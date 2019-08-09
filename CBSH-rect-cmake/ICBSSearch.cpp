@@ -889,7 +889,7 @@ bool ICBSSearch::runICBSSearch()
 			solution_cost = curr->g_val;
 			cout << solution_cost << " ; " << solution_cost - dummy_start->g_val << " ; " <<
 				HL_num_expanded << " ; " << HL_num_generated << " ; " <<
-				LL_num_expanded << " ; " << LL_num_generated << " ; " << runtime << " ; ";
+				LL_num_expanded << " ; " << LL_num_generated << " ; " << runtime / CLOCKS_PER_SEC << " ; ";
 			cout << endl;
 			break;
 		}
@@ -978,7 +978,7 @@ bool ICBSSearch::runICBSSearch()
 		solution_cost = -2;
 		cout << "No solutions  ; " << solution_cost << " ; " << min_f_val - dummy_start->g_val << " ; " <<
 			HL_num_expanded << " ; " << HL_num_generated << " ; " <<
-			LL_num_expanded << " ; " << LL_num_generated << " ; " << runtime << " ; " << 
+			LL_num_expanded << " ; " << LL_num_generated << " ; " << runtime / CLOCKS_PER_SEC << " ; " <<
 			"|Open|=" << open_list.size() << endl;
 		solution_found = false;
 	}
