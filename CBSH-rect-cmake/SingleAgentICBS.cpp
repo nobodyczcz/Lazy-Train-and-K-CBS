@@ -3,6 +3,7 @@
 #include <ctime>
 
 
+
 void SingleAgentICBS::updatePath(const LLNode* goal, std::vector<PathEntry> &path)
 {
 	path.resize(goal->timestep + 1);
