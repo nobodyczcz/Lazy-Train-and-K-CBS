@@ -77,7 +77,7 @@ public:
 	// minimizing the number of internal conflicts (that is conflicts with known_paths for other agents found so far).
 	// lowerbound is the lowerbound of the length of the path
 	// max_plan_len used to compute the size of res_table
-	bool findPath(std::vector<PathEntry> &path, double f_weight, const std::vector < std::list< std::pair<int, int> > >* constraints, const bool* res_table, size_t max_plan_len, double lowerbound);
+	bool findPath(std::vector<PathEntry> &path, double f_weight, const std::vector < std::list< std::pair<int, int> > >* constraints, const bool* res_table, size_t max_plan_len, double lowerbound, std::clock_t start=0, int time_limit=0);
 
 	bool validMove(int curr, int next) const; // whetehr curr->next is a valid move
 

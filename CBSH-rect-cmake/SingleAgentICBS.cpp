@@ -1,5 +1,7 @@
 #include "SingleAgentICBS.h"
 #include <iostream>
+#include <ctime>
+
 
 void SingleAgentICBS::updatePath(const LLNode* goal, std::vector<PathEntry> &path)
 {
@@ -87,7 +89,7 @@ bool SingleAgentICBS::validMove(int curr, int next) const
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // return true if a path found (and updates vector<int> path) or false if no path exists
-bool SingleAgentICBS::findPath(std::vector<PathEntry> &path, double f_weight, const std::vector < std::list< std::pair<int, int> > >* constraints, const bool* res_table, size_t max_plan_len, double lowerbound) 
+bool SingleAgentICBS::findPath(std::vector<PathEntry> &path, double f_weight, const std::vector < std::list< std::pair<int, int> > >* constraints, const bool* res_table, size_t max_plan_len, double lowerbound, std::clock_t start_clock ,int time_limit) 
 {
 	num_expanded = 0;
 	num_generated = 0;
@@ -103,11 +105,17 @@ bool SingleAgentICBS::findPath(std::vector<PathEntry> &path, double f_weight, co
 	allNodes_table[start] = start;
 	min_f_val = start->getFVal();
 	lower_bound = std::max(lowerbound, f_weight * min_f_val);
-
+	std:clock_t runtime;
 	int lastGoalConsTime = extractLastGoalTimestep(goal_location, constraints); // the last timestep of a constraint at the goal
 
 	while (!focal_list.empty()) 
 	{
+		if (time_limit != 0) {
+			runtime = std::clock() - start_clock;
+			if (runtime > time_limit) {
+				return false;
+			}
+		}
 		LLNode* curr = focal_list.top(); focal_list.pop();
 		open_list.erase(curr->open_handle);
 

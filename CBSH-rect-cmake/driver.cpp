@@ -73,7 +73,7 @@ int main(int argc, char** argv)
 		return -1;
 	}
 	std::cout << "Start Searching" << endl;
-	ICBSSearch icbs(ml, al, 1.0, s, vm["cutoffTime"].as<int>() * 1000, vm["kDelay"].as<int>());
+	ICBSSearch icbs(ml, al, 1.0, s, vm["cutoffTime"].as<int>() * CLOCKS_PER_SEC, vm["kDelay"].as<int>());
 	// what is the 1.0
 	
 	bool res;

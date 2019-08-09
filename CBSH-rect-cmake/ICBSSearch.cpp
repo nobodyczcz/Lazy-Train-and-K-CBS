@@ -661,7 +661,7 @@ bool ICBSSearch::findPathForSingleAgent(ICBSNode*  node, int ag, double lowerbou
 	bool* res_table = new bool[map_size * max_plan_len]();  // initialized to false
 	updateReservationTable(res_table, ag, *node);
 	// find a path w.r.t cons_vec (and prioretize by res_table).
-	bool foundSol = search_engines[ag]->findPath(node->path, focal_w, cons_vec, res_table, max_plan_len, lowerbound);
+	bool foundSol = search_engines[ag]->findPath(node->path, focal_w, cons_vec, res_table, max_plan_len, lowerbound,start,time_limit);
 	LL_num_expanded += search_engines[ag]->num_expanded;
 	LL_num_generated += search_engines[ag]->num_generated;
 	delete (cons_vec);
@@ -812,7 +812,6 @@ bool ICBSSearch::runICBSSearch()
 {
 	printStrategy();
 	// set timer
-	std::clock_t start;
 	start = std::clock();
 	std::clock_t t1;
 	runtime_computeh = 0;
@@ -830,7 +829,7 @@ bool ICBSSearch::runICBSSearch()
 		{  // timeout
 			cout << "TIMEOUT  ; " << solution_cost << " ; " << min_f_val - dummy_start->g_val << " ; " <<
 				HL_num_expanded << " ; " << HL_num_generated << " ; " <<
-				LL_num_expanded << " ; " << LL_num_generated << " ; " << runtime << " ; " << endl;
+				LL_num_expanded << " ; " << LL_num_generated << " ; " << runtime/CLOCKS_PER_SEC << " ; " << endl;
 			break;
 		}
 		t1 = std::clock();

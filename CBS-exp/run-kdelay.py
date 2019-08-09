@@ -1,10 +1,10 @@
 import subprocess, os
-exe = os.path.abspath("../build/manjaro-x64/CBSH-rect-cmake/CBS-K")
+exe = os.path.abspath("../build/x86-Release/CBSH-rect-cmake/CBS-K.exe")
 algos=["CBS","CBSH"]
 theMap = "./map/0obs-20x20"
-output = "./outputs/0obs-20x20map-CBS"
+output = "../../outputs/0obs-20x20map-CBS"
 if not os.path.exists(output):
-    os.mkdir(output)
+    os.makedirs(output)
 
 for i in range(1,7):
     for k in range(0,5):

@@ -45,6 +45,8 @@ private:
 
 	constraint_strategy cons_strategy;
 	const int time_limit;
+	std::clock_t start;
+
 	double focal_w = 1.0;
 	
 
