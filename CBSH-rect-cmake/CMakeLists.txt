@@ -4,6 +4,57 @@
 cmake_minimum_required (VERSION 3.8)
 
 # Add source to this project's executable.
-add_executable (CBSH-rect-cmake "CBSH-rect-cmake.cpp" "CBSH-rect-cmake.h")
+add_executable (CBS-K "driver.cpp")
 
 # TODO: Add tests and install targets if needed.
+set(all
+        agents_loader.h
+        compute_heuristic.h
+		ICBSNode.h
+		ICBSSearch.h
+		LLNode.h
+		map_loader.h
+		MDD.h
+		RectangleReasoning.h
+		SingleAgentICBS.h
+		agents_loader.cpp
+        compute_heuristic.cpp
+		ICBSNode.cpp
+		ICBSSearch.cpp
+		LLNode.cpp
+		map_loader.cpp
+		MDD.cpp
+		RectangleReasoning.cpp
+		SingleAgentICBS.cpp
+        )
+add_library(others ${all})
+target_link_libraries( ${PROJECT_NAME} others )
+
+
+
+# Google's sparsehash
+if (WIN32)
+    include_directories("C:/Users/czcz2/Google Drive/MIT/GCITR/boost_1_61_0")
+	include_directories("C:/Users/czcz2/Google Drive/MIT/GCITR/boost_1_61_0/stage/x86/lib")
+	include_directories("C:/Users/czcz2/Google Drive/MIT/GCITR/sparsehash/src")
+	include_directories("C:/Users/czcz2/Google Drive/MIT/GCITR/sparsehash/src/windows")
+else()
+	find_path(SPARSEHASH_INCLUDE_DIRS sparsehash/dense_hash_map)
+	if (NOT SPARSEHASH_INCLUDE_DIRS)
+		message(FATAL_ERROR "Could not find <sparsehash/dense_hash_map>.")
+	endif ()
+	include_directories(SYSTEM ${SPARSEHASH_INCLUDE_DIRS})
+
+
+	set(Boost_USE_STATIC_LIBS OFF) 
+	set(Boost_USE_MULTITHREADED ON)  
+	set(Boost_USE_STATIC_RUNTIME OFF) 
+	find_package(Boost REQUIRED COMPONENTS system program_options ) 
+
+	if(Boost_FOUND)
+		include_directories(${Boost_INCLUDE_DIRS})
+		target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
+	else()
+		 message(FATAL_ERROR "Could not find boost.")
+	endif()
+endif()

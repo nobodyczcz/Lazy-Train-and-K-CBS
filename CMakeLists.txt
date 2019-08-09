@@ -3,7 +3,11 @@
 #
 cmake_minimum_required (VERSION 3.8)
 
-project ("CBSH-rect-cmake")
+project ("CBS-K")
 
 # Include sub-projects.
 add_subdirectory ("CBSH-rect-cmake")
+# set include path for Google's sparse hash table
+
+
+

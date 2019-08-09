@@ -1,0 +1,186 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/CBSH-rect-cmake/ICBSNode.cpp
+ICBSNode.h
+/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/CBSH-rect-cmake/ICBSNode.h
+
+/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/CBSH-rect-cmake/ICBSNode.h
+MDD.h
+/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/CBSH-rect-cmake/MDD.h
+
+/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/CBSH-rect-cmake/ICBSSearch.cpp
+ICBSSearch.h
+/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/CBSH-rect-cmake/ICBSSearch.h
+ctime
+-
+iostream
+-
+limits.h
+-
+
+/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/CBSH-rect-cmake/ICBSSearch.h
+ICBSNode.h
+/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/CBSH-rect-cmake/ICBSNode.h
+SingleAgentICBS.h
+/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/CBSH-rect-cmake/SingleAgentICBS.h
+compute_heuristic.h
+/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/CBSH-rect-cmake/compute_heuristic.h
+agents_loader.h
+/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/CBSH-rect-cmake/agents_loader.h
+RectangleReasoning.h
+/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/CBSH-rect-cmake/RectangleReasoning.h
+
+/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/CBSH-rect-cmake/LLNode.cpp
+LLNode.h
+/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/CBSH-rect-cmake/LLNode.h
+
+/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/CBSH-rect-cmake/LLNode.h
+boost/heap/fibonacci_heap.hpp
+-
+list
+-
+functional
+-
+
+/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/CBSH-rect-cmake/MDD.cpp
+MDD.h
+/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/CBSH-rect-cmake/MDD.h
+iostream
+-
+
+/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/CBSH-rect-cmake/MDD.h
+list
+-
+vector
+-
+SingleAgentICBS.h
+/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/CBSH-rect-cmake/SingleAgentICBS.h
+
+/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/CBSH-rect-cmake/RectangleReasoning.cpp
+RectangleReasoning.h
+/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/CBSH-rect-cmake/RectangleReasoning.h
+algorithm
+-
+iostream
+-
+
+/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/CBSH-rect-cmake/RectangleReasoning.h
+tuple
+-
+vector
+-
+list
+-
+LLNode.h
+/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/CBSH-rect-cmake/LLNode.h
+ICBSNode.h
+/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/CBSH-rect-cmake/ICBSNode.h
+
+/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/CBSH-rect-cmake/SingleAgentICBS.cpp
+SingleAgentICBS.h
+/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/CBSH-rect-cmake/SingleAgentICBS.h
+iostream
+-
+
+/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/CBSH-rect-cmake/SingleAgentICBS.h
+stdlib.h
+-
+vector
+-
+list
+-
+utility
+-
+LLNode.h
+/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/CBSH-rect-cmake/LLNode.h
+map_loader.h
+/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/CBSH-rect-cmake/map_loader.h
+boost/heap/fibonacci_heap.hpp
+-
+google/dense_hash_map
+-
+
+/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/CBSH-rect-cmake/agents_loader.cpp
+agents_loader.h
+/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/CBSH-rect-cmake/agents_loader.h
+string
+-
+cstring
+-
+iostream
+-
+cassert
+-
+fstream
+-
+boost/tokenizer.hpp
+-
+stdlib.h
+-
+stdio.h
+-
+vector
+-
+utility
+-
+algorithm
+-
+ctime
+-
+
+/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/CBSH-rect-cmake/agents_loader.h
+string
+-
+vector
+-
+utility
+-
+map_loader.h
+/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/CBSH-rect-cmake/map_loader.h
+
+/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/CBSH-rect-cmake/compute_heuristic.cpp
+boost/heap/fibonacci_heap.hpp
+-
+compute_heuristic.h
+/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/CBSH-rect-cmake/compute_heuristic.h
+google/dense_hash_map
+-
+iostream
+-
+LLNode.h
+/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/CBSH-rect-cmake/LLNode.h
+limits.h
+-
+
+/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/CBSH-rect-cmake/compute_heuristic.h
+vector
+-
+utility
+-
+stdlib.h
+-
+
+/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/CBSH-rect-cmake/map_loader.cpp
+map_loader.h
+/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/CBSH-rect-cmake/map_loader.h
+iostream
+-
+fstream
+-
+boost/tokenizer.hpp
+-
+cstring
+-
+
+/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/CBSH-rect-cmake/map_loader.h
+string
+-
+vector
+-
+
