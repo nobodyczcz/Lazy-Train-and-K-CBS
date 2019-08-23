@@ -221,6 +221,7 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 
 		// detect new conflicts
 		int a1 = curr.agent_id;
+
 		for (int a2 = 0; a2 < num_of_agents; a2++)
 		{
 			if(a1 == a2)
@@ -249,7 +250,8 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 				bool findVertKDelay = false;
 				bool findEdgeKDelay = false;
 
-				for (int k = 0; k <= kDelay; k++) {
+				for (int k = -kDelay ; k <= kDelay; k++) {// when k<0 and conflict, its a kdelay conflict for a2
+					std::cout << k << endl;
 					if (timestep + k >= min_path_length)
 						continue;
 					int loc2 = paths[a2]->at(timestep + k).location;
@@ -257,7 +259,7 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 					{
 						if (!findVertKDelay) {
 							//prevent add one constraint multiple times
-							curr.unknownConf.push_back(std::shared_ptr<tuple<int, int, int, int, int>>(new tuple<int, int, int, int, int>(a1, a2, loc1, -1, timestep)));
+							curr.unknownConf.push_back(std::shared_ptr<tuple<int, int, int, int, int>>(new tuple<int, int, int, int, int>(k < 0 ? a2 : a1, k < 0 ? a1 : a2, loc1, -1, k < 0 ? timestep + k : timestep)));
 							findVertKDelay = true;
 						}
 					}
@@ -266,8 +268,9 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 						&& loc2 == paths[a1]->at(timestep + 1).location)
 					{
 						if (!findEdgeKDelay) {
-							curr.unknownConf.push_back(std::shared_ptr<tuple<int, int, int, int, int>>(new tuple<int, int, int, int, int>(a1, a2, loc1, loc2, timestep + 1))); // edge conflict
+							curr.unknownConf.push_back(std::shared_ptr<tuple<int, int, int, int, int>>(new tuple<int, int, int, int, int>(k < 0 ? a2 : a1, k < 0 ? a1 : a2, loc1, loc2, k < 0 ? timestep + 1 + k : timestep + 1))); // edge conflict
 							findEdgeKDelay = true;
+
 						}
 					}
 				}
@@ -298,15 +301,17 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 	{
 		for(int a1 = 0; a1 < num_of_agents ; a1++)
 		{
-			for (int a2 = a1 + 1; a2 < num_of_agents; a2++)
+			for (int a2 = a1+1 ; a2 < num_of_agents; a2++)
 			{
+
 				size_t min_path_length = paths[a1]->size() < paths[a2]->size() ? paths[a1]->size() : paths[a2]->size();
 				for (size_t timestep = 0; timestep < min_path_length; timestep++)
 				{
 					int loc1 = paths[a1]->at(timestep).location;
 					bool findVertKDelay = false;
 					bool findEdgeKDelay = false;
-					for (int k = 0; k <= kDelay; k++) {
+					for (int k = -kDelay ; k <= kDelay; k++) {// when k<0 and conflict, its a kdelay conflict for a2
+						std::cout << k << endl;
 						if (timestep + k >= min_path_length)
 							continue;
 						int loc2 = paths[a2]->at(timestep + k).location;
@@ -314,8 +319,9 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 						{
 							if (!findVertKDelay) {
 								//prevent add one constraint multiple times
-								curr.unknownConf.push_back(std::shared_ptr<tuple<int, int, int, int, int>>(new tuple<int, int, int, int, int>(a1, a2, loc1, -1, timestep)));
+								curr.unknownConf.push_back(std::shared_ptr<tuple<int, int, int, int, int>>(new tuple<int, int, int, int, int>(k < 0 ? a2 : a1, k < 0 ? a1 : a2, loc1, -1, k < 0 ? timestep + k : timestep)));
 								findVertKDelay = true;
+
 							}
 						}
 						else if (timestep + k  < min_path_length - 1
@@ -323,8 +329,9 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 							&& loc2 == paths[a1]->at(timestep + 1).location)
 						{
 							if (!findEdgeKDelay) {
-								curr.unknownConf.push_back(std::shared_ptr<tuple<int, int, int, int, int>>(new tuple<int, int, int, int, int>(a1, a2, loc1, loc2, timestep + 1)));
+								curr.unknownConf.push_back(std::shared_ptr<tuple<int, int, int, int, int>>(new tuple<int, int, int, int, int>(k < 0 ? a2 : a1, k < 0 ? a1 : a2, loc1, loc2, k < 0 ? timestep + 1 + k : timestep + 1)));
 								findEdgeKDelay = true;
+
 							}
 						}
 					}

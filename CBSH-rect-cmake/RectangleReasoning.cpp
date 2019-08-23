@@ -96,6 +96,7 @@ void addKDelayBarrierConstraints(int S1, int S2, int S1_t, int S2_t, int Rg, int
 		R2_y = s2_y;
 	}
 	for (int i = 0;i <= k;i++) {
+		std::cout << "add one barrier constraint " << std::endl;
 		constraints1.push_back(std::make_tuple(-1 - R1_x * num_col - R1_y, Rg, Rg_t+i));
 		constraints2.push_back(std::make_tuple(-1 - R2_x * num_col - R2_y, Rg, Rg_t+i));
 	}
