@@ -6,7 +6,7 @@ output = "./outputs/0obs-20x20map7k"
 if not os.path.exists(output):
     os.makedirs(output)
 pool=[]
-for i in range(2,9):
+for i in range(1,7):
     for k in range(0,5):
         for algo in algos:
             for asy in [True,False]:
