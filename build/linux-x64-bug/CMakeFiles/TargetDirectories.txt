@@ -1,0 +1,6 @@
+/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/build/linux-x64/CMakeFiles/rebuild_cache.dir
+/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/build/linux-x64/CMakeFiles/edit_cache.dir
+/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/build/linux-x64/CBSH-rect-cmake/CMakeFiles/edit_cache.dir
+/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/build/linux-x64/CBSH-rect-cmake/CMakeFiles/rebuild_cache.dir
+/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/build/linux-x64/CBSH-rect-cmake/CMakeFiles/CBS-K.dir
+/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/build/linux-x64/CBSH-rect-cmake/CMakeFiles/others.dir

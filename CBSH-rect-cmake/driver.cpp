@@ -25,6 +25,7 @@ int main(int argc, char** argv)
 	po::options_description desc("Allowed options");
 	desc.add_options()
 		("help", "produce help message")
+		("debug", "debug mode")
 		("map,m", po::value<std::string>()->required(), "input file for map")
 		("agents,a", po::value<std::string>()->required(), "input file for agents")
 		("output,o", po::value<std::string>()->required(), "output file for schedule")
@@ -33,6 +34,7 @@ int main(int argc, char** argv)
 		("cutoffTime,t", po::value<int>()->default_value(7200), "cutoff time (seconds)")
 		("seed,d", po::value<int>()->default_value(0), "random seed")
 		("kDelay", po::value<int>()->default_value(0), "generate k-robust plan")
+		("asyConstraint","Using asymmetry range constraint to resolve k-delay conflict. Else use symmetry range constraint ")
 	;
 
 	po::variables_map vm;
@@ -53,7 +55,20 @@ int main(int argc, char** argv)
 	AgentsLoader al(vm["agents"].as<string>(), ml, vm["agentNum"].as<int>());
  
 	srand(vm["seed"].as<int>());
-
+	bool asymmetry_constraint;
+	if (vm.count("asyConstraint")) {
+		asymmetry_constraint = true;
+	}
+	else {
+		asymmetry_constraint = false;
+	}
+	bool debug;
+	if (vm.count("debug")) {
+		debug = true;
+	}
+	else {
+		debug = false;
+	}
 	constraint_strategy s;
 	if (vm["solver"].as<string>() == "ICBS")
 		s = constraint_strategy::ICBS;
@@ -73,7 +88,7 @@ int main(int argc, char** argv)
 		return -1;
 	}
 	std::cout << "Start Searching" << endl;
-	ICBSSearch icbs(ml, al, 1.0, s, vm["cutoffTime"].as<int>() * CLOCKS_PER_SEC, vm["kDelay"].as<int>());
+	ICBSSearch icbs(ml, al, 1.0, s, vm["cutoffTime"].as<int>() * CLOCKS_PER_SEC, vm["kDelay"].as<int>(), asymmetry_constraint, debug);
 	// what is the 1.0
 	
 	bool res;

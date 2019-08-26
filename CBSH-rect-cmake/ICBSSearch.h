@@ -32,7 +32,7 @@ public:
 	// Runs the algorithm until the problem is solved or time is exhausted 
 	bool runICBSSearch();
 
-	ICBSSearch(const MapLoader& ml, const AgentsLoader& al, double f_w, constraint_strategy c, int time_limit, int kDlay);
+	ICBSSearch(const MapLoader& ml, const AgentsLoader& al, double f_w, constraint_strategy c, int time_limit, int kDlay,bool asymmetry,bool debug);
 	~ICBSSearch();
 
 private:
@@ -57,7 +57,12 @@ private:
 	const int* moves_offset;
 	int num_col;
 	AgentsLoader al;
+
+	// k robust planning
 	int kDelay;
+	bool asymmetry_constraint;
+
+	bool debug_mode;
 
 	vector<vector<PathEntry>*> paths;
 	vector<vector<PathEntry>> paths_found_initially;  // contain initial paths found

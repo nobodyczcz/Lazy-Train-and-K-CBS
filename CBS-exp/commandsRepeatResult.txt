@@ -1,0 +1,1 @@
+"/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/build/linux-x64/CBSH-rect-cmake/CBS-K" -m ./map/0obs-20x20.map -a ./agent/0obs-20x20map-2agents-1.agents -o ./outputs/0obs-20x20map7k/algo=CBS_rc=1_k=2_asy=False -s CBS -t 600 --kDelay 2 --debug
