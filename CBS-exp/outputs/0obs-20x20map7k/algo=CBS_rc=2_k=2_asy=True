@@ -33,3 +33,8 @@
 1.968,17,29,606,1376,..\..\..\CBS-exp\agent\0obs-20x20map-2agents-2.agents,12,4,ICBS
 0.015625,17,29,568,1313,./agent/0obs-20x20map-2agents-2.agents,12,4,ICBS
 0.078125,17,29,568,1313,./agent/0obs-20x20map-2agents-2.agents,12,4,ICBS
+0,1,3,65,147,./agent/0obs-20x20map-2agents-2.agents,12,4,CBSH-CR
+0.140625,39,76,991,2606,./agent/0obs-20x20map-2agents-2.agents,12,4,CBSH-CR
+0,1,3,65,147,./agent/0obs-20x20map-2agents-2.agents,12,4,CBSH-CR
+0.109375,39,76,991,2606,./agent/0obs-20x20map-2agents-2.agents,12,4,CBSH-CR
+0.140625,39,76,991,2606,./agent/0obs-20x20map-2agents-2.agents,12,4,CBSH-R

@@ -341,7 +341,7 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 
 							}
 						}
-						else if (timestep + k  < min_path_length - 1
+						else if (timestep + k  < min_path_length - 1 && timestep + 1 < min_path_length
 							&& loc1 == paths[a2]->at(timestep + 1 + k).location
 							&& loc2 == paths[a1]->at(timestep + 1).location)
 						{
