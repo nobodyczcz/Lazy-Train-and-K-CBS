@@ -1,0 +1,2 @@
+/usr/bin/ar qc libothers.a  CMakeFiles/others.dir/agents_loader.cpp.o CMakeFiles/others.dir/compute_heuristic.cpp.o CMakeFiles/others.dir/ICBSNode.cpp.o CMakeFiles/others.dir/ICBSSearch.cpp.o CMakeFiles/others.dir/LLNode.cpp.o CMakeFiles/others.dir/map_loader.cpp.o CMakeFiles/others.dir/MDD.cpp.o CMakeFiles/others.dir/RectangleReasoning.cpp.o CMakeFiles/others.dir/SingleAgentICBS.cpp.o
+/usr/bin/ranlib libothers.a

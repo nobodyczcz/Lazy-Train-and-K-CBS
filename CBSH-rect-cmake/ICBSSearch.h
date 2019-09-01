@@ -6,6 +6,12 @@
 #include "agents_loader.h"
 #include "RectangleReasoning.h"
 
+struct options {
+	bool asymmetry_constraint;
+	bool debug;
+	bool ignore_t0;
+};
+
 class ICBSSearch
 {
 public:
@@ -32,7 +38,7 @@ public:
 	// Runs the algorithm until the problem is solved or time is exhausted 
 	bool runICBSSearch();
 
-	ICBSSearch(const MapLoader& ml, const AgentsLoader& al, double f_w, constraint_strategy c, int time_limit, int kDlay,bool asymmetry,bool debug);
+	ICBSSearch(const MapLoader& ml, const AgentsLoader& al, double f_w, constraint_strategy c, int time_limit, int kDlay, options options1);
 	~ICBSSearch();
 
 private:
@@ -61,7 +67,7 @@ private:
 	// k robust planning
 	int kDelay;
 	bool asymmetry_constraint;
-
+	bool ignore_t0;
 	bool debug_mode;
 
 	vector<vector<PathEntry>*> paths;

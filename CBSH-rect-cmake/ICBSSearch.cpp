@@ -272,7 +272,7 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 							findVertKDelay = true;
 						}
 					}
-					else if (timestep + k < min_path_length - 1
+					else if (timestep + k < min_path_length - 1 && timestep + 1 < min_path_length
 						&& loc1 == paths[a2]->at(timestep + 1 + k).location
 						&& loc2 == paths[a1]->at(timestep + 1).location)
 					{
@@ -285,6 +285,7 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 
 						}
 					}
+
 				}
 				
 			}
@@ -748,6 +749,7 @@ bool ICBSSearch::generateChild(ICBSNode*  node, ICBSNode* curr)
 
 	t1 = std::clock();
 	findConflicts(*node);
+
 	runtime_conflictdetection += std::clock() - t1;
 
 	node->num_of_collisions = node->unknownConf.size() + node->cardinalConf.size() + node->semiConf.size() + node->nonConf.size() + node->rectCardinalConf.size();
@@ -867,7 +869,6 @@ bool ICBSSearch::runICBSSearch()
 		t1 = std::clock();
 		updatePaths(curr);
 		runtime_updatepaths += std::clock() - t1;
-
 		if (cons_strategy == constraint_strategy::CBS)
 		{
 			t1 = std::clock();
@@ -919,6 +920,8 @@ bool ICBSSearch::runICBSSearch()
 			cout << endl;
 			break;
 		}
+		if (debug_mode)
+			cout << "choose conflict: " << get<0>(*curr->conflict)  <<" " << get<1>(*curr->conflict)<<" " << "(" << get<2>(*curr->conflict) / num_col << "," << get<2>(*curr->conflict) % num_col << ") " << get<4>(*curr->conflict) << endl;
 
 
 
@@ -932,6 +935,7 @@ bool ICBSSearch::runICBSSearch()
 		n1->agent_id = get<0>(*curr->conflict);
 		n2->agent_id = get<1>(*curr->conflict);
 
+
 		if (get<2>(*curr->conflict) < 0) // Rectangle conflict
 		{
 			int Rg = -1 - get<2>(*curr->conflict);
@@ -944,12 +948,21 @@ bool ICBSSearch::runICBSSearch()
 			}
 			else // add barrier constraints
 			{
+				//get<0>(*curr->conflict) agent1 id, get<3>(*curr->conflict) agent1 conflict time
 				int S1 = paths[get<0>(*curr->conflict)]->at(get<3>(*curr->conflict)).location;
 				int S2 = paths[get<1>(*curr->conflict)]->at(get<4>(*curr->conflict)).location;
+				int G1 = paths[get<0>(*curr->conflict)]->back().location;
+				int G2 = paths[get<1>(*curr->conflict)]->back().location;
+
 				if (debug_mode) {
 					cout << "add barrier constraint," << n1->agent_id << " "<< n2->agent_id << endl;
 				}
-				addKDelayBarrierConstraints(S1, S2, S1_t, S2_t, Rg, num_col, n1->constraints, n2->constraints,kDelay,asymmetry_constraint);
+				if (kDelay == 0) {
+					addBarrierConstraints(S1, S2, S1_t, S2_t, Rg, num_col, n1->constraints, n2->constraints);
+				}
+				else {
+					addKDelayBarrierConstraints(S1, S2, S1_t, S2_t, Rg, G1, G2, num_col, n1->constraints, n2->constraints, kDelay, asymmetry_constraint);
+				}
 			}
 
 		}
@@ -1006,8 +1019,20 @@ bool ICBSSearch::runICBSSearch()
 
 		bool Sol1 = false, Sol2 = false;
 		vector<vector<PathEntry>*> copy(paths);
-		Sol1 = generateChild(n1, curr);
+		if (debug_mode)
+			cout << "generate child 1" << endl;
+
+		//Agent1 is the base agent for a k-delay conflict. Thus if conflict time is 0, means agent 1's initial location
+		//conflict with agent 2's 0+1~0+k location. Thus we only diable node 1 when k-delay conflict happen on time 0.
+		if (get<4>(*curr->conflict) != 0 || get<2>(*curr->conflict) < 0 || ignore_t0)
+			Sol1 = generateChild(n1, curr);
+		else if (debug_mode)
+			cout << "Time 0 conflict, ignore node 1" << endl;
+
+
 		paths = copy;
+		if (debug_mode)
+			cout << "generate child 2" << endl;
 		Sol2 = generateChild(n2, curr);
 
 		if(!Sol1)
@@ -1020,7 +1045,6 @@ bool ICBSSearch::runICBSSearch()
 			delete (n2);
 			n2 = NULL;
 		}
-
 		curr->clear();
 		t1 = std::clock();
 		if (open_list.size() == 0) {
@@ -1055,7 +1079,7 @@ bool ICBSSearch::runICBSSearch()
 }
 
 
-ICBSSearch::ICBSSearch(const MapLoader& ml, const AgentsLoader& al, double f_w, constraint_strategy c, int time_limit, int kDlay, bool asymmetry, bool debug):
+ICBSSearch::ICBSSearch(const MapLoader& ml, const AgentsLoader& al, double f_w, constraint_strategy c, int time_limit, int kDlay, options options1):
 	focal_w(f_w), time_limit(time_limit)
 {
 	cons_strategy = c;
@@ -1070,8 +1094,9 @@ ICBSSearch::ICBSSearch(const MapLoader& ml, const AgentsLoader& al, double f_w, 
 	solution_found = false;
 	solution_cost = -1;
 	kDelay = kDlay;
-	asymmetry_constraint = asymmetry;
-	debug_mode = debug;
+	asymmetry_constraint = options1.asymmetry_constraint;
+	debug_mode = options1.debug;
+	ignore_t0 = options1.ignore_t0;
 
 	search_engines = vector < SingleAgentICBS* >(num_of_agents);
 	for (int i = 0; i < num_of_agents; i++) {

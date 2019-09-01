@@ -18,6 +18,7 @@
 #include <boost/program_options.hpp>
 #include<boost/tokenizer.hpp>
 
+
 int main(int argc, char** argv) 
 {
 	namespace po = boost::program_options;
@@ -34,6 +35,7 @@ int main(int argc, char** argv)
 		("cutoffTime,t", po::value<int>()->default_value(7200), "cutoff time (seconds)")
 		("seed,d", po::value<int>()->default_value(0), "random seed")
 		("kDelay", po::value<int>()->default_value(0), "generate k-robust plan")
+		("ignore-t0-conflict","Ignore t==0 k-delay conflict resolving")
 		("asyConstraint","Using asymmetry range constraint to resolve k-delay conflict. Else use symmetry range constraint ")
 	;
 
@@ -55,19 +57,24 @@ int main(int argc, char** argv)
 	AgentsLoader al(vm["agents"].as<string>(), ml, vm["agentNum"].as<int>());
  
 	srand(vm["seed"].as<int>());
-	bool asymmetry_constraint;
+	options options1;
 	if (vm.count("asyConstraint")) {
-		asymmetry_constraint = true;
+		options1.asymmetry_constraint = true;
 	}
 	else {
-		asymmetry_constraint = false;
+		options1.asymmetry_constraint = false;
 	}
-	bool debug;
 	if (vm.count("debug")) {
-		debug = true;
+		options1.debug = true;
 	}
 	else {
-		debug = false;
+		options1.debug = false;
+	}
+	if (vm.count("ignore-t0-conflict")) {
+		options1.ignore_t0 = true;
+	}
+	else {
+		options1.ignore_t0 = false;
 	}
 	constraint_strategy s;
 	if (vm["solver"].as<string>() == "ICBS")
@@ -88,7 +95,7 @@ int main(int argc, char** argv)
 		return -1;
 	}
 	std::cout << "Start Searching" << endl;
-	ICBSSearch icbs(ml, al, 1.0, s, vm["cutoffTime"].as<int>() * CLOCKS_PER_SEC, vm["kDelay"].as<int>(), asymmetry_constraint, debug);
+	ICBSSearch icbs(ml, al, 1.0, s, vm["cutoffTime"].as<int>() * CLOCKS_PER_SEC, vm["kDelay"].as<int>(), options1);
 	// what is the 1.0
 	
 	bool res;

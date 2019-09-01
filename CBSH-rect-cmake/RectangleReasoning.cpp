@@ -51,62 +51,90 @@ void addBarrierConstraints(int S1, int S2, int S1_t, int S2_t, int Rg, int num_c
 	constraints2.push_back(std::make_tuple(-1 - R2_x * num_col - R2_y, Rg, Rg_t));
 }
 
-// add a pair of barrier constraints
-void addKDelayBarrierConstraints(int S1, int S2, int S1_t, int S2_t, int Rg, int num_col,
+// add a pair of long k-delay barrier constraints
+void addKDelayBarrierConstraints(int S1, int S2, int S1_t, int S2_t, int Rg, int G1, int G2, int num_col,
 	std::list<std::tuple<int, int, int>>& constraints1, std::list<std::tuple<int, int, int>>& constraints2,int k,bool asymmetry_constraint)
 {
+	// 
 	int s1_x = S1 / num_col;
 	int s1_y = S1 % num_col;
 	int s2_x = S2 / num_col;
 	int s2_y = S2 % num_col;
+	int g1_x = G1 / num_col;
+	int g1_y = G1 % num_col;
+	int g2_x = G2 / num_col;
+	int g2_y = G2 % num_col;
 	int Rg_x = Rg / num_col;
 	int Rg_y = Rg % num_col;
 	int Rg_t = S1_t + abs(Rg_x - s1_x) + abs(Rg_y - s1_y);
 
+
 	int R1_x, R1_y, R2_x, R2_y;
+	int Rg1_x, Rg1_y, Rg2_x, Rg2_y;
 	if (s1_x == s2_x)
 	{
 		if ((s1_y - s2_y) * (s2_y - Rg_y) >= 0)
 		{
-			R1_x = s1_x;
+			R1_x = s2_x;//different
+			Rg1_x = g2_x;
 			R2_x = Rg_x;
+			Rg2_x = Rg_x;
 			R1_y = Rg_y;
-			R2_y = s2_y;
+			Rg1_y = Rg_y;
+			R2_y = s1_y;//different
+			Rg2_y = g1_y;
 		}
 		else
 		{
 			R1_x = Rg_x;
-			R2_x = s2_x;
-			R1_y = s1_y;
+			Rg1_x = Rg_x;
+			R2_x = s1_x;//different
+			Rg2_x = g1_x;
+			R1_y = s2_y;//different
+			Rg1_y = g2_y;
 			R2_y = Rg_y;
+			Rg2_y = Rg_y;
 		}
 	}
 	else if ((s1_x - s2_x)*(s2_x - Rg_x) >= 0)
 	{
 		R1_x = Rg_x;
-		R2_x = s2_x;
-		R1_y = s1_y;
+		Rg1_x = Rg_x;
+		R2_x = s1_x;//different
+		Rg2_x = g1_x;
+		R1_y = s2_y;//different
+		Rg1_y = g2_y;
 		R2_y = Rg_y;
+		Rg2_y = Rg_y;
 	}
 	else
 	{
-		R1_x = s1_x;
+		R1_x = s2_x;//different
+		Rg1_x = g2_x;
 		R2_x = Rg_x;
+		Rg2_x = Rg_x;
 		R1_y = Rg_y;
-		R2_y = s2_y;
+		Rg1_y = Rg_y;
+		R2_y = s1_y;//different
+		Rg2_y = g1_y;
 	}
+
+	int Rg1_t = S1_t + abs(Rg1_x - s1_x) + abs(Rg1_y - s1_y);
+	int Rg2_t = S1_t + abs(Rg2_x - s1_x) + abs(Rg2_y - s1_y);
+
 	if (asymmetry_constraint) {
-		constraints1.push_back(std::make_tuple(-1 - R1_x * num_col - R1_y, Rg, Rg_t));
+		constraints1.push_back(std::make_tuple(-1 - R1_x * num_col - R1_y, Rg1_x * num_col + Rg1_y, Rg1_t));
 		for (int i = -k; i <= k; i++) {
 			if ((Rg_t + i) < 0)
 				continue;
-			constraints2.push_back(std::make_tuple(-1 - R2_x * num_col - R2_y, Rg, Rg_t + i));
+			constraints2.push_back(std::make_tuple(-1 - R2_x * num_col - R2_y, Rg2_x * num_col + Rg2_y, Rg2_t + i));
 		}
 	}
 	else {
 		for (int i = 0; i <= k; i++) {
-			constraints1.push_back(std::make_tuple(-1 - R1_x * num_col - R1_y, Rg, Rg_t + i));
-			constraints2.push_back(std::make_tuple(-1 - R2_x * num_col - R2_y, Rg, Rg_t + i));
+			constraints1.push_back(std::make_tuple(-1 - R1_x * num_col - R1_y, Rg1_x * num_col + Rg1_y, Rg1_t + i));
+
+			constraints2.push_back(std::make_tuple(-1 - R2_x * num_col - R2_y, Rg2_x * num_col + Rg2_y, Rg2_t + i));
 		}
 	}
 	

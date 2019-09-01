@@ -6,8 +6,8 @@ output = "./outputs/0obs-20x20map7k"
 if not os.path.exists(output):
     os.makedirs(output)
 pool=[]
-for i in range(1,7):
-    for k in range(0,5):
+for i in range(1,2):
+    for k in range(0,3):
         for algo in algos:
             for asy in [True,False]:
                 print("start rc {} algo {} k delay {}".format(i,algo,k))
@@ -21,14 +21,15 @@ for i in range(1,7):
                 if asy :
                     cmd.append("--asyConstraint")
                 print(subprocess.list2cmdline(cmd))
-                if (len(pool)>=6):
-                    finish = False
-                    while not finish:
-                        for p in range(0,len(pool)):
-                            if pool[p].poll() is not None:
-                                pool.pop(p)
-                                finish = True
-                                break
-                            else:
-                                time.sleep(1)
-                pool.append(subprocess.Popen(cmd))
+                # if (len(pool)>=6):
+                #     finish = False
+                #     while not finish:
+                #         for p in range(0,len(pool)):
+                #             if pool[p].poll() is not None:
+                #                 pool.pop(p)
+                #                 finish = True
+                #                 break
+                #             else:
+                #                 time.sleep(1)
+                # pool.append(subprocess.run(cmd))
+                subprocess.run(cmd)

@@ -11,7 +11,7 @@ void addBarrierConstraints(int S1, int S2, int S1_t, int S2_t, int Rg, int num_c
 	std::list<std::tuple<int, int, int>>& constraints1, std::list<std::tuple<int, int, int>>& constraints2);
 
 // add a pair of k-delay barrier constraints
-void addKDelayBarrierConstraints(int S1, int S2, int S1_t, int S2_t, int Rg, int num_col,
+void addKDelayBarrierConstraints(int S1, int S2, int S1_t, int S2_t, int Rg, int G1, int G2, int num_col,
 	std::list<std::tuple<int, int, int>>& constraints1, std::list<std::tuple<int, int, int>>& constraints2,int k, bool asymmetry_constraint);
 
 // add a pair of modified barrier constraints
