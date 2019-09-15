@@ -22,12 +22,12 @@ void addModifiedBarrierConstraints(const std::vector<PathEntry>& path1, const st
 // add a vertival modified barrier constraint
 void addModifiedVerticalBarrierConstraint(const std::vector<PathEntry>& path, int y,
 	int Ri_x, int Rg_x, int Rg_t, int num_col,
-	std::list<std::tuple<int, int, int>>& constraints);
+	std::list<std::tuple<int, int, int>>& constraints, int k);
 
 // add a horizontal modified barrier constraint
 void addModifiedHorizontalBarrierConstraint(const std::vector<PathEntry>& path, int x,
 	int Ri_y, int Rg_y, int Rg_t, int num_col,
-	std::list<std::tuple<int, int, int>>& constraints);
+	std::list<std::tuple<int, int, int>>& constraints, int k);
 
 //Identify rectangle conflicts
 bool isRectangleConflict(const std::pair<int,int>& s1, const std::pair<int, int>& s2, 

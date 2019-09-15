@@ -943,8 +943,11 @@ bool ICBSSearch::runICBSSearch()
 			int S2_t = get<4>(*curr->conflict);
 			if (cons_strategy == constraint_strategy::CBSH_RM) // add modified barrier constraints
 			{
+				if (debug_mode) {
+					cout << "add modified barrier constraint," << n1->agent_id << " " << n2->agent_id << endl;
+				}
 				addModifiedBarrierConstraints(*paths[get<0>(*curr->conflict)], *paths[get<1>(*curr->conflict)],
-					S1_t, S2_t, Rg, num_col, n1->constraints, n2->constraints,asymmetry_constraint);
+					S1_t, S2_t, Rg, num_col, n1->constraints, n2->constraints,kDelay);
 			}
 			else // add barrier constraints
 			{

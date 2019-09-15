@@ -263,3 +263,6 @@ build/*
 build/linux-x64/*
 CBS-exp/*
 build/linux-x64/CBSH-rect-cmake/CBS-K
+build/linux-x64/CBSH-rect-cmake/libothers.a
+build/linux-x64/CBSH-rect-cmake/CMakeFiles/others.dir/ICBSSearch.cpp.o
+build/linux-x64/CBSH-rect-cmake/CMakeFiles/others.dir/RectangleReasoning.cpp.o

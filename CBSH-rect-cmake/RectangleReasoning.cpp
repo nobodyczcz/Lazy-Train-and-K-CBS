@@ -162,8 +162,9 @@ void addModifiedBarrierConstraints(const std::vector<PathEntry>& path1, const st
 		R2_x = s2_x;
 		R1_y = s1_y;
 		R2_y = Rg_y;
-		addModifiedHorizontalBarrierConstraint(path1, Rg_x, R1_y, Rg_y, Rg_t, num_col, constraints1);
-		addModifiedVerticalBarrierConstraint(path2, Rg_y, R2_x, Rg_x, Rg_t, num_col, constraints2);
+		std::cout << R1_x << "," << R1_y << ";" << R2_x << "," << R2_y << ";" << Rg_x << "," << Rg_y << ";" << std::endl;
+		addModifiedHorizontalBarrierConstraint(path1, Rg_x, R1_y, Rg_y, Rg_t, num_col, constraints1,k);
+		addModifiedVerticalBarrierConstraint(path2, Rg_y, R2_x, Rg_x, Rg_t, num_col, constraints2,k);
 	}
 	else
 	{
@@ -171,15 +172,16 @@ void addModifiedBarrierConstraints(const std::vector<PathEntry>& path1, const st
 		R2_x = Rg_x;
 		R1_y = Rg_y;
 		R2_y = s2_y;
-		addModifiedVerticalBarrierConstraint(path1, Rg_y, R1_x, Rg_x, Rg_t, num_col, constraints1);
-		addModifiedHorizontalBarrierConstraint(path2, Rg_x, R2_y, Rg_y, Rg_t, num_col, constraints2);		
+		std::cout << R1_x << "," << R1_y << ";" << R2_x << "," << R2_y << ";" << Rg_x << "," << Rg_y << ";" << std::endl;
+		addModifiedVerticalBarrierConstraint(path1, Rg_y, R1_x, Rg_x, Rg_t, num_col, constraints1,k);
+		addModifiedHorizontalBarrierConstraint(path2, Rg_x, R2_y, Rg_y, Rg_t, num_col, constraints2,k);		
 	}
 }
 
 // add a vertival modified barrier constraint
 void addModifiedVerticalBarrierConstraint(const std::vector<PathEntry>& path, int y,
 	int Ri_x, int Rg_x, int Rg_t, int num_col,
-	std::list<std::tuple<int, int, int>>& constraints)
+	std::list<std::tuple<int, int, int>>& constraints,int k)
 {
 	int sign = Ri_x < Rg_x ? 1 : -1;
 	int Ri_t = Rg_t - abs(Ri_x - Rg_x);
@@ -187,23 +189,36 @@ void addModifiedVerticalBarrierConstraint(const std::vector<PathEntry>& path, in
 	for (int t2 = Ri_t; t2 <= Rg_t; t2++)
 	{
 		int loc = (Ri_x + (t2 - Ri_t) * sign) * num_col + y;
-		std::list<int>::const_iterator it = std::find(path[t2].locations.begin(), path[t2].locations.end(), loc);
-		if (it == path[t2].locations.end() && t1 >= 0) // add constraints [t1, t2)
+		std::cout << (Ri_x + (t2 - Ri_t) * sign) << "," << y << ";";
+		bool found = false;
+		for (int i = 0; i <= k; i++) {
+			if (t2 + i >= path.size())
+				continue;
+			std::list<int>::const_iterator it = std::find(path[t2+i].locations.begin(), path[t2+i].locations.end(), loc);
+			if (it != path[t2 + i].locations.end())
+				found = true;
+		}
+		std::cout << (found) << std::endl;
+		if (!found && t1 >= 0) // add constraints [t1, t2)
 		{
 			int loc1 = (Ri_x + (t1 - Ri_t) * sign) * num_col + y;
 			int loc2 = (Ri_x + (t2 - 1 - Ri_t) * sign) * num_col + y;
-			constraints.push_back(std::make_tuple(-1 - loc1, loc2, t2 - 1));
+			for (int i = 0; i <= k; i++) {
+				constraints.push_back(std::make_tuple(-1 - loc1, loc2, t2 - 1 + i));
+			}
 			t1 = -1;
 			continue;
 		}
-		else if (it != path[t2].locations.end() && t1 < 0)
+		else if (found && t1 < 0)
 		{
 			t1 = t2;
 		}
-		if (it != path[t2].locations.end() && t2 == Rg_t)
+		if (found && t2 == Rg_t)
 		{
 			int loc1 = (Ri_x + (t1 - Ri_t) * sign) * num_col + y;
-			constraints.push_back(std::make_tuple(-1 - loc1, loc, t2)); // add constraints [t1, t2]
+			for (int i = 0; i <= k; i++) {
+				constraints.push_back(std::make_tuple(-1 - loc1, loc, t2 + i)); // add constraints [t1, t2]
+			}
 		}
 	}
 }
@@ -211,7 +226,7 @@ void addModifiedVerticalBarrierConstraint(const std::vector<PathEntry>& path, in
 // add a horizontal modified barrier constraint
 void addModifiedHorizontalBarrierConstraint(const std::vector<PathEntry>& path, int x,
 	int Ri_y, int Rg_y, int Rg_t, int num_col,
-	std::list<std::tuple<int, int, int>>& constraints)
+	std::list<std::tuple<int, int, int>>& constraints, int k)
 {
 	int sign = Ri_y < Rg_y ? 1 : -1;
 	int Ri_t = Rg_t - abs(Ri_y - Rg_y);
@@ -219,23 +234,36 @@ void addModifiedHorizontalBarrierConstraint(const std::vector<PathEntry>& path, 
 	for (int t2 = Ri_t; t2 <= Rg_t; t2++)
 	{
 		int loc = (Ri_y + (t2 - Ri_t) * sign) + x * num_col;
-		std::list<int>::const_iterator it = std::find(path[t2].locations.begin(), path[t2].locations.end(), loc);
-		if (it == path[t2].locations.end() && t1 >= 0) // add constraints [t1, t2)
+		std::cout << x << "," << (Ri_y + (t2 - Ri_t) * sign) <<";";
+		bool found = false;
+		for (int i = 0; i <= k; i++) {
+			if (t2 + i >= path.size())
+				continue;
+			std::list<int>::const_iterator it = std::find(path[t2+i].locations.begin(), path[t2+i].locations.end(), loc);
+			if (it != path[t2 + i].locations.end())
+				found = true;
+		}
+		std::cout << (found) << std::endl;
+		if (!found && t1 >= 0) // add constraints [t1, t2)
 		{
 			int loc1 = (Ri_y + (t1 - Ri_t) * sign) + x * num_col;
 			int loc2 = (Ri_y + (t2 - 1 - Ri_t) * sign) + x * num_col;
-			constraints.push_back(std::make_tuple(-1 - loc1, loc2, t2 - 1));
+			for (int i = 0; i <= k; i++) {
+				constraints.push_back(std::make_tuple(-1 - loc1, loc2, t2 - 1+i));
+			}
 			t1 = -1;
 			continue;
 		}
-		else if (it != path[t2].locations.end() && t1 < 0)
+		else if (found && t1 < 0)
 		{
 			t1 = t2;
 		}
-		if (it != path[t2].locations.end() && t2 == Rg_t)
+		if (found && t2 == Rg_t)
 		{
 			int loc1 = (Ri_y + (t1 - Ri_t) * sign) + x * num_col;
-			constraints.push_back(std::make_tuple(-1 - loc1, loc, t2)); // add constraints [t1, t2]
+			for (int i = 0; i <= k; i++) {
+				constraints.push_back(std::make_tuple(-1 - loc1, loc, t2+i)); // add constraints [t1, t2]
+			}
 		}
 	}
 }
