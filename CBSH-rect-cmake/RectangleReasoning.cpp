@@ -162,7 +162,6 @@ void addModifiedBarrierConstraints(const std::vector<PathEntry>& path1, const st
 		R2_x = s2_x;
 		R1_y = s1_y;
 		R2_y = Rg_y;
-		std::cout << R1_x << "," << R1_y << ";" << R2_x << "," << R2_y << ";" << Rg_x << "," << Rg_y << ";" << std::endl;
 		addModifiedHorizontalBarrierConstraint(path1, Rg_x, R1_y, Rg_y, Rg_t, num_col, constraints1,k);
 		addModifiedVerticalBarrierConstraint(path2, Rg_y, R2_x, Rg_x, Rg_t, num_col, constraints2,k);
 	}
@@ -172,7 +171,6 @@ void addModifiedBarrierConstraints(const std::vector<PathEntry>& path1, const st
 		R2_x = Rg_x;
 		R1_y = Rg_y;
 		R2_y = s2_y;
-		std::cout << R1_x << "," << R1_y << ";" << R2_x << "," << R2_y << ";" << Rg_x << "," << Rg_y << ";" << std::endl;
 		addModifiedVerticalBarrierConstraint(path1, Rg_y, R1_x, Rg_x, Rg_t, num_col, constraints1,k);
 		addModifiedHorizontalBarrierConstraint(path2, Rg_x, R2_y, Rg_y, Rg_t, num_col, constraints2,k);		
 	}
@@ -189,7 +187,6 @@ void addModifiedVerticalBarrierConstraint(const std::vector<PathEntry>& path, in
 	for (int t2 = Ri_t; t2 <= Rg_t; t2++)
 	{
 		int loc = (Ri_x + (t2 - Ri_t) * sign) * num_col + y;
-		std::cout << (Ri_x + (t2 - Ri_t) * sign) << "," << y << ";";
 		bool found = false;
 		for (int i = 0; i <= k; i++) {
 			if (t2 + i >= path.size())
@@ -198,7 +195,6 @@ void addModifiedVerticalBarrierConstraint(const std::vector<PathEntry>& path, in
 			if (it != path[t2 + i].locations.end())
 				found = true;
 		}
-		std::cout << (found) << std::endl;
 		if (!found && t1 >= 0) // add constraints [t1, t2)
 		{
 			int loc1 = (Ri_x + (t1 - Ri_t) * sign) * num_col + y;
@@ -234,7 +230,6 @@ void addModifiedHorizontalBarrierConstraint(const std::vector<PathEntry>& path, 
 	for (int t2 = Ri_t; t2 <= Rg_t; t2++)
 	{
 		int loc = (Ri_y + (t2 - Ri_t) * sign) + x * num_col;
-		std::cout << x << "," << (Ri_y + (t2 - Ri_t) * sign) <<";";
 		bool found = false;
 		for (int i = 0; i <= k; i++) {
 			if (t2 + i >= path.size())
@@ -243,7 +238,6 @@ void addModifiedHorizontalBarrierConstraint(const std::vector<PathEntry>& path, 
 			if (it != path[t2 + i].locations.end())
 				found = true;
 		}
-		std::cout << (found) << std::endl;
 		if (!found && t1 >= 0) // add constraints [t1, t2)
 		{
 			int loc1 = (Ri_y + (t1 - Ri_t) * sign) + x * num_col;
