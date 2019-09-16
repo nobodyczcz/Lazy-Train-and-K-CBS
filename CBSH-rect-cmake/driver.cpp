@@ -37,6 +37,7 @@ int main(int argc, char** argv)
 		("kDelay", po::value<int>()->default_value(0), "generate k-robust plan")
 		("ignore-t0-conflict","Ignore t==0 k-delay conflict resolving")
 		("asyConstraint","Using asymmetry range constraint to resolve k-delay conflict. Else use symmetry range constraint ")
+		("short", "do not use long barrier constraint to resolve k delay rectangle conflict")
 	;
 
 	po::variables_map vm;
@@ -75,6 +76,12 @@ int main(int argc, char** argv)
 	}
 	else {
 		options1.ignore_t0 = false;
+	}
+	if (vm.count("short")) {
+		options1.shortBarrier = true;
+	}
+	else {
+		options1.shortBarrier = false;
 	}
 	constraint_strategy s;
 	if (vm["solver"].as<string>() == "ICBS")

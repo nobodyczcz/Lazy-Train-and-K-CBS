@@ -10,6 +10,7 @@ struct options {
 	bool asymmetry_constraint;
 	bool debug;
 	bool ignore_t0;
+	bool shortBarrier;
 };
 
 class ICBSSearch
@@ -69,6 +70,7 @@ private:
 	bool asymmetry_constraint;
 	bool ignore_t0;
 	bool debug_mode;
+	bool shortBarrier;
 
 	vector<vector<PathEntry>*> paths;
 	vector<vector<PathEntry>> paths_found_initially;  // contain initial paths found

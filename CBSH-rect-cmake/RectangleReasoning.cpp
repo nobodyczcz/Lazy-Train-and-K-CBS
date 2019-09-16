@@ -51,6 +51,56 @@ void addBarrierConstraints(int S1, int S2, int S1_t, int S2_t, int Rg, int num_c
 	constraints2.push_back(std::make_tuple(-1 - R2_x * num_col - R2_y, Rg, Rg_t));
 }
 
+// add a pair of barrier constraints
+void addShortKDelayBarrierConstraints(int S1, int S2, int S1_t, int S2_t, int Rg, int num_col,
+	std::list<std::tuple<int, int, int>>& constraints1, std::list<std::tuple<int, int, int>>& constraints2, int k)
+{
+	int s1_x = S1 / num_col;
+	int s1_y = S1 % num_col;
+	int s2_x = S2 / num_col;
+	int s2_y = S2 % num_col;
+	int Rg_x = Rg / num_col;
+	int Rg_y = Rg % num_col;
+	int Rg_t = S1_t + abs(Rg_x - s1_x) + abs(Rg_y - s1_y);
+
+	int R1_x, R1_y, R2_x, R2_y;
+	if (s1_x == s2_x)
+	{
+		if ((s1_y - s2_y) * (s2_y - Rg_y) >= 0)
+		{
+			R1_x = s1_x;
+			R2_x = Rg_x;
+			R1_y = Rg_y;
+			R2_y = s2_y;
+		}
+		else
+		{
+			R1_x = Rg_x;
+			R2_x = s2_x;
+			R1_y = s1_y;
+			R2_y = Rg_y;
+		}
+	}
+	else if ((s1_x - s2_x)*(s2_x - Rg_x) >= 0)
+	{
+		R1_x = Rg_x;
+		R2_x = s2_x;
+		R1_y = s1_y;
+		R2_y = Rg_y;
+	}
+	else
+	{
+		R1_x = s1_x;
+		R2_x = Rg_x;
+		R1_y = Rg_y;
+		R2_y = s2_y;
+	}
+
+	for (int i = 0; i <= k; i++) {
+		constraints1.push_back(std::make_tuple(-1 - R1_x * num_col - R1_y, Rg, Rg_t+i));
+		constraints2.push_back(std::make_tuple(-1 - R2_x * num_col - R2_y, Rg, Rg_t+i));
+	}
+}
 // add a pair of long k-delay barrier constraints
 void addKDelayBarrierConstraints(int S1, int S2, int S1_t, int S2_t, int Rg, int G1, int G2, int num_col,
 	std::list<std::tuple<int, int, int>>& constraints1, std::list<std::tuple<int, int, int>>& constraints2,int k,bool asymmetry_constraint)

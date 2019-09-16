@@ -964,7 +964,10 @@ bool ICBSSearch::runICBSSearch()
 					addBarrierConstraints(S1, S2, S1_t, S2_t, Rg, num_col, n1->constraints, n2->constraints);
 				}
 				else {
-					addKDelayBarrierConstraints(S1, S2, S1_t, S2_t, Rg, G1, G2, num_col, n1->constraints, n2->constraints, kDelay, asymmetry_constraint);
+					if (shortBarrier)
+						addShortKDelayBarrierConstraints(S1, S2, S1_t, S2_t, Rg, num_col, n1->constraints, n2->constraints, kDelay);
+					else
+						addKDelayBarrierConstraints(S1, S2, S1_t, S2_t, Rg, G1, G2, num_col, n1->constraints, n2->constraints, kDelay, asymmetry_constraint);
 				}
 			}
 
@@ -1100,7 +1103,7 @@ ICBSSearch::ICBSSearch(const MapLoader& ml, const AgentsLoader& al, double f_w, 
 	asymmetry_constraint = options1.asymmetry_constraint;
 	debug_mode = options1.debug;
 	ignore_t0 = options1.ignore_t0;
-
+	shortBarrier = options1.shortBarrier;
 	search_engines = vector < SingleAgentICBS* >(num_of_agents);
 	for (int i = 0; i < num_of_agents; i++) {
 		int init_loc = ml.linearize_coordinate((al.initial_locations[i]).first, (al.initial_locations[i]).second);
