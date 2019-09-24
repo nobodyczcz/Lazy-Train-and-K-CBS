@@ -48,6 +48,7 @@ public:
 	
 
 	boost::python::list outputPaths();
+	bool isTimeout() { return timeout; };
 
 
 protected:
@@ -112,7 +113,7 @@ protected:
 	void printStrategy() const;
 	virtual void buildMDD(ICBSNode& curr, int id) {};
 	virtual bool findPathForSingleAgent(ICBSNode*  node, int ag, double lowerbound = 0) { return false; };
-
+	bool timeout = false;
 
 };
 

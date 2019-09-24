@@ -111,7 +111,10 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 	start->in_openlist = true;
 	allNodes_table[start] = start;
 	min_f_val = start->getFVal();
+
 	lower_bound = std::max(lowerbound, f_weight * min_f_val);
+	//cout << "start lower_bound: " << lower_bound << endl;
+
 	std:clock_t runtime;
 	int lastGoalConsTime = extractLastGoalTimestep(goal_location, constraints); // the last timestep of a constraint at the goal
 	//for (int h = 0; h < my_heuristic.size();h++) {
@@ -142,12 +145,13 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 			allNodes_table.clear();
 			return true;
 		}
-		//if(curr->parent != NULL)
-		//cout << "parent loc " << curr->parent->loc << " " << curr->parent->heading << endl;
+		/*if(curr->parent != NULL)
+			cout << "Parent loc: " << curr->parent->loc << " heading: " << curr->parent->heading << " f: " << curr->parent->getFVal() << " g: " << curr->parent->g_val << " h: "<< curr->parent->h_val<<" num_internal_conf: " << curr->parent->num_internal_conf << endl;
 
-		//cout << "current loc " << curr->loc << " " << curr->heading << endl;
+		cout << "current loc: " << curr->loc << " heading: " << curr->heading<<" f: "<<curr->getFVal() << " g: " << curr->g_val << " h: " << curr->h_val << " num_internal_conf: " <<curr->num_internal_conf << endl;
+		
 		if (curr->loc == 17 && curr->heading == 3)
-			return false;
+			return false;*/
 		
 
 		vector<pair<int, int>> transitions = ml->get_transitions(curr->loc, curr->heading,false);
@@ -198,11 +202,16 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 				it = allNodes_table.find(next);
 				if (it == allNodes_table.end()) 
 				{
+					//cout << "Possible child loc: " << next->loc << " heading: " << next->heading << " f: " << next->getFVal() << " g: " << next->g_val << " h: " << next->h_val<< " num_internal_conf: " << next->num_internal_conf << endl;
 					next->open_handle = open_list.push(next);
 					next->in_openlist = true;
 					num_generated++;
-					if (next->getFVal() <= lower_bound)
+					if (next->getFVal() <= lower_bound) {
+						//cout << "put in focal list" << endl;
 						next->focal_handle = focal_list.push(next);
+
+					}
+						
 					allNodes_table[next] = next;
 				}
 				else

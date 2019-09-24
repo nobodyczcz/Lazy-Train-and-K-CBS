@@ -15,6 +15,7 @@ PythonCBS<Map>::PythonCBS(p::object railEnv1, std::string algo, int kRobust, int
 	options1.shortBarrier = false;
 	options1.asymmetry_constraint = false;
 	timeLimit = t;
+	this->algo = algo;
 	this->kRobust = kRobust;
 	if (algo == "ICBS")
 		s = constraint_strategy::ICBS;
@@ -51,19 +52,39 @@ PythonCBS<Map>::PythonCBS(p::object railEnv1, std::string algo, int kRobust, int
 }
 
 template <class Map>
-p::object PythonCBS<Map>::printResult() {
-	std::cout << "get transitions" << std::endl;
-	p::object result = railEnv.attr("rail").attr("get_transitions")(5, 5, 0);
-	std::cout << "get transitions done" << std::endl;
-	return result;
+p::list PythonCBS<Map>::getResult() {
+
+	return icbs->outputPaths();
 }
 
 template <class Map>
-p::list PythonCBS<Map>::search() {
-	MultiMapICBSSearch <Map> icbs(ml, *al, 1.0, s, timeLimit * CLOCKS_PER_SEC, kRobust, options1);
-	bool res;
-	res = icbs.runICBSSearch();
-	return icbs.outputPaths();
+bool PythonCBS<Map>::search() {
+	icbs = new MultiMapICBSSearch <Map> (ml, *al, 1.0, s, timeLimit * CLOCKS_PER_SEC, kRobust, options1);
+	bool res =false;
+	res = icbs->runICBSSearch();
+
+	
+	return res;
+
+}
+
+
+template <class Map>
+p::dict PythonCBS<Map>::getResultDetail() {
+	p::dict result;
+
+	result["runtime"] = icbs->runtime / CLOCKS_PER_SEC;
+	result["HL_expanded"] = icbs->HL_num_expanded;
+	result["HL_generated"] = icbs->HL_num_generated;
+
+	result["LL_expanded"] = icbs->LL_num_expanded;
+	result["LL_generated"] = icbs->LL_num_generated;
+	if (icbs->isTimeout())
+		result["solution_cost"] = -1;
+	else
+		result["solution_cost"] = icbs->solution_cost;
+	result["algorithm"] = algo;
+	return result;
 
 }
 
@@ -72,5 +93,7 @@ BOOST_PYTHON_MODULE(libPythonCBS)  // Name here must match the name of the final
 {
 	using namespace boost::python;
 	class_<PythonCBS<FlatlandLoader>>("PythonCBS", init<object, string, int, int, bool>())
-		.def("printResult", &PythonCBS<FlatlandLoader>::printResult).def("search", &PythonCBS<FlatlandLoader>::search);
+		.def("getResult", &PythonCBS<FlatlandLoader>::getResult)
+		.def("search", &PythonCBS<FlatlandLoader>::search)
+		.def("getResultDetail", &PythonCBS<FlatlandLoader>::getResultDetail);
 }

@@ -851,6 +851,7 @@ bool ICBSSearch::runICBSSearch()
 		runtime = (std::clock() - start);
 		if (runtime > time_limit)
 		{  // timeout
+			timeout = true;
 			cout << "TIMEOUT  ; " << solution_cost << " ; " << min_f_val - dummy_start->g_val << " ; " <<
 				HL_num_expanded << " ; " << HL_num_generated << " ; " <<
 				LL_num_expanded << " ; " << LL_num_generated << " ; " << runtime/CLOCKS_PER_SEC << " ; " << endl;
@@ -1098,6 +1099,7 @@ void MultiMapICBSSearch<Map>::initializeDummyStart() {
 		bool* res_table = new bool[map_size * (dummy_start->makespan + 1)]();  // initialized to false
 		updateReservationTable(res_table, i, *dummy_start);
 
+		//cout << "agent " << i << endl;
 		if (search_engines[i]->findPath(paths_found_initially[i], focal_w, NULL, res_table, dummy_start->makespan + 1, 0) == false)
 			cout << "NO SOLUTION EXISTS";
 

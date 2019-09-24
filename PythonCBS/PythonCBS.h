@@ -15,10 +15,12 @@ class PythonCBS {
 public:
 	PythonCBS(p::object railEnv1, std::string algo, int kRobust, int t, bool debug);
 
-	p::object printResult();
+	p::list getResult();
 
-	p::list search();
+	bool search();
+	p::dict getResultDetail();
 private:
+	std::string algo;
 	p::object railEnv;
 	FlatlandLoader* ml;
 	AgentsLoader* al;
@@ -26,6 +28,7 @@ private:
 	options options1;
 	int timeLimit;
 	int kRobust;
+	MultiMapICBSSearch<Map>* icbs;
 
 	
 };
