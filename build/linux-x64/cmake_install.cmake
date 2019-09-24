@@ -1,4 +1,4 @@
-# Install script for directory: /mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake
+# Install script for directory: /mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/CBSH-rect-cmake
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -35,12 +35,6 @@ endif()
 # Is this installation the result of a crosscompile?
 if(NOT DEFINED CMAKE_CROSSCOMPILING)
   set(CMAKE_CROSSCOMPILING "FALSE")
-endif()
-
-if(NOT CMAKE_INSTALL_LOCAL_ONLY)
-  # Include the install script for each subdirectory.
-  include("/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/build/linux-x64/CBSH-rect-cmake/cmake_install.cmake")
-
 endif()
 
 if(CMAKE_INSTALL_COMPONENT)

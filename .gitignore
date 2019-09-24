@@ -260,8 +260,11 @@ paket-files/
 __pycache__/
 *.pyc
 build/*
-build/linux-x64/*
+build/
+build/linux-x64/
+CBS-exp/
 CBS-exp/*
+PythonCBS/build/
 build/linux-x64/CBSH-rect-cmake/CBS-K
 build/linux-x64/CBSH-rect-cmake/libothers.a
 build/linux-x64/CBSH-rect-cmake/CMakeFiles/others.dir/ICBSSearch.cpp.o

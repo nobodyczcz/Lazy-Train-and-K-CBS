@@ -3,10 +3,69 @@
 #include <fstream>
 #include<boost/tokenizer.hpp>
 #include <cstring>
+#include <bitset>
 
+
+
+namespace p = boost::python;
 
 using namespace boost;
 using namespace std;
+
+
+MapLoader::MapLoader(){}
+
+MapLoader::MapLoader(p::object rail1, int rows, int cols)
+{
+	this->rail = rail1;
+	this->rows = rows;
+	this->cols = cols;
+	this->my_map = new bool[false];
+
+	// Possible moves [WAIT, NORTH, EAST, SOUTH, WEST]
+	moves_offset = new int[MapLoader::MOVE_COUNT];
+	moves_offset[MapLoader::valid_moves_t::WAIT_MOVE] = 0;
+	moves_offset[MapLoader::valid_moves_t::NORTH] = -cols;
+	moves_offset[MapLoader::valid_moves_t::EAST] = 1;
+	moves_offset[MapLoader::valid_moves_t::SOUTH] = cols;
+	moves_offset[MapLoader::valid_moves_t::WEST] = -1;
+
+
+}
+
+vector<pair<int, int>> MapLoader::get_transitions(int loc, int heading, int noWait) {
+	vector<pair<int, int>> transitions;
+	int moveRange = 5;
+
+	for (int direction = 0; direction < moveRange; direction++)
+	{
+		pair<int, int> move;
+		int next_loc = loc + moves_offset[direction];
+		move.first = next_loc;
+		move.second = 4; //4 means no heading
+		if (validMove(loc, next_loc) && !my_map[next_loc])
+		{
+			transitions.push_back(move);
+		}
+	}
+		
+	return transitions;
+	
+}
+	
+
+
+bool MapLoader::validMove(int curr, int next)
+{
+	if (next < 0 || next >= rows * cols)
+		return false;
+	int curr_x = curr / cols;
+	int curr_y = curr % cols;
+	int next_x = next / cols;
+	int next_y = next % cols;
+	return abs(next_x - curr_x) + abs(next_y - curr_y) < 2;
+}
+
 
 MapLoader::MapLoader(int rows, int cols)
 {
@@ -125,6 +184,7 @@ bool* MapLoader::get_map() const {
 }
 
 MapLoader::~MapLoader() {
+	std::cout << "maploader destructor" << std::endl;
   delete[] this->my_map;
   delete[] this->moves_offset;
 }

@@ -16,7 +16,7 @@
 #include <fstream>
 
 #include <boost/program_options.hpp>
-#include<boost/tokenizer.hpp>
+#include <boost/tokenizer.hpp>
 
 
 int main(int argc, char** argv) 
@@ -39,7 +39,6 @@ int main(int argc, char** argv)
 		("asyConstraint","Using asymmetry range constraint to resolve k-delay conflict. Else use symmetry range constraint ")
 		("short", "do not use long barrier constraint to resolve k delay rectangle conflict")
 	;
-
 	po::variables_map vm;
 	po::store(po::parse_command_line(argc, argv, desc), vm);
 
@@ -102,7 +101,7 @@ int main(int argc, char** argv)
 		return -1;
 	}
 	std::cout << "Start Searching" << endl;
-	ICBSSearch icbs(ml, al, 1.0, s, vm["cutoffTime"].as<int>() * CLOCKS_PER_SEC, vm["kDelay"].as<int>(), options1);
+	MultiMapICBSSearch <MapLoader> icbs(&ml, al, 1.0, s, vm["cutoffTime"].as<int>() * CLOCKS_PER_SEC, vm["kDelay"].as<int>(), options1);
 	// what is the 1.0
 	
 	bool res;

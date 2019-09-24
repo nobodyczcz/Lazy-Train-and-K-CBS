@@ -5,6 +5,8 @@
 #include "compute_heuristic.h"
 #include "agents_loader.h"
 #include "RectangleReasoning.h"
+#include <boost/python.hpp>
+
 
 struct options {
 	bool asymmetry_constraint;
@@ -12,6 +14,9 @@ struct options {
 	bool ignore_t0;
 	bool shortBarrier;
 };
+
+
+
 
 class ICBSSearch
 {
@@ -38,11 +43,14 @@ public:
 
 	// Runs the algorithm until the problem is solved or time is exhausted 
 	bool runICBSSearch();
+	ICBSSearch() {};
 
-	ICBSSearch(const MapLoader& ml, const AgentsLoader& al, double f_w, constraint_strategy c, int time_limit, int kDlay, options options1);
-	~ICBSSearch();
+	
 
-private:
+	boost::python::list outputPaths();
+
+
+protected:
 
 	typedef boost::heap::fibonacci_heap< ICBSNode*, boost::heap::compare<ICBSNode::compare_node> > heap_open_t;
 	typedef boost::heap::fibonacci_heap< ICBSNode*, boost::heap::compare<ICBSNode::secondary_compare_node> > heap_focal_t;
@@ -51,17 +59,17 @@ private:
 	list<ICBSNode*> allNodes_table;
 
 	constraint_strategy cons_strategy;
-	const int time_limit;
+	int time_limit;
 	std::clock_t start;
 
 	double focal_w = 1.0;
 	
 
-	const bool* my_map;
+	bool* my_map;
 	int map_size;
 	int num_of_agents;
-	const int* actions_offset;
-	const int* moves_offset;
+	int* actions_offset;
+	int* moves_offset;
 	int num_col;
 	AgentsLoader al;
 
@@ -74,11 +82,9 @@ private:
 
 	vector<vector<PathEntry>*> paths;
 	vector<vector<PathEntry>> paths_found_initially;  // contain initial paths found
-	vector < SingleAgentICBS* > search_engines;  // used to find (single) agents' paths and mdd
 
 
 	// high level search
-	bool findPathForSingleAgent(ICBSNode*  node, int ag, double lowerbound = 0);
 	bool generateChild(ICBSNode* child, ICBSNode* curr);
 
 	//conflicts
@@ -92,9 +98,7 @@ private:
 	int computeHeuristics(const ICBSNode& curr);
 	bool KVertexCover(const vector<vector<bool>>& CG, int num_of_CGnodes, int num_of_CGedges, int k);
 
-	// build MDD
-	void buildMDD(ICBSNode& curr, int id); 
-
+	
 	//update information
 	vector < list< pair<int, int> > >* collectConstraints(ICBSNode* curr, int agent_id);
 	inline void updatePaths(ICBSNode* curr);
@@ -106,5 +110,26 @@ private:
 	// print
 	void printPaths() const;
 	void printStrategy() const;
+	virtual void buildMDD(ICBSNode& curr, int id) {};
+	virtual bool findPathForSingleAgent(ICBSNode*  node, int ag, double lowerbound = 0) { return false; };
+
+
+};
+
+template<class Map>
+class MultiMapICBSSearch :public ICBSSearch
+{
+public:
+	vector<SingleAgentICBS<Map> *> search_engines;  // used to find (single) agents' paths and mdd
+	MultiMapICBSSearch(Map* ml, AgentsLoader& al, double f_w, constraint_strategy c, int time_limit, int kDlay, options options1);
+	~MultiMapICBSSearch();
+	// build MDD
+	void buildMDD(ICBSNode& curr, int id);
+	void initializeDummyStart();
+
+	bool findPathForSingleAgent(ICBSNode*  node, int ag, double lowerbound = 0);
+
+
+
 };
 

@@ -1,1 +1,0 @@
-/usr/bin/c++     CMakeFiles/CBS-K.dir/driver.cpp.o  -o CBS-K libothers.a /usr/lib/x86_64-linux-gnu/libboost_system.so /usr/lib/x86_64-linux-gnu/libboost_program_options.so 

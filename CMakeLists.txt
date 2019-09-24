@@ -7,6 +7,8 @@ project ("CBS-K")
 
 # Include sub-projects.
 add_subdirectory ("CBSH-rect-cmake")
+add_subdirectory ("PythonCBS")
+
 # set include path for Google's sparse hash table
 
 

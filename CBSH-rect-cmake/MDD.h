@@ -21,6 +21,7 @@ public:
 	}
 	int location;
 	int level;
+	int heading;
 
 	bool operator == (const MDDNode & node) const
 	{
@@ -33,13 +34,14 @@ public:
 	MDDNode* parent;
 };
 
+template<class Map>
 class MDD
 {
 public:
 	std::vector<std::list<MDDNode*>> levels;
 
 	bool buildMDD(const std::vector < std::list< std::pair<int, int> > >& constraints, 
-		int numOfLevels, const SingleAgentICBS & solver);
+		int numOfLevels,  SingleAgentICBS<Map> &solver);
 
 	MDDNode* find(int location, int level);
 	void deleteNode(MDDNode* node);

@@ -48,24 +48,13 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = "/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake"
+CMAKE_SOURCE_DIR = "/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/CBSH-rect-cmake"
 
 # The top-level build directory on which CMake was run.
 CMAKE_BINARY_DIR = "/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/build/linux-x64"
 
 #=============================================================================
 # Targets provided globally by CMake.
-
-# Special rule for the target rebuild_cache
-rebuild_cache:
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake to regenerate build system..."
-	/usr/bin/cmake -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
-.PHONY : rebuild_cache
-
-# Special rule for the target rebuild_cache
-rebuild_cache/fast: rebuild_cache
-
-.PHONY : rebuild_cache/fast
 
 # Special rule for the target edit_cache
 edit_cache:
@@ -77,6 +66,17 @@ edit_cache:
 edit_cache/fast: edit_cache
 
 .PHONY : edit_cache/fast
+
+# Special rule for the target rebuild_cache
+rebuild_cache:
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake to regenerate build system..."
+	/usr/bin/cmake -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
+.PHONY : rebuild_cache
+
+# Special rule for the target rebuild_cache
+rebuild_cache/fast: rebuild_cache
+
+.PHONY : rebuild_cache/fast
 
 # The main all target
 all: cmake_check_build_system
@@ -120,7 +120,7 @@ CBS-K: cmake_check_build_system
 
 # fast build rule for target.
 CBS-K/fast:
-	$(MAKE) -f CBSH-rect-cmake/CMakeFiles/CBS-K.dir/build.make CBSH-rect-cmake/CMakeFiles/CBS-K.dir/build
+	$(MAKE) -f CMakeFiles/CBS-K.dir/build.make CMakeFiles/CBS-K.dir/build
 .PHONY : CBS-K/fast
 
 #=============================================================================
@@ -133,8 +133,305 @@ others: cmake_check_build_system
 
 # fast build rule for target.
 others/fast:
-	$(MAKE) -f CBSH-rect-cmake/CMakeFiles/others.dir/build.make CBSH-rect-cmake/CMakeFiles/others.dir/build
+	$(MAKE) -f CMakeFiles/others.dir/build.make CMakeFiles/others.dir/build
 .PHONY : others/fast
+
+ICBSNode.o: ICBSNode.cpp.o
+
+.PHONY : ICBSNode.o
+
+# target to build an object file
+ICBSNode.cpp.o:
+	$(MAKE) -f CMakeFiles/others.dir/build.make CMakeFiles/others.dir/ICBSNode.cpp.o
+.PHONY : ICBSNode.cpp.o
+
+ICBSNode.i: ICBSNode.cpp.i
+
+.PHONY : ICBSNode.i
+
+# target to preprocess a source file
+ICBSNode.cpp.i:
+	$(MAKE) -f CMakeFiles/others.dir/build.make CMakeFiles/others.dir/ICBSNode.cpp.i
+.PHONY : ICBSNode.cpp.i
+
+ICBSNode.s: ICBSNode.cpp.s
+
+.PHONY : ICBSNode.s
+
+# target to generate assembly for a file
+ICBSNode.cpp.s:
+	$(MAKE) -f CMakeFiles/others.dir/build.make CMakeFiles/others.dir/ICBSNode.cpp.s
+.PHONY : ICBSNode.cpp.s
+
+ICBSSearch.o: ICBSSearch.cpp.o
+
+.PHONY : ICBSSearch.o
+
+# target to build an object file
+ICBSSearch.cpp.o:
+	$(MAKE) -f CMakeFiles/others.dir/build.make CMakeFiles/others.dir/ICBSSearch.cpp.o
+.PHONY : ICBSSearch.cpp.o
+
+ICBSSearch.i: ICBSSearch.cpp.i
+
+.PHONY : ICBSSearch.i
+
+# target to preprocess a source file
+ICBSSearch.cpp.i:
+	$(MAKE) -f CMakeFiles/others.dir/build.make CMakeFiles/others.dir/ICBSSearch.cpp.i
+.PHONY : ICBSSearch.cpp.i
+
+ICBSSearch.s: ICBSSearch.cpp.s
+
+.PHONY : ICBSSearch.s
+
+# target to generate assembly for a file
+ICBSSearch.cpp.s:
+	$(MAKE) -f CMakeFiles/others.dir/build.make CMakeFiles/others.dir/ICBSSearch.cpp.s
+.PHONY : ICBSSearch.cpp.s
+
+LLNode.o: LLNode.cpp.o
+
+.PHONY : LLNode.o
+
+# target to build an object file
+LLNode.cpp.o:
+	$(MAKE) -f CMakeFiles/others.dir/build.make CMakeFiles/others.dir/LLNode.cpp.o
+.PHONY : LLNode.cpp.o
+
+LLNode.i: LLNode.cpp.i
+
+.PHONY : LLNode.i
+
+# target to preprocess a source file
+LLNode.cpp.i:
+	$(MAKE) -f CMakeFiles/others.dir/build.make CMakeFiles/others.dir/LLNode.cpp.i
+.PHONY : LLNode.cpp.i
+
+LLNode.s: LLNode.cpp.s
+
+.PHONY : LLNode.s
+
+# target to generate assembly for a file
+LLNode.cpp.s:
+	$(MAKE) -f CMakeFiles/others.dir/build.make CMakeFiles/others.dir/LLNode.cpp.s
+.PHONY : LLNode.cpp.s
+
+MDD.o: MDD.cpp.o
+
+.PHONY : MDD.o
+
+# target to build an object file
+MDD.cpp.o:
+	$(MAKE) -f CMakeFiles/others.dir/build.make CMakeFiles/others.dir/MDD.cpp.o
+.PHONY : MDD.cpp.o
+
+MDD.i: MDD.cpp.i
+
+.PHONY : MDD.i
+
+# target to preprocess a source file
+MDD.cpp.i:
+	$(MAKE) -f CMakeFiles/others.dir/build.make CMakeFiles/others.dir/MDD.cpp.i
+.PHONY : MDD.cpp.i
+
+MDD.s: MDD.cpp.s
+
+.PHONY : MDD.s
+
+# target to generate assembly for a file
+MDD.cpp.s:
+	$(MAKE) -f CMakeFiles/others.dir/build.make CMakeFiles/others.dir/MDD.cpp.s
+.PHONY : MDD.cpp.s
+
+RectangleReasoning.o: RectangleReasoning.cpp.o
+
+.PHONY : RectangleReasoning.o
+
+# target to build an object file
+RectangleReasoning.cpp.o:
+	$(MAKE) -f CMakeFiles/others.dir/build.make CMakeFiles/others.dir/RectangleReasoning.cpp.o
+.PHONY : RectangleReasoning.cpp.o
+
+RectangleReasoning.i: RectangleReasoning.cpp.i
+
+.PHONY : RectangleReasoning.i
+
+# target to preprocess a source file
+RectangleReasoning.cpp.i:
+	$(MAKE) -f CMakeFiles/others.dir/build.make CMakeFiles/others.dir/RectangleReasoning.cpp.i
+.PHONY : RectangleReasoning.cpp.i
+
+RectangleReasoning.s: RectangleReasoning.cpp.s
+
+.PHONY : RectangleReasoning.s
+
+# target to generate assembly for a file
+RectangleReasoning.cpp.s:
+	$(MAKE) -f CMakeFiles/others.dir/build.make CMakeFiles/others.dir/RectangleReasoning.cpp.s
+.PHONY : RectangleReasoning.cpp.s
+
+SingleAgentICBS.o: SingleAgentICBS.cpp.o
+
+.PHONY : SingleAgentICBS.o
+
+# target to build an object file
+SingleAgentICBS.cpp.o:
+	$(MAKE) -f CMakeFiles/others.dir/build.make CMakeFiles/others.dir/SingleAgentICBS.cpp.o
+.PHONY : SingleAgentICBS.cpp.o
+
+SingleAgentICBS.i: SingleAgentICBS.cpp.i
+
+.PHONY : SingleAgentICBS.i
+
+# target to preprocess a source file
+SingleAgentICBS.cpp.i:
+	$(MAKE) -f CMakeFiles/others.dir/build.make CMakeFiles/others.dir/SingleAgentICBS.cpp.i
+.PHONY : SingleAgentICBS.cpp.i
+
+SingleAgentICBS.s: SingleAgentICBS.cpp.s
+
+.PHONY : SingleAgentICBS.s
+
+# target to generate assembly for a file
+SingleAgentICBS.cpp.s:
+	$(MAKE) -f CMakeFiles/others.dir/build.make CMakeFiles/others.dir/SingleAgentICBS.cpp.s
+.PHONY : SingleAgentICBS.cpp.s
+
+agents_loader.o: agents_loader.cpp.o
+
+.PHONY : agents_loader.o
+
+# target to build an object file
+agents_loader.cpp.o:
+	$(MAKE) -f CMakeFiles/others.dir/build.make CMakeFiles/others.dir/agents_loader.cpp.o
+.PHONY : agents_loader.cpp.o
+
+agents_loader.i: agents_loader.cpp.i
+
+.PHONY : agents_loader.i
+
+# target to preprocess a source file
+agents_loader.cpp.i:
+	$(MAKE) -f CMakeFiles/others.dir/build.make CMakeFiles/others.dir/agents_loader.cpp.i
+.PHONY : agents_loader.cpp.i
+
+agents_loader.s: agents_loader.cpp.s
+
+.PHONY : agents_loader.s
+
+# target to generate assembly for a file
+agents_loader.cpp.s:
+	$(MAKE) -f CMakeFiles/others.dir/build.make CMakeFiles/others.dir/agents_loader.cpp.s
+.PHONY : agents_loader.cpp.s
+
+compute_heuristic.o: compute_heuristic.cpp.o
+
+.PHONY : compute_heuristic.o
+
+# target to build an object file
+compute_heuristic.cpp.o:
+	$(MAKE) -f CMakeFiles/others.dir/build.make CMakeFiles/others.dir/compute_heuristic.cpp.o
+.PHONY : compute_heuristic.cpp.o
+
+compute_heuristic.i: compute_heuristic.cpp.i
+
+.PHONY : compute_heuristic.i
+
+# target to preprocess a source file
+compute_heuristic.cpp.i:
+	$(MAKE) -f CMakeFiles/others.dir/build.make CMakeFiles/others.dir/compute_heuristic.cpp.i
+.PHONY : compute_heuristic.cpp.i
+
+compute_heuristic.s: compute_heuristic.cpp.s
+
+.PHONY : compute_heuristic.s
+
+# target to generate assembly for a file
+compute_heuristic.cpp.s:
+	$(MAKE) -f CMakeFiles/others.dir/build.make CMakeFiles/others.dir/compute_heuristic.cpp.s
+.PHONY : compute_heuristic.cpp.s
+
+driver.o: driver.cpp.o
+
+.PHONY : driver.o
+
+# target to build an object file
+driver.cpp.o:
+	$(MAKE) -f CMakeFiles/CBS-K.dir/build.make CMakeFiles/CBS-K.dir/driver.cpp.o
+.PHONY : driver.cpp.o
+
+driver.i: driver.cpp.i
+
+.PHONY : driver.i
+
+# target to preprocess a source file
+driver.cpp.i:
+	$(MAKE) -f CMakeFiles/CBS-K.dir/build.make CMakeFiles/CBS-K.dir/driver.cpp.i
+.PHONY : driver.cpp.i
+
+driver.s: driver.cpp.s
+
+.PHONY : driver.s
+
+# target to generate assembly for a file
+driver.cpp.s:
+	$(MAKE) -f CMakeFiles/CBS-K.dir/build.make CMakeFiles/CBS-K.dir/driver.cpp.s
+.PHONY : driver.cpp.s
+
+flat_map_loader.o: flat_map_loader.cpp.o
+
+.PHONY : flat_map_loader.o
+
+# target to build an object file
+flat_map_loader.cpp.o:
+	$(MAKE) -f CMakeFiles/others.dir/build.make CMakeFiles/others.dir/flat_map_loader.cpp.o
+.PHONY : flat_map_loader.cpp.o
+
+flat_map_loader.i: flat_map_loader.cpp.i
+
+.PHONY : flat_map_loader.i
+
+# target to preprocess a source file
+flat_map_loader.cpp.i:
+	$(MAKE) -f CMakeFiles/others.dir/build.make CMakeFiles/others.dir/flat_map_loader.cpp.i
+.PHONY : flat_map_loader.cpp.i
+
+flat_map_loader.s: flat_map_loader.cpp.s
+
+.PHONY : flat_map_loader.s
+
+# target to generate assembly for a file
+flat_map_loader.cpp.s:
+	$(MAKE) -f CMakeFiles/others.dir/build.make CMakeFiles/others.dir/flat_map_loader.cpp.s
+.PHONY : flat_map_loader.cpp.s
+
+map_loader.o: map_loader.cpp.o
+
+.PHONY : map_loader.o
+
+# target to build an object file
+map_loader.cpp.o:
+	$(MAKE) -f CMakeFiles/others.dir/build.make CMakeFiles/others.dir/map_loader.cpp.o
+.PHONY : map_loader.cpp.o
+
+map_loader.i: map_loader.cpp.i
+
+.PHONY : map_loader.i
+
+# target to preprocess a source file
+map_loader.cpp.i:
+	$(MAKE) -f CMakeFiles/others.dir/build.make CMakeFiles/others.dir/map_loader.cpp.i
+.PHONY : map_loader.cpp.i
+
+map_loader.s: map_loader.cpp.s
+
+.PHONY : map_loader.s
+
+# target to generate assembly for a file
+map_loader.cpp.s:
+	$(MAKE) -f CMakeFiles/others.dir/build.make CMakeFiles/others.dir/map_loader.cpp.s
+.PHONY : map_loader.cpp.s
 
 # Help Target
 help:
@@ -142,10 +439,43 @@ help:
 	@echo "... all (the default if no target is provided)"
 	@echo "... clean"
 	@echo "... depend"
-	@echo "... rebuild_cache"
 	@echo "... edit_cache"
+	@echo "... rebuild_cache"
 	@echo "... CBS-K"
 	@echo "... others"
+	@echo "... ICBSNode.o"
+	@echo "... ICBSNode.i"
+	@echo "... ICBSNode.s"
+	@echo "... ICBSSearch.o"
+	@echo "... ICBSSearch.i"
+	@echo "... ICBSSearch.s"
+	@echo "... LLNode.o"
+	@echo "... LLNode.i"
+	@echo "... LLNode.s"
+	@echo "... MDD.o"
+	@echo "... MDD.i"
+	@echo "... MDD.s"
+	@echo "... RectangleReasoning.o"
+	@echo "... RectangleReasoning.i"
+	@echo "... RectangleReasoning.s"
+	@echo "... SingleAgentICBS.o"
+	@echo "... SingleAgentICBS.i"
+	@echo "... SingleAgentICBS.s"
+	@echo "... agents_loader.o"
+	@echo "... agents_loader.i"
+	@echo "... agents_loader.s"
+	@echo "... compute_heuristic.o"
+	@echo "... compute_heuristic.i"
+	@echo "... compute_heuristic.s"
+	@echo "... driver.o"
+	@echo "... driver.i"
+	@echo "... driver.s"
+	@echo "... flat_map_loader.o"
+	@echo "... flat_map_loader.i"
+	@echo "... flat_map_loader.s"
+	@echo "... map_loader.o"
+	@echo "... map_loader.i"
+	@echo "... map_loader.s"
 .PHONY : help
 
 

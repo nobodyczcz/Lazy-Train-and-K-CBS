@@ -1,9 +1,13 @@
 #include "MDD.h"
+#include "flat_map_loader.h"
+
 #include <iostream>
 
-bool MDD::buildMDD(const std::vector <std::list< std::pair<int, int> > >& constraints, int numOfLevels, const SingleAgentICBS & solver)
+template<class Map>
+bool MDD<Map>::buildMDD(const std::vector <std::list< std::pair<int, int> > >& constraints, int numOfLevels, SingleAgentICBS<Map> & solver)
 {
 	MDDNode* root = new MDDNode(solver.start_location, NULL); // Root
+	root->heading = solver.start_heading;
 	std::queue<MDDNode*> open;
 	std::list<MDDNode*> closed;
 	open.push(root);
@@ -26,17 +30,19 @@ bool MDD::buildMDD(const std::vector <std::list< std::pair<int, int> > >& constr
 		}
 		// We want (g + 1)+h <= f = numOfLevels - 1, so h <= numOfLevels - g. -1 because it's the bound of the children.
 		double heuristicBound = numOfLevels - node->level - 2+ 0.001; 
-		for (int i = 0; i < 5; i++) // Try every possible move. We only add backward edges in this step.
+
+		vector<pair<int, int>> transitions = solver.ml->get_transitions(node->location,node->heading,false);
+
+		for (const pair<int, int> move : transitions)
 		{
-			int newLoc = node->location + solver.moves_offset[i];
-			if (solver.validMove(node->location, newLoc) && 
-				solver.my_heuristic[newLoc] < heuristicBound && 
+			int newLoc = move.first;
+			if ( solver.my_heuristic[newLoc].heading[move.second] < heuristicBound && 
 				!solver.isConstrained(node->location, newLoc, node->level + 1, &constraints)) // valid move
 			{
 				std::list<MDDNode*>::reverse_iterator child = closed.rbegin();
 				bool find = false;
 				for (; child != closed.rend() && ((*child)->level == node->level + 1); ++child)
-					if ((*child)->location == newLoc) // If the child node exists
+					if ((*child)->location == newLoc && ((*child)->heading == move.second)) // If the child node exists
 					{
 						(*child)->parents.push_back(node); // then add corresponding parent link and child link
 						find = true;
@@ -45,6 +51,10 @@ bool MDD::buildMDD(const std::vector <std::list< std::pair<int, int> > >& constr
 				if (!find) // Else generate a new mdd node
 				{
 					MDDNode* childNode = new MDDNode(newLoc, node);
+					if (newLoc == node->location || node->heading == -1)
+						childNode->heading = node->heading;
+					else
+						childNode->heading = move.second;
 					open.push(childNode);
 					closed.push_back(childNode);
 				}
@@ -74,8 +84,8 @@ bool MDD::buildMDD(const std::vector <std::list< std::pair<int, int> > >& constr
 	return true;
 }
 
-
-void MDD::deleteNode(MDDNode* node)
+template<class Map>
+void MDD<Map>::deleteNode(MDDNode* node)
 {
 	levels[node->level].remove(node);
 	for (std::list<MDDNode*>::iterator child = node->children.begin(); child != node->children.end(); ++child)
@@ -92,7 +102,8 @@ void MDD::deleteNode(MDDNode* node)
 	}
 }
 
-void MDD::clear()
+template<class Map>
+void MDD<Map>::clear()
 {
 	if(levels.empty())
 		return;
@@ -103,7 +114,8 @@ void MDD::clear()
 	}
 }
 
-MDDNode* MDD::find(int location, int level) 
+template<class Map>
+MDDNode* MDD<Map>::find(int location, int level)
 {
 	if(level < levels.size())
 		for (std::list<MDDNode*>::iterator it = levels[level].begin(); it != levels[level].end(); ++it)
@@ -112,7 +124,8 @@ MDDNode* MDD::find(int location, int level)
 	return NULL;
 }
 
-MDD::MDD(MDD & cpy) // deep copy
+template<class Map>
+MDD<Map>::MDD(MDD & cpy) // deep copy
 {
 	levels.resize(cpy.levels.size());
 	MDDNode* root = new MDDNode(cpy.levels[0].front()->location, NULL);
@@ -142,7 +155,12 @@ MDD::MDD(MDD & cpy) // deep copy
 	}
 }
 
-MDD::~MDD()
+template<class Map>
+MDD<Map>::~MDD()
 {
 	clear();
 }
+
+template class MDD<MapLoader>;
+template class MDD<FlatlandLoader>;
+

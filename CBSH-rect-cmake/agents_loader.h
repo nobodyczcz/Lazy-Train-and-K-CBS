@@ -9,6 +9,8 @@
 #include <vector>
 #include <utility>
 #include "map_loader.h"
+#include <boost/python.hpp>
+
 
 using namespace std;
 
@@ -17,11 +19,13 @@ class AgentsLoader {
   int num_of_agents;
   vector< pair<int, int> > initial_locations;
   vector< pair<int, int> > goal_locations;
+  vector<int> headings;
   vector<double> max_v;  // entry [i] is the max translational velocity for agent i
   vector<double> max_w;  // entry [i] is the max rotational velocity for agent i
   vector<double> max_a;  // entry [i] is the max accelration for agent i
   AgentsLoader(const std::string fname, const MapLoader &ml, int agentsNum);
   AgentsLoader();
+  AgentsLoader(boost::python::object agents);
   void addAgent ( int start_row, int start_col, int goal_row, int goal_col );
   void printAgentsInitGoal ();
   void saveToFile(const std::string fname);

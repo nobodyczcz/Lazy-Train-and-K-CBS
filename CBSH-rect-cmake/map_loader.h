@@ -3,8 +3,18 @@
 
 #include <string>
 #include <vector>
+#include <boost/python.hpp>
+
+namespace p = boost::python;
+using namespace std;
 
 enum constraint_strategy { CBS, ICBS, CBSH, CBSH_CR, CBSH_R, CBSH_RM, STRATEGY_COUNT };
+
+struct railCell {
+	int transitions;
+	bool isTurn;
+	bool isDeadEnd;
+};
 
 class MapLoader 
 {
@@ -12,15 +22,21 @@ class MapLoader
   bool* my_map;
   int rows;
   int cols;
+  boost::python::object rail;
+
 
   int start_loc;
   int goal_loc;
 
   enum valid_moves_t { NORTH, EAST, SOUTH, WEST, WAIT_MOVE, MOVE_COUNT };  // MOVE_COUNT is the enum's size
-  int* moves_offset;
+  int *moves_offset;
+  bool validMove(int curr, int next);
 
   MapLoader(std::string fname); // load map from file
   MapLoader(int rows, int cols); // initialize new [rows x cols] empty map
+  MapLoader(p::object rail1, int rows, int cols);
+  MapLoader();
+  vector<pair<int, int>> get_transitions(int loc, int heading, int noWait);
   inline bool is_blocked (int row, int col) const { return my_map[row * this->cols + col]; }
   inline bool is_blocked (int loc) const { return my_map[loc]; }
   inline size_t map_size() const { return rows * cols; }
@@ -36,4 +52,3 @@ class MapLoader
 
   ~MapLoader();
 };
-

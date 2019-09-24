@@ -9,10 +9,12 @@
 
 #include "LLNode.h"
 #include "map_loader.h"
+#include "compute_heuristic.h"
 #include <boost/heap/fibonacci_heap.hpp>
 #include <google/dense_hash_map>
+using namespace std;
 
-
+template<class Map>
 class SingleAgentICBS
 {
 public:
@@ -28,12 +30,12 @@ public:
 
 	int start_location;
 	int goal_location;
+	int start_heading;
 
-	const bool* my_map;
+	Map* ml;
 	int map_size;
 	int num_col;
-	const int* moves_offset;
-	std::vector<int> my_heuristic;  // this is the precomputed heuristic for this agent
+	std::vector<hvals> my_heuristic;  // this is the precomputed heuristic for this agent
 
 	uint64_t num_expanded;
 	uint64_t num_generated;
@@ -67,7 +69,7 @@ public:
 	}
 
 	// Updates the path datamember
-	void updatePath(const LLNode* goal, std::vector<PathEntry> &path); 
+	void updatePath(const LLNode* goal, std::vector<PathEntry> &path);
 
 	// Return the number of conflicts between the known_paths' (by looking at the reservation table) for the move [curr_id,next_id].
 	// Returns 0 if no conflict, 1 for vertex or edge conflict, 2 for both.
@@ -79,13 +81,13 @@ public:
 	// lowerbound is the lowerbound of the length of the path
 	// max_plan_len used to compute the size of res_table
 	bool findPath(std::vector<PathEntry> &path, double f_weight, const std::vector < std::list< std::pair<int, int> > >* constraints, const bool* res_table, size_t max_plan_len, double lowerbound, std::clock_t start=0, int time_limit=0);
-
 	bool validMove(int curr, int next) const; // whetehr curr->next is a valid move
 
 	inline void releaseClosedListNodes(hashtable_t* allNodes_table);
 
-	SingleAgentICBS(int start_location, int goal_location, const bool* my_map, int map_size, const int* moves_offset, int num_col);
+	SingleAgentICBS(int start_location, int goal_location,  Map* ml,int start_heading = 4);
 	~SingleAgentICBS();
 
 };
+
 

@@ -15,11 +15,34 @@
 #include <ctime>
 using namespace boost;
 using namespace std;
+namespace p = boost::python;
+
 
 int RANDOM_WALK_STEPS = 100000;
 
-AgentsLoader::AgentsLoader(string fname, const MapLoader &ml, int agentsNum = 0){
+AgentsLoader::AgentsLoader(p::object agents) {
+	int agentsNum = p::len(agents);
+	this->num_of_agents = agentsNum;
+	for (int i = 0; i < num_of_agents; i++) {
+		pair<int, int> initial;
+		pair<int, int> goal;
+		p::tuple iniTuple(agents[i].attr("position"));
+		initial.first = p::extract<int>(iniTuple[0]);
+		initial.second = p::extract<int>(iniTuple[1]);
+		p::tuple goalTuple(agents[i].attr("target"));
+		goal.first = p::extract<int>(goalTuple[0]);
+		goal.second = p::extract<int>(goalTuple[1]);
+		int heading = p::extract<int>(agents[i].attr("direction"));
+		this->initial_locations.push_back(initial);
+		this->goal_locations.push_back(goal);
+		this->headings.push_back(heading);
 
+	}
+
+
+}
+
+AgentsLoader::AgentsLoader(string fname, const MapLoader &ml, int agentsNum = 0){
   string line;
 
   ifstream myfile (fname.c_str());
@@ -49,6 +72,8 @@ AgentsLoader::AgentsLoader(string fname, const MapLoader &ml, int agentsNum = 0)
       curr_pair.second = atoi ( (*c_beg).c_str() );
       //      cout << "GOAL[" << curr_pair.first << "," << curr_pair.second << "]" << endl;
       this->goal_locations.push_back(curr_pair);
+	  this->headings.push_back(4);
+
       // read max velocity and accelration for agent i
      /* c_beg++;
       this->max_v.push_back(atof((*c_beg).c_str()));
@@ -127,6 +152,8 @@ AgentsLoader::AgentsLoader(string fname, const MapLoader &ml, int agentsNum = 0)
 				//update goal
 				this->goal_locations.push_back(make_pair(goal / ml.cols, goal % ml.cols));
 				goals[goal] = true;
+				this->headings.push_back(4);
+
 				// update others
 				/*this->max_v.push_back(1);
 				this->max_w.push_back(1);
@@ -150,7 +177,7 @@ void AgentsLoader::printAgentsInitGoal () {
   cout << "AGENTS:" << endl;;
   for (int i=0; i<num_of_agents; i++) {
     cout << "Agent" << i << " : I=(" << initial_locations[i].first << "," << initial_locations[i].second << ") ; G=(" <<
-      goal_locations[i].first << "," << goal_locations[i].second << ")" << endl;
+      goal_locations[i].first << "," << goal_locations[i].second << ")" <<"Heading: "<<headings[i]<< endl;
   }
   cout << endl;
 }

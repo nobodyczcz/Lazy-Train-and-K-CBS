@@ -54,102 +54,82 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = "/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake"
+CMAKE_SOURCE_DIR = "/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/CBSH-rect-cmake"
 
 # The top-level build directory on which CMake was run.
 CMAKE_BINARY_DIR = "/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/build/linux-x64"
 
 #=============================================================================
-# Directory level rules for directory CBSH-rect-cmake
-
-# Convenience name for "all" pass in the directory.
-CBSH-rect-cmake/all: CBSH-rect-cmake/CMakeFiles/CBS-K.dir/all
-CBSH-rect-cmake/all: CBSH-rect-cmake/CMakeFiles/others.dir/all
-
-.PHONY : CBSH-rect-cmake/all
-
-# Convenience name for "clean" pass in the directory.
-CBSH-rect-cmake/clean: CBSH-rect-cmake/CMakeFiles/CBS-K.dir/clean
-CBSH-rect-cmake/clean: CBSH-rect-cmake/CMakeFiles/others.dir/clean
-
-.PHONY : CBSH-rect-cmake/clean
-
-# Convenience name for "preinstall" pass in the directory.
-CBSH-rect-cmake/preinstall:
-
-.PHONY : CBSH-rect-cmake/preinstall
-
-#=============================================================================
-# Target rules for target CBSH-rect-cmake/CMakeFiles/CBS-K.dir
+# Target rules for target CMakeFiles/CBS-K.dir
 
 # All Build rule for target.
-CBSH-rect-cmake/CMakeFiles/CBS-K.dir/all: CBSH-rect-cmake/CMakeFiles/others.dir/all
-	$(MAKE) -f CBSH-rect-cmake/CMakeFiles/CBS-K.dir/build.make CBSH-rect-cmake/CMakeFiles/CBS-K.dir/depend
-	$(MAKE) -f CBSH-rect-cmake/CMakeFiles/CBS-K.dir/build.make CBSH-rect-cmake/CMakeFiles/CBS-K.dir/build
+CMakeFiles/CBS-K.dir/all: CMakeFiles/others.dir/all
+	$(MAKE) -f CMakeFiles/CBS-K.dir/build.make CMakeFiles/CBS-K.dir/depend
+	$(MAKE) -f CMakeFiles/CBS-K.dir/build.make CMakeFiles/CBS-K.dir/build
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir="/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/build/linux-x64/CMakeFiles" --progress-num=1,2 "Built target CBS-K"
-.PHONY : CBSH-rect-cmake/CMakeFiles/CBS-K.dir/all
+.PHONY : CMakeFiles/CBS-K.dir/all
 
 # Include target in all.
-all: CBSH-rect-cmake/CMakeFiles/CBS-K.dir/all
+all: CMakeFiles/CBS-K.dir/all
 
 .PHONY : all
 
 # Build rule for subdir invocation for target.
-CBSH-rect-cmake/CMakeFiles/CBS-K.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start "/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/build/linux-x64/CMakeFiles" 12
-	$(MAKE) -f CMakeFiles/Makefile2 CBSH-rect-cmake/CMakeFiles/CBS-K.dir/all
+CMakeFiles/CBS-K.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start "/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/build/linux-x64/CMakeFiles" 13
+	$(MAKE) -f CMakeFiles/Makefile2 CMakeFiles/CBS-K.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start "/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/build/linux-x64/CMakeFiles" 0
-.PHONY : CBSH-rect-cmake/CMakeFiles/CBS-K.dir/rule
+.PHONY : CMakeFiles/CBS-K.dir/rule
 
 # Convenience name for target.
-CBS-K: CBSH-rect-cmake/CMakeFiles/CBS-K.dir/rule
+CBS-K: CMakeFiles/CBS-K.dir/rule
 
 .PHONY : CBS-K
 
 # clean rule for target.
-CBSH-rect-cmake/CMakeFiles/CBS-K.dir/clean:
-	$(MAKE) -f CBSH-rect-cmake/CMakeFiles/CBS-K.dir/build.make CBSH-rect-cmake/CMakeFiles/CBS-K.dir/clean
-.PHONY : CBSH-rect-cmake/CMakeFiles/CBS-K.dir/clean
+CMakeFiles/CBS-K.dir/clean:
+	$(MAKE) -f CMakeFiles/CBS-K.dir/build.make CMakeFiles/CBS-K.dir/clean
+.PHONY : CMakeFiles/CBS-K.dir/clean
 
 # clean rule for target.
-clean: CBSH-rect-cmake/CMakeFiles/CBS-K.dir/clean
+clean: CMakeFiles/CBS-K.dir/clean
 
 .PHONY : clean
 
 #=============================================================================
-# Target rules for target CBSH-rect-cmake/CMakeFiles/others.dir
+# Target rules for target CMakeFiles/others.dir
 
 # All Build rule for target.
-CBSH-rect-cmake/CMakeFiles/others.dir/all:
-	$(MAKE) -f CBSH-rect-cmake/CMakeFiles/others.dir/build.make CBSH-rect-cmake/CMakeFiles/others.dir/depend
-	$(MAKE) -f CBSH-rect-cmake/CMakeFiles/others.dir/build.make CBSH-rect-cmake/CMakeFiles/others.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir="/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/build/linux-x64/CMakeFiles" --progress-num=3,4,5,6,7,8,9,10,11,12 "Built target others"
-.PHONY : CBSH-rect-cmake/CMakeFiles/others.dir/all
+CMakeFiles/others.dir/all:
+	$(MAKE) -f CMakeFiles/others.dir/build.make CMakeFiles/others.dir/depend
+	$(MAKE) -f CMakeFiles/others.dir/build.make CMakeFiles/others.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir="/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/build/linux-x64/CMakeFiles" --progress-num=3,4,5,6,7,8,9,10,11,12,13 "Built target others"
+.PHONY : CMakeFiles/others.dir/all
 
 # Include target in all.
-all: CBSH-rect-cmake/CMakeFiles/others.dir/all
+all: CMakeFiles/others.dir/all
 
 .PHONY : all
 
 # Build rule for subdir invocation for target.
-CBSH-rect-cmake/CMakeFiles/others.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start "/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/build/linux-x64/CMakeFiles" 10
-	$(MAKE) -f CMakeFiles/Makefile2 CBSH-rect-cmake/CMakeFiles/others.dir/all
+CMakeFiles/others.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start "/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/build/linux-x64/CMakeFiles" 11
+	$(MAKE) -f CMakeFiles/Makefile2 CMakeFiles/others.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start "/mnt/c/Users/czcz2/Google Drive/MIT/GCITR/CBSH-rect-cmake/build/linux-x64/CMakeFiles" 0
-.PHONY : CBSH-rect-cmake/CMakeFiles/others.dir/rule
+.PHONY : CMakeFiles/others.dir/rule
 
 # Convenience name for target.
-others: CBSH-rect-cmake/CMakeFiles/others.dir/rule
+others: CMakeFiles/others.dir/rule
 
 .PHONY : others
 
 # clean rule for target.
-CBSH-rect-cmake/CMakeFiles/others.dir/clean:
-	$(MAKE) -f CBSH-rect-cmake/CMakeFiles/others.dir/build.make CBSH-rect-cmake/CMakeFiles/others.dir/clean
-.PHONY : CBSH-rect-cmake/CMakeFiles/others.dir/clean
+CMakeFiles/others.dir/clean:
+	$(MAKE) -f CMakeFiles/others.dir/build.make CMakeFiles/others.dir/clean
+.PHONY : CMakeFiles/others.dir/clean
 
 # clean rule for target.
-clean: CBSH-rect-cmake/CMakeFiles/others.dir/clean
+clean: CMakeFiles/others.dir/clean
 
 .PHONY : clean
 
