@@ -137,14 +137,14 @@ void ComputeHeuristic<Map>::getHVals(vector<hvals>& res)
 			if (s->possible_next_heading.size() > 0) {
 				for (int& next_heading : s->possible_next_heading) {
 					int heading = (next_heading + 2) % 4;
-					if(res[s->loc].heading[heading] == INT_MAX)
+					if(s->g_val < res[s->loc].heading[heading])
 					res[s->loc].heading[heading] = s->g_val;
 
 				}
 			}
 
 			int heading = (s->heading + 2) % 4;
-			if (res[s->loc].heading[heading] == INT_MAX)
+			if (s->g_val < res[s->loc].heading[heading])
 			res[s->loc].heading[heading] = s->g_val;
 
 			
