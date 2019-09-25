@@ -10,11 +10,7 @@ using namespace std;
 
 enum constraint_strategy { CBS, ICBS, CBSH, CBSH_CR, CBSH_R, CBSH_RM, STRATEGY_COUNT };
 
-struct railCell {
-	int transitions;
-	bool isTurn;
-	bool isDeadEnd;
-};
+
 
 class MapLoader 
 {

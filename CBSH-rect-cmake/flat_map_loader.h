@@ -9,6 +9,12 @@
 namespace p = boost::python;
 using namespace std;
 
+struct railCell {
+	int transitions;
+	bool isTurn;
+	bool isDeadEnd;
+};
+
 class FlatlandLoader:public MapLoader {
 public:
 	FlatlandLoader(boost::python::object rail1, int rows, int cols);
@@ -19,5 +25,7 @@ public:
 	railCell* railMap;
 	vector<pair<int, int>> get_transitions(int location, int heading = -1, bool noWait=false);
 	~FlatlandLoader();
+protected:
+	float blockRate;
 };
 

@@ -31,9 +31,14 @@ FlatlandLoader::FlatlandLoader(p::object rail1, int rows, int cols) {
 	moves_offset[MapLoader::valid_moves_t::WEST] = -1;
 
 	railMap = new railCell[rows*cols];
+	int notRailCount = 0;
 	for (int loc = 0; loc < rows*cols; loc++) {
 		railMap[loc] = get_full_cell(loc);
+		if (railMap[loc].transitions == 0)
+			notRailCount += 1;
+
 	}
+	blockRate = notRailCount / (rows*cols);
 
 };
 

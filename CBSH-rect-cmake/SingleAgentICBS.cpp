@@ -113,7 +113,7 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 	min_f_val = start->getFVal();
 
 	lower_bound = std::max(lowerbound, f_weight * min_f_val);
-	//cout << "start lower_bound: " << lower_bound << endl;
+	cout << "start lower_bound: " << lower_bound << endl;
 
 	std:clock_t runtime;
 	int lastGoalConsTime = extractLastGoalTimestep(goal_location, constraints); // the last timestep of a constraint at the goal
@@ -146,12 +146,12 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 			return true;
 		}
 		/*if(curr->parent != NULL)
-			cout << "Parent loc: " << curr->parent->loc << " heading: " << curr->parent->heading << " f: " << curr->parent->getFVal() << " g: " << curr->parent->g_val << " h: "<< curr->parent->h_val<<" num_internal_conf: " << curr->parent->num_internal_conf << endl;
+			cout << "Parent loc: " << curr->parent->loc << " heading: " << curr->parent->heading << " f: " << curr->parent->getFVal() << " g: " << curr->parent->g_val << " h: "<< curr->parent->h_val<<" num_internal_conf: " << curr->parent->num_internal_conf << "current lower boundary: "<< lower_bound << endl;
 
-		cout << "current loc: " << curr->loc << " heading: " << curr->heading<<" f: "<<curr->getFVal() << " g: " << curr->g_val << " h: " << curr->h_val << " num_internal_conf: " <<curr->num_internal_conf << endl;
-		
-		if (curr->loc == 17 && curr->heading == 3)
-			return false;*/
+		cout << "current loc: " << curr->loc << " heading: " << curr->heading<<" f: "<<curr->getFVal() << " g: " << curr->g_val << " h: " << curr->h_val << " num_internal_conf: " <<curr->num_internal_conf << "current lower boundary: " << lower_bound << endl;
+		*/
+		//if (curr->loc == 17 && curr->heading == 3)
+		//	return false;
 		
 
 		vector<pair<int, int>> transitions = ml->get_transitions(curr->loc, curr->heading,false);
@@ -270,7 +270,7 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 				}  // end update an existing node
 			}// end if case forthe move is legal
 		}  // end for loop that generates successors
-		   
+		//cout << "focal list size"<<focal_list.size() << endl;
 		// update FOCAL if min f-val increased
 		if (open_list.size() == 0)  // in case OPEN is empty, no path found
 			break;
