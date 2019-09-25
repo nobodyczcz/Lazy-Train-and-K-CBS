@@ -113,7 +113,7 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 	min_f_val = start->getFVal();
 
 	lower_bound = std::max(lowerbound, f_weight * min_f_val);
-	cout << "start lower_bound: " << lower_bound << endl;
+	//cout << "start lower_bound: " << lower_bound << endl;
 
 	std:clock_t runtime;
 	int lastGoalConsTime = extractLastGoalTimestep(goal_location, constraints); // the last timestep of a constraint at the goal
