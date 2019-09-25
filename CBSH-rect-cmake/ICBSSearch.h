@@ -35,6 +35,7 @@ public:
 	uint64_t HL_num_generated = 0;
 	uint64_t LL_num_expanded = 0;
 	uint64_t LL_num_generated = 0;
+	int numOfRectangle = 0;
 
 	bool solution_found;
 	int solution_cost;

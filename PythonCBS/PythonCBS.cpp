@@ -84,6 +84,7 @@ p::dict PythonCBS<Map>::getResultDetail() {
 	else
 		result["solution_cost"] = icbs->solution_cost;
 	result["algorithm"] = algo;
+	result["No_f_rectangle"] = icbs->numOfRectangle;
 	return result;
 
 }

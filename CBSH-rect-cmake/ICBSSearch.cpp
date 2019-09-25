@@ -935,11 +935,13 @@ bool ICBSSearch::runICBSSearch()
 
 		if (get<2>(*curr->conflict) < 0) // Rectangle conflict
 		{
+			numOfRectangle += 1;
 			int Rg = -1 - get<2>(*curr->conflict);
 			int S1_t = get<3>(*curr->conflict);
 			int S2_t = get<4>(*curr->conflict);
 			if (cons_strategy == constraint_strategy::CBSH_RM) // add modified barrier constraints
 			{
+				
 				if (debug_mode) {
 					cout << "add modified barrier constraint," << n1->agent_id << " " << n2->agent_id << endl;
 				}
