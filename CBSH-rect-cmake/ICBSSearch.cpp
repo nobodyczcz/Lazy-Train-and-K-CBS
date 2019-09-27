@@ -213,7 +213,7 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 {
 	if (debug_mode) {
 		cout << "start find conflict" << endl;
-		printPaths();
+		//printPaths();
 	}
 	if (curr.parent != NULL)
 	{
@@ -701,10 +701,10 @@ boost::python::list ICBSSearch::outputPaths()
 void ICBSSearch::updateFocalList(double old_lower_bound, double new_lower_bound, double f_weight) 
 {
 	for (ICBSNode* n : open_list) {
-		if (!n->in_focalList && n->f_val > old_lower_bound &&
+		if ( n->f_val > old_lower_bound &&
 			n->f_val <= new_lower_bound) {
 			n->focal_handle = focal_list.push(n);
-			n->in_focalList = true;
+
 		}
 	}
 }
@@ -1006,8 +1006,8 @@ bool ICBSSearch::runICBSSearch()
 			"|Open|=" << open_list.size() << endl;
 		solution_found = false;
 	}
-	if (debug_mode)
-		printPaths();
+	//if (debug_mode)
+	//	printPaths();
 	return solution_found;
 }
 

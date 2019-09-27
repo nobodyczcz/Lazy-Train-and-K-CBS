@@ -134,11 +134,14 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 				return false;
 			}
 		}
+		//cout << "focal size " << focal_list.size() << endl;
+
 		LLNode* curr = focal_list.top(); focal_list.pop();
 		open_list.erase(curr->open_handle);
 
 		curr->in_openlist = false;
 		num_expanded++;
+		//cout << "focal size " << focal_list.size() << endl;
 
 		// check if the popped node is a goal
 		if (curr->loc == goal_location && curr->timestep > lastGoalConsTime) 
@@ -211,8 +214,11 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 					next->in_openlist = true;
 					num_generated++;
 					if (next->getFVal() <= lower_bound) {
+						//cout << "focal size " << focal_list.size() << endl;
 						//cout << "put in focal list" << endl;
 						next->focal_handle = focal_list.push(next);
+						next->in_focallist = true;
+						//cout << "focal size " << focal_list.size() << endl;
 
 					}
 						

@@ -89,7 +89,7 @@ public:
 	size_t depth; // depath of this CT node
 	size_t makespan; // makespan over all paths
 	int num_of_collisions; // number of conflicts in the current paths
-	bool in_focalList;
+	bool in_focalList=false;
 	uint64_t time_expanded;
 	uint64_t time_generated;
 
