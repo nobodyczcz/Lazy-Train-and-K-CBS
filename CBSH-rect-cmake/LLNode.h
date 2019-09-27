@@ -29,8 +29,10 @@ public:
 	std::vector<int> possible_next_heading;
 	LLNode* parent=NULL;
 	int timestep = 0;
+	int time_generated=0;
 	int num_internal_conf = 0; 
 	bool in_openlist = false;
+	bool in_focallist = false;
 	ConflictList* conflist=NULL;
 
 	// the following is used to comapre nodes in the OPEN list
@@ -50,25 +52,40 @@ public:
 	{
 		bool operator()(const LLNode* n1, const LLNode* n2) const // returns true if n1 > n2
 		{
-			if (n1->num_internal_conf == n2->num_internal_conf)
-			{
+			
+			if (n1->num_internal_conf == n2->num_internal_conf) {
 				if (n1->g_val == n2->g_val)
 				{
-					/*if (rand() % 2 == 0)
-						return true;
-					else
-						return false;*/
-					if (n1->h_val == n2->h_val) {
-						if (rand() % 2 == 0)
-							return true;
-						else
-							return false;
+					if (n1->timestep == n2->timestep) {
+						return n1->time_generated > n2->time_generated; // break ties towards earlier generated nodes -
+																		// explore the tree more broadly (despite preferring depth)
+																		// (time_generated can't be equal)
 					}
-					return n1->h_val >= n2->h_val;
+					return n1->timestep < n2->timestep;  // break ties towards *more* depth - more work was done, even if it didn't reduce the number of conflicts or increase the cost yet
 				}
-				return n1->g_val <= n2->g_val;  // break ties towards larger g_vals
+				return n1->g_val < n2->g_val;// break ties towards *larger* g_val
 			}
-			return n1->num_internal_conf >= n2->num_internal_conf;  // n1 > n2 if it has more conflicts
+			return n1->num_internal_conf > n2->num_internal_conf;  // break ties towards fewer conflicts
+			  
+			//if (n1->num_internal_conf == n2->num_internal_conf)
+			//{
+			//	if (n1->g_val == n2->g_val)
+			//	{
+			//		/*if (rand() % 2 == 0)
+			//			return true;
+			//		else
+			//			return false;*/
+			//		if (n1->h_val == n2->h_val) {
+			//			if (rand() % 2 == 0)
+			//				return true;
+			//			else
+			//				return false;
+			//		}
+			//		return n1->h_val >= n2->h_val;
+			//	}
+			//	return n1->g_val <= n2->g_val;  // break ties towards larger g_vals
+			//}
+			//return n1->num_internal_conf >= n2->num_internal_conf;  // n1 > n2 if it has more conflicts
 		}
 	};  // used by FOCAL (heap) to compare nodes (top of the heap has min number-of-conflicts)
 

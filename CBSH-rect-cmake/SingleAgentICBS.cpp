@@ -113,12 +113,13 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 	start->open_handle = open_list.push(start);
 	start->focal_handle = focal_list.push(start);
 	start->in_openlist = true;
+	start->time_generated = 0;
 	allNodes_table[start] = start;
 	min_f_val = start->getFVal();
 
 	lower_bound = std::max(lowerbound, f_weight * min_f_val);
 	//cout << "start lower_bound: " << lower_bound << endl;
-
+	int time_generated = 0;
 	std:clock_t runtime;
 	int lastGoalConsTime = extractLastGoalTimestep(goal_location, constraints); // the last timestep of a constraint at the goal
 	//for (int h = 0; h < my_heuristic.size();h++) {
@@ -172,7 +173,7 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 		for (const pair<int, int> move : transitions)
 		{
 			int next_id = move.first;
-
+			time_generated += 1;
 			int next_timestep = curr->timestep + 1;
 			if (!isConstrained(curr->loc, next_id, next_timestep, constraints))
 			{
@@ -198,6 +199,7 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 				next->heading = next_heading;
 				next->actionToHere = move.second;
 				next->conflist = conflicts;
+				next->time_generated = time_generated;
 				//std::cout << "current: (" << curr->loc << "," << curr->heading << "," << curr->getFVal() << ") " << "next: (" << next->loc << "," << next->heading << "," << next->getFVal() << ")" << std::endl;
 
 				// try to retrieve it from the hash table
@@ -283,8 +285,10 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 			double new_lower_bound = std::max(lowerbound, f_weight * new_min_f_val);
 			for (LLNode* n : open_list) 
 			{
-				if (n->getFVal() > lower_bound && n->getFVal() <= new_lower_bound)
+				if (!n->in_focallist && n->getFVal() > lower_bound && n->getFVal() <= new_lower_bound) {
 					n->focal_handle = focal_list.push(n);
+					n->in_focallist = true;
+				}
 			}
 			min_f_val = new_min_f_val;
 			lower_bound = new_lower_bound;

@@ -21,10 +21,17 @@ public:
 		{
 			if (n1->num_of_collisions == n2->num_of_collisions)
 			{
-				if(rand()%2 == 0)
-					return true;
-				else
-					return false;
+				if (n1->g_val == n2->g_val) {
+					if (n1->h_val == n2->h_val) {
+						if (rand() % 2 == 0)
+							return true;
+						else
+							return false;
+					}
+					return n1->h_val <= n2->h_val;
+				}
+				return n1->g_val <= n2->g_val;
+
 			}
 			return n1->num_of_collisions >= n2->num_of_collisions;
 		}
@@ -82,7 +89,7 @@ public:
 	size_t depth; // depath of this CT node
 	size_t makespan; // makespan over all paths
 	int num_of_collisions; // number of conflicts in the current paths
-
+	bool in_focalList;
 	uint64_t time_expanded;
 	uint64_t time_generated;
 
