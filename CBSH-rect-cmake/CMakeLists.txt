@@ -28,6 +28,8 @@ set(all
 		MDD.cpp
 		RectangleReasoning.cpp
 		SingleAgentICBS.cpp
+		ReservationTable.h
+		ReservationTable.cpp
         )
 add_library(others ${all})
 target_link_libraries( CBS-K others )

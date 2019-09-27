@@ -1,5 +1,7 @@
 #include "ICBSSearch.h"
 #include "flat_map_loader.h"
+#include "ReservationTable.h"
+
 #include <ctime>
 #include <iostream>
 #include <limits.h>
@@ -227,82 +229,29 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 		// detect new conflicts
 		int a1 = curr.agent_id;
 
+		//collect conflict from path;
+		for (size_t t = 0; t < paths[curr.agent_id]->size(); t++) {
+			if (paths[curr.agent_id]->at(t).conflist != NULL) {
+				curr.unknownConf.splice(curr.unknownConf.end(), *(paths[curr.agent_id]->at(t).conflist));
+			}
+		}
+
+		//Detect any agent conflict with goal location
 		for (int a2 = 0; a2 < num_of_agents; a2++)
 		{
 			if(a1 == a2)
 				continue;
-			//else if (search_engines[a1]->num_of_conf == 0) // New path does not have conflicts with others before it reaches its goal
-			//{
-			//	if (paths[a1]->size() + 1 < paths[a2]->size())
-			//	{
-			//		int loc1 = paths[a1]->back().location;
-			//		for (size_t timestep = paths[a1]->size(); timestep < paths[a2]->size(); timestep++)
-			//		{
-			//			int loc2 = paths[a2]->at(timestep).location;
-			//			if (loc1 == loc2)
-			//			{
-			//				//for goal, current code won't influence k delay plan
-			//				curr.unknownConf.push_front(std::shared_ptr<tuple<int, int, int, int, int>>(new tuple<int, int, int, int, int>(a1, a2, loc1, -1, timestep))); // It's at least a semi conflict			
-			//			}
-			//		}
-			//	}
-			//	cout << "continue" << endl;
-			//	continue;
-			//}
-			size_t min_path_length = paths[a1]->size() < paths[a2]->size() ? paths[a1]->size() : paths[a2]->size();
-			for (size_t timestep = 0; timestep < min_path_length; timestep++)
-			{
-				int loc1 = paths[a1]->at(timestep).location;
-				bool findVertKDelay = false;
 
-				for (int k = -kDelay; k <= kDelay; k++) {// when k<0 and conflict, its a kdelay conflict for a2
-					if (timestep + k >= min_path_length)
-						continue;
-					int loc2 = paths[a2]->at(timestep + k).location;
-					//if (debug_mode)
-					//	cout <<"loc1: "<< "(" << loc1 / num_col << "," << loc1 % num_col << ")" << " loc2:" << "(" << loc2 / num_col << "," << loc2 % num_col << ")" <<endl;
-					//
+			if (paths[a1]->size() + 1 < paths[a2]->size())
+			{
+				int loc1 = paths[a1]->back().location;
+				for (size_t timestep = paths[a1]->size(); timestep < paths[a2]->size(); timestep++)
+				{
+					int loc2 = paths[a2]->at(timestep).location;
 					if (loc1 == loc2)
 					{
-						if (!findVertKDelay) {
-							//prevent add one constraint multiple times
-							if (debug_mode) {
-								cout << "find vertex conflict, k: "<< k << " " << "(" << loc1 / num_col << "," << loc1 % num_col << ")" << endl;
-							}
-							curr.unknownConf.push_back(std::shared_ptr<tuple<int, int, int, int, int>>(new tuple<int, int, int, int, int>(k < 0 ? a2 : a1, k < 0 ? a1 : a2, loc1, -1, k < 0 ? timestep + k : timestep)));
-							findVertKDelay = true;
-						}
-					}
-					
-				}
-				int loc2 = paths[a2]->at(timestep).location;
-				if (timestep < min_path_length - 1 
-					&& loc1 == paths[a2]->at(timestep + 1 ).location
-					&& loc2 == paths[a1]->at(timestep + 1).location)
-				{
-						if (debug_mode) {
-							cout << "find edge conflict " << "(" << loc1 / num_col << "," << loc1 % num_col << ")" << endl;
-						}
-						curr.unknownConf.push_back(std::shared_ptr<tuple<int, int, int, int, int>>(new tuple<int, int, int, int, int>(a1, a2, loc1, loc2, timestep + 1))); // edge conflict
-
-					
-				}
-
-				
-			}
-			if (paths[a1]->size() != paths[a2]->size())
-			{
-				//a1 and a2 do not reach goal at same time
-				int a1_ = paths[a1]->size() < paths[a2]->size() ? a1 : a2;
-				int a2_ = paths[a1]->size() < paths[a2]->size() ? a2 : a1;
-				int loc1 = paths[a1_]->back().location;
-				for (size_t timestep = min_path_length; timestep < paths[a2_]->size(); timestep++)
-				{
-					//shorter one's goal location do not conflict with longer one
-					int loc2 = paths[a2_]->at(timestep).location;
-					if (loc1 == loc2)
-					{
-						curr.unknownConf.push_front(std::shared_ptr<tuple<int, int, int, int, int>>(new tuple<int, int, int, int, int>(a1_, a2_, loc1, -1, timestep))); // It's at least a semi conflict			
+						//for goal, current code won't influence k delay plan
+						curr.unknownConf.push_front(std::shared_ptr<tuple<int, int, int, int, int>>(new tuple<int, int, int, int, int>(a1, a2, loc1, -1, timestep))); // It's at least a semi conflict			
 					}
 				}
 			}
@@ -315,49 +264,20 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 	{
 		for(int a1 = 0; a1 < num_of_agents ; a1++)
 		{
+			//collect conflicts from path
+			for (size_t t = 0; t < paths[a1]->size(); t++) {
+				if (paths[a1]->at(t).conflist != NULL) {
+					curr.unknownConf.splice(curr.unknownConf.end(), *(paths[a1]->at(t).conflist));
+				}
+			}
 			for (int a2 = a1+1 ; a2 < num_of_agents; a2++)
 			{
 
 				size_t min_path_length = paths[a1]->size() < paths[a2]->size() ? paths[a1]->size() : paths[a2]->size();
-				for (size_t timestep = 0; timestep < min_path_length; timestep++)
-				{
-					int loc1 = paths[a1]->at(timestep).location;
-					bool findVertKDelay = false;
-					bool findEdgeKDelay = false;
-					for (int k = -kDelay; k <= kDelay; k++) {// when k<0 and conflict, its a kdelay conflict for a2
-						if (timestep + k >= min_path_length)
-							continue;
-						int loc2 = paths[a2]->at(timestep + k).location;
-						//if (debug_mode)
-						//	cout << "loc1: " << "(" << loc1 / num_col << "," << loc1 % num_col << ")" << " loc2:" << "(" << loc2 / num_col << "," << loc2 % num_col << ")" << endl;
-						if (loc1 == loc2)
-						{
-							if (!findVertKDelay) {
-								if (debug_mode) {
-									cout << "find vertex conflict, k: " << k << " " << "(" << loc1 / num_col << "," << loc1 % num_col << ")" << endl;
-								}
-								//prevent add one constraint multiple times
-								curr.unknownConf.push_back(std::shared_ptr<tuple<int, int, int, int, int>>(new tuple<int, int, int, int, int>(k < 0 ? a2 : a1, k < 0 ? a1 : a2, loc1, -1, k < 0 ? timestep + k : timestep)));
-								findVertKDelay = true;
-
-							}
-						}
-						
-					}
-					int loc2 = paths[a2]->at(timestep).location;
-					if (timestep < min_path_length - 1
-						&& loc1 == paths[a2]->at(timestep + 1).location
-						&& loc2 == paths[a1]->at(timestep + 1).location)
-					{
-						if (debug_mode) {
-							cout << "find edge conflict " << "(" << loc1 / num_col << "," << loc1 % num_col << ")" << endl;
-						}
-						curr.unknownConf.push_back(std::shared_ptr<tuple<int, int, int, int, int>>(new tuple<int, int, int, int, int>(a1, a2, loc1, loc2, timestep + 1))); // edge conflict
-
+				//collect conflict from path;
+				
 					
-				}
-					
-				}
+				
 				if (paths[a1]->size() != paths[a2]->size())
 				{
 					//short one a1_ longer one a2_
@@ -533,6 +453,9 @@ std::shared_ptr<tuple<int, int, int, int, int>> ICBSSearch::classifyConflicts(IC
 							int new_type = classifyRectangleConflict(s1, s2, g1, g2, Rg, num_col);
 							if (new_type > type || (new_type == type && new_area > area))
 							{
+								/*cout << get<0>(*con)<<" " << get<1>(*con) << " " << get<2>(*con) << " " << get<3>(*con) << " " << get<4>(*con) << " " << endl;
+								cout << "s1 " << s1 << " s2 " << s2 << " g1 "<< g1 << " g2 "<< g2 << " rg "<< Rg.first<<" "<<Rg.second << endl;
+								*/
 								conflict = std::shared_ptr<tuple<int, int, int, int, int>>
 									(new tuple<int, int, int, int, int>(get<0>(*con), get<1>(*con), -1 - Rg.first * num_col - Rg.second, t1_start, t2_start));
 								type = new_type;
@@ -663,14 +586,14 @@ bool MultiMapICBSSearch<Map>::findPathForSingleAgent(ICBSNode*  node, int ag, do
 	vector < list< pair<int, int> > >* cons_vec = collectConstraints(curr, ag);
 	// build reservation table
 	size_t max_plan_len = node->makespan + 1;
-	bool* res_table = new bool[map_size * max_plan_len]();  // initialized to false
-	updateReservationTable(res_table, ag, *node);
+	ReservationTable* res_table = new ReservationTable(map_size,&paths,curr->agent_id);  // initialized to false
+
 	// find a path w.r.t cons_vec (and prioretize by res_table).
 	bool foundSol = search_engines[ag]->findPath(node->path, focal_w, cons_vec, res_table, max_plan_len, lowerbound,start,time_limit);
 	LL_num_expanded += search_engines[ag]->num_expanded;
 	LL_num_generated += search_engines[ag]->num_generated;
 	delete (cons_vec);
-	delete[] res_table;
+	delete (res_table);
 	if (foundSol)
 	{
 		node->g_val = node->g_val - paths[ag]->size() + node->path.size();
@@ -945,6 +868,7 @@ bool ICBSSearch::runICBSSearch()
 				if (debug_mode) {
 					cout << "add modified barrier constraint," << n1->agent_id << " " << n2->agent_id << endl;
 				}
+
 				addModifiedBarrierConstraints(*paths[get<0>(*curr->conflict)], *paths[get<1>(*curr->conflict)],
 					S1_t, S2_t, Rg, num_col, n1->constraints, n2->constraints,kDelay);
 			}
@@ -1096,23 +1020,23 @@ void MultiMapICBSSearch<Map>::initializeDummyStart() {
 	// initialize paths_found_initially
 	paths.resize(num_of_agents, NULL);
 	paths_found_initially.resize(num_of_agents);
+	ReservationTable* res_table = new ReservationTable(map_size);  // initialized to false
 	for (int i = 0; i < num_of_agents; i++) {
-
-		bool* res_table = new bool[map_size * (dummy_start->makespan + 1)]();  // initialized to false
-		updateReservationTable(res_table, i, *dummy_start);
 
 		//cout << "agent " << i << endl;
 		if (search_engines[i]->findPath(paths_found_initially[i], focal_w, NULL, res_table, dummy_start->makespan + 1, 0) == false)
 			cout << "NO SOLUTION EXISTS";
 
 		paths[i] = &paths_found_initially[i];
+		res_table->addPath(i, paths[i]);
 		dummy_start->makespan = max(dummy_start->makespan, paths_found_initially[i].size() - 1);
 
 		LL_num_expanded += search_engines[i]->num_expanded;
 		LL_num_generated += search_engines[i]->num_generated;
-		delete[] res_table;
 
 	}
+	delete (res_table);
+
 
 
 	if (debug_mode)
@@ -1195,7 +1119,7 @@ MultiMapICBSSearch<Map>::MultiMapICBSSearch(Map* ml, AgentsLoader& al, double f_
 		int init_loc = ml->linearize_coordinate((al.initial_locations[i]).first, (al.initial_locations[i]).second);
 		int goal_loc = ml->linearize_coordinate((al.goal_locations[i]).first, (al.goal_locations[i]).second);
 		ComputeHeuristic<Map> ch(init_loc, goal_loc, ml, al.headings[i]);
-		search_engines[i] = new SingleAgentICBS<Map>(init_loc, goal_loc, ml, al.headings[i]);
+		search_engines[i] = new SingleAgentICBS<Map>(init_loc, goal_loc, ml,i, al.headings[i],kDelay);
 		ch.getHVals(search_engines[i]->my_heuristic);
 		/*if (debug_mode) {
 			std::cout << "Heuristic table for " << i << ": ";

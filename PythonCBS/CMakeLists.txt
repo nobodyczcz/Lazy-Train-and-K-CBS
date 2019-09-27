@@ -4,8 +4,8 @@
 cmake_minimum_required (VERSION 3.8)
 
 IF(NOT CMAKE_BUILD_TYPE)
-  #SET(CMAKE_BUILD_TYPE "DEBUG")
-  SET(CMAKE_BUILD_TYPE "RELEASE")
+  SET(CMAKE_BUILD_TYPE "DEBUG")
+  #SET(CMAKE_BUILD_TYPE "RELEASE")
   #SET(CMAKE_BUILD_TYPE "RELWITHDEBINFO")
   #SET(CMAKE_BUILD_TYPE "MINSIZEREL")
 ENDIF()
@@ -33,6 +33,8 @@ ADD_LIBRARY(PythonCBS SHARED
 	../CBSH-rect-cmake/MDD.cpp
 	../CBSH-rect-cmake/RectangleReasoning.cpp
 	../CBSH-rect-cmake/SingleAgentICBS.cpp
+	../CBSH-rect-cmake/ReservationTable.h
+	../CBSH-rect-cmake/ReservationTable.cpp
     
 )
 

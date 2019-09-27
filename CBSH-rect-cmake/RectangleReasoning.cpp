@@ -203,6 +203,14 @@ void addModifiedBarrierConstraints(const std::vector<PathEntry>& path1, const st
 	int Rg_x = Rg / num_col;
 	int Rg_y = Rg % num_col;
 	int Rg_t = S1_t + abs(Rg_x - s1_x) + abs(Rg_y - s1_y);
+	//cout << "s1: " << s1_x << "," << s1_y << endl;
+	//cout << "s2: " << s2_x << "," << s2_y << endl;
+	//cout << "rg: " << Rg_x << "," << Rg_y << endl;
+	//cout << "Rg_t: " << Rg_t << endl;
+
+
+
+
 
 	int R1_x, R1_y, R2_x, R2_y;
 	if ((s1_x == s2_x && (s1_y - s2_y) * (s2_y - Rg_y) < 0) ||
@@ -234,6 +242,7 @@ void addModifiedVerticalBarrierConstraint(const std::vector<PathEntry>& path, in
 	int sign = Ri_x < Rg_x ? 1 : -1;
 	int Ri_t = Rg_t - abs(Ri_x - Rg_x);
 	int t1 = -1;
+	bool overallFound = false;
 	for (int t2 = Ri_t; t2 <= Rg_t; t2++)
 	{
 		int loc = (Ri_x + (t2 - Ri_t) * sign) * num_col + y;
@@ -241,9 +250,25 @@ void addModifiedVerticalBarrierConstraint(const std::vector<PathEntry>& path, in
 		for (int i = 0; i <= k; i++) {
 			if (t2 + i >= path.size())
 				continue;
+
+			//cout << "vertical "<<"loc="<< loc<< " k=" << i << endl;
+			//list<int>::const_iterator locs;
+			//for (locs = path[t2 + i].locations.begin(); locs != path[t2 + i].locations.end(); locs++)
+			//{
+			//	cout << (*locs) << " ";
+			//}
+			//cout << endl;
+
 			std::list<int>::const_iterator it = std::find(path[t2+i].locations.begin(), path[t2+i].locations.end(), loc);
-			if (it != path[t2 + i].locations.end())
+			if (it != path[t2 + i].locations.end()) {
 				found = true;
+				overallFound = true;
+			}
+			if (path[t2 + i].location == loc) {
+				found = true;
+				overallFound = true;
+			}
+
 		}
 		if (!found && t1 >= 0) // add constraints [t1, t2)
 		{
@@ -267,6 +292,13 @@ void addModifiedVerticalBarrierConstraint(const std::vector<PathEntry>& path, in
 			}
 		}
 	}
+	//cout << "ri: " << Ri_x << "," << y << endl;
+
+	//if (overallFound)
+	//	cout << "vertical rm success" << endl;
+	//else
+	//	cout << "vertical rm failed" << endl;
+	assert(overallFound && "RM barrier failed: vertical");
 }
 
 // add a horizontal modified barrier constraint
@@ -274,9 +306,23 @@ void addModifiedHorizontalBarrierConstraint(const std::vector<PathEntry>& path, 
 	int Ri_y, int Rg_y, int Rg_t, int num_col,
 	std::list<std::tuple<int, int, int>>& constraints, int k)
 {
+	/*for (int t = 0; t < path.size(); t++) {
+		std::cout << "(" << path.at(t).location / num_col << "," << path.at(t).location % num_col << ")";
+		list<int>::const_iterator locs;
+		for (locs = path.at(t).locations.begin(); locs != path.at(t).locations.end(); locs++)
+		{
+			cout << (*locs) << " ";
+		}
+		cout << "->";
+
+	}
+	std::cout << std::endl;*/
+	
+
 	int sign = Ri_y < Rg_y ? 1 : -1;
 	int Ri_t = Rg_t - abs(Ri_y - Rg_y);
 	int t1 = -1;
+	bool overallFound =false;
 	for (int t2 = Ri_t; t2 <= Rg_t; t2++)
 	{
 		int loc = (Ri_y + (t2 - Ri_t) * sign) + x * num_col;
@@ -284,9 +330,24 @@ void addModifiedHorizontalBarrierConstraint(const std::vector<PathEntry>& path, 
 		for (int i = 0; i <= k; i++) {
 			if (t2 + i >= path.size())
 				continue;
+
+			/*cout << "horizontal " << "loc=" << loc<<" t=" << t2 << " k=" << i << endl;
+			list<int>::const_iterator locs;
+			for (locs = path[t2 + i].locations.begin(); locs != path[t2 + i].locations.end(); locs++)
+			{
+				cout << (*locs) << " ";
+			}
+			cout << endl;*/
+
 			std::list<int>::const_iterator it = std::find(path[t2+i].locations.begin(), path[t2+i].locations.end(), loc);
-			if (it != path[t2 + i].locations.end())
+			if (it != path[t2 + i].locations.end()) {
 				found = true;
+				overallFound = true;
+			}
+			if (path[t2 + i].location == loc) {
+				found = true;
+				overallFound = true;
+			}
 		}
 		if (!found && t1 >= 0) // add constraints [t1, t2)
 		{
@@ -310,6 +371,15 @@ void addModifiedHorizontalBarrierConstraint(const std::vector<PathEntry>& path, 
 			}
 		}
 	}
+	//cout << "ri: " << x << "," << Ri_y << endl;
+
+	/*if (overallFound)
+		cout << "horizontal rm success" << endl;
+	else
+		cout << "horizontal rm failed" << endl;*/
+
+	assert(overallFound && "RM barrier failed, horizontal");
+
 }
 
 //Identify rectangle conflicts for CR/R

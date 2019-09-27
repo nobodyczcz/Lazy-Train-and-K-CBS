@@ -5,15 +5,18 @@
 #include <ctime>
 
 template<class Map>
-void SingleAgentICBS<Map>::updatePath(const LLNode* goal, std::vector<PathEntry> &path)
+void SingleAgentICBS<Map>::updatePath(LLNode* goal, std::vector<PathEntry> &path)
 {
 	path.resize(goal->timestep + 1);
-	const LLNode* curr = goal;
+	LLNode* curr = goal;
 	num_of_conf = goal->num_internal_conf;
 	for(int t = goal->timestep; t >= 0; t--)
 	{
 		path[t].location = curr->loc;
 		path[t].actionToHere = curr->heading;
+		delete(path[t].conflist);
+		path[t].conflist = curr->conflist;
+		curr->conflist = NULL;
 		curr = curr->parent;
 	}
 }
@@ -95,7 +98,8 @@ bool SingleAgentICBS<Map>::validMove(int curr, int next) const
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // return true if a path found (and updates vector<int> path) or false if no path exists
 template<class Map>
-bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weight, const std::vector < std::list< std::pair<int, int> > >* constraints, const bool* res_table, size_t max_plan_len, double lowerbound, std::clock_t start_clock ,int time_limit)
+bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weight, const std::vector < std::list< std::pair<int, int> > >* constraints, 
+	ReservationTable* res_table, size_t max_plan_len, double lowerbound, std::clock_t start_clock ,int time_limit)
 {
 	num_expanded = 0;
 	num_generated = 0;
@@ -145,13 +149,12 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 			allNodes_table.clear();
 			return true;
 		}
-		/*if(curr->parent != NULL)
-			cout << "Parent loc: " << curr->parent->loc << " heading: " << curr->parent->heading << " f: " << curr->parent->getFVal() << " g: " << curr->parent->g_val << " h: "<< curr->parent->h_val<<" num_internal_conf: " << curr->parent->num_internal_conf << "current lower boundary: "<< lower_bound << endl;
+		//if(curr->parent != NULL)
+		//	cout << "Parent loc: " << curr->parent->loc << " heading: " << curr->parent->heading << " f: " << curr->parent->getFVal() << " g: " << curr->parent->g_val << " h: "<< curr->parent->h_val<<" num_internal_conf: " << curr->parent->num_internal_conf << "current lower boundary: "<< lower_bound << endl;
 
-		cout << "current loc: " << curr->loc << " heading: " << curr->heading<<" f: "<<curr->getFVal() << " g: " << curr->g_val << " h: " << curr->h_val << " num_internal_conf: " <<curr->num_internal_conf << "current lower boundary: " << lower_bound << endl;
-		*/
-		//if (curr->loc == 17 && curr->heading == 3)
-		//	return false;
+		//cout << "current loc: " << curr->loc << " heading: " << curr->heading<<" f: "<<curr->getFVal() << " g: " << curr->g_val << " h: " << curr->h_val << " num_internal_conf: " <<curr->num_internal_conf << "current lower boundary: " << lower_bound << endl;
+		//
+		//
 		
 
 		vector<pair<int, int>> transitions = ml->get_transitions(curr->loc, curr->heading,false);
@@ -163,8 +166,6 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 		//	//	cout << moves_offset[m]<<" ";
 		//	//}
 		//	//cout << endl;
-
-
 		//}
 		//cout << endl;
 
@@ -189,13 +190,14 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 				//cout<<"next_id "<< next_id <<" curr heading "<< curr->heading<<" next heading "<<next_heading <<endl;
 				int next_h_val = my_heuristic[next_id].heading[next_heading];
 				int next_internal_conflicts = 0;
-				if (max_plan_len > 0)  // check if the reservation table is not empty (that is tha max_length of any other agent's plan is > 0)
-					next_internal_conflicts = curr->num_internal_conf + numOfConflictsForStep(curr->loc, next_id, next_timestep, res_table, max_plan_len);
+				ConflictList* conflicts = res_table->findConflict(agent_id, curr->loc, next_id, curr->timestep, kRobust);
+				next_internal_conflicts = curr->num_internal_conf + conflicts->size();
 				
 				// generate (maybe temporary) node
 				LLNode* next = new LLNode(next_id, next_g_val, next_h_val,	curr, next_timestep, next_internal_conflicts, false);
 				next->heading = next_heading;
 				next->actionToHere = move.second;
+				next->conflist = conflicts;
 				//std::cout << "current: (" << curr->loc << "," << curr->heading << "," << curr->getFVal() << ") " << "next: (" << next->loc << "," << next->heading << "," << next->getFVal() << ")" << std::endl;
 
 				// try to retrieve it from the hash table
@@ -306,8 +308,9 @@ inline void SingleAgentICBS<Map>::releaseClosedListNodes(hashtable_t* allNodes_t
 }
 
 template<class Map>
-SingleAgentICBS<Map>::SingleAgentICBS(int start_location, int goal_location,  Map* ml1, int start_heading):ml(ml1)
+SingleAgentICBS<Map>::SingleAgentICBS(int start_location, int goal_location,  Map* ml1,int agent_id, int start_heading, int kRobust):ml(ml1)
 {
+	this->agent_id = agent_id;
 	this->start_heading = start_heading;
 
 	this->start_location = start_location;
@@ -323,6 +326,7 @@ SingleAgentICBS<Map>::SingleAgentICBS(int start_location, int goal_location,  Ma
 
 	this->num_col = ml->cols;
 
+	this->kRobust = kRobust;
 	// initialize allNodes_table (hash table)
 	empty_node = new LLNode();
 	empty_node->loc = -1;

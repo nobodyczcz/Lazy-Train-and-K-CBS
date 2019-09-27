@@ -2,9 +2,11 @@
 #include <boost/heap/fibonacci_heap.hpp>
 #include <list>
 #include <functional>  // for std::hash (c++11 and above)
-
+#include <memory>
 using boost::heap::fibonacci_heap;
 using boost::heap::compare;
+
+typedef std::list<std::shared_ptr<std::tuple<int, int, int, int, int>>> ConflictList;
 
 struct PathEntry
 {
@@ -13,6 +15,7 @@ struct PathEntry
 	int actionToHere;
 	PathEntry(int loc = -1){location = loc; single = false;}
 	std::list<int> locations; // all possible locations at the same time step
+	ConflictList* conflist=NULL;
 };
 
 class LLNode
@@ -28,6 +31,7 @@ public:
 	int timestep = 0;
 	int num_internal_conf = 0; 
 	bool in_openlist = false;
+	ConflictList* conflist=NULL;
 
 	// the following is used to comapre nodes in the OPEN list
 	struct compare_node 
@@ -81,7 +85,9 @@ public:
 	LLNode(int loc, int g_val, int h_val, LLNode* parent, int timestep,
 		int num_internal_conf = 0, bool in_openlist = false);
 	inline double getFVal() const { return g_val + h_val; }
-	~LLNode(){}
+	~LLNode(){
+		delete(conflist);
+	}
 
 	// The following is used by googledensehash for checking whether two nodes are equal
 	// we say that two nodes, s1 and s2, are equal if
