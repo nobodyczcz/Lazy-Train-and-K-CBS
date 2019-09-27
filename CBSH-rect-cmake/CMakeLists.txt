@@ -4,9 +4,17 @@
 cmake_minimum_required (VERSION 3.8)
 
 # Add source to this project's executable.
+
+
+IF(NOT CMAKE_BUILD_TYPE)
+  #SET(CMAKE_BUILD_TYPE "DEBUG")
+  SET(CMAKE_BUILD_TYPE "RELEASE")
+  #SET(CMAKE_BUILD_TYPE "RELWITHDEBINFO")
+  #SET(CMAKE_BUILD_TYPE "MINSIZEREL")
+ENDIF()
 add_executable (CBS-K "driver.cpp")
 
-# TODO: Add tests and install targets if needed.
+
 set(all
 		flat_map_loader.h
 		flat_map_loader.cpp
