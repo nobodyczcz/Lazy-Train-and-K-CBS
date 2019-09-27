@@ -38,6 +38,8 @@ int main(int argc, char** argv)
 		("ignore-t0-conflict","Ignore t==0 k-delay conflict resolving")
 		("asyConstraint","Using asymmetry range constraint to resolve k-delay conflict. Else use symmetry range constraint ")
 		("short", "do not use long barrier constraint to resolve k delay rectangle conflict")
+		("only_generate_instance", po::value<std::string>()->default_value(""),"no searching")
+
 	;
 	po::variables_map vm;
 	po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -82,6 +84,12 @@ int main(int argc, char** argv)
 	else {
 		options1.shortBarrier = false;
 	}
+	if (vm["only_generate_instance"].as<string>()!="") {
+		al.saveToFile(vm["only_generate_instance"].as<string>());
+		return 0;
+	}
+	
+
 	constraint_strategy s;
 	if (vm["solver"].as<string>() == "ICBS")
 		s = constraint_strategy::ICBS;
