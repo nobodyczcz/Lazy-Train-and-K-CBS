@@ -42,7 +42,7 @@ vector<pair<int, int>> MapLoader::get_transitions(int loc, int heading, int noWa
 		pair<int, int> move;
 		int next_loc = loc + moves_offset[direction];
 		move.first = next_loc;
-		move.second = 4; //4 means no heading
+		move.second = -1; //-1 means no heading
 		if (validMove(loc, next_loc) && !my_map[next_loc])
 		{
 			transitions.push_back(move);
@@ -184,7 +184,6 @@ bool* MapLoader::get_map() const {
 }
 
 MapLoader::~MapLoader() {
-	std::cout << "maploader destructor" << std::endl;
   delete[] this->my_map;
   delete[] this->moves_offset;
 }

@@ -184,8 +184,8 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 				int next_g_val = curr->g_val + 1;
 				int next_heading;
 
-				if (curr->heading == 4) //heading == 4 means no heading info
-					next_heading = 4;
+				if (curr->heading == -1) //heading == 4 means no heading info
+					next_heading = -1;
 				else
 					if (move.second == 4) //move == 4 means wait
 						next_heading = curr->heading;

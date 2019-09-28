@@ -25,7 +25,7 @@ public:
 
 	bool operator == (const MDDNode & node) const
 	{
-		return (this->location == node.location) && (this->level == node.level);
+		return (this->location == node.location) && (this->level == node.level) && (this->heading == node.heading);
 	}
 
 
@@ -42,7 +42,7 @@ public:
 
 	bool buildMDD(const std::vector < std::list< std::pair<int, int> > >& constraints, 
 		int numOfLevels,  SingleAgentICBS<Map> &solver);
-
+	bool buildMDD(const std::vector <std::list< std::pair<int, int> > >& constraints, int numOfLevels, SingleAgentICBS<Map> & solver, int start, int start_time, int goal,int start_heading=-1);
 	MDDNode* find(int location, int level);
 	void deleteNode(MDDNode* node);
 	void clear();

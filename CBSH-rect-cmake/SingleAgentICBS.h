@@ -89,7 +89,7 @@ public:
 
 	inline void releaseClosedListNodes(hashtable_t* allNodes_table);
 
-	SingleAgentICBS(int start_location, int goal_location,  Map* ml,int agent_id,int start_heading = 4,int kRobust = 0);
+	SingleAgentICBS(int start_location, int goal_location,  Map* ml,int agent_id,int start_heading = -1,int kRobust = 0);
 	~SingleAgentICBS();
 
 };

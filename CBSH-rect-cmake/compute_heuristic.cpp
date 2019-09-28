@@ -54,7 +54,7 @@ void ComputeHeuristic<Map>::getHVals(vector<hvals>& res)
 		res[i].heading[1] = INT_MAX;
 		res[i].heading[2] = INT_MAX;
 		res[i].heading[3] = INT_MAX;
-		res[i].heading[4] = INT_MAX;
+		res[i].heading[-1] = INT_MAX;
 
 	}
 		
@@ -68,7 +68,7 @@ void ComputeHeuristic<Map>::getHVals(vector<hvals>& res)
 	nodes.set_empty_key(NULL);
 	dense_hash_map<LLNode*, fibonacci_heap<LLNode*, boost::heap::compare<LLNode::compare_node> >::handle_type, LLNode::NodeHasher, LLNode::eqnode>::iterator it; // will be used for find()
 
-	if (start_heading == 4) {
+	if (start_heading == -1) {
 		LLNode* root = new LLNode(root_location, 0, 0, NULL, 0);
 		root->heading = start_heading;
 		root->open_handle = heap.push(root);  // add root to heap
@@ -94,11 +94,11 @@ void ComputeHeuristic<Map>::getHVals(vector<hvals>& res)
 			int next_g_val = curr->g_val + 1;
 			LLNode* next = new LLNode(next_loc, next_g_val, 0, NULL, 0);
 
-			if (curr->heading == 4) //heading == 4 means no heading info
-				next->heading = 4;
+			if (curr->heading == -1) //heading == -1 means no heading info
+				next->heading = -1;
 			else
 				if (move.second == 4) //move == 4 means wait
-					next->heading == curr->heading;
+					next->heading = curr->heading;
 				else
 					next->heading = move.second;
 
@@ -127,7 +127,7 @@ void ComputeHeuristic<Map>::getHVals(vector<hvals>& res)
 	for (it = nodes.begin(); it != nodes.end(); it++) 
 	{
 		LLNode* s = (*it).first;
-		if (s->heading == 4) {
+		if (s->heading == -1) {
 			int heading;
 			heading = s->heading;
 			res[s->loc].heading[s->heading] = s->g_val;

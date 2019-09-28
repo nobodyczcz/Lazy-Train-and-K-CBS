@@ -4,11 +4,13 @@
 #include <utility>
 #include <stdlib.h>
 #include "map_loader.h"
+#include <boost/unordered_map.hpp>
+
 
 using namespace std;
 
 struct hvals {
-	int heading[5];
+	boost::unordered_map<int, int> heading;
 };
 template<class Map>
 class ComputeHeuristic 
@@ -32,13 +34,4 @@ class ComputeHeuristic
 
 };
 
-//class FlatlandComputeHeuristic :public ComputeHeuristic
-//{
-//public:
-//	FlatlandComputeHeuristic(int start_location, int goal_location, FlatlandLoader* fl0, int start_heading = 4);
-//	vector<pair<int, int>> get_transitions(int loc, int heading, int noWait = false);
-//private:
-//	FlatlandLoader* fl;
-//
-//};
 

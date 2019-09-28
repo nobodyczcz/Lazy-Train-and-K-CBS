@@ -13,6 +13,9 @@ bool MDD<Map>::buildMDD(const std::vector <std::list< std::pair<int, int> > >& c
 	open.push(root);
 	closed.push_back(root);
 	levels.resize(numOfLevels);
+	//cout << "start: " << solver.start_heading << endl;
+	//cout << "goal: " << solver.goal_location << endl;
+
 	while (!open.empty())
 	{
 		MDDNode* node = open.front();
@@ -23,6 +26,13 @@ bool MDD<Map>::buildMDD(const std::vector <std::list< std::pair<int, int> > >& c
 			levels[numOfLevels - 1].push_back(node);
 			if(!open.empty())
 			{
+				while (!open.empty())
+				{
+					MDDNode* node = open.front();
+					open.pop();
+					cout << "loc: " << node->location << " heading: " << node->heading << endl;
+				}
+				
 				std::cerr << "Failed to build MDD!" << std::endl;
 				exit(1);
 			}
@@ -35,8 +45,109 @@ bool MDD<Map>::buildMDD(const std::vector <std::list< std::pair<int, int> > >& c
 
 		for (const pair<int, int> move : transitions)
 		{
+			int new_heading;
+			if (node->heading == -1) //heading == -1 means no heading info
+				new_heading = -1;
+			else
+				if (move.second == 4) //move == 4 means wait
+					new_heading = node->heading;
+				else
+					new_heading = move.second;
 			int newLoc = move.first;
-			if ( solver.my_heuristic[newLoc].heading[move.second] < heuristicBound && 
+			if ( solver.my_heuristic[newLoc].heading[new_heading] < heuristicBound &&
+				!solver.isConstrained(node->location, newLoc, node->level + 1, &constraints)) // valid move
+			{
+				std::list<MDDNode*>::reverse_iterator child = closed.rbegin();
+				bool find = false;
+				for (; child != closed.rend() && ((*child)->level == node->level + 1); ++child)
+					if ((*child)->location == newLoc)  // If the child node exists
+					{
+						if ((*child)->heading == -1) { //if no heading info
+							(*child)->parents.push_back(node); // then add corresponding parent link and child link
+							find = true;
+							break;
+						}
+						else if ((*child)->location == solver.goal_location) { //if goal location ignore heading
+							(*child)->parents.push_back(node); // then add corresponding parent link and child link
+							find = true;
+							break;
+						}
+						else if ((*child)->heading == new_heading) {//child heading equal to node heading
+							(*child)->parents.push_back(node); // then add corresponding parent link and child link
+							find = true;
+							break;
+						}
+
+						
+					}
+				if (!find) // Else generate a new mdd node
+				{
+					MDDNode* childNode = new MDDNode(newLoc, node);
+					childNode->heading = new_heading;
+
+					open.push(childNode);
+					closed.push_back(childNode);
+				}
+			}
+		}
+	}
+	// Backward
+	for (int t = numOfLevels - 1; t > 0; t--)
+	{
+		for (std::list<MDDNode*>::iterator it = levels[t].begin(); it != levels[t].end(); ++it)
+		{
+			for (std::list<MDDNode*>::iterator parent = (*it)->parents.begin(); parent != (*it)->parents.end(); parent++)
+			{
+				if ((*parent)->children.empty()) // a new node
+				{
+					levels[t - 1].push_back(*parent);
+				}
+				(*parent)->children.push_back(*it); // add forward edge	
+			}
+		}
+	}
+
+	// Delete useless nodes (nodes who don't have any children)
+	for (std::list<MDDNode*>::iterator it = closed.begin(); it != closed.end(); ++it)
+		if ((*it)->children.empty() && (*it)->level < numOfLevels - 1)
+			delete (*it);
+	return true;
+}
+
+template<class Map>
+bool MDD<Map>::buildMDD(const std::vector <std::list< std::pair<int, int> > >& constraints, int numOfLevels, SingleAgentICBS<Map> & solver,int start,int start_time,int goal, int start_heading)
+{
+	MDDNode* root = new MDDNode(solver.start_location, NULL); // Root
+	root->heading = solver.start_heading;
+	std::queue<MDDNode*> open;
+	std::list<MDDNode*> closed;
+	open.push(root);
+	closed.push_back(root);
+	levels.resize(numOfLevels);
+	while (!open.empty())
+	{
+		MDDNode* node = open.front();
+		open.pop();
+		// Here we suppose all edge cost equals 1
+		if (node->level == numOfLevels - 1)
+		{
+			levels[numOfLevels - 1].push_back(node);
+			if (!open.empty())
+			{
+				std::cerr << "Failed to build MDD!" << std::endl;
+				exit(1);
+			}
+			break;
+		}
+		// We want (g + 1)+h <= f = numOfLevels - 1, so h <= numOfLevels - g. -1 because it's the bound of the children.
+		double heuristicBound = numOfLevels - node->level - 2 + 0.001;
+
+		vector<pair<int, int>> transitions = solver.ml->get_transitions(node->location, node->heading, false);
+
+		for (const pair<int, int> move : transitions)
+		{
+			int newLoc = move.first;
+			if (solver.my_heuristic[newLoc].heading[move.second] < heuristicBound &&
 				!solver.isConstrained(node->location, newLoc, node->level + 1, &constraints)) // valid move
 			{
 				std::list<MDDNode*>::reverse_iterator child = closed.rbegin();
