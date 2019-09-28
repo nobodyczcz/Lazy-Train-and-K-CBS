@@ -26,12 +26,13 @@ bool MDD<Map>::buildMDD(const std::vector <std::list< std::pair<int, int> > >& c
 			levels[numOfLevels - 1].push_back(node);
 			if(!open.empty())
 			{
-				while (!open.empty())
-				{
-					MDDNode* node = open.front();
-					open.pop();
-					cout << "loc: " << node->location << " heading: " << node->heading << endl;
-				}
+				//while (!open.empty())
+				//{
+				//	MDDNode* node = open.front();
+				//	open.pop();
+				//	cout << "loc: " << node->location << " heading: " << node->heading<<" h "<< solver.my_heuristic[node->location].heading[node->heading] <<" "<< solver.my_heuristic[node->location].heading.count(node->heading)<< endl;
+				//	
+				//}
 				
 				std::cerr << "Failed to build MDD!" << std::endl;
 				exit(1);
@@ -42,7 +43,7 @@ bool MDD<Map>::buildMDD(const std::vector <std::list< std::pair<int, int> > >& c
 		double heuristicBound = numOfLevels - node->level - 2+ 0.001; 
 
 		vector<pair<int, int>> transitions = solver.ml->get_transitions(node->location,node->heading,false);
-
+		//cout << "current " << node->location << " heading " << node->heading << endl;
 		for (const pair<int, int> move : transitions)
 		{
 			int new_heading;
@@ -54,7 +55,9 @@ bool MDD<Map>::buildMDD(const std::vector <std::list< std::pair<int, int> > >& c
 				else
 					new_heading = move.second;
 			int newLoc = move.first;
-			if ( solver.my_heuristic[newLoc].heading[new_heading] < heuristicBound &&
+			//cout << "newLoc " << newLoc << " heading " << new_heading<<" h "<< solver.my_heuristic[newLoc].heading[new_heading] << endl;
+
+			if (solver.my_heuristic[newLoc].heading.count(new_heading) && solver.my_heuristic[newLoc].heading[new_heading] < heuristicBound &&
 				!solver.isConstrained(node->location, newLoc, node->level + 1, &constraints)) // valid move
 			{
 				std::list<MDDNode*>::reverse_iterator child = closed.rbegin();

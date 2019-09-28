@@ -103,7 +103,7 @@ public:
 		int num_internal_conf = 0, bool in_openlist = false);
 	inline double getFVal() const { return g_val + h_val; }
 	~LLNode(){
-		delete(conflist);
+		delete conflist;
 	}
 
 	// The following is used by googledensehash for checking whether two nodes are equal

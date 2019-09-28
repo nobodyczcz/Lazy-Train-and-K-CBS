@@ -231,8 +231,12 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 
 		//collect conflict from path;
 		for (size_t t = 0; t < paths[curr.agent_id]->size(); t++) {
-			if (paths[curr.agent_id]->at(t).conflist != NULL) {
+			if (paths[curr.agent_id]->at(t).conflist != NULL && paths[curr.agent_id]->at(t).conflist->size()!=0) {
 				curr.unknownConf.splice(curr.unknownConf.end(), *(paths[curr.agent_id]->at(t).conflist));
+				delete paths[curr.agent_id]->at(t).conflist;
+
+
+
 			}
 		}
 

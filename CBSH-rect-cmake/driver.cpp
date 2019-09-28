@@ -2,6 +2,8 @@
 * Unauthorized copying of this file, via any medium is strictly prohibited
 * Confidential
 * Written by Jiaoyang Li <jiaoyanl@usc.edu>, Dec 2018
+*
+* K-Robust plan and new conflict detecting method written by Zhe Chen 
 */
 
 /*driver.cpp

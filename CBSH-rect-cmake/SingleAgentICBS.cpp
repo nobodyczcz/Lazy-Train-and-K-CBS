@@ -14,7 +14,7 @@ void SingleAgentICBS<Map>::updatePath(LLNode* goal, std::vector<PathEntry> &path
 	{
 		path[t].location = curr->loc;
 		path[t].actionToHere = curr->heading;
-		delete(path[t].conflist);
+		delete path[t].conflist;
 		path[t].conflist = curr->conflist;
 		curr->conflist = NULL;
 		curr = curr->parent;

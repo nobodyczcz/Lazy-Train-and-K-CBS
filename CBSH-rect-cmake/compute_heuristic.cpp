@@ -49,14 +49,6 @@ void ComputeHeuristic<Map>::getHVals(vector<hvals>& res)
 {
 	size_t root_location = goal_location;
 	res.resize(map_rows * map_cols);
-	for (int i = 0; i < map_rows * map_cols; i++) {
-		res[i].heading[0] = INT_MAX;
-		res[i].heading[1] = INT_MAX;
-		res[i].heading[2] = INT_MAX;
-		res[i].heading[3] = INT_MAX;
-		res[i].heading[-1] = INT_MAX;
-
-	}
 		
 	// generate a heap that can save nodes (and a open_handle)
 	boost::heap::fibonacci_heap< LLNode*, boost::heap::compare<LLNode::compare_node> > heap;
@@ -130,22 +122,46 @@ void ComputeHeuristic<Map>::getHVals(vector<hvals>& res)
 		if (s->heading == -1) {
 			int heading;
 			heading = s->heading;
-			res[s->loc].heading[s->heading] = s->g_val;
+			if (!res[s->loc].heading.count(heading)) {
+				res[s->loc].heading[heading] = s->g_val;
+
+			}
+			else if (s->g_val < res[s->loc].heading[heading]) {
+				res[s->loc].heading[heading] = s->g_val;
+
+
+			}
 
 		}
 		else {
+			
 			if (s->possible_next_heading.size() > 0) {
 				for (int& next_heading : s->possible_next_heading) {
 					int heading = (next_heading + 2) % 4;
-					if(s->g_val < res[s->loc].heading[heading])
-					res[s->loc].heading[heading] = s->g_val;
+
+					if (!res[s->loc].heading.count(heading)) {
+						res[s->loc].heading[heading] = s->g_val;
+						
+					}
+					else if (s->g_val < res[s->loc].heading[heading]) {
+						res[s->loc].heading[heading] = s->g_val;
+						
+
+					}
 
 				}
 			}
 
 			int heading = (s->heading + 2) % 4;
-			if (s->g_val < res[s->loc].heading[heading])
-			res[s->loc].heading[heading] = s->g_val;
+			if (!res[s->loc].heading.count(heading)) {
+				res[s->loc].heading[heading] = s->g_val;
+				
+			}
+			else if (s->g_val < res[s->loc].heading[heading]) {
+				res[s->loc].heading[heading] = s->g_val;
+
+				
+			}
 
 			
 
@@ -155,6 +171,7 @@ void ComputeHeuristic<Map>::getHVals(vector<hvals>& res)
 	}
 	nodes.clear();
 	heap.clear();
+
 }
 
 template<class Map>
