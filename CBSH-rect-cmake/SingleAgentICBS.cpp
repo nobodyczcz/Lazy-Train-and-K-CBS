@@ -1,5 +1,6 @@
 #include "SingleAgentICBS.h"
 #include "flat_map_loader.h"
+#include "Visualiser.h"
 
 #include <iostream>
 #include <ctime>
@@ -126,6 +127,9 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 	//	for (int heading = 0; heading<5;heading++)
 	//		std::cout << "(" << h << ": heading:"<<heading <<": "<< my_heuristic[h].heading[heading] << ")";
 	//}
+	Visualiser* visual = new Visualiser(ml->my_map,ml->rows,ml->cols);
+	visual->colorConstraints( constraints);
+	visual->renderWindow();
 	while (!focal_list.empty()) 
 	{
 		if (time_limit != 0) {
@@ -158,7 +162,7 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 
 		//cout << "current loc: " << curr->loc << " heading: " << curr->heading<<" f: "<<curr->getFVal() << " g: " << curr->g_val << " h: " << curr->h_val << " num_internal_conf: " <<curr->num_internal_conf << "current lower boundary: " << lower_bound << endl;
 		//
-		//
+		visual->setGreen(curr->loc);
 		
 
 		vector<pair<int, int>> transitions = ml->get_transitions(curr->loc, curr->heading,false);
@@ -223,6 +227,9 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 					}
 						
 					allNodes_table[next] = next;
+
+					visual->setGreen(next->loc);
+
 				}
 				else
 				{  // update existing node's if needed (only in the open_list)

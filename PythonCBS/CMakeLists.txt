@@ -43,32 +43,60 @@ ADD_LIBRARY(PythonCBS SHARED
 INCLUDE_DIRECTORIES("../CBSH-rect-cmake")
 
 if (WIN32)
-	set(BOOST_ROOT "C:/Users/czcz2/Google Drive/MIT/GCITR/boost_1_71_0")
-	set(BOOST_LIBRARYDIR "C:/Users/czcz2/Google Drive/MIT/GCITR/boost_1_71_0/stage/lib")
-	set(BOOST_INCLUDEDIR "C:/Users/czcz2/Google Drive/MIT/GCITR/boost_1_71_0/boost")
+#	set( "C:/Users/czcz2/Google Drive/MIT/GCITR/boost_1_71_0/boost")
 
 	include_directories("C:/Users/czcz2/Google Drive/MIT/GCITR/sparsehash/src")
 	include_directories("C:/Users/czcz2/Google Drive/MIT/GCITR/sparsehash/src/windows")
 	include_directories("C:/Users/czcz2/Anaconda3/include")
 	include_directories("C:/Users/czcz2/Google Drive/MIT/GCITR/boost_1_71_0")
 	include_directories("C:/Users/czcz2/Google Drive/MIT/GCITR/boost_1_71_0/stage/lib")
+	include_directories("C:/Users/czcz2/Anaconda3/libs")
+	include_directories("C:/Users/czcz2/Anaconda3/include")
+	#include_directories("C:/Users/czcz2/Google Drive/MIT/GCITR/SFML/SFML-2.5.1-32/include")
+	#include_directories("C:/Users/czcz2/Google Drive/MIT/GCITR/SFML/SFML-2.5.1-64/include")
+	#include_directories("C:/Users/czcz2/Google Drive/MIT/GCITR/SFML/SFML-2.5.1-32/lib")
+	#include_directories("C:/Users/czcz2/Google Drive/MIT/GCITR/SFML/SFML-2.5.1-64/lib")
+	#include_directories("C:/Users/czcz2/Google Drive/MIT/GCITR/SFML/SFML-2.5.1-32/bin")
+	#include_directories("C:/Users/czcz2/Google Drive/MIT/GCITR/SFML/SFML-2.5.1-64/bin")
+	set(SFML_DIR "C:/Users/czcz2/Google Drive/MIT/GCITR/SFML/SFML-2.5.1-64/lib/cmake/SFML")
+	set(SFML_INCLUDE_DIR "C:/Users/czcz2/Google Drive/MIT/GCITR/SFML/SFML-2.5.1-64/include")
 	
+
+	set(PYTHON_INCLUDE_DIRS "C:/Users/czcz2/Anaconda3/include")
+	set(PYTHON_LIBRARIES "C:/Users/czcz2/Anaconda3/libs")
+	find_package(PythonInterp 3.7 REQUIRED)
+	# This goes after, since it uses PythonInterp as hint
+	find_package(PythonLibs 3.7 REQUIRED)
+	include_directories(${PYTHON_INCLUDE_DIRS})
+	MESSAGE(${PYTHON_LIBRARIES} ${PYTHON_INCLUDE_DIRS})
+
+
+	# Detect and add SFML
+	#list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+	#Find any version 2.X of SFML
+	#See the FindSFML.cmake file for additional details and instructions
+	find_package(SFML 2.5.1 REQUIRED  graphics window system)
+	if(SFML_FOUND)
+	include_directories(${SFML_INCLUDE_DIR})
+	target_link_libraries(PythonCBS ${SFML_LIBRARIES} ${SFML_DEPENDENCIES})
+	endif()
 	
-	FIND_PACKAGE(Boost)
+	SET(Boost_NO_BOOST_CMAKE ON)
+	set(BOOST_ROOT "C:/Users/czcz2/Google Drive/MIT/GCITR/boost_1_71_0/")
+	set(BOOST_LIBRARYDIR "C:/Users/czcz2/Google Drive/MIT/GCITR/boost_1_71_0/stage/lib64-msvc-14.1")
+	FIND_PACKAGE(Boost 1.61.0 COMPONENTS system program_options python37)
 	IF(Boost_FOUND)
-		FIND_PACKAGE(Boost COMPONENTS system program_options python37)
 		SET(Boost_USE_STATIC_LIBS OFF)
 		SET(Boost_USE_MULTITHREADED ON)
 		SET(Boost_USE_STATIC_RUNTIME OFF)
 		include_directories(${Boost_INCLUDEDIR} )
 
 		add_definitions(${Boost_LIB_DIAGNOSTIC_DEFINITIONS})
-		TARGET_LINK_LIBRARIES(PythonCBS ${Boost_LIBRARIES})
-		TARGET_LINK_LIBRARIES(PythonCBS "C:/Users/czcz2/Anaconda3/libs/python37.lib")
+		TARGET_LINK_LIBRARIES(PythonCBS ${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
 
 
 	ELSEIF(NOT Boost_FOUND)
-	  MESSAGE(FATAL_ERROR "Unable to find correct Boost version. Did you set BOOST_ROOT?")
+	  MESSAGE(FATAL_ERROR "Unable to find all boost libs")
 	ENDIF()
 else()
 	file(READ "/etc/issue" ETC_ISSUE)
