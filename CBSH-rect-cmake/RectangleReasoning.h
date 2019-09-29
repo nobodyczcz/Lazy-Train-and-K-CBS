@@ -20,17 +20,33 @@ void addKDelayBarrierConstraints(int S1, int S2, int S1_t, int S2_t, int Rg, int
 // add a pair of modified barrier constraints
 void addModifiedBarrierConstraints(const std::vector<PathEntry>& path1, const std::vector<PathEntry>& path2, 
 	int S1_t, int S2_t, int Rg, int num_col, 
-	std::list<std::tuple<int, int, int>>& constraints1, std::list<std::tuple<int, int, int>>& constraints2, int k);
+	std::list<std::tuple<int, int, int>>& constraints1, std::list<std::tuple<int, int, int>>& constraints2);
 
 // add a vertival modified barrier constraint
 void addModifiedVerticalBarrierConstraint(const std::vector<PathEntry>& path, int y,
 	int Ri_x, int Rg_x, int Rg_t, int num_col,
-	std::list<std::tuple<int, int, int>>& constraints, int k);
+	std::list<std::tuple<int, int, int>>& constraints);
 
 // add a horizontal modified barrier constraint
 void addModifiedHorizontalBarrierConstraint(const std::vector<PathEntry>& path, int x,
 	int Ri_y, int Rg_y, int Rg_t, int num_col,
-	std::list<std::tuple<int, int, int>>& constraints, int k);
+	std::list<std::tuple<int, int, int>>& constraints);
+
+// add a pair of modified barrier constraints
+void addModifiedLongBarrierConstraints(const std::vector<PathEntry>& path1, const std::vector<PathEntry>& path2,
+	int S1_t, int S2_t, int Rg, int G1, int G2, int num_col,
+	std::list<std::tuple<int, int, int>>& constraints1, std::list<std::tuple<int, int, int>>& constraints2,
+	vector<shared_ptr<MDDEmpty>>& a1kMDD, vector<shared_ptr<MDDEmpty>>& a2kMDD, int k);
+
+// add a vertival modified barrier constraint
+void addModifiedVerticalLongBarrierConstraint(const std::vector<PathEntry>& path, int y,
+	int Ri_x, int Rg_x, int Rg_t, int num_col, int St,
+	std::list<std::tuple<int, int, int>>& constraints, vector<shared_ptr<MDDEmpty>>& kMDD, int k);
+
+// add a horizontal modified barrier constraint
+void addModifiedHorizontalLongBarrierConstraint(const std::vector<PathEntry>& path, int x,
+	int Ri_y, int Rg_y, int Rg_t, int num_col, int St,
+	std::list<std::tuple<int, int, int>>& constraints, vector<shared_ptr<MDDEmpty>>& kMDD, int k);
 
 //Identify rectangle conflicts
 bool isRectangleConflict(const std::pair<int,int>& s1, const std::pair<int, int>& s2, 

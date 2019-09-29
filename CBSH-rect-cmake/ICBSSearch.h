@@ -42,8 +42,7 @@ public:
 	double min_f_val;
 	double focal_list_threshold;
 
-	// Runs the algorithm until the problem is solved or time is exhausted 
-	bool runICBSSearch();
+
 	ICBSSearch() {};
 
 	
@@ -130,6 +129,8 @@ public:
 	void initializeDummyStart();
 
 	bool findPathForSingleAgent(ICBSNode*  node, int ag, double lowerbound = 0);
+	// Runs the algorithm until the problem is solved or time is exhausted 
+	bool runICBSSearch();
 
 
 

@@ -3,9 +3,7 @@
 
 #include <string>
 #include <vector>
-#include <boost/python.hpp>
 
-namespace p = boost::python;
 using namespace std;
 
 enum constraint_strategy { CBS, ICBS, CBSH, CBSH_CR, CBSH_R, CBSH_RM, STRATEGY_COUNT };
@@ -18,7 +16,6 @@ class MapLoader
   bool* my_map;
   int rows;
   int cols;
-  boost::python::object rail;
 
 
   int start_loc;
@@ -30,7 +27,6 @@ class MapLoader
 
   MapLoader(std::string fname); // load map from file
   MapLoader(int rows, int cols); // initialize new [rows x cols] empty map
-  MapLoader(p::object rail1, int rows, int cols);
   MapLoader();
   vector<pair<int, int>> get_transitions(int loc, int heading, int noWait);
   inline bool is_blocked (int row, int col) const { return my_map[row * this->cols + col]; }

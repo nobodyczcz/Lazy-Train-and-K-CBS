@@ -39,8 +39,8 @@ set(all
 		SingleAgentICBS.cpp
 		ReservationTable.h
 		ReservationTable.cpp
-		../mapVisualiser/Visualiser.h
-		../mapVisualiser/Visualiser.cpp
+		# ../mapVisualiser/Visualiser.h
+		# ../mapVisualiser/Visualiser.cpp
         )
 add_library(others ${all})
 target_link_libraries( CBS-K others )
@@ -49,7 +49,7 @@ target_link_libraries( CBS-K others )
 
 # Google's sparsehash
 if (WIN32)
-
+	cmake_policy(SET CMP0074 OLD)
 #	set( "C:/Users/czcz2/Google Drive/MIT/GCITR/boost_1_71_0/boost")
 
 	include_directories("C:/Users/czcz2/Google Drive/MIT/GCITR/sparsehash/src")
@@ -65,8 +65,8 @@ if (WIN32)
 	#include_directories("C:/Users/czcz2/Google Drive/MIT/GCITR/SFML/SFML-2.5.1-64/lib")
 	#include_directories("C:/Users/czcz2/Google Drive/MIT/GCITR/SFML/SFML-2.5.1-32/bin")
 	#include_directories("C:/Users/czcz2/Google Drive/MIT/GCITR/SFML/SFML-2.5.1-64/bin")
-	set(SFML_DIR "C:/Users/czcz2/Google Drive/MIT/GCITR/SFML/SFML-2.5.1-64/lib/cmake/SFML")
-	set(SFML_INCLUDE_DIR "C:/Users/czcz2/Google Drive/MIT/GCITR/SFML/SFML-2.5.1-64/include")
+	# set(SFML_DIR "C:/Users/czcz2/Google Drive/MIT/GCITR/SFML/SFML-2.5.1-64/lib/cmake/SFML")
+	# set(SFML_INCLUDE_DIR "C:/Users/czcz2/Google Drive/MIT/GCITR/SFML/SFML-2.5.1-64/include")
 	
 
 	set(PYTHON_INCLUDE_DIRS "C:/Users/czcz2/Anaconda3/include")
@@ -82,16 +82,16 @@ if (WIN32)
 	#list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 	#Find any version 2.X of SFML
 	#See the FindSFML.cmake file for additional details and instructions
-	find_package(SFML 2.5.1 REQUIRED  graphics window system)
-	if(SFML_FOUND)
-	include_directories(${SFML_INCLUDE_DIR})
-	target_link_libraries(CBS-K ${SFML_LIBRARIES} ${SFML_DEPENDENCIES})
-	endif()
+	# find_package(SFML 2.5.1 REQUIRED  graphics window system)
+	# if(SFML_FOUND)
+	# include_directories(${SFML_INCLUDE_DIR})
+	# target_link_libraries(CBS-K ${SFML_LIBRARIES} ${SFML_DEPENDENCIES})
+	# endif()
 	
 	SET(Boost_NO_BOOST_CMAKE ON)
-	set(BOOST_ROOT "C:/Users/czcz2/Google Drive/MIT/GCITR/boost_1_71_1/")
-	set(BOOST_LIBRARYDIR "C:/Users/czcz2/Google Drive/MIT/GCITR/boost_1_71_1/stage/lib64-msvc-14.1")
-	FIND_PACKAGE(Boost 1.61.0 COMPONENTS system program_options python37)
+	set(BOOST_ROOT "C:/Users/czcz2/Google Drive/MIT/GCITR/boost_1_61_0/")
+	set(BOOST_LIBRARYDIR "C:/Users/czcz2/Google Drive/MIT/GCITR/boost_1_61_0/lib64-msvc-14.0")
+	FIND_PACKAGE(Boost 1.61.0 COMPONENTS system program_options python)
 	IF(Boost_FOUND)
 		SET(Boost_USE_STATIC_LIBS OFF)
 		SET(Boost_USE_MULTITHREADED ON)
@@ -137,14 +137,14 @@ else()
 	FIND_PACKAGE(Boost REQUIRED COMPONENTS system program_options ${boostPython})
 
 	# Detect and add SFML
-	list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+	# list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 	#Find any version 2.X of SFML
 	#See the FindSFML.cmake file for additional details and instructions
-	find_package(SFML 2 REQUIRED  graphics window system)
-	if(SFML_FOUND)
-	include_directories(${SFML_INCLUDE_DIR})
-	target_link_libraries(CBS-K ${SFML_LIBRARIES} ${SFML_DEPENDENCIES})
-	endif()
+	# find_package(SFML 2 REQUIRED  graphics window system)
+	# if(SFML_FOUND)
+	# include_directories(${SFML_INCLUDE_DIR})
+	# target_link_libraries(CBS-K ${SFML_LIBRARIES} ${SFML_DEPENDENCIES})
+	# endif()
 
 	if(Boost_FOUND)
 		include_directories(${Boost_INCLUDE_DIRS})

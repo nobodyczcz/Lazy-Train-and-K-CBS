@@ -11,6 +11,7 @@ typedef std::list<std::shared_ptr<std::tuple<int, int, int, int, int>>> Conflict
 struct PathEntry
 {
 	int location;
+	int heading;
 	bool single;
 	int actionToHere;
 	PathEntry(int loc = -1){location = loc; single = false;}

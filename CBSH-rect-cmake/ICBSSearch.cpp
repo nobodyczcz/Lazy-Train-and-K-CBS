@@ -1,6 +1,9 @@
 #include "ICBSSearch.h"
 #include "flat_map_loader.h"
 #include "ReservationTable.h"
+#include <sstream>
+#include <memory>
+
 
 #include <ctime>
 #include <iostream>
@@ -431,6 +434,7 @@ std::shared_ptr<tuple<int, int, int, int, int>> ICBSSearch::classifyConflicts(IC
 			std::shared_ptr<tuple<int, int, int, int, int>> conflict;
 			int type = -1;
 			int area = 0;
+			int distance = 0;
 			for (int t1_start: s1s)
 			{
 				for (int t1_end: g1s)
@@ -455,15 +459,32 @@ std::shared_ptr<tuple<int, int, int, int, int>> ICBSSearch::classifyConflicts(IC
 								std::make_pair(g1 / num_col, g1 % num_col));
 							int new_area = (abs(Rs.first - Rg.first) + 1) * (abs(Rs.second - Rg.second) + 1);
 							int new_type = classifyRectangleConflict(s1, s2, g1, g2, Rg, num_col);
-							if (new_type > type || (new_type == type && new_area > area))
+							int new_distance = abs(t2_end / num_col - t2_start / num_col) + abs(t2_end %num_col - t2_start % num_col) +
+								abs(t1_end / num_col - t1_start / num_col) + abs(t1_end %num_col - t1_start % num_col);
+							//cout << "s1 " << s1 << " s2 " << s2 << " g1 " << g1 << " g2 " << g2 << " rg " << Rg.first << " " << Rg.second << endl;
+
+							if (new_type > type || (new_type == type && new_area > area)|| (new_type == type && new_area == area && new_distance>distance))
 							{
-								/*cout << get<0>(*con)<<" " << get<1>(*con) << " " << get<2>(*con) << " " << get<3>(*con) << " " << get<4>(*con) << " " << endl;
-								cout << "s1 " << s1 << " s2 " << s2 << " g1 "<< g1 << " g2 "<< g2 << " rg "<< Rg.first<<" "<<Rg.second << endl;
-								*/
+								//cout << get<0>(*con)<<" " << get<1>(*con) << " " << get<2>(*con) << " " << get<3>(*con) << " " << get<4>(*con) << " " << endl;
+								
 								conflict = std::shared_ptr<tuple<int, int, int, int, int>>
 									(new tuple<int, int, int, int, int>(get<0>(*con), get<1>(*con), -1 - Rg.first * num_col - Rg.second, t1_start, t2_start));
 								type = new_type;
 								area = new_area;
+								distance = new_distance;
+
+								ConflictDetial details;
+								details.s1 = s1;
+								details.s2 = s2;
+								details.s1_t = t1_start;
+								details.g1 = g1;
+								details.g1_t = t1_end;
+								details.s2_t = t2_start;
+								details.g2 = g2;
+								details.g2_t = t2_end;
+								std::stringstream key;
+								key << get<0>(*con) << get<1>(*con) << -1 - Rg.first * num_col - Rg.second << t1_start << t2_start;
+								parent.conflictDetailTable[key.str()] = details;
 							}
 						}
 					}
@@ -759,7 +780,8 @@ void ICBSSearch::printStrategy() const
 	}
 }
 
-bool ICBSSearch::runICBSSearch() 
+template<class Map>
+bool MultiMapICBSSearch<Map>::runICBSSearch()
 {
 	if (debug_mode)
 		cout << "Start search" << endl;
@@ -861,6 +883,41 @@ bool ICBSSearch::runICBSSearch()
 		n1->agent_id = get<0>(*curr->conflict);
 		n2->agent_id = get<1>(*curr->conflict);
 
+		if (debug_mode) {
+			cout << "check conflict repeatance" << endl;
+			stringstream con;
+			con << get<0>(*curr->conflict) << get<1>(*curr->conflict) << get<2>(*curr->conflict) << get<3>(*curr->conflict) << get<4>(*curr->conflict);
+			curr->resolvedConflicts.insert(con.str());
+			bool stop = false;
+			bool noRepeat = true;
+			ICBSNode* parent = curr->parent;
+			if (parent != NULL) {
+				while (!stop) {
+					cout << "1";
+					if (parent->parent == NULL) {
+						stop = true;
+						break;
+					}
+					noRepeat = !parent->resolvedConflicts.count(con.str());
+					assert(noRepeat && "Repeated conflict!");
+					parent = parent->parent;
+
+				}
+			}
+			else {
+				cout << "no parent" << endl;
+
+			}
+			if (noRepeat) {
+				cout << "no repeatance" << endl;
+			}
+			else {
+				cout << "repeatance detected" << endl;
+
+			}
+
+		}
+
 
 		if (get<2>(*curr->conflict) < 0) // Rectangle conflict
 		{
@@ -874,9 +931,40 @@ bool ICBSSearch::runICBSSearch()
 				if (debug_mode) {
 					cout << "add modified barrier constraint," << n1->agent_id << " " << n2->agent_id << endl;
 				}
+				if (kDelay==0){
+					addModifiedBarrierConstraints(*paths[get<0>(*curr->conflict)], *paths[get<1>(*curr->conflict)],
+					S1_t, S2_t, Rg, num_col, n1->constraints, n2->constraints);
+				}
+				else{
+					vector<shared_ptr<MDDEmpty>> a1kMDD;
+					vector<shared_ptr<MDDEmpty>> a2kMDD;
+					std::stringstream key;
+					key << get<0>(*curr->conflict) << get<1>(*curr->conflict) << get<2>(*curr->conflict) << get<3>(*curr->conflict) << get<4>(*curr->conflict);
 
-				addModifiedBarrierConstraints(*paths[get<0>(*curr->conflict)], *paths[get<1>(*curr->conflict)],
-					S1_t, S2_t, Rg, num_col, n1->constraints, n2->constraints,kDelay);
+					ConflictDetial detail = curr->conflictDetailTable[key.str()];
+					std::vector <std::list< std::pair<int, int> > >* constraints1 = collectConstraints(curr, get<0>(*curr->conflict));
+					std::vector <std::list< std::pair<int, int> > >* constraints2 = collectConstraints(curr, get<1>(*curr->conflict));
+
+					for (int i = 1; i <= kDelay; i++) {
+						MDD<Map>* a1MDD = new MDD<Map>();
+						MDD<Map>* a2MDD = new MDD<Map>();
+
+						a1MDD->buildMDD(*constraints1, paths[get<0>(*curr->conflict)]->size() - detail.s1_t + i,
+							*(search_engines[get<0>(*curr->conflict)]),detail.s1,detail.s1_t,
+							paths[get<0>(*curr->conflict)]->at(detail.s1_t).actionToHere);
+
+						a2MDD->buildMDD(*constraints2, paths[get<1>(*curr->conflict)]->size() - detail.s1_t + i,
+							*(search_engines[get<1>(*curr->conflict)]), detail.s2, detail.s2_t,
+							paths[get<1>(*curr->conflict)]->at(detail.s2_t).actionToHere);
+						a1kMDD.push_back(shared_ptr<MDDEmpty>(a1MDD));
+						a2kMDD.push_back(shared_ptr<MDDEmpty>(a2MDD));
+
+					}
+
+					addModifiedLongBarrierConstraints( *(paths[get<0>(*curr->conflict)]), *(paths[get<1>(*curr->conflict)]),
+					S1_t, S2_t, Rg,detail.g1,detail.g2, num_col, n1->constraints, n2->constraints, a1kMDD, a2kMDD, kDelay);
+				}
+
 			}
 			else // add barrier constraints
 			{

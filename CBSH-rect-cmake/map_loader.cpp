@@ -7,7 +7,6 @@
 
 
 
-namespace p = boost::python;
 
 using namespace boost;
 using namespace std;
@@ -15,23 +14,6 @@ using namespace std;
 
 MapLoader::MapLoader(){}
 
-MapLoader::MapLoader(p::object rail1, int rows, int cols)
-{
-	this->rail = rail1;
-	this->rows = rows;
-	this->cols = cols;
-	this->my_map = new bool[false];
-
-	// Possible moves [WAIT, NORTH, EAST, SOUTH, WEST]
-	moves_offset = new int[MapLoader::MOVE_COUNT];
-	moves_offset[MapLoader::valid_moves_t::WAIT_MOVE] = 0;
-	moves_offset[MapLoader::valid_moves_t::NORTH] = -cols;
-	moves_offset[MapLoader::valid_moves_t::EAST] = 1;
-	moves_offset[MapLoader::valid_moves_t::SOUTH] = cols;
-	moves_offset[MapLoader::valid_moves_t::WEST] = -1;
-
-
-}
 
 vector<pair<int, int>> MapLoader::get_transitions(int loc, int heading, int noWait) {
 	vector<pair<int, int>> transitions;

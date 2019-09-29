@@ -1,6 +1,18 @@
 #pragma once
 #include "MDD.h"
+#include <boost/unordered_map.hpp>
+#include <unordered_set>
 
+struct ConflictDetial {//extra information for k delay long RM.
+	int s1;
+	int s2;
+	int g1;
+	int g2;
+	int s1_t;
+	int s2_t;
+	int g1_t;
+	int g2_t;
+};
 
 class ICBSNode
 {
@@ -42,6 +54,8 @@ public:
 	open_handle_t open_handle;
 	focal_handle_t focal_handle;
 
+	std::unordered_set<string> resolvedConflicts;
+
 	
 
 	
@@ -71,6 +85,9 @@ public:
 	std::list<std::shared_ptr<std::tuple<int, int, int, int, int>>> nonConf;
 	std::list<std::shared_ptr<std::tuple<int, int, int, int, int>>> unknownConf;	
 	//std::list<std::shared_ptr<std::tuple<int, int, int, int, int, int>>> kDelayConf;
+
+	
+	boost::unordered_map<string, ConflictDetial> conflictDetailTable;
 
 	
 	// The chosen conflict
