@@ -459,11 +459,11 @@ std::shared_ptr<tuple<int, int, int, int, int>> ICBSSearch::classifyConflicts(IC
 								std::make_pair(g1 / num_col, g1 % num_col));
 							int new_area = (abs(Rs.first - Rg.first) + 1) * (abs(Rs.second - Rg.second) + 1);
 							int new_type = classifyRectangleConflict(s1, s2, g1, g2, Rg, num_col);
-							int new_distance = abs(t2_end / num_col - t2_start / num_col) + abs(t2_end %num_col - t2_start % num_col) +
-								abs(t1_end / num_col - t1_start / num_col) + abs(t1_end %num_col - t1_start % num_col);
+							/*int new_distance = abs(t2_end / num_col - t2_start / num_col) + abs(t2_end %num_col - t2_start % num_col) +
+								abs(t1_end / num_col - t1_start / num_col) + abs(t1_end %num_col - t1_start % num_col);*/
 							//cout << "s1 " << s1 << " s2 " << s2 << " g1 " << g1 << " g2 " << g2 << " rg " << Rg.first << " " << Rg.second << endl;
 
-							if (new_type > type || (new_type == type && new_area > area)|| (new_type == type && new_area == area && new_distance>distance))
+							if (new_type > type || (new_type == type && new_area > area)/*|| (new_type == type && new_area == area && new_distance>distance)*/)
 							{
 								//cout << get<0>(*con)<<" " << get<1>(*con) << " " << get<2>(*con) << " " << get<3>(*con) << " " << get<4>(*con) << " " << endl;
 								
@@ -471,7 +471,7 @@ std::shared_ptr<tuple<int, int, int, int, int>> ICBSSearch::classifyConflicts(IC
 									(new tuple<int, int, int, int, int>(get<0>(*con), get<1>(*con), -1 - Rg.first * num_col - Rg.second, t1_start, t2_start));
 								type = new_type;
 								area = new_area;
-								distance = new_distance;
+								//distance = new_distance;
 
 								ConflictDetial details;
 								details.s1 = s1;
@@ -1039,6 +1039,7 @@ bool MultiMapICBSSearch<Map>::runICBSSearch()
 			//}
 			//
 		}
+		
 
 		bool Sol1 = false, Sol2 = false;
 		vector<vector<PathEntry>*> copy(paths);
@@ -1059,6 +1060,49 @@ bool MultiMapICBSSearch<Map>::runICBSSearch()
 		if (debug_mode)
 			cout << "generate child 2" << endl;
 		Sol2 = generateChild(n2, curr);
+
+		if (debug_mode) {
+			cout << "n1 constraints:";
+			std::list<std::tuple<int, int, int>>::iterator it;
+			for (it = n1->constraints.begin(); it != n1->constraints.end(); ++it) {
+				cout << "<(" << get<0>((*it)) / num_col << "," << get<0>((*it)) % num_col << ")" << ","
+					<< "(" << get<1>((*it)) / num_col << "," << get<1>((*it)) % num_col << ")" << ","
+					<< get<2>((*it)) << ">; ";
+
+			}
+			cout << endl;
+
+			cout << "n1 conflicts:";
+			for (auto &conit : n1->unknownConf) {
+				cout << "<" << get<0>(*conit) << "," << get<1>(*conit) << ","
+					<<"("<< get<2>(*conit) / num_col << "," << get<2>(*conit) % num_col << ")" << ","
+					<< "(" << get<3>(*conit) / num_col << "," << get<3>(*conit) % num_col << ")" << ","
+					<< get<4>(*conit) << ">; ";
+
+			}
+			cout << endl;
+
+
+			cout << "n2 constraints:";
+			for (it = n2->constraints.begin(); it != n2->constraints.end(); ++it) {
+				cout << "<(" << get<0>((*it)) / num_col << "," << get<0>((*it)) % num_col << ")" << ","
+					<< "(" << get<1>((*it)) / num_col << "," << get<1>((*it)) % num_col << ")" << ","
+					<< get<2>((*it)) << ">; ";
+
+			}
+			cout << endl;
+
+			cout << "n2 conflicts:";
+			for (auto &conit : n2->unknownConf) {
+				cout << "<" << get<0>(*conit) << "," << get<1>(*conit) << ","
+					<<"("<< get<2>(*conit) / num_col << "," << get<2>(*conit) % num_col << "),"
+					<< "(" << get<3>(*conit) / num_col << "," << get<3>(*conit) % num_col << ")" << ","
+					<< get<4>(*conit) << ">; ";
+
+			}
+			cout << endl;
+			//exit(0);
+		}
 
 		if(!Sol1)
 		{

@@ -195,7 +195,7 @@ void addKDelayBarrierConstraints(int S1, int S2, int S1_t, int S2_t, int Rg, int
 		}
 	}
 	
-	
+	//exit(0);
 }
 
 // add a pair of modified barrier constraints
@@ -364,6 +364,7 @@ void addModifiedLongBarrierConstraints(const std::vector<PathEntry>& path1, cons
 		G2_t = Rg_t + abs(G2_y - Rg_y);
 		addModifiedVerticalLongBarrierConstraint(path1, Rg_y, R1_x, G1_x, G1_t, num_col, S1_t, constraints1,a1kMDD,k);
 		addModifiedHorizontalLongBarrierConstraint(path2, Rg_x, R2_y, G2_y, G2_t, num_col, S2_t, constraints2,a2kMDD,k);
+		//exit(0);
 	}
 }
 
@@ -388,62 +389,68 @@ void addModifiedVerticalLongBarrierConstraint(const std::vector<PathEntry>& path
 	{
 		int loc = (Ri_x + (t2 - Ri_t) * sign) * num_col + y;
 		//std::cout << "target loc: " << loc / 22 << "," << loc % 22 << std::endl;
-
 		for (int i = 0; i <= k; i++) {
-			//std::cout << "add constraint on k=0 " << " t=" << t2<<": ";
-
+			//std::cout << "add constraint on k= " << i << " t=" << t2 << ": ";
 			if ((t2 + i < path.size())) {
 				std::list<int>::const_iterator it = std::find(path[t2 + i].locations.begin(), path[t2 + i].locations.end(), loc);
-				std::stringstream con;
-				con << loc << t2 + i;
-				if (it != path[t2 + i].locations.end() && !added.count(con.str()))
+
+				if (it != path[t2 + i].locations.end())
 				{
-					constraints.push_back(std::make_tuple(loc, -1, t2 + i)); // add constraints [t1, t2]
-					//std::cout << "loc: " << loc / 22 << "," << loc % 22 << " t: " << t2 << "|";
-					added.insert(con.str());
+					for (int consk = 0; consk <= k - i; consk++) {
+						//if constraint is on k=0, add more time range constraint until t=t+k
+						std::stringstream con;
+						con << loc << t2 + i+consk;
+						if (!added.count(con.str())) {
+
+							constraints.push_back(std::make_tuple(loc, -1, t2 + i+consk)); // add constraints [t1, t2]
+							//std::cout << "self mdd loc: " << loc / 22 << "," << loc % 22 << " t: " << t2 << "|";
+							added.insert(con.str());
+						}
+					}
+
+
 
 				}
 				//std::cout << std::endl;
 			}
-			
 
 
-		
-			//std::cout << "add constraint on k=" << i <<" t="<< t2<< ": ";
+
+			//std::cout << "add constraint on k=" << i << " t=" << t2 << ": ";
 			for (int mdd = 0; mdd < kMDD.size(); mdd++) {
+				std::list<MDDNode*>::iterator it;
 				if ((t2 - St + i) >= kMDD[mdd]->levels.size())
 					continue;
-				std::list<MDDNode*>::iterator it;
-				for (it = kMDD[mdd]->levels[t2 - St+i].begin(); it != kMDD[mdd]->levels[t2 - St+i].end(); ++it) {
-					std::stringstream con;
-					con << loc << t2 + i;
-					if ((*it)->location == loc && !added.count(con.str())) {
-						constraints.push_back(std::make_tuple(loc, -1, t2 + i)); // add constraints [t1, t2]
-						//std::cout << "loc: " << loc / 22 << "," << loc % 22 << " t: " << t2+i << "|";
-						added.insert(con.str());
+				for (it = kMDD[mdd]->levels[t2 - St + i].begin(); it != kMDD[mdd]->levels[t2 - St + i].end(); ++it) {
+					if ((*it)->location == loc) {
+						for (int consk = 0; consk <= k - i; consk++) {
+							//if constraint is on k=0, add more time range constraint until t=t+k
+							std::stringstream con;
+							con << loc << t2 + i + consk;
+							if (!added.count(con.str())) {
+								constraints.push_back(std::make_tuple(loc, -1, t2 + i + consk)); // add constraints [t1, t2]
+								//std::cout << "kmdd loc: " << loc / 22 << "," << loc % 22 << " t: " << t2 + i + consk << "|";
+								added.insert(con.str());
+							}
 
+						}
 					}
 				}
+
+
+
+			}
 			//std::cout << std::endl;
 		}
 
-			//cout << "vertical "<<"loc="<< loc<< " k=" << i << endl;
-			//list<int>::const_iterator locs;
-			//for (locs = path[t2 + i].locations.begin(); locs != path[t2 + i].locations.end(); locs++)
-			//{
-			//	cout << (*locs) << " ";
-			//}
-			//cout << endl;
-
-		}
 	}
+}
 	//cout << "ri: " << Ri_x << "," << y << endl;
 
 	//if (overallFound)
 	//	cout << "vertical rm success" << endl;
 	//else
 	//	cout << "vertical rm failed" << endl;
-}
 
 // add a horizontal modified barrier constraint
 void addModifiedHorizontalLongBarrierConstraint(const std::vector<PathEntry>& path, int x,
@@ -477,19 +484,28 @@ void addModifiedHorizontalLongBarrierConstraint(const std::vector<PathEntry>& pa
 		int loc = (Ri_y + (t2 - Ri_t) * sign) + x * num_col;
 		//std::cout << "target loc: " << loc / 22 << "," << loc % 22 << std::endl;
 		for (int i = 0; i <= k; i++) {
-			//std::cout << "add constraint on k=0 " << " t=" << t2 << ": ";
+			//std::cout << "add constraint on k= "<<i << " t=" << t2 << ": ";
 			if ((t2 + i < path.size())) {
 				std::list<int>::const_iterator it = std::find(path[t2 + i].locations.begin(), path[t2 + i].locations.end(), loc);
-				std::stringstream con;
-				con << loc << t2 + i;
-				if ( it != path[t2 + i].locations.end() && !added.count(con.str()))
+
+				if ( it != path[t2 + i].locations.end() )
 				{
-					constraints.push_back(std::make_tuple(loc, -1, t2 + i)); // add constraints [t1, t2]
-					//std::cout << "loc: " << loc / 22 << "," << loc % 22 << " t: " << t2 << "|";
-					added.insert(con.str());
+					for (int consk = 0; consk <= k - i; consk++) {
+						//if constraint is on k=0, add more time range constraint until t=t+k
+						std::stringstream con;
+						con << loc << t2 + i+ consk;
+						if (!added.count(con.str())) {
+
+							constraints.push_back(std::make_tuple(loc, -1, t2 + i+consk)); // add constraints [t1, t2]
+							//std::cout << "self mdd loc: " << loc / 22 << "," << loc % 22 << " t: " << t2 << "|";
+							added.insert(con.str());
+						}
+					}
+					
+					
 
 				}
-				//std::cout << std::endl;
+				 //std::cout << std::endl;
 			}
 
 
@@ -500,29 +516,32 @@ void addModifiedHorizontalLongBarrierConstraint(const std::vector<PathEntry>& pa
 				if ((t2 - St + i) >= kMDD[mdd]->levels.size())
 					continue;
 				for (it = kMDD[mdd]->levels[t2 - St + i].begin(); it != kMDD[mdd]->levels[t2 - St + i].end(); ++it) {
-					std::stringstream con;
-					con << loc << t2 + i;
-					if ((*it)->location == loc && !added.count(con.str())) {
-						constraints.push_back(std::make_tuple(loc, -1, t2 + i)); // add constraints [t1, t2]
-						//std::cout << "loc: " << loc / 22 << "," << loc % 22 << " t: " << t2 + i << "|";
-						added.insert(con.str());
+					if ((*it)->location == loc) {
+						for (int consk = 0; consk <= k - i; consk++) { 
+							//if constraint is on k=0, add more time range constraint until t=t+k
+							std::stringstream con;
+							con << loc << t2 + i + consk;
+							if (!added.count(con.str())) {
+								constraints.push_back(std::make_tuple(loc, -1, t2 + i + consk)); // add constraints [t1, t2]
+								//std::cout << "kmdd loc: " << loc / 22 << "," << loc % 22 << " t: " << t2 + i + consk << "|";
+								added.insert(con.str());
+							}
+
+						}
 					}
 				}
+					
+				
 				
 			}
 			//std::cout << std::endl;
 		}
 	}
-	//cout << "ri: " << x << "," << Ri_y << endl;
 
-	/*if (overallFound)
-		cout << "horizontal rm success" << endl;
-	else
-		cout << "horizontal rm failed" << endl;*/
 
 
 }
-
+ 
 //Identify rectangle conflicts for CR/R
 bool isRectangleConflict(const std::pair<int, int>& s1, const std::pair<int, int>& s2,
 	const std::pair<int, int>& g1, const std::pair<int, int>& g2, int g1_t, int g2_t)
