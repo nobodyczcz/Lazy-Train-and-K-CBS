@@ -99,6 +99,8 @@ std::vector <std::list< std::pair<int, int> > >* ICBSSearch::collectConstraints(
 int ICBSSearch::computeHeuristics(const ICBSNode& curr)
 {
 	// Conflict graph
+	if (debug_mode)
+		cout << "build conflict graph" << endl;
 	vector<vector<bool>> CG(num_of_agents);
 	int num_of_CGnodes = 0, num_of_CGedges = 0;
 	for (int i = 0; i < num_of_agents; i++)
@@ -138,12 +140,18 @@ int ICBSSearch::computeHeuristics(const ICBSNode& curr)
 		}
 	}
 
+	if (debug_mode)
+		cout << "compute minimum vertex cover" << endl;
 	// Minimum Vertex Cover
 	if (curr.parent == NULL) // root node of CBS tree
 	{
-		for (int i = 1; i < num_of_CGnodes; i++)
+		for (int i = 1; i < num_of_CGnodes; i++) {
+			if (debug_mode)
+				cout << "Compute Node: " << i << endl;
 			if (KVertexCover(CG, num_of_CGnodes, num_of_CGedges, i))
 				return i;
+		}
+		
 	}
 	if (KVertexCover(CG, num_of_CGnodes, num_of_CGedges, curr.parent->h_val - 1))
 		return curr.parent->h_val - 1;
@@ -331,6 +339,11 @@ std::shared_ptr<tuple<int, int, int, int, int>> ICBSSearch::classifyConflicts(IC
 	{
 		std::shared_ptr<tuple<int, int, int, int, int>> con = parent.unknownConf.front();
 		parent.unknownConf.pop_front();
+		if (debug_mode)
+			cout << "classify conflict for: " << "<" << get<0>(*con) << "," << get<1>(*con) << ","
+			<< "(" << get<2>(*con) / num_col << "," << get<2>(*con) % num_col << ")" << ","
+			<< "(" << get<3>(*con) / num_col << "," << get<3>(*con) % num_col << ")" << ","
+			<< get<4>(*con) << ">; " << endl;
 
 		bool cardinal1 = false, cardinal2 = false;
 		if (get<4>(*con) >= paths[get<0>(*con)]->size())
@@ -384,7 +397,8 @@ std::shared_ptr<tuple<int, int, int, int, int>> ICBSSearch::classifyConflicts(IC
 		//Rectangle reasoning for semi and non cardinal vertex conflicts
 		int a1 = get<0>(*con);
 		int a2 = get<1>(*con);
-
+		if (debug_mode)
+			cout << "rectangle reasoning for semi and non cardinl vertex conflicts" << endl;
 		if (cons_strategy == constraint_strategy::CBSH_CR)//Identify cardinal rectangle by start and goals
 		{
 			if(isRectangleConflict(al.initial_locations[a1], al.initial_locations[a2], al.goal_locations[a1], al.goal_locations[a2],
@@ -398,6 +412,7 @@ std::shared_ptr<tuple<int, int, int, int, int>> ICBSSearch::classifyConflicts(IC
 		}
 		else if (cons_strategy == constraint_strategy::CBSH_R)//Identify rectangle by start and goals
 		{
+			//cout << "identify rectangle by start and goals" << endl;
 			//Identify rectangles by start and goals
 			if (isRectangleConflict(al.initial_locations[a1], al.initial_locations[a2], al.goal_locations[a1], al.goal_locations[a2],
 				paths[a1]->size() - 1, paths[a2]->size() - 1))
@@ -423,6 +438,35 @@ std::shared_ptr<tuple<int, int, int, int, int>> ICBSSearch::classifyConflicts(IC
 		}
 		else if (cons_strategy == constraint_strategy::CBSH_RM)
 		{
+			/*bool inRec = false;
+			if (parent.discovedRectangles.count(get<0>(*con))) {
+				
+				for (auto& rectangles : parent.discovedRectangles[get<0>(*con)]) {
+					int x = get<2>(*con) / num_col;
+					int y = get<2>(*con) % num_col;
+					int Rsx = rectangles.first / num_col;
+					int Rsy = rectangles.first % num_col;
+					int Rgx = rectangles.second / num_col;
+					int Rgy = rectangles.second % num_col;
+					if (((Rgx - x)*(x - Rsx) >= 0) && ((Rgy - y)*(y - Rsy) >= 0)) {
+						inRec = true;
+					}
+
+				}
+			}
+			if (inRec) {
+				if(debug_mode)
+				cout << "In rectangle, pass this conflict" << endl;
+				continue;
+			}
+			if(debug_mode)
+			cout << "Finding rectangle" << endl;*/
+
+			ConflictDetial details;
+			details.originalConf = get<2>(*con);
+			details.originalT = get<4>(*con);
+			string conflictKey;
+			
 			int timestep = get<4>(*con);
 			std::list<int>	s1s = getStartCandidates(*paths[a1], timestep, num_col);
 			std::list<int>	g1s = getGoalCandidates(*paths[a1], timestep, num_col);
@@ -435,6 +479,7 @@ std::shared_ptr<tuple<int, int, int, int, int>> ICBSSearch::classifyConflicts(IC
 			int type = -1;
 			int area = 0;
 			int distance = 0;
+			
 			for (int t1_start: s1s)
 			{
 				for (int t1_end: g1s)
@@ -472,19 +517,23 @@ std::shared_ptr<tuple<int, int, int, int, int>> ICBSSearch::classifyConflicts(IC
 								type = new_type;
 								area = new_area;
 								//distance = new_distance;
-
-								ConflictDetial details;
+								
+								details.a1 = get<0>(*con);
+								details.a2 = get<1>(*con);
 								details.s1 = s1;
 								details.s2 = s2;
+								
 								details.s1_t = t1_start;
 								details.g1 = g1;
 								details.g1_t = t1_end;
 								details.s2_t = t2_start;
 								details.g2 = g2;
 								details.g2_t = t2_end;
+								details.rg = Rg.first * num_col + Rg.second;
+								details.rs = Rs.first * num_col - Rs.second;
 								std::stringstream key;
 								key << get<0>(*con) << get<1>(*con) << -1 - Rg.first * num_col - Rg.second << t1_start << t2_start;
-								parent.conflictDetailTable[key.str()] = details;
+								conflictKey = key.str();
 							}
 						}
 					}
@@ -492,16 +541,42 @@ std::shared_ptr<tuple<int, int, int, int, int>> ICBSSearch::classifyConflicts(IC
 			}
 			if (type == 2)
 			{
+				assert(!parent.conflictDetailTable.count(conflictKey) && "rectangle exist in conflict detail table");
 				parent.rectCardinalConf.push_back(conflict);
+				parent.conflictDetailTable[conflictKey] = details;
+				if (debug_mode) {
+					cout << "Turn into rectangle conflict: <" << details.a1 << "," << details.a2 << "," << -1 - details.rg << "," << details.s1_t << "," << details.s2_t << ">" << endl;
+				}
+				//parent.discovedRectangles[details.a1].push_back(pair<int,int>(details.rs, details.rg));
 			}
 			else if (type == 1 && !findRectangleConflict(parent.parent, *conflict))
 			{
+				assert(!parent.conflictDetailTable.count(conflictKey) && "rectangle exist in conflict detail table");
+
 				parent.rectSemiConf.push_back(conflict);
+				parent.conflictDetailTable[conflictKey] = details;
+				if (debug_mode) {
+					cout << "Turn into rectangle conflict: <" << details.a1 << "," << details.a2 << "," << -1 - details.rg << "," << details.s1_t << "," << details.s2_t << ">" << endl;
+				}
+				//parent.discovedRectangles[details.a1].push_back(pair<int, int>(details.rs, details.rg));
+
+
 			}
 			else if (type == 0 && !findRectangleConflict(parent.parent, *conflict))
 			{
+				assert(!parent.conflictDetailTable.count(conflictKey) && "rectangle exist in conflict detail table");
+
 				parent.rectNonConf.push_back(conflict);
+				parent.conflictDetailTable[conflictKey] = details;
+				if (debug_mode) {
+					cout << "Turn into rectangle conflict: <" << details.a1 << "," << details.a2 << "," << -1 - details.rg << "," << details.s1_t << "," << details.s2_t << ">" << endl;
+				}
+				//parent.discovedRectangles[details.a1].push_back(pair<int, int>(details.rs, details.rg));
+
+
 			}
+			//cout << "Finding rectangle done" << endl;
+
 		}
 	}
 
@@ -615,6 +690,9 @@ bool MultiMapICBSSearch<Map>::findPathForSingleAgent(ICBSNode*  node, int ag, do
 
 	// find a path w.r.t cons_vec (and prioretize by res_table).
 	bool foundSol = search_engines[ag]->findPath(node->path, focal_w, cons_vec, res_table, max_plan_len, lowerbound,start,time_limit);
+	if (debug_mode) {
+		std::cout<< "Low level done. Nodes expanded: "<<search_engines[ag]->num_expanded<<std::endl;
+	}
 	LL_num_expanded += search_engines[ag]->num_expanded;
 	LL_num_generated += search_engines[ag]->num_generated;
 	delete (cons_vec);
@@ -654,7 +732,7 @@ bool ICBSSearch::generateChild(ICBSNode*  node, ICBSNode* curr)
 		return false;
 
 	
-	runtime_lowlevel += std::clock() - t1;
+	runtime_lowlevel += (std::clock() - t1) * 1000.0 / CLOCKS_PER_SEC;
 	
 	//Estimate h value
 	if (node->parent->g_val == node->g_val)
@@ -704,6 +782,43 @@ void ICBSSearch::printPaths() const
 		std::cout << std::endl;
 	}
 }
+
+void ICBSSearch::printBT(const std::string& prefix, const ICBSNode* node, bool isLeft)
+{
+	if (node != NULL)
+	{
+		std::cout << prefix;
+		std::cout << (isLeft ? "├──" : "└──");
+		if(node->conflict!=nullptr) {
+
+			// print the value of the node
+			std::cout << "<" << get<0>(*node->conflict) << " "
+				<< get<1>(*node->conflict) << " "
+				<< "(" << get<2>(*node->conflict) / num_col << ","
+				<< get<2>(*node->conflict) % num_col << "), "
+				<< get<3>(*node->conflict)<<","
+				<< get<4>(*node->conflict) << ">" << std::endl;
+
+			// enter the next tree level - left and right branch
+
+		}
+		else {
+			std::cout << "No choosen conflict" << std::endl;
+		}
+
+		if(node->leftChild!=NULL)
+		printBT(prefix + (isLeft ? "│   " : "    "), node->leftChild, true);
+
+		if(node->rightChild!=NULL)
+		printBT(prefix + (isLeft ? "│   " : "    "), node->rightChild, false);
+	}
+}
+
+void ICBSSearch::printHLTree()
+{
+	printBT("", dummy_start, false);
+}
+
 boost::python::list ICBSSearch::outputPaths()
 {
 	boost::python::list result;
@@ -783,6 +898,8 @@ void ICBSSearch::printStrategy() const
 template<class Map>
 bool MultiMapICBSSearch<Map>::runICBSSearch()
 {
+	initializeDummyStart();
+
 	if (debug_mode)
 		cout << "Start search" << endl;
 	printStrategy();
@@ -836,7 +953,11 @@ bool MultiMapICBSSearch<Map>::runICBSSearch()
 			runtime_conflictdetection += std::clock() - t1;
 
 			t1 = std::clock();
+			if (debug_mode)
+				cout << "conpute heuristic" << endl;
 			curr->h_val = computeHeuristics(*curr);
+			if (debug_mode)
+				cout << "conpute heuristic done" << endl;
 			runtime_computeh += std::clock() - t1;
 			curr->f_val = curr->g_val + curr->h_val;
 
@@ -868,8 +989,11 @@ bool MultiMapICBSSearch<Map>::runICBSSearch()
 			cout << endl;
 			break;
 		}
-		if (debug_mode)
-			cout << "choose conflict: " << get<0>(*curr->conflict)  <<" " << get<1>(*curr->conflict)<<" " << "(" << get<2>(*curr->conflict) / num_col << "," << get<2>(*curr->conflict) % num_col << ") " << get<4>(*curr->conflict) << endl;
+		if (debug_mode) {
+
+			cout << "choose conflict: " << get<0>(*curr->conflict) << " " << get<1>(*curr->conflict) << " " << "(" << get<2>(*curr->conflict) / num_col << "," << get<2>(*curr->conflict) % num_col << ") " << get<4>(*curr->conflict) << endl;
+
+		}
 
 
 
@@ -888,19 +1012,26 @@ bool MultiMapICBSSearch<Map>::runICBSSearch()
 			stringstream con;
 			con << get<0>(*curr->conflict) << get<1>(*curr->conflict) << get<2>(*curr->conflict) << get<3>(*curr->conflict) << get<4>(*curr->conflict);
 			curr->resolvedConflicts.insert(con.str());
+			
 			bool stop = false;
 			bool noRepeat = true;
 			ICBSNode* parent = curr->parent;
 			if (parent != NULL) {
+				cout << "Try find " << con.str() << " in curr's parent nodes" << endl;
 				while (!stop) {
 					cout << "1";
 					if (parent->parent == NULL) {
 						stop = true;
 						break;
 					}
-					noRepeat = !parent->resolvedConflicts.count(con.str());
+					std::unordered_set<std::string>::const_iterator it = parent->resolvedConflicts.find(con.str());
+					if (it!=parent->resolvedConflicts.end()) {
+						noRepeat = false;
+					}
 					assert(noRepeat && "Repeated conflict!");
 					parent = parent->parent;
+
+					
 
 				}
 			}
@@ -941,7 +1072,7 @@ bool MultiMapICBSSearch<Map>::runICBSSearch()
 					std::stringstream key;
 					key << get<0>(*curr->conflict) << get<1>(*curr->conflict) << get<2>(*curr->conflict) << get<3>(*curr->conflict) << get<4>(*curr->conflict);
 
-					ConflictDetial detail = curr->conflictDetailTable[key.str()];
+					const ConflictDetial detail = curr->conflictDetailTable[key.str()];
 					std::vector <std::list< std::pair<int, int> > >* constraints1 = collectConstraints(curr, get<0>(*curr->conflict));
 					std::vector <std::list< std::pair<int, int> > >* constraints2 = collectConstraints(curr, get<1>(*curr->conflict));
 
@@ -963,6 +1094,17 @@ bool MultiMapICBSSearch<Map>::runICBSSearch()
 
 					addModifiedLongBarrierConstraints( *(paths[get<0>(*curr->conflict)]), *(paths[get<1>(*curr->conflict)]),
 					S1_t, S2_t, Rg,detail.g1,detail.g2, num_col, n1->constraints, n2->constraints, a1kMDD, a2kMDD, kDelay);
+
+					if (n1->constraints.size() == 0) {
+						for (int i = 0; i <= kDelay; i++) {
+							n1->constraints.push_back(make_tuple(detail.originalConf, -1, detail.originalT + i));
+						}
+					}
+					if (n2->constraints.size() == 0) {
+						for (int i = 0; i <= kDelay; i++) {
+							n2->constraints.push_back(make_tuple(detail.originalConf, -1, detail.originalT + i));
+						}
+					}
 				}
 
 			}
@@ -1109,10 +1251,16 @@ bool MultiMapICBSSearch<Map>::runICBSSearch()
 			delete (n1);
 			n1 = NULL;
 		}
+		else {
+			curr->leftChild = n1;
+		}
 		if(!Sol2)
 		{
 			delete (n2);
 			n2 = NULL;
+		}
+		else {
+			curr->rightChild = n2;
 		}
 		curr->clear();
 		t1 = std::clock();
@@ -1144,6 +1292,10 @@ bool MultiMapICBSSearch<Map>::runICBSSearch()
 	}
 	//if (debug_mode)
 	//	printPaths();
+	if (debug_mode) {
+		printHLTree();
+	}
+
 	return solution_found;
 }
 
@@ -1199,7 +1351,19 @@ void MultiMapICBSSearch<Map>::initializeDummyStart() {
 	min_f_val = dummy_start->f_val;
 	focal_list_threshold = min_f_val * focal_w;
 	if (debug_mode)
+	{
 		cout << "Initializing done" << endl;
+
+		cout << "Dummy start conflicts:";
+		for (auto &conit : dummy_start->unknownConf) {
+			cout << "<" << get<0>(*conit) << "," << get<1>(*conit) << ","
+				<< "(" << get<2>(*conit) / num_col << "," << get<2>(*conit) % num_col << ")" << ","
+				<< "(" << get<3>(*conit) / num_col << "," << get<3>(*conit) % num_col << ")" << ","
+				<< get<4>(*conit) << ">; ";
+
+		}
+		cout << endl;
+	}
 }
 
 inline void ICBSSearch::releaseClosedListNodes() 
@@ -1275,12 +1439,13 @@ MultiMapICBSSearch<Map>::MultiMapICBSSearch(Map* ml, AgentsLoader& al, double f_
 	if (debug_mode) {
 		cout << "Initializing search engines done" << endl;
 	}
-	initializeDummyStart();
 }
 
 template<class Map>
 void MultiMapICBSSearch<Map>::buildMDD(ICBSNode& curr, int id)
 {
+	if (debug_mode)
+		cout << "start build MDD" << endl;
 	MDD<Map> * mdd = new MDD<Map>();
 
 	vector < list< pair<int, int> > >* cons_vec = collectConstraints(&curr, id);
@@ -1300,6 +1465,8 @@ void MultiMapICBSSearch<Map>::buildMDD(ICBSNode& curr, int id)
 	}
 	delete mdd;
 	delete cons_vec;
+	if (debug_mode)
+		cout << "build MDD done" << endl;
 }
 
 template class MultiMapICBSSearch<MapLoader>;

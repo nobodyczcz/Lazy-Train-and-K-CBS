@@ -2,8 +2,11 @@
 #include "MDD.h"
 #include <boost/unordered_map.hpp>
 #include <unordered_set>
+#include <unordered_map>
 
 struct ConflictDetial {//extra information for k delay long RM.
+	int a1;
+	int a2;
 	int s1;
 	int s2;
 	int g1;
@@ -12,6 +15,10 @@ struct ConflictDetial {//extra information for k delay long RM.
 	int s2_t;
 	int g1_t;
 	int g2_t;
+	int rs;
+	int rg;
+	int originalConf;
+	int originalT;
 };
 
 class ICBSNode
@@ -55,6 +62,7 @@ public:
 	focal_handle_t focal_handle;
 
 	std::unordered_set<string> resolvedConflicts;
+	std::unordered_map<int, vector<std::pair<int, int>>> discovedRectangles;
 
 	
 
@@ -94,7 +102,8 @@ public:
 	std::shared_ptr<std::tuple<int, int, int, int, int>> conflict;
 
 	ICBSNode* parent;
-
+	ICBSNode* leftChild=NULL;
+	ICBSNode* rightChild=NULL;
 	int agent_id;
 	std::vector<PathEntry> path; // path of agent_id
 	std::list<std::tuple<int, int, int>> constraints; // constraints imposed to agent_id
@@ -109,6 +118,8 @@ public:
 	bool in_focalList=false;
 	uint64_t time_expanded;
 	uint64_t time_generated;
+
+	
 
 
 	void clear();

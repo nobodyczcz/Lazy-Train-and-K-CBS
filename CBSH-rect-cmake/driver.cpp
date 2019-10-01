@@ -41,6 +41,9 @@ int main(int argc, char** argv)
 		("asyConstraint","Using asymmetry range constraint to resolve k-delay conflict. Else use symmetry range constraint ")
 		("short", "do not use long barrier constraint to resolve k delay rectangle conflict")
 		("only_generate_instance", po::value<std::string>()->default_value(""),"no searching")
+		("corridor2", po::value<bool>(), "reason about 2-way branching corridor conflicts")
+		("corridor4", po::value<bool>(), "reason about 4-way branching corridor conflicts")
+		("cardinalCorridor", po::value<bool>(), "only reason about cardinal corridor conflicts")
 
 	;
 	po::variables_map vm;
@@ -113,6 +116,22 @@ int main(int argc, char** argv)
 	std::cout << "Start Searching" << endl;
 	MultiMapICBSSearch <MapLoader> icbs(&ml, al, 1.0, s, vm["cutoffTime"].as<int>() * CLOCKS_PER_SEC, vm["kDelay"].as<int>(), options1);
 	// what is the 1.0
+	if (vm.count("cardinalRect"))
+	{
+		icbs.cardinalRect = vm["cardinalRect"].as<bool>();
+	}
+	if (vm.count("corridor2"))
+	{
+		icbs.corridor2 = vm["corridor2"].as<bool>();
+	}
+	if (vm.count("corridor4"))
+	{
+		icbs.corridor4 = vm["corridor4"].as<bool>();
+	}
+	if (vm.count("cardinalCorridor"))
+	{
+		icbs.cardinalCorridorReasoning = vm["cardinalCorridor"].as<bool>();
+	}
 	
 	bool res;
 	res = icbs.runICBSSearch();

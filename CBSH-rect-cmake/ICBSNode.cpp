@@ -10,5 +10,6 @@ void ICBSNode::clear()
 	semiConf.clear();
 	nonConf.clear();
 	unknownConf.clear();
+	conflictDetailTable.clear();
 }
 

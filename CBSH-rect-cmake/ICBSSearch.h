@@ -50,6 +50,13 @@ public:
 	boost::python::list outputPaths();
 	bool isTimeout() { return timeout; };
 
+	bool cardinalRect = false;
+	bool rectangleMDD = false;
+	bool corridor2 = false;
+	bool corridor4 = false;
+	bool cardinalCorridorReasoning = false;
+	bool targetReasoning;
+
 
 protected:
 
@@ -111,6 +118,8 @@ protected:
 	// print
 	void printPaths() const;
 	void printStrategy() const;
+	void printBT(const std::string& prefix, const ICBSNode* node, bool isLeft);
+	void printHLTree();
 	virtual void buildMDD(ICBSNode& curr, int id) {};
 	virtual bool findPathForSingleAgent(ICBSNode*  node, int ag, double lowerbound = 0) { return false; };
 	bool timeout = false;
