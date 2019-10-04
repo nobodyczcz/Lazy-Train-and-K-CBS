@@ -1,6 +1,7 @@
 #pragma once
 #include "Conflict.h"
 #include <climits>
+#include <unordered_set>
 class ConstraintTable
 {
 public:
@@ -17,7 +18,7 @@ public:
 	};
 
 private:
-	unordered_map<size_t, list<pair<int, int> > > CT;
+	unordered_map<size_t, std::unordered_set<int> > CT;
 	
 };
 

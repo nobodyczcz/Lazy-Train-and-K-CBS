@@ -136,6 +136,8 @@ protected:
 
 	// print
 	void printPaths() const;
+	void printPaths(Path& path) const;
+	
 	void printStrategy() const;
 };
 

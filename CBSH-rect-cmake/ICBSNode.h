@@ -28,13 +28,11 @@ public:
 			if (n1->num_of_collisions == n2->num_of_collisions)
 			{
 				if (n1->g_val == n2->g_val) {
-					if (n1->h_val == n2->h_val) {
 						if (rand() % 2 == 0)
 							return true;
 						else
 							return false;
-					}
-					return n1->h_val <= n2->h_val;
+
 				}
 				return n1->g_val <= n2->g_val;
 
@@ -62,7 +60,8 @@ public:
 	// conflicts in the current paths
 	std::list<std::shared_ptr<Conflict>> conflicts;
 	std::list<std::shared_ptr<Conflict>> unknownConf;
-	
+	std::unordered_set<string> resolvedConflicts;
+
 	// The chosen conflict
 	//std::shared_ptr<RConflict> rConflict;
 	std::shared_ptr<Conflict> conflict;

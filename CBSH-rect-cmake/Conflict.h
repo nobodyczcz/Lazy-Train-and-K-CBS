@@ -48,12 +48,12 @@ void addKDelayBarrierConstraints(int S1, int S2, int S1_t, int S2_t, int Rg, int
 // add a vertival modified barrier constraint
 bool addModifiedVerticalLongBarrierConstraint(const std::vector<PathEntry>& path, int y,
 	int Ri_x, int Rg_x, int Rg_t, int num_col, int St,
-	std::list<Constraint>& constraints, std::vector<MDDPath*>& kMDD, int k);
+	std::list<Constraint>& constraints, int k, std::vector<MDDPath*>* kMDD);
 
 // add a horizontal modified barrier constraint
 bool addModifiedHorizontalLongBarrierConstraint(const std::vector<PathEntry>& path, int x,
 	int Ri_y, int Rg_y, int Rg_t, int num_col, int St,
-	std::list<Constraint>& constraints, std::vector<MDDPath*>& kMDD, int k);
+	std::list<Constraint>& constraints, int k, std::vector<MDDPath*>* kMDD);
 
 
 
@@ -76,7 +76,8 @@ public:
 	int g2_t;
 	int rs;
 	int rg;
-	int originalConf;
+	int originalConf1;
+	int originalConf2=-1;
 	int originalT;
 	std::list<Constraint> constraint1;
 	std::list<Constraint> constraint2;
@@ -89,11 +90,11 @@ public:
 		this->a2 = a2;
 		this->t = t;
 		this->k = k;
+		this->originalConf1 = v;
 		for (int i = 0; i <= kRobust; i++) {
 			this->constraint1.emplace_back(v, -1, t+i, constraint_type::VERTEX);
 			this->constraint2.emplace_back(v, -1, t+i, constraint_type::VERTEX);
 		}
-		
 		type = conflict_type::STANDARD;
 	}
 		
@@ -102,6 +103,9 @@ public:
 		this->a1 = a1;
 		this->a2 = a2;
 		this->t = t;
+		this->originalConf1 = v1;
+		this->originalConf2 = v2;
+
 		this->constraint1.emplace_back(v1, v2, t, constraint_type::EDGE);
 		this->constraint2.emplace_back(v2, v1, t, constraint_type::EDGE);
 		type = conflict_type::STANDARD;
@@ -112,6 +116,8 @@ public:
 		this->a1 = a1;
 		this->a2 = a2;
 		this->t = std::min(t3, t4);
+		this->originalConf1 = v1;
+		this->originalConf2 = v2;
 		this->constraint1.emplace_back(v1, t3, std::min(t3_ - 1, t4 + k), constraint_type::RANGE);
 		this->constraint2.emplace_back(v2, t4, std::min(t4_ - 1, t3 + k), constraint_type::RANGE);
 		type = conflict_type::CORRIDOR2;
@@ -123,6 +129,8 @@ public:
 		this->a1 = a1;
 		this->a2 = a2;
 		this->t = std::min(t1, t2);
+		this->originalConf1 = v1;
+		this->originalConf2 = v2;
 		this->constraint1.emplace_back(v1, t1, t1 + 2 * k - 1, constraint_type::RANGE);
 		this->constraint1.emplace_back(v2, t1 + k, std::min(t2 + 2 * k, t1 + h - 1), constraint_type::RANGE);
 		this->constraint2.emplace_back(v2, t2, t2 + 2 * k - 1, constraint_type::RANGE);
@@ -135,6 +143,8 @@ public:
 		this->a1 = a1;
 		this->a2 = a2;
 		this->t = Rg_t - abs(Rg.first - Rs.first) - abs(Rg.second - Rs.second);
+		this->originalConf1 = Rs.first*num_col + Rs.second;
+		this->originalConf2 = Rg.first*num_col + Rg.second;;
 		if (abs(move1) == 1 || abs(move2) > 1) // first agent moves horizontally and second agent moves vertically
 		{
 			if (!addModifiedVerticalBarrierConstraint(*paths[a1], Rg.second, Rs.first, Rg.first, Rg_t, num_col, constraint1))
@@ -167,7 +177,8 @@ public:
 		this->a1 = a1;
 		this->a2 = a2;
 		this->t = Rg_t - abs(Rg.first - Rs.first) - abs(Rg.second - Rs.second);
-
+		this->originalConf1 = Rs.first*num_col + Rs.second;
+		this->originalConf2 = Rg.first*num_col + Rg.second;;
 		if (s1.first == s2.first)
 		{
 			if ((s1.second - s2.second) * (s2.second - Rg.second) >= 0)
@@ -230,7 +241,9 @@ public:
 		this->a1 = a1;
 		this->a2 = a2;
 		this->t = Rg_t - abs(Rg.first - Rs.first) - abs(Rg.second - Rs.second);
-		
+		this->originalConf1 = Rs.first*num_col + Rs.second;
+		this->originalConf2 = Rg.first*num_col + Rg.second;
+		this->k = k;
 		addKDelayBarrierConstraints(S1, S2, S1_t, S2_t, Rg.first*num_col+Rg.second, G1, G2, num_col,
 			constraint1, constraint2,k, asymmetry_constraint);
 
@@ -241,11 +254,14 @@ public:
 	bool kRectangleConflict(int a1, int a2, const std::pair<int, int>& Rs, const std::pair<int, int>& Rg,
 		const std::pair<int, int>& s1, const std::pair<int, int>& s2, int Rg_t,
 		const std::vector<Path*>& paths, int S1_t,int S2_t, const std::pair<int, int>& G1, const std::pair<int, int>& G2,
-		int num_col, std::vector<MDDPath*>& a1kMDD, std::vector<MDDPath*>& a2kMDD ) // For K-RM
+		int num_col, int k, std::vector<MDDPath*>* a1kMDD=NULL, std::vector<MDDPath*>* a2kMDD=NULL ) // For K-RM
 	{
 		this->a1 = a1;
 		this->a2 = a2;
 		this->t = Rg_t - abs(Rg.first - Rs.first) - abs(Rg.second - Rs.second);
+		this->originalConf1 = Rs.first*num_col + Rs.second;
+		this->originalConf2 = Rg.first*num_col + Rg.second;
+		this->k = k;
 
 		int s1_x = s1.first;
 		int s1_y = s1.second;
@@ -257,6 +273,7 @@ public:
 		int g1_y = G1.second;
 		int g2_x = G2.first;
 		int g2_y = G2.second;
+
 
 		int R1_x, R1_y, R2_x, R2_y, G1_x, G1_y, G2_x, G2_y, G1_t, G2_t;
 		if ((s1_x == s2_x && (s1_y - s2_y) * (s2_y - Rg_y) < 0) ||
@@ -277,9 +294,9 @@ public:
 			G1_t = Rg_t + abs(G1_y - Rg_y);
 			G2_t = Rg_t + abs(G2_x - Rg_x);
 			
-			if (!addModifiedHorizontalLongBarrierConstraint(*paths[a1], Rg_x, R1_y, G1_y, G1_t, num_col, S1_t, constraint1, a1kMDD, k))
+			if (!addModifiedHorizontalLongBarrierConstraint(*paths[a1], Rg_x, R1_y, G1_y, G1_t, num_col, S1_t, constraint1, k, a1kMDD))
 				return false;
-			if (!addModifiedVerticalLongBarrierConstraint(*paths[a2], Rg_y, R2_x, G2_x, G2_t, num_col, S2_t, constraint2, a2kMDD, k))
+			if (!addModifiedVerticalLongBarrierConstraint(*paths[a2], Rg_y, R2_x, G2_x, G2_t, num_col, S2_t, constraint2, k, a2kMDD))
 				return false;
 		}
 		else
@@ -300,12 +317,14 @@ public:
 			G1_t = Rg_t + abs(G1_x - Rg_x);
 			G2_t = Rg_t + abs(G2_y - Rg_y);
 			
-			if(!addModifiedVerticalLongBarrierConstraint(*paths[a1], Rg_y, R1_x, G1_x, G1_t, num_col, S1_t, constraint1, a1kMDD, k))
+			if(!addModifiedVerticalLongBarrierConstraint(*paths[a1], Rg_y, R1_x, G1_x, G1_t, num_col, S1_t, constraint1, k, a1kMDD))
 				return false;
-			if (!addModifiedHorizontalLongBarrierConstraint(*paths[a2], Rg_x, R2_y, G2_y, G2_t, num_col, S2_t, constraint2, a2kMDD, k))
+			if (!addModifiedHorizontalLongBarrierConstraint(*paths[a2], Rg_x, R2_y, G2_y, G2_t, num_col, S2_t, constraint2, k, a2kMDD))
 				return false;
 			//exit(0);
 		}
+		type = conflict_type::RECTANGLE;
+		return true;
 	}
 
 	void targetConflict(int a1, int a2, int v, int t)
@@ -313,6 +332,7 @@ public:
 		this->a1 = a1;
 		this->a2 = a2;
 		this->t = t;
+		this->originalConf1 = v;
 		this->constraint1.emplace_back(-1, a1, t, constraint_type::LENGTH); // length of a1 should be larger than t
 		this->constraint2.emplace_back(v, a1, t, constraint_type::LENGTH); // length of a1 should be no larger than t, and other agents can not use v at and after timestep t
 		type = conflict_type::TARGET;

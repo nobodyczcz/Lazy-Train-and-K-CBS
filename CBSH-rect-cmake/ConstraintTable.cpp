@@ -2,7 +2,10 @@
 
 void ConstraintTable::insert(int loc, int t_min, int t_max)
 {
-	CT[loc].emplace_back(t_min, t_max);
+
+	for (int t = t_min; t < t_max; t++) {
+		CT[loc].insert(t);
+	}
 	if (loc == goal_location && t_max > length_min)
 	{
 		length_min = t_max;
@@ -20,10 +23,9 @@ bool ConstraintTable::is_constrained(int loc, int t)
 	{
 		return false;
 	}
-	for (auto constraint: it->second)
-	{
-		if (constraint.first <= t && t < constraint.second)
-			return true;
-	}
-	return false;
+	
+	if (CT[loc].count(t))
+		return true;
+	else
+		return false;
 }
