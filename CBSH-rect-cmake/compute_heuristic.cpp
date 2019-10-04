@@ -1,6 +1,5 @@
 #include <boost/heap/fibonacci_heap.hpp>
-#include "flat_map_loader.h"
-
+#include "ConstraintTable.h"
 #include "compute_heuristic.h"
 #include <google/dense_hash_map>
 #include <iostream>

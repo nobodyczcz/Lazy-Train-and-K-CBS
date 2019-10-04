@@ -4,7 +4,7 @@
 #include <iostream>
 
 template<class Map>
-bool MDD<Map>::buildMDD(const std::vector <std::list< std::pair<int, int> > >& constraints, int numOfLevels, SingleAgentICBS<Map> & solver)
+bool MDD<Map>::buildMDD( ConstraintTable& constraints, int numOfLevels, SingleAgentICBS<Map> & solver)
 {
 	MDDNode* root = new MDDNode(solver.start_location, NULL); // Root
 	root->heading = solver.start_heading;
@@ -60,7 +60,8 @@ bool MDD<Map>::buildMDD(const std::vector <std::list< std::pair<int, int> > >& c
 			//cout << "newLoc " << newLoc << " heading " << new_heading<<" h "<< solver.my_heuristic[newLoc].heading[new_heading] << endl;
 
 			if (solver.my_heuristic[newLoc].heading.count(new_heading) && solver.my_heuristic[newLoc].heading[new_heading] < heuristicBound &&
-				!solver.isConstrained(node->location, newLoc, node->level + 1, &constraints)) // valid move
+				!constraints.is_constrained(newLoc, node->level + 1) &&
+				!constraints.is_constrained(node->location * solver.map_size + newLoc, node->level + 1)) // valid move
 			{
 				std::list<MDDNode*>::reverse_iterator child = closed.rbegin();
 				bool find = false;
@@ -122,7 +123,7 @@ bool MDD<Map>::buildMDD(const std::vector <std::list< std::pair<int, int> > >& c
 }
 
 template<class Map>
-bool MDD<Map>::buildMDD(const std::vector <std::list< std::pair<int, int> > >& constraints, 
+bool MDD<Map>::buildMDD( ConstraintTable& constraints,
 	int numOfLevels, SingleAgentICBS<Map> & solver,int start,int start_time, int start_heading)
 {
 	MDDNode* root = new MDDNode(start, NULL); // Root
@@ -179,7 +180,8 @@ bool MDD<Map>::buildMDD(const std::vector <std::list< std::pair<int, int> > >& c
 			//cout << "newLoc " << newLoc << " heading " << new_heading<<" h "<< solver.my_heuristic[newLoc].heading[new_heading] << endl;
 
 			if (solver.my_heuristic[newLoc].heading.count(new_heading) && solver.my_heuristic[newLoc].heading[new_heading] < heuristicBound &&
-				!solver.isConstrained(node->location, newLoc, start_time + node->level + 1, &constraints)) // valid move
+				!constraints.is_constrained(newLoc, node->level + 1) &&
+				!constraints.is_constrained(node->location * solver.map_size + newLoc, node->level + 1)) // valid move
 			{
 				std::list<MDDNode*>::reverse_iterator child = closed.rbegin();
 				bool find = false;
@@ -318,4 +320,5 @@ MDD<Map>::~MDD()
 
 template class MDD<MapLoader>;
 template class MDD<FlatlandLoader>;
+
 

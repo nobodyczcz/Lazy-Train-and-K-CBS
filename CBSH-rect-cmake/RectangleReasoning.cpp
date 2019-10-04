@@ -1,547 +1,12 @@
 #include "RectangleReasoning.h"
-#include "MDD.h"
-#include "flat_map_loader.h"
+
 #include <algorithm>    // std::find
 #include <iostream>
-#include <vector>
-#include <unordered_set>
-#include <sstream>
-#include <string>
+#include <ctime> //std::time
 
 
-// add a pair of barrier constraints
-void addBarrierConstraints(int S1, int S2, int S1_t, int S2_t, int Rg, int num_col,
-	std::list<std::tuple<int, int, int>>& constraints1, std::list<std::tuple<int, int, int>>& constraints2)
-{
-	int s1_x = S1 / num_col;
-	int s1_y = S1 % num_col;
-	int s2_x = S2 / num_col;
-	int s2_y = S2 % num_col;
-	int Rg_x = Rg / num_col;
-	int Rg_y = Rg % num_col;
-	int Rg_t = S1_t + abs(Rg_x - s1_x) + abs(Rg_y - s1_y);
 
-	int R1_x, R1_y, R2_x, R2_y;
-	if (s1_x == s2_x)
-	{
-		if ((s1_y - s2_y) * (s2_y - Rg_y) >= 0)
-		{
-			R1_x = s1_x;
-			R2_x = Rg_x;
-			R1_y = Rg_y;
-			R2_y = s2_y;
-		}
-		else
-		{
-			R1_x = Rg_x;
-			R2_x = s2_x;
-			R1_y = s1_y;
-			R2_y = Rg_y;
-		}
-	}
-	else if ((s1_x - s2_x)*(s2_x - Rg_x) >= 0)
-	{
-		R1_x = Rg_x;
-		R2_x = s2_x;
-		R1_y = s1_y;
-		R2_y = Rg_y;
-	}
-	else
-	{
-		R1_x = s1_x;
-		R2_x = Rg_x;
-		R1_y = Rg_y;
-		R2_y = s2_y;
-	}
 
-	constraints1.push_back(std::make_tuple(-1 - R1_x * num_col - R1_y, Rg, Rg_t));
-	constraints2.push_back(std::make_tuple(-1 - R2_x * num_col - R2_y, Rg, Rg_t));
-}
-
-// add a pair of barrier constraints
-void addShortKDelayBarrierConstraints(int S1, int S2, int S1_t, int S2_t, int Rg, int num_col,
-	std::list<std::tuple<int, int, int>>& constraints1, std::list<std::tuple<int, int, int>>& constraints2, int k)
-{
-	int s1_x = S1 / num_col;
-	int s1_y = S1 % num_col;
-	int s2_x = S2 / num_col;
-	int s2_y = S2 % num_col;
-	int Rg_x = Rg / num_col;
-	int Rg_y = Rg % num_col;
-	int Rg_t = S1_t + abs(Rg_x - s1_x) + abs(Rg_y - s1_y);
-
-	int R1_x, R1_y, R2_x, R2_y;
-	if (s1_x == s2_x)
-	{
-		if ((s1_y - s2_y) * (s2_y - Rg_y) >= 0)
-		{
-			R1_x = s1_x;
-			R2_x = Rg_x;
-			R1_y = Rg_y;
-			R2_y = s2_y;
-		}
-		else
-		{
-			R1_x = Rg_x;
-			R2_x = s2_x;
-			R1_y = s1_y;
-			R2_y = Rg_y;
-		}
-	}
-	else if ((s1_x - s2_x)*(s2_x - Rg_x) >= 0)
-	{
-		R1_x = Rg_x;
-		R2_x = s2_x;
-		R1_y = s1_y;
-		R2_y = Rg_y;
-	}
-	else
-	{
-		R1_x = s1_x;
-		R2_x = Rg_x;
-		R1_y = Rg_y;
-		R2_y = s2_y;
-	}
-
-	for (int i = 0; i <= k; i++) {
-		constraints1.push_back(std::make_tuple(-1 - R1_x * num_col - R1_y, Rg, Rg_t+i));
-		constraints2.push_back(std::make_tuple(-1 - R2_x * num_col - R2_y, Rg, Rg_t+i));
-	}
-}
-// add a pair of long k-delay barrier constraints
-void addKDelayBarrierConstraints(int S1, int S2, int S1_t, int S2_t, int Rg, int G1, int G2, int num_col,
-	std::list<std::tuple<int, int, int>>& constraints1, std::list<std::tuple<int, int, int>>& constraints2,int k,bool asymmetry_constraint)
-{
-	// 
-	int s1_x = S1 / num_col;
-	int s1_y = S1 % num_col;
-	int s2_x = S2 / num_col;
-	int s2_y = S2 % num_col;
-	int g1_x = G1 / num_col;
-	int g1_y = G1 % num_col;
-	int g2_x = G2 / num_col;
-	int g2_y = G2 % num_col;
-	int Rg_x = Rg / num_col;
-	int Rg_y = Rg % num_col;
-	int Rg_t = S1_t + abs(Rg_x - s1_x) + abs(Rg_y - s1_y);
-
-
-	int R1_x, R1_y, R2_x, R2_y;
-	int Rg1_x, Rg1_y, Rg2_x, Rg2_y;
-	if (s1_x == s2_x)
-	{
-		if ((s1_y - s2_y) * (s2_y - Rg_y) >= 0)
-		{
-			R1_x = s2_x;//different
-			Rg1_x = g2_x;
-			R2_x = Rg_x;
-			Rg2_x = Rg_x;
-			R1_y = Rg_y;
-			Rg1_y = Rg_y;
-			R2_y = s1_y;//different
-			Rg2_y = g1_y;
-		}
-		else
-		{
-			R1_x = Rg_x;
-			Rg1_x = Rg_x;
-			R2_x = s1_x;//different
-			Rg2_x = g1_x;
-			R1_y = s2_y;//different
-			Rg1_y = g2_y;
-			R2_y = Rg_y;
-			Rg2_y = Rg_y;
-		}
-	}
-	else if ((s1_x - s2_x)*(s2_x - Rg_x) >= 0)
-	{
-		R1_x = Rg_x;
-		Rg1_x = Rg_x;
-		R2_x = s1_x;//different
-		Rg2_x = g1_x;
-		R1_y = s2_y;//different
-		Rg1_y = g2_y;
-		R2_y = Rg_y;
-		Rg2_y = Rg_y;
-	}
-	else
-	{
-		R1_x = s2_x;//different
-		Rg1_x = g2_x;
-		R2_x = Rg_x;
-		Rg2_x = Rg_x;
-		R1_y = Rg_y;
-		Rg1_y = Rg_y;
-		R2_y = s1_y;//different
-		Rg2_y = g1_y;
-	}
-
-	int Rg1_t = S1_t + abs(Rg1_x - s1_x) + abs(Rg1_y - s1_y);
-	int Rg2_t = S1_t + abs(Rg2_x - s1_x) + abs(Rg2_y - s1_y);
-
-	if (asymmetry_constraint) {
-		constraints1.push_back(std::make_tuple(-1 - R1_x * num_col - R1_y, Rg1_x * num_col + Rg1_y, Rg1_t));
-		for (int i = -k; i <= k; i++) {
-			if ((Rg_t + i) < 0)
-				continue;
-			constraints2.push_back(std::make_tuple(-1 - R2_x * num_col - R2_y, Rg2_x * num_col + Rg2_y, Rg2_t + i));
-		}
-	}
-	else {
-		for (int i = 0; i <= k; i++) {
-			constraints1.push_back(std::make_tuple(-1 - R1_x * num_col - R1_y, Rg1_x * num_col + Rg1_y, Rg1_t + i));
-
-			constraints2.push_back(std::make_tuple(-1 - R2_x * num_col - R2_y, Rg2_x * num_col + Rg2_y, Rg2_t + i));
-		}
-	}
-	
-	//exit(0);
-}
-
-// add a pair of modified barrier constraints
-void addModifiedBarrierConstraints(const std::vector<PathEntry>& path1, const std::vector<PathEntry>& path2,
-	int S1_t, int S2_t, int Rg, int num_col,
-	std::list<std::tuple<int, int, int>>& constraints1, std::list<std::tuple<int, int, int>>& constraints2)
-{
-	int s1_x = path1[S1_t].location / num_col;
-	int s1_y = path1[S1_t].location % num_col;
-	int s2_x = path2[S2_t].location / num_col;
-	int s2_y = path2[S2_t].location % num_col;
-	int Rg_x = Rg / num_col;
-	int Rg_y = Rg % num_col;
-	int Rg_t = S1_t + abs(Rg_x - s1_x) + abs(Rg_y - s1_y);
-
-	int R1_x, R1_y, R2_x, R2_y;
-	if ((s1_x == s2_x && (s1_y - s2_y) * (s2_y - Rg_y) < 0) ||
-		(s1_x != s2_x && (s1_x - s2_x)*(s2_x - Rg_x) >= 0))
-	{
-		R1_x = Rg_x;
-		R2_x = s2_x;
-		R1_y = s1_y;
-		R2_y = Rg_y;
-		addModifiedHorizontalBarrierConstraint(path1, Rg_x, R1_y, Rg_y, Rg_t, num_col, constraints1);
-		addModifiedVerticalBarrierConstraint(path2, Rg_y, R2_x, Rg_x, Rg_t, num_col, constraints2);
-	}
-	else
-	{
-		R1_x = s1_x;
-		R2_x = Rg_x;
-		R1_y = Rg_y;
-		R2_y = s2_y;
-		addModifiedVerticalBarrierConstraint(path1, Rg_y, R1_x, Rg_x, Rg_t, num_col, constraints1);
-		addModifiedHorizontalBarrierConstraint(path2, Rg_x, R2_y, Rg_y, Rg_t, num_col, constraints2);		
-	}
-}
-
-// add a vertival modified barrier constraint
-void addModifiedVerticalBarrierConstraint(const std::vector<PathEntry>& path, int y,
-	int Ri_x, int Rg_x, int Rg_t, int num_col,
-	std::list<std::tuple<int, int, int>>& constraints)
-{
-	int sign = Ri_x < Rg_x ? 1 : -1;
-	int Ri_t = Rg_t - abs(Ri_x - Rg_x);
-	int t1 = -1;
-	for (int t2 = Ri_t; t2 <= Rg_t; t2++)
-	{
-		int loc = (Ri_x + (t2 - Ri_t) * sign) * num_col + y;
-		std::list<int>::const_iterator it = std::find(path[t2].locations.begin(), path[t2].locations.end(), loc);
-		if (it == path[t2].locations.end() && t1 >= 0) // add constraints [t1, t2)
-		{
-			int loc1 = (Ri_x + (t1 - Ri_t) * sign) * num_col + y;
-			int loc2 = (Ri_x + (t2 - 1 - Ri_t) * sign) * num_col + y;
-			constraints.push_back(std::make_tuple(-1 - loc1, loc2, t2 - 1));
-			t1 = -1;
-			continue;
-		}
-		else if (it != path[t2].locations.end() && t1 < 0)
-		{
-			t1 = t2;
-		}
-		if (it != path[t2].locations.end() && t2 == Rg_t)
-		{
-			int loc1 = (Ri_x + (t1 - Ri_t) * sign) * num_col + y;
-			constraints.push_back(std::make_tuple(-1 - loc1, loc, t2)); // add constraints [t1, t2]
-		}
-	}
-}
-
-// add a horizontal modified barrier constraint
-void addModifiedHorizontalBarrierConstraint(const std::vector<PathEntry>& path, int x,
-	int Ri_y, int Rg_y, int Rg_t, int num_col,
-	std::list<std::tuple<int, int, int>>& constraints)
-{
-	int sign = Ri_y < Rg_y ? 1 : -1;
-	int Ri_t = Rg_t - abs(Ri_y - Rg_y);
-	int t1 = -1;
-	for (int t2 = Ri_t; t2 <= Rg_t; t2++)
-	{
-		int loc = (Ri_y + (t2 - Ri_t) * sign) + x * num_col;
-		std::list<int>::const_iterator it = std::find(path[t2].locations.begin(), path[t2].locations.end(), loc);
-		if (it == path[t2].locations.end() && t1 >= 0) // add constraints [t1, t2)
-		{
-			int loc1 = (Ri_y + (t1 - Ri_t) * sign) + x * num_col;
-			int loc2 = (Ri_y + (t2 - 1 - Ri_t) * sign) + x * num_col;
-			constraints.push_back(std::make_tuple(-1 - loc1, loc2, t2 - 1));
-			t1 = -1;
-			continue;
-		}
-		else if (it != path[t2].locations.end() && t1 < 0)
-		{
-			t1 = t2;
-		}
-		if (it != path[t2].locations.end() && t2 == Rg_t)
-		{
-			int loc1 = (Ri_y + (t1 - Ri_t) * sign) + x * num_col;
-			constraints.push_back(std::make_tuple(-1 - loc1, loc, t2)); // add constraints [t1, t2]
-		}
-	}
-}
-
-// add a pair of modified barrier constraints
-void addModifiedLongBarrierConstraints(const std::vector<PathEntry>& path1, const std::vector<PathEntry>& path2, 
-	int S1_t, int S2_t, int Rg, int G1, int G2, int num_col,
-	std::list<std::tuple<int, int, int>>& constraints1, std::list<std::tuple<int, int, int>>& constraints2,
-	vector<shared_ptr<MDDEmpty>>& a1kMDD, vector<shared_ptr<MDDEmpty>>& a2kMDD, int k)
-{
-	int s1_x = path1[S1_t].location / num_col;
-	int s1_y = path1[S1_t].location % num_col;
-	int s2_x = path2[S2_t].location / num_col;
-	int s2_y = path2[S2_t].location % num_col;
-	int Rg_x = Rg / num_col;
-	int Rg_y = Rg % num_col;
-	int Rg_t = S1_t + abs(Rg_x - s1_x) + abs(Rg_y - s1_y);
-	int g1_x = G1 / num_col;
-	int g1_y = G1 % num_col;
-	int g2_x = G2 / num_col;
-	int g2_y = G2 % num_col;
-	//cout << "s1: " << s1_x << "," << s1_y << endl;
-	//cout << "s2: " << s2_x << "," << s2_y << endl;
-	//cout << "rg: " << Rg_x << "," << Rg_y << endl;
-	//cout << "Rg_t: " << Rg_t << endl;
-
-	
-
-
-
-	int R1_x, R1_y, R2_x, R2_y, G1_x, G1_y, G2_x, G2_y, G1_t, G2_t ;
-	if ((s1_x == s2_x && (s1_y - s2_y) * (s2_y - Rg_y) < 0) ||
-		(s1_x != s2_x && (s1_x - s2_x)*(s2_x - Rg_x) >= 0))
-	{
-		R1_x = Rg_x;
-		G1_x = Rg_x;
-
-		R2_x = s1_x;
-		G2_x = g1_x;
-
-		R1_y = s2_y;
-		G1_y = g2_y;
-
-		R2_y = Rg_y;
-		G2_y = Rg_y;
-
-		G1_t = Rg_t + abs(G1_y - Rg_y);
-		G2_t = Rg_t + abs(G2_x - Rg_x);
-
-		addModifiedHorizontalLongBarrierConstraint(path1, Rg_x, R1_y, G1_y, G1_t, num_col, S1_t, constraints1,a1kMDD,k);
-		addModifiedVerticalLongBarrierConstraint(path2, Rg_y, R2_x, G2_x, G2_t, num_col, S2_t, constraints2,a2kMDD,k);
-	}
-	else
-	{
-		R1_x = s2_x;
-		G1_x = g2_x;
-
-		R2_x = Rg_x;
-		G2_y = Rg_x;
-
-		R1_y = Rg_y;
-		G1_y = Rg_y;
-
-		R2_y = s1_y;
-		G2_y = g1_y;
-
-
-		G1_t = Rg_t + abs(G1_x - Rg_x);
-		G2_t = Rg_t + abs(G2_y - Rg_y);
-		addModifiedVerticalLongBarrierConstraint(path1, Rg_y, R1_x, G1_x, G1_t, num_col, S1_t, constraints1,a1kMDD,k);
-		addModifiedHorizontalLongBarrierConstraint(path2, Rg_x, R2_y, G2_y, G2_t, num_col, S2_t, constraints2,a2kMDD,k);
-		//exit(0);
-	}
-}
-
-// add a vertival modified barrier constraint
-void addModifiedVerticalLongBarrierConstraint(const std::vector<PathEntry>& path, int y,
-	int Ri_x, int Rg_x, int Rg_t, int num_col,int St,
-	std::list<std::tuple<int, int, int>>& constraints, vector<shared_ptr<MDDEmpty>>& kMDD,int k)
-{
-
-
-	//std::cout << "vertical y:" << y<<" Rix:"<<Ri_x<<" Rgx:"<< Rg_x<<" t:"<<Rg_t << std::endl;
-
-	//for (int i = 0; i < kMDD.size(); i++) {
-	//	kMDD[i]->print();
-	//}
-
-	int sign = Ri_x < Rg_x ? 1 : -1;
-	int Ri_t = Rg_t - abs(Ri_x - Rg_x);
-	std::unordered_set<string> added;
-
-	for (int t2 = Ri_t; t2 <= Rg_t; t2++)
-	{
-		int loc = (Ri_x + (t2 - Ri_t) * sign) * num_col + y;
-		//std::cout << "target loc: " << loc / 22 << "," << loc % 22 << std::endl;
-		for (int i = 0; i <= k; i++) {
-			//std::cout << "add constraint on k= " << i << " t=" << t2 << ": ";
-			if ((t2 + i < path.size())) {
-				std::list<int>::const_iterator it = std::find(path[t2 + i].locations.begin(), path[t2 + i].locations.end(), loc);
-
-				if (it != path[t2 + i].locations.end())
-				{
-					for (int consk = 0; consk <= k - i; consk++) {
-						//if constraint is on k=0, add more time range constraint until t=t+k
-						std::stringstream con;
-						con << loc << t2 + i+consk;
-						if (!added.count(con.str())) {
-
-							constraints.push_back(std::make_tuple(loc, -1, t2 + i+consk)); // add constraints [t1, t2]
-							//std::cout << "self mdd loc: " << loc / 22 << "," << loc % 22 << " t: " << t2 << "|";
-							added.insert(con.str());
-						}
-					}
-
-
-
-				}
-				//std::cout << std::endl;
-			}
-
-
-
-			//std::cout << "add constraint on k=" << i << " t=" << t2 << ": ";
-			for (int mdd = 0; mdd < kMDD.size(); mdd++) {
-				std::list<MDDNode*>::iterator it;
-				if ((t2 - St + i) >= kMDD[mdd]->levels.size())
-					continue;
-				for (it = kMDD[mdd]->levels[t2 - St + i].begin(); it != kMDD[mdd]->levels[t2 - St + i].end(); ++it) {
-					if ((*it)->location == loc) {
-						for (int consk = 0; consk <= k - i; consk++) {
-							//if constraint is on k=0, add more time range constraint until t=t+k
-							std::stringstream con;
-							con << loc << t2 + i + consk;
-							if (!added.count(con.str())) {
-								constraints.push_back(std::make_tuple(loc, -1, t2 + i + consk)); // add constraints [t1, t2]
-								//std::cout << "kmdd loc: " << loc / 22 << "," << loc % 22 << " t: " << t2 + i + consk << "|";
-								added.insert(con.str());
-							}
-
-						}
-					}
-				}
-
-
-
-			}
-			//std::cout << std::endl;
-		}
-
-	}
-}
-	//cout << "ri: " << Ri_x << "," << y << endl;
-
-	//if (overallFound)
-	//	cout << "vertical rm success" << endl;
-	//else
-	//	cout << "vertical rm failed" << endl;
-
-// add a horizontal modified barrier constraint
-void addModifiedHorizontalLongBarrierConstraint(const std::vector<PathEntry>& path, int x,
-	int Ri_y, int Rg_y, int Rg_t, int num_col, int St,
-	std::list<std::tuple<int, int, int>>& constraints, vector<shared_ptr<MDDEmpty>>& kMDD, int k)
-{
-	/*for (int t = 0; t < path.size(); t++) {
-		std::cout << "(" << path.at(t).location / num_col << "," << path.at(t).location % num_col << ")";
-		list<int>::const_iterator locs;
-		for (locs = path.at(t).locations.begin(); locs != path.at(t).locations.end(); locs++)
-		{
-			cout << (*locs) << " ";
-		}
-		cout << "->";
-
-	}
-	std::cout << std::endl;*/
-	//std::cout << "Horizontal x:" << x << " Riy:" << Ri_y << "Rgy:" << Rg_y << " t:" << Rg_t << std::endl;
-
-	//for (int i = 0; i < kMDD.size(); i++) {
-	//	kMDD[i]->print();
-	//}
-
-	int sign = Ri_y < Rg_y ? 1 : -1;
-	int Ri_t = Rg_t - abs(Ri_y - Rg_y);
-	int t1 = -1;
-	bool overallFound =false;
-	std::unordered_set<string> added;
-	for (int t2 = Ri_t; t2 <= Rg_t; t2++)
-	{
-		int loc = (Ri_y + (t2 - Ri_t) * sign) + x * num_col;
-		//std::cout << "target loc: " << loc / 22 << "," << loc % 22 << std::endl;
-		for (int i = 0; i <= k; i++) {
-			//std::cout << "add constraint on k= "<<i << " t=" << t2 << ": ";
-			if ((t2 + i < path.size())) {
-				std::list<int>::const_iterator it = std::find(path[t2 + i].locations.begin(), path[t2 + i].locations.end(), loc);
-
-				if ( it != path[t2 + i].locations.end() )
-				{
-					for (int consk = 0; consk <= k - i; consk++) {
-						//if constraint is on k=0, add more time range constraint until t=t+k
-						std::stringstream con;
-						con << loc << t2 + i+ consk;
-						if (!added.count(con.str())) {
-
-							constraints.push_back(std::make_tuple(loc, -1, t2 + i+consk)); // add constraints [t1, t2]
-							//std::cout << "self mdd loc: " << loc / 22 << "," << loc % 22 << " t: " << t2 << "|";
-							added.insert(con.str());
-						}
-					}
-					
-					
-
-				}
-				 //std::cout << std::endl;
-			}
-
-
-
-			//std::cout << "add constraint on k=" << i << " t=" << t2 << ": ";
-			for (int mdd = 0; mdd < kMDD.size(); mdd++) {
-				std::list<MDDNode*>::iterator it;
-				if ((t2 - St + i) >= kMDD[mdd]->levels.size())
-					continue;
-				for (it = kMDD[mdd]->levels[t2 - St + i].begin(); it != kMDD[mdd]->levels[t2 - St + i].end(); ++it) {
-					if ((*it)->location == loc) {
-						for (int consk = 0; consk <= k - i; consk++) { 
-							//if constraint is on k=0, add more time range constraint until t=t+k
-							std::stringstream con;
-							con << loc << t2 + i + consk;
-							if (!added.count(con.str())) {
-								constraints.push_back(std::make_tuple(loc, -1, t2 + i + consk)); // add constraints [t1, t2]
-								//std::cout << "kmdd loc: " << loc / 22 << "," << loc % 22 << " t: " << t2 + i + consk << "|";
-								added.insert(con.str());
-							}
-
-						}
-					}
-				}
-					
-				
-				
-			}
-			//std::cout << std::endl;
-		}
-	}
-
-
-
-}
- 
 //Identify rectangle conflicts for CR/R
 bool isRectangleConflict(const std::pair<int, int>& s1, const std::pair<int, int>& s2,
 	const std::pair<int, int>& g1, const std::pair<int, int>& g2, int g1_t, int g2_t)
@@ -691,27 +156,493 @@ bool isManhattanOptimal(int loc1, int loc2, int dist, int num_col)
 	return abs(loc1 / num_col - loc2 / num_col) + abs(loc1 % num_col - loc2 % num_col) == dist;
 }
 
-// whther two rectangle conflicts are idenitical
-bool equalRectangleConflict(const std::tuple<int, int, int, int, int>& c1, const std::tuple<int, int, int, int, int>& c2)
+//// whther two rectangle conflicts are idenitical
+//bool equalRectangleConflict(const Conflict& c1, const Conflict& c2)
+//{
+//	if (std::get<2>(c1) != std::get<2>(c2)) //Not same vertex Rg
+//		return false;
+//	else if ((std::get<0>(c1) == std::get<0>(c2) && std::get<1>(c1) == std::get<1>(c2)) ||
+//		(std::get<0>(c1) == std::get<1>(c2) && std::get<1>(c1) == std::get<0>(c2))) // Same set of agents
+//		return true;
+//	else
+//		return false;
+//}
+//
+//// find duplicate rectangle conflicts, used to detect whether a semi-/non-cardinal rectangle conflict is unique
+//bool findRectangleConflict(const ICBSNode* curr, const Conflict& conflict)
+//{
+//	while (curr != NULL)
+//	{
+//		if (equalRectangleConflict(conflict, *curr->conflict))
+//			return true;
+//		curr = curr->parent;
+//	}
+//	return false;
+//}
+
+
+//Compute candidates for GR
+std::list<int>  getStartCandidates(const std::vector<PathEntry>& path, int timestep, int dir1, int dir2)
 {
-	if (std::get<2>(c1) != std::get<2>(c2)) //Not same vertex Rg
+	std::list<int> starts;
+	int curr = path[timestep].location;
+	int t = timestep - 1;
+	while (t >= 0) 
+	{
+		int prev = path[t].location;
+		if(curr - prev == dir1 || curr - prev == dir2)
+		{
+			curr = prev;
+			t--;
+		}
+		else
+		{
+			break;
+		}
+	}
+	starts.push_back(t + 1);
+	return starts;
+}
+
+std::list<int>  getGoalCandidates(const std::vector<PathEntry>& path, int timestep, int dir1, int dir2)
+{
+	std::list<int> goals;
+	int curr = path[timestep].location;
+	int t = timestep + 1;
+	while (t < path.size()) 
+	{
+		int next = path[t].location;
+		if (next - curr == dir1 || next - curr == dir2)
+		{
+			curr = next;
+			t++;
+		}
+		else
+		{
+			break;
+		}
+	}
+	goals.push_back(t - 1);
+	return goals;
+}
+
+template <class Map>
+bool ExtractBarriers(const MDD<Map>& mdd, int dir1, int dir2, int start, int goal, int start_time, int num_col, std::list<Constraint>& B)
+{
+	int num_barrier;
+	int barrierZeroTime;
+	int sign1 = dir1 / abs(dir1);
+	int sign2 = dir2 / abs(dir2);
+	if (abs(dir1) == 1) //vertical barriers
+	{
+		num_barrier = abs(start % num_col - goal % num_col) + 1;
+		barrierZeroTime = - start / num_col * sign2 + start_time;
+	}
+	else
+	{
+		num_barrier = abs(start / num_col - goal / num_col) + 1;
+		barrierZeroTime = - start % num_col * sign2 + start_time;
+	}
+	std::vector<int> extent_L(num_barrier, INT_MAX);
+	std::vector<int> extent_U(num_barrier, -1);
+	
+	std::unordered_map<MDDNode*, std::vector<bool>> blocking;
+	
+	MDDNode* n = mdd.levels[0].front();
+	std::vector<bool> block(num_barrier, false);
+	int hasStart = false;
+	if (start_time == 0)
+	{
+		extent_L[0] = 0;
+		extent_U[0] = 0;
+		block[0] = true;
+		hasStart = true;
+	}
+	blocking[n] = block;
+
+	for (int t = 1; t < mdd.levels.size(); t++)
+	{
+		for (auto n : mdd.levels[t])
+		{
+			std::vector<bool> block(num_barrier, true);
+			for (auto parent : n->parents)
+			{
+				std::vector<bool> parent_block = blocking[parent];
+				for (int i = 0; i < num_barrier; i++)
+				{
+					if(!parent_block[i])
+						block[i] = false;
+				}
+			}
+			int barrier_id, barrier_time;
+			if (abs(dir1) == 1) //vertical barriers
+			{
+				barrier_id = abs(start % num_col - n->location % num_col);
+				barrier_time = n->location / num_col * sign2 + barrierZeroTime + barrier_id;
+			}
+			else
+			{
+				barrier_id = abs(start / num_col - n->location / num_col);
+				barrier_time = n->location % num_col * sign2 + barrierZeroTime + barrier_id;
+			}
+			if (barrier_id < num_barrier && !block[barrier_id] && barrier_time == n->level)
+			{
+				if (n->children.size() == 1 && extent_L[barrier_id] == INT_MAX &&
+					abs(dir1) * abs(n->location - n->children.front()->location) == num_col);// the only child node is on the same barrier
+				else
+				{
+					extent_L[barrier_id] = std::min(extent_L[barrier_id], n->level);
+					extent_U[barrier_id] = std::max(extent_U[barrier_id], n->level);
+					block[barrier_id] = true;
+				}						
+			}
+			blocking[n] = block;
+		}
+	}
+	
+	n = mdd.levels.back().front();
+	block = blocking[n];
+	for (int i = 0; i < num_barrier; i++)
+	{
+		if (block[i])
+		{
+			int barrier_start_x, barrier_start_y, barrier_end_x, barrier_end_y, barrier_end_time;
+			if (abs(dir1) == 1) //vertical barriers
+			{
+				barrier_start_x = (extent_L[i] - barrierZeroTime  - i) * sign2;
+				barrier_start_y = start % num_col + i * sign1;
+				barrier_end_x = (extent_U[i] - barrierZeroTime - i) * sign2;
+				barrier_end_y = barrier_start_y;
+			}
+			else
+			{
+				barrier_start_x = start / num_col + i * sign1;
+				barrier_start_y = (extent_L[i] - barrierZeroTime - i) * sign2;
+				barrier_end_x = barrier_start_x;
+				barrier_end_y = (extent_U[i] - barrierZeroTime - i) * sign2;
+			}
+			barrier_end_time = extent_U[i];
+			B.emplace_back(barrier_start_x * num_col + barrier_start_y, 
+				barrier_end_x * num_col + barrier_end_y, barrier_end_time, constraint_type::BARRIER);
+		}
+	}
+	return !B.empty();
+}
+
+bool isEntryBarrier(const Constraint& b1, const Constraint& b2, int dir1, int num_col)
+{
+
+	std::pair<int, int> b1_l = std::make_pair(std::get<0>(b1) / num_col, std::get<0>(b1) % num_col);
+	std::pair<int, int> b1_u = std::make_pair(std::get<1>(b1) / num_col, std::get<1>(b1) % num_col);
+	std::pair<int, int> b2_l = std::make_pair(std::get<0>(b2) / num_col, std::get<0>(b2) % num_col);
+	std::pair<int, int> b2_u = std::make_pair(std::get<1>(b2) / num_col, std::get<1>(b2) % num_col);
+	if (dir1 == num_col && b2_l.first >= b1_l.first)
+		return true;
+	else if (dir1 == -num_col && b2_l.first <= b1_l.first)
+		return true;
+	else if (dir1 == 1 && b2_l.second >= b1_l.second)
+		return true;
+	else if (dir1 == -1 && b2_l.second <= b1_l.second)
+		return true;
+	else 
 		return false;
-	else if ((std::get<0>(c1) == std::get<0>(c2) && std::get<1>(c1) == std::get<1>(c2)) ||
-		(std::get<0>(c1) == std::get<1>(c2) && std::get<1>(c1) == std::get<0>(c2))) // Same set of agents
+}
+
+bool isExitBarrier(const Constraint& b1, const Constraint& b2, int dir1, int num_col)
+{
+
+	std::pair<int, int> b1_l = std::make_pair(std::get<0>(b1) / num_col, std::get<0>(b1) % num_col);
+	std::pair<int, int> b1_u = std::make_pair(std::get<1>(b1) / num_col, std::get<1>(b1) % num_col);
+	std::pair<int, int> b2_l = std::make_pair(std::get<0>(b2) / num_col, std::get<0>(b2) % num_col);
+	std::pair<int, int> b2_u = std::make_pair(std::get<1>(b2) / num_col, std::get<1>(b2) % num_col);
+
+	if (dir1 == num_col && b2_u.first <= b1_l.first)
+		return true;
+	else if (dir1 == -num_col && b2_u.first >= b1_l.first)
+		return true;
+	else if (dir1 == 1 && b2_u.second <= b1_l.second)
+		return true;
+	else if (dir1 == -1 && b2_u.second >= b1_l.second)
 		return true;
 	else
 		return false;
 }
 
-// find duplicate rectangle conflicts, used to detect whether a semi-/non-cardinal rectangle conflict is unique
-bool findRectangleConflict(const ICBSNode* curr, const std::tuple<int, int, int, int, int>& conflict)
+std::pair<int, int> getIntersection(const Constraint& b1, const Constraint& b2, int num_col)
 {
-	while (curr != NULL)
+	std::pair<int, int> b1_l = std::make_pair(std::get<0>(b1) / num_col, std::get<0>(b1) % num_col);
+	std::pair<int, int> b1_u = std::make_pair(std::get<1>(b1) / num_col, std::get<1>(b1) % num_col);
+	std::pair<int, int> b2_l = std::make_pair(std::get<0>(b2) / num_col, std::get<0>(b2) % num_col);
+	std::pair<int, int> b2_u = std::make_pair(std::get<1>(b2) / num_col, std::get<1>(b2) % num_col);
+
+	if (b1_l.first == b1_u.first && b2_l.second == b2_u.second)
+		return std::make_pair(b1_l.first, b2_l.second);
+	else 
+		return std::make_pair(b2_l.first, b1_l.second);
+}
+
+void getCorners(const Constraint& b1, const Constraint& b2, int dir1, int dir2, int num_col, 
+	std::pair<int,int>& R1, std::pair<int, int>& R2, std::pair<int, int>& Rs, std::pair<int, int>& Rg)
+{
+	std::pair<int, int> b1_l = std::make_pair(std::get<0>(b1) / num_col, std::get<0>(b1) % num_col);
+	std::pair<int, int> b1_u = std::make_pair(std::get<1>(b1) / num_col, std::get<1>(b1) % num_col);
+	std::pair<int, int> b2_l = std::make_pair(std::get<0>(b2) / num_col, std::get<0>(b2) % num_col);
+	std::pair<int, int> b2_u = std::make_pair(std::get<1>(b2) / num_col, std::get<1>(b2) % num_col);
+	
+	if (dir1 == 1 || dir2 == 1)
 	{
-		if (equalRectangleConflict(conflict, *curr->conflict))
+		Rs.first = std::min(b1_l.first, b2_l.first);
+		Rg.first = std::max(b1_u.first, b2_u.first);
+	}
+	else if (dir1 == -1 || dir2 == -1)
+	{
+		Rs.first = std::max(b1_l.first, b2_l.first);
+		Rg.first = std::min(b1_u.first, b2_u.first);
+	}
+	if (dir1 == num_col || dir2 == num_col)
+	{
+		Rs.second = std::min(b1_l.second, b2_l.second);
+		Rg.second = std::max(b1_u.second, b2_u.second);
+	}
+	else if (dir1 == -num_col || dir2 == -num_col)
+	{
+		Rs.second = std::max(b1_l.second, b2_l.second);
+		Rg.second = std::min(b1_u.second, b2_u.second);
+	}
+
+	if (abs(dir1) == 1)
+	{
+		R1.first = Rs.first;
+		R1.second = Rg.second;
+		R2.first = Rg.first;
+		R2.second = Rs.second;
+	}
+	else
+	{
+		R1.first = Rg.first;
+		R1.second = Rs.second;
+		R2.first = Rs.first;
+		R2.second = Rg.second;
+	}
+}
+
+bool isCut(const Constraint b, const std::pair<int, int>& Rs, const std::pair<int, int>& Rg, int num_col)
+{
+	std::pair<int, int> b_l = std::make_pair(std::get<0>(b) / num_col, std::get<0>(b) % num_col);
+	std::pair<int, int> b_u = std::make_pair(std::get<1>(b) / num_col, std::get<1>(b) % num_col);
+	if (b_l == b_u)
+	{
+		if (((Rs.first <= b_l.first && b_u.first <= Rg.first)|| (Rs.first >= b_l.first && b_u.first >= Rg.first)) &&
+			((Rs.second <= b_l.second && b_u.second <= Rg.second) || (Rs.second >= b_l.second && b_u.second >= Rg.second)))
 			return true;
-		curr = curr->parent;
+		else
+			return false;
+	}
+	if (Rs.first <= b_l.first && b_l.first <= b_u.first && b_u.first <= Rg.first && b_l.second == b_u.second)
+		return true;
+	else if (Rs.second <= b_l.second && b_l.second <= b_u.second && b_u.second <= Rg.second && b_l.first == b_u.first)
+		return true;
+	else if (Rs.first >= b_l.first && b_l.first >= b_u.first && b_u.first >= Rg.first && b_l.second == b_u.second)
+		return true;
+	else if (Rs.second >= b_l.second && b_l.second >= b_u.second && b_u.second >= Rg.second && b_l.first == b_u.first)
+		return true;
+	else
+		return false;
+}
+
+bool blockedNodes(const std::vector<PathEntry>& path, const std::pair<int, int>& Rs, const std::pair<int, int>& Rg, int Rg_t, int dir, int num_col)
+{
+	int sign;
+	std::pair<int, int> b_l;
+	if (abs(dir) == 1)
+	{
+		b_l.first = Rg.first;
+		b_l.second = Rs.second;
+	}
+	else 
+	{
+		b_l.first = Rs.first;
+		b_l.second = Rg.second;
+	}
+	
+	int t_max = std::min(Rg_t, (int)path.size() - 1);
+	int t_b_l = Rg_t - abs(b_l.first - Rg.first) - abs(b_l.second - Rg.second);
+	int t_min = std::max(0, t_b_l);
+
+	for (int t = t_min; t <= t_max; t++)
+	{
+		int loc = b_l.first  * num_col + b_l.second + (t - t_b_l) * dir;
+		if (path[t].location == loc)
+		{
+				return true;
+		}
 	}
 	return false;
 }
 
+template <class Map>
+bool blockedNodes(const MDD<Map>& mdd, const Constraint b, int num_col)
+{
+	std::pair<int, int> b_l = std::make_pair(std::get<0>(b) / num_col, std::get<0>(b) % num_col);
+	std::pair<int, int> b_u = std::make_pair(std::get<1>(b) / num_col, std::get<1>(b) % num_col);
+	int t_b_u = std::get<2>(b);
+	int t_max = std::min(t_b_u, (int)mdd.levels.size() - 1);
+	int t_b_l = t_b_u - abs(b_l.first - b_u.first) - abs(b_l.second - b_u.second);
+	int t_min = std::max(0, t_b_l);
+	int sign1 = b_u.first - b_l.first;
+	int sign2 = b_u.second - b_l.second;
+	if (abs(sign1) > 1)
+		sign1 /= abs(sign1);
+	if (abs(sign2) > 1)
+		sign2 /= abs(sign2);
+	for (int t = t_min; t <= t_max; t++)
+	{
+		int loc = (b_l.first + (t - t_b_l) * sign1) * num_col + b_l.second + (t - t_b_l) * sign2;
+		for (auto n : mdd.levels[t])
+		{
+			if (n->location == loc)
+				return true;
+		}
+	}
+	return false;
+}
+
+template <class Map>
+void generalizedRectangle(const std::vector<PathEntry>& path1, const std::vector<PathEntry>& path2, const MDD<Map>& mdd1, const MDD<Map>& mdd2, 
+	const std::list<Constraint>::const_iterator& b1, const std::list<Constraint>::const_iterator& b2,
+	const std::list<Constraint>& B1, const std::list<Constraint>& B2, int timestep, int num_col, 
+	int& best_type, std::pair<int, int>& best_Rs, std::pair<int, int>& best_Rg, int time_limit, std::set<std::pair<int, int>> &visitedRs)
+{
+	if (std::clock() > time_limit)
+		return;
+	int loc = path1[timestep].location;
+	int dir1 = loc - path1[timestep - 1].location;
+	int dir2 = loc - path2[timestep - 1].location;
+
+	std::list<Constraint>::const_iterator b1_entry = b1;
+	std::list<Constraint>::const_iterator b2_entry = b2;
+
+	if (best_type == 2)
+		return;
+	while (b1_entry != B1.cend() && b2_entry != B2.cend())
+	{
+		if (!isEntryBarrier(*b1_entry, *b2_entry, dir1, num_col))
+		{
+			++b2_entry;
+			continue;
+		}
+		if (!isEntryBarrier(*b2_entry, *b1_entry, dir2, num_col))
+		{
+			++b1_entry;
+			continue;
+		}
+		//break;
+	//}
+	//if (b1_entry != B1.cend() &&  b2_entry != B2.cend())
+	//{
+		std::pair<int, int> Rs = getIntersection(*b1_entry, *b2_entry, num_col);
+		auto it = visitedRs.find(Rs);
+		if (it != visitedRs.end())
+			return;
+		visitedRs.insert(Rs);
+		std::list<Constraint>::const_reverse_iterator  b1_exit = B1.rbegin();
+		std::list<Constraint>::const_reverse_iterator  b2_exit = B2.rbegin();
+		bool move1 = true;
+		while (b1_exit != B1.rend() && b2_exit != B2.rend())
+		{
+			if (!isExitBarrier(*b1_exit, *b2_entry, dir1, num_col))
+			{
+				move1 = false;
+				break;
+			}
+			if (!isExitBarrier(*b2_exit, *b1_entry, dir2, num_col))
+			{
+				move1 = true;
+				break;
+			}
+			std::pair<int, int> Rg = getIntersection(*b1_exit, *b2_exit, num_col); 
+			int Rg_t = timestep + std::abs(Rg.first - loc / num_col) + std::abs(Rg.second - loc % num_col);
+			if (!blockedNodes(path1, Rs, Rg, Rg_t, dir2, num_col))
+			{
+				++b1_exit;
+				continue;
+			}
+			if (!blockedNodes(path2, Rs, Rg, Rg_t, dir1, num_col))
+			{
+				++b2_exit;
+				continue;
+			}
+
+			/*if (!blockedNodes<Map>(mdd1, *b1_exit, num_col))
+			{
+				++b1_exit;
+				continue;
+			}
+			if (!blockedNodes<Map>(mdd2, *b2_exit, num_col))
+			{
+				++b2_exit;
+				continue;
+			}*/
+				
+			bool cut1 = isCut(*b1_exit, Rs, Rg, num_col);
+			bool cut2 = isCut(*b2_exit, Rs, Rg, num_col);
+			int type = (int)(cut1)+(int)(cut2);
+			if (type > best_type)
+			{
+				best_Rs = Rs;
+				best_Rg = Rg;
+				best_type = type;
+				if (best_type == 2)
+					return;
+			}
+
+			if (!cut1)
+				++b1_exit;
+			else if (!cut2)
+				++b2_exit;
+		}
+		if (b1_exit == B1.rend())
+		{
+			++b2_entry;
+		}
+		else if (b2_exit == B2.rend())
+		{
+			++b1_entry;
+		}
+		/*else if (move1)
+		{
+			++b1_entry;
+		}
+		else
+		{
+			++b2_entry;
+		}*/
+		std::list<Constraint>::const_iterator b = b1_entry;
+		b++;
+		//std::cout << *b << " " << *b2_entry << std::endl;
+		generalizedRectangle(path1, path2, mdd1, mdd2, b, b2_entry, B1, B2, timestep, num_col,
+			best_type, best_Rs, best_Rg, time_limit, visitedRs);
+		b = b2_entry;
+		b++;
+		//std::cout << *b1_entry << " " << *b << std::endl;
+		generalizedRectangle(path1, path2, mdd1, mdd2, b1_entry, b, B1, B2, timestep, num_col,
+			best_type, best_Rs, best_Rg, time_limit, visitedRs);
+		return;
+		
+	}
+	return;
+}
+
+template void generalizedRectangle<MapLoader>(const std::vector<PathEntry>& path1, const std::vector<PathEntry>& path2, const MDD<MapLoader>& mdd1, const MDD<MapLoader>& mdd2,
+	const std::list<Constraint>::const_iterator& b1, const std::list<Constraint>::const_iterator& b2,
+	const std::list<Constraint>& B1, const std::list<Constraint>& B2, int timestep, int num_col,
+	int& best_type, std::pair<int, int>& best_Rs, std::pair<int, int>& best_Rg, int time_limit, std::set<std::pair<int, int>> &visitedRs);
+template bool blockedNodes<MapLoader>(const MDD<MapLoader>& mdd, const Constraint b, int num_col);
+template bool ExtractBarriers<MapLoader>(const MDD<MapLoader>& mdd, int dir1, int dir2, int start, int goal, int start_time, int num_col, std::list<Constraint>& B);
+
+template void generalizedRectangle<FlatlandLoader>(const std::vector<PathEntry>& path1, const std::vector<PathEntry>& path2, const MDD<FlatlandLoader>& mdd1, const MDD<FlatlandLoader>& mdd2,
+	const std::list<Constraint>::const_iterator& b1, const std::list<Constraint>::const_iterator& b2,
+	const std::list<Constraint>& B1, const std::list<Constraint>& B2, int timestep, int num_col,
+	int& best_type, std::pair<int, int>& best_Rs, std::pair<int, int>& best_Rg, int time_limit, std::set<std::pair<int, int>> &visitedRs);
+template bool blockedNodes<FlatlandLoader>(const MDD<FlatlandLoader>& mdd, const Constraint b, int num_col);
+template bool ExtractBarriers<FlatlandLoader>(const MDD<FlatlandLoader>& mdd, int dir1, int dir2, int start, int goal, int start_time, int num_col, std::list<Constraint>& B);

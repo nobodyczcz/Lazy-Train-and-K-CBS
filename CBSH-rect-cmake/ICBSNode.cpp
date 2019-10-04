@@ -3,13 +3,7 @@
 
 void ICBSNode::clear()
 {
-	rectCardinalConf.clear();
-	rectSemiConf.clear();
-	rectNonConf.clear();
-	cardinalConf.clear();
-	semiConf.clear();
-	nonConf.clear();
+	conflicts.clear();
 	unknownConf.clear();
-	conflictDetailTable.clear();
 }
 

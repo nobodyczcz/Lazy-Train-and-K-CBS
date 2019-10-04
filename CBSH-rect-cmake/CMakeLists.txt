@@ -12,11 +12,12 @@ IF(NOT CMAKE_BUILD_TYPE)
   #SET(CMAKE_BUILD_TYPE "RELWITHDEBINFO")
   #SET(CMAKE_BUILD_TYPE "MINSIZEREL")
 ENDIF()
-add_executable (CBS-K "driver.cpp")
 
 
 include_directories(../mapVisualiser/)
-set(all
+
+add_executable (CBS-K
+		driver.cpp
 		flat_map_loader.h
 		flat_map_loader.cpp
         agents_loader.h
@@ -39,11 +40,21 @@ set(all
 		SingleAgentICBS.cpp
 		ReservationTable.h
 		ReservationTable.cpp
+		Conflict.h
+		Conflict.cpp
+		ConstraintTable.cpp
+		ConstraintTable.h
+		CorridorReasoning.cpp
+		CorridorReasoning.h
+		egraph_reader.h
+		common.h
+		common.cpp
 		# ../mapVisualiser/Visualiser.h
 		# ../mapVisualiser/Visualiser.cpp
-        )
-add_library(others ${all})
-target_link_libraries( CBS-K others )
+		)
+
+
+
 
 
 

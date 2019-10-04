@@ -4,6 +4,8 @@
 #include <utility>
 #include <stdlib.h>
 #include "map_loader.h"
+#include "flat_map_loader.h"
+
 #include <boost/unordered_map.hpp>
 
 

@@ -2,8 +2,11 @@
 
 #include <boost/unordered_map.hpp>
 #include <unordered_set> 
-#include "LLNode.h"
+#include "common.h"
+#include <memory>
 using namespace std;
+
+
 
 class AgentStep {
 public:
@@ -44,7 +47,7 @@ public:
 	void addPath(int agent_id, std::vector<PathEntry>* path);
 	void addPaths(vector<vector<PathEntry>*>* paths, int exclude = -1);
 	void deletePath(int agent_id, std::vector<PathEntry>* path);
-	ConflictList* findConflict(int agent, int currLoc, int nextLoc, int currT, int kDelay =0);
+	OldConfList* findConflict(int agent, int currLoc, int nextLoc, int currT, int kDelay =0);
 
 
 

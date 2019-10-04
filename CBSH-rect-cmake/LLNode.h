@@ -3,25 +3,17 @@
 #include <list>
 #include <functional>  // for std::hash (c++11 and above)
 #include <memory>
+#include "common.h"
 using boost::heap::fibonacci_heap;
 using boost::heap::compare;
 
-typedef std::list<std::shared_ptr<std::tuple<int, int, int, int, int>>> ConflictList;
 
-struct PathEntry
-{
-	int location;
-	int heading;
-	bool single;
-	int actionToHere;
-	PathEntry(int loc = -1){location = loc; single = false;}
-	std::list<int> locations; // all possible locations at the same time step
-	ConflictList* conflist=NULL;
-};
+
 
 class LLNode
 {
 public:
+
 	int loc;
 	int g_val;
 	int h_val = 0;
@@ -34,7 +26,7 @@ public:
 	int num_internal_conf = 0; 
 	bool in_openlist = false;
 	bool in_focallist = false;
-	ConflictList* conflist=NULL;
+	OldConfList* conflist=NULL;
 
 	// the following is used to comapre nodes in the OPEN list
 	struct compare_node 
@@ -104,7 +96,7 @@ public:
 		int num_internal_conf = 0, bool in_openlist = false);
 	inline double getFVal() const { return g_val + h_val; }
 	~LLNode(){
-		delete conflist;
+		delete (conflist);
 	}
 
 	// The following is used by googledensehash for checking whether two nodes are equal

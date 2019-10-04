@@ -1,16 +1,9 @@
 #include "ICBSSearch.h"
-#include "flat_map_loader.h"
-#include "ReservationTable.h"
-#include <sstream>
-#include <memory>
-
-
 #include <ctime>
 #include <iostream>
-#include <limits.h>
 
 
-// takes the and UPDATE all (constrained) paths found for agents from curr to start
+// takes the paths_found_initially and UPDATE all (constrained) paths found for agents from curr to start
 // also, do the same for ll_min_f_vals and paths_costs (since its already "on the way").
 inline void ICBSSearch::updatePaths(ICBSNode* curr)
 {
@@ -20,17 +13,22 @@ inline void ICBSSearch::updatePaths(ICBSNode* curr)
 
 	while (curr->parent != NULL)
 	{
-		if (!updated[curr->agent_id])
+		for (list<pair<int, vector<PathEntry>>>::iterator it = curr->paths.begin(); it != curr->paths.end() ; ++it)
 		{
-			paths[curr->agent_id] = &(curr->path);
-			updated[curr->agent_id] = true;
+			if (!updated[it->first])
+			{
+				paths[it->first] = &(it->second);
+				updated[it->first] = true;
+			}
 		}
 		curr = curr->parent;
 	}
 }
 
 
-std::vector <std::list< std::pair<int, int> > >* ICBSSearch::collectConstraints(ICBSNode* curr, int agent_id)
+
+
+/*std::vector <std::list< std::pair<int, int> > >* ICBSSearch::collectConstraints(ICBSNode* curr, int agent_id)
 {
 	std::clock_t t1 = std::clock();
 	// extract all constraints on agent_id
@@ -45,6 +43,8 @@ std::vector <std::list< std::pair<int, int> > >* ICBSSearch::collectConstraints(
 				constraints.push_back(constraint);
 				if (get<2>(constraint) > max_timestep) // calc constraints' max_timestep
 					max_timestep = get<2>(constraint);
+				if(-1 - get<2>(constraint) > max_timestep) // calc constraints' max_timestep
+					max_timestep = -1 - get<2>(constraint);
 			}
 		}
 		curr = curr->parent;
@@ -52,40 +52,39 @@ std::vector <std::list< std::pair<int, int> > >* ICBSSearch::collectConstraints(
 
 
 	// initialize a constraint vector of length max_timestep+1. Each entry is an empty list< pair<int,int> > (loc1,loc2)
-	vector < list< pair<int, int> > >* cons_vec = new vector < list< pair<int, int> > >(max_timestep+kDelay + 1, list< pair<int, int> >());
+	vector < list< pair<int, int> > >* cons_vec = new vector < list< pair<int, int> > >(max_timestep + 1, list< pair<int, int> >());
 	
 	for (list< tuple<int, int, int> >::iterator it = constraints.begin(); it != constraints.end(); it++) 
 	{
-		if (get<0>(*it) < 0) // barrier constraint
+		if (get<2>(*it) < 0) // time range constraint
+		{
+			int loc = get<0>(*it);
+			int t1 = -1 - get<1>(*it);
+			int t2 = -1 - get<2>(*it);			
+			for (int i = t1; i <= t2; i++)
+				cons_vec->at(i).push_back(make_pair(loc, -1));
+		}
+		else if (get<0>(*it) < 0) // barrier constraint
 		{
 			int x1 = (-get<0>(*it) - 1) / num_col, y1 = (-get<0>(*it) - 1) % num_col;
 			int x2 = get<1>(*it) / num_col, y2 = get<1>(*it) % num_col;
-
-			if (x1 == x2) //row barrier
+			if (x1 == x2)
 			{
-				if (y1 < y2) // down barrier
-					for (int i = 0; i <= y2 - y1; i++) {
-						if (get<2>(*it) - i >= 0)
-							cons_vec->at(get<2>(*it) - i).push_back(make_pair(x1 * num_col + y2 - i, -1));
-					}
-				else //up barrier
-					for (int i = 0; i <= y1 - y2; i++) {
-						if (get<2>(*it) - i >= 0)
+				if (y1 < y2)
+					for (int i = 0; i <= std::min(y2 - y1, get<2>(*it)); i++)
+						cons_vec->at(get<2>(*it) - i).push_back(make_pair(x1 * num_col + y2 - i, -1));
+				else
+					for (int i = 0; i <= std::min(y1 - y2, get<2>(*it)); i++)
 						cons_vec->at(get<2>(*it) - i).push_back(make_pair(x1 * num_col + y2 + i, -1));
-					}
 			}
-			else // y1== y2 column barrier
+			else // y1== y2
 			{
 				if (x1 < x2)
-					for (int i = 0; i <= x2 - x1; i++) {
-						if (get<2>(*it) - i >= 0)
-							cons_vec->at(get<2>(*it) - i).push_back(make_pair((x2 - i) * num_col + y1, -1));
-					}
+					for (int i = 0; i <= std::min(x2 - x1, get<2>(*it)); i++)
+						cons_vec->at(get<2>(*it) - i).push_back(make_pair((x2 - i) * num_col + y1, -1));
 				else
-					for (int i = 0; i <= x1 - x2; i++) {
-						if (get<2>(*it) - i >= 0)
-							cons_vec->at(get<2>(*it) - i).push_back(make_pair((x2 + i) * num_col + y1, -1));
-					}
+					for (int i = 0; i <= std::min(x1 - x2, get<2>(*it)); i++)
+						cons_vec->at(get<2>(*it) - i).push_back(make_pair((x2 + i) * num_col + y1, -1));
 			}
 		}
 		else
@@ -94,32 +93,21 @@ std::vector <std::list< std::pair<int, int> > >* ICBSSearch::collectConstraints(
 	
 	runtime_updatecons += std::clock() - t1;
 	return cons_vec;
-}
+}*/
 
 int ICBSSearch::computeHeuristics(const ICBSNode& curr)
 {
 	// Conflict graph
-	if (debug_mode)
-		cout << "build conflict graph" << endl;
 	vector<vector<bool>> CG(num_of_agents);
 	int num_of_CGnodes = 0, num_of_CGedges = 0;
 	for (int i = 0; i < num_of_agents; i++)
 		CG[i].resize(num_of_agents, false);
-	for (list<std::shared_ptr<tuple<int,int,int,int,int>>>::const_iterator it = curr.cardinalConf.begin(); it != curr.cardinalConf.end(); ++it)
+	for (auto conflict : curr.conflicts)
 	{
-		if(!CG[get<0>(**it)][get<1>(**it)])
+		if(conflict->p == conflict_priority::CARDINAL && !CG[conflict->a1][conflict->a2])
 		{
-			CG[get<0>(**it)][get<1>(**it)] = true;
-			CG[get<1>(**it)][get<0>(**it)] = true;
-			num_of_CGedges++;
-		}
-	}
-	for (list<std::shared_ptr<tuple<int, int, int, int, int>>>::const_iterator it = curr.rectCardinalConf.begin(); it != curr.rectCardinalConf.end(); ++it)
-	{
-		if (!CG[get<0>(**it)][get<1>(**it)])
-		{
-			CG[get<0>(**it)][get<1>(**it)] = true;
-			CG[get<1>(**it)][get<0>(**it)] = true;
+			CG[conflict->a1][conflict->a2] = true;
+			CG[conflict->a2][conflict->a1] = true;
 			num_of_CGedges++;
 		}
 	}
@@ -140,18 +128,12 @@ int ICBSSearch::computeHeuristics(const ICBSNode& curr)
 		}
 	}
 
-	if (debug_mode)
-		cout << "compute minimum vertex cover" << endl;
 	// Minimum Vertex Cover
 	if (curr.parent == NULL) // root node of CBS tree
 	{
-		for (int i = 1; i < num_of_CGnodes; i++) {
-			if (debug_mode)
-				cout << "Compute Node: " << i << endl;
+		for (int i = 1; i < num_of_CGnodes; i++)
 			if (KVertexCover(CG, num_of_CGnodes, num_of_CGedges, i))
 				return i;
-		}
-		
 	}
 	if (KVertexCover(CG, num_of_CGnodes, num_of_CGedges, curr.parent->h_val - 1))
 		return curr.parent->h_val - 1;
@@ -207,529 +189,526 @@ bool ICBSSearch::KVertexCover(const vector<vector<bool>>& CG, int num_of_CGnodes
 
 // deep copy of all conflicts except ones that involve the particular agent
 // used for copying conflicts from the parent node to the child nodes
-void ICBSSearch::copyConflicts(const std::list<std::shared_ptr<std::tuple<int, int, int, int, int>>>& conflicts, 
-	std::list<std::shared_ptr<std::tuple<int, int, int, int, int>>>& copy, int excluded_agent) const
+void ICBSSearch::copyConflicts(const std::list<std::shared_ptr<Conflict >>& conflicts,
+	std::list<std::shared_ptr<Conflict>>& copy, const list<int>& excluded_agents) const
 {
-	for (std::list<std::shared_ptr<std::tuple<int, int, int, int, int>>>::const_iterator it = conflicts.begin(); it != conflicts.end(); ++it)
+	for (auto conflict : conflicts)
 	{
-		if (get<0>(**it) != excluded_agent && get<1>(**it) != excluded_agent)
+		bool found = false;
+		for (auto a : excluded_agents)
 		{
-			copy.push_back(*it);
+			if (conflict->a1 == a || conflict->a2 == a)
+			{
+				found = true;
+				break;
+			}
+		}
+		if (!found)
+		{
+			copy.push_back(conflict);
 		}
 	}
 }
+
+//void ICBSSearch::copyConflicts(const std::list<std::shared_ptr<CConflict >>& conflicts,
+//	std::list<std::shared_ptr<CConflict>>& copy, int excluded_agent) const
+//{
+//	for (std::list<std::shared_ptr<CConflict>>::const_iterator it = conflicts.begin(); it != conflicts.end(); ++it)
+//	{
+//		if (get<0>(**it) != excluded_agent && get<1>(**it) != excluded_agent)
+//		{
+//			copy.push_back(*it);
+//		}
+//	}
+//}
+
 
 
 void ICBSSearch::findConflicts(ICBSNode& curr)
 {
-	if (debug_mode) {
-		cout << "start find conflict" << endl;
-		//printPaths();
-	}
 	if (curr.parent != NULL)
 	{
-		// Copy from parent
-		copyConflicts(curr.parent->rectCardinalConf, curr.rectCardinalConf, curr.agent_id);
-		copyConflicts(curr.parent->rectSemiConf, curr.rectSemiConf, curr.agent_id);
-		copyConflicts(curr.parent->rectNonConf, curr.rectNonConf, curr.agent_id);
-		copyConflicts(curr.parent->cardinalConf, curr.cardinalConf, curr.agent_id);
-		copyConflicts(curr.parent->semiConf, curr.semiConf, curr.agent_id);
-		copyConflicts(curr.parent->nonConf, curr.nonConf, curr.agent_id);
-		copyConflicts(curr.parent->unknownConf, curr.unknownConf, curr.agent_id);
+		if (debug_mode)
+			cout << "copy from parent" << endl;
+		// Copy from parent、
+		list<int> new_agents;
+		for (auto p : curr.paths)
+		{
+			new_agents.push_back(p.first);
+		}
+		copyConflicts(curr.parent->conflicts, curr.conflicts, new_agents);
+		copyConflicts(curr.parent->unknownConf, curr.unknownConf, new_agents);
 
+		if (debug_mode)
+			cout << "Find Conflicts" << endl;
 		// detect new conflicts
 		int a1 = curr.agent_id;
-
 		//collect conflict from path;
-		for (size_t t = 0; t < paths[curr.agent_id]->size(); t++) {
-			if (paths[curr.agent_id]->at(t).conflist != NULL && paths[curr.agent_id]->at(t).conflist->size()!=0) {
-				curr.unknownConf.splice(curr.unknownConf.end(), *(paths[curr.agent_id]->at(t).conflist));
+		for (size_t t = 0; t < paths[a1]->size(); t++) {
+			if (paths[a1]->at(t).conflist != NULL && paths[a1]->at(t).conflist->size() != 0) {
+				
+				for (auto& con : *(paths[a1]->at(t).conflist)) {
+					std::shared_ptr<Conflict> newConf(new Conflict());
+
+					if (get<3>(*con) < 0) {
+						newConf->vertexConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<4>(*con), get<5>(*con),kDelay);
+					}
+					else {
+						newConf->edgeConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<3>(*con),get<4>(*con));
+					}
+					if (debug_mode)
+					cout << "<" << get<0>(*con) << "," << get<1>(*con) << ","
+						<< "(" << get<2>(*con) / num_col << "," << get<2>(*con) % num_col << ")" << ","
+						<< "(" << get<3>(*con) / num_col << "," << get<3>(*con) % num_col << ")" << ","
+						<< get<4>(*con)<<","<< get<5>(*con) << ">; ";
+					curr.unknownConf.emplace_back(newConf);
+
+				}
 				delete paths[curr.agent_id]->at(t).conflist;
-
-
-
 			}
 		}
-
 		//Detect any agent conflict with goal location
 		for (int a2 = 0; a2 < num_of_agents; a2++)
 		{
-			if(a1 == a2)
+			if (a1 == a2)
 				continue;
 
-			if (paths[a1]->size() + 1 < paths[a2]->size())
-			{
-				int loc1 = paths[a1]->back().location;
-				for (size_t timestep = paths[a1]->size(); timestep < paths[a2]->size(); timestep++)
-				{
-					int loc2 = paths[a2]->at(timestep).location;
-					if (loc1 == loc2)
-					{
-						//for goal, current code won't influence k delay plan
-						curr.unknownConf.push_front(std::shared_ptr<tuple<int, int, int, int, int>>(new tuple<int, int, int, int, int>(a1, a2, loc1, -1, timestep))); // It's at least a semi conflict			
-					}
-				}
-			}
+			findTargetConflicts(a1, a2, curr);
 
 		}
-
 
 	}
 	else
 	{
-		for(int a1 = 0; a1 < num_of_agents ; a1++)
+		if (debug_mode)
+			cout << "Find Conflicts" << endl;
+		for (int a1 = 0; a1 < num_of_agents; a1++)
 		{
+
 			//collect conflicts from path
 			for (size_t t = 0; t < paths[a1]->size(); t++) {
-				if (paths[a1]->at(t).conflist != NULL) {
-					curr.unknownConf.splice(curr.unknownConf.end(), *(paths[a1]->at(t).conflist));
-				}
-			}
-			for (int a2 = a1+1 ; a2 < num_of_agents; a2++)
-			{
 
-				size_t min_path_length = paths[a1]->size() < paths[a2]->size() ? paths[a1]->size() : paths[a2]->size();
-				//collect conflict from path;
-				
-					
-				
-				if (paths[a1]->size() != paths[a2]->size())
-				{
-					//short one a1_ longer one a2_
-					//current short after goal code should work good for k robust
-					int a1_ = paths[a1]->size() < paths[a2]->size() ? a1 : a2;
-					int a2_ = paths[a1]->size() < paths[a2]->size() ? a2 : a1;
-					int loc1 = paths[a1_]->back().location;// short one's goal location
-					for (size_t timestep = min_path_length; timestep < paths[a2_]->size(); timestep++)
-					{
-						//in future longer one can't pass through the goal location of shorter one.
-						int loc2 = paths[a2_]->at(timestep).location;
-						if (loc1 == loc2)
-						{
-							curr.unknownConf.push_front(std::shared_ptr<tuple<int, int, int, int, int>>(new tuple<int, int, int, int, int>(a1_, a2_, loc1, -1, timestep))); // It's at least a semi conflict			
-						}
+				if (paths[a1]->at(t).conflist == NULL || paths[a1]->at(t).conflist->size() == 0)
+					continue;
+				for (auto& con : *(paths[a1]->at(t).conflist)) {
+					std::shared_ptr<Conflict> newConf(new Conflict());
+					if (get<3>(*con) < 0) {
+						newConf->vertexConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<4>(*con), get<5>(*con),kDelay);
 					}
+					else {
+						newConf->edgeConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<3>(*con), get<4>(*con));
+					}
+					if (debug_mode)
+					cout << "<" << get<0>(*con) << "," << get<1>(*con) << ","
+						<< "(" << get<2>(*con) / num_col << "," << get<2>(*con) % num_col << ")" << ","
+						<< "(" << get<3>(*con) / num_col << "," << get<3>(*con) % num_col << ")" << ","
+						<< get<4>(*con) << "," << get<5>(*con) << ">; ";
+					curr.unknownConf.emplace_back(newConf);
+
 				}
+				delete paths[a1]->at(t).conflist;
+			}
+			for (int a2 = a1 + 1; a2 < num_of_agents; a2++)
+			{
+				if (a1 == a2)
+					continue;
+
+				findTargetConflicts(a1, a2, curr);
+				
+			}
+		}
+	}
+	if (debug_mode)
+		cout  << endl;
+}
+
+void ICBSSearch::findTargetConflicts(int a1, int a2, ICBSNode& curr) {
+	size_t min_path_length = paths[a1]->size() < paths[a2]->size() ? paths[a1]->size() : paths[a2]->size();
+	//collect conflict from path;
+
+
+
+	if (paths[a1]->size() != paths[a2]->size())
+	{
+		//short one a1_ longer one a2_
+		//current short after goal code should work good for k robust
+		int a1_ = paths[a1]->size() < paths[a2]->size() ? a1 : a2;
+		int a2_ = paths[a1]->size() < paths[a2]->size() ? a2 : a1;
+		int loc1 = paths[a1_]->back().location;// short one's goal location
+		for (size_t timestep = min_path_length; timestep < paths[a2_]->size(); timestep++)
+		{
+
+			//in future longer one can't pass through the goal location of shorter one.
+			int loc2 = paths[a2_]->at(timestep).location;
+			if (loc1 == loc2)
+			{
+				std::shared_ptr<Conflict> conflict(new Conflict());
+				if (targetReasoning && paths[a1]->size() == timestep + 1)
+				{
+					conflict->targetConflict(a1_, a2_, loc1, timestep);
+				}
+				else
+				{
+					conflict->vertexConflict(a1_, a2_, loc1, timestep);
+				}
+				if (debug_mode)
+				cout << "<" << a1_ << "," << a2_ << ","
+					<< "(" << loc1 / num_col << "," << loc1 % num_col << ")" << ","
+					<< "(,)" << ","
+					<< timestep << "," "0" << ">; ";
+				curr.unknownConf.push_back(conflict);
 			}
 		}
 	}
 }
 
-std::shared_ptr<tuple<int, int, int, int, int>> ICBSSearch::chooseEarliestConflict(ICBSNode &parent)
+//void ICBSSearch::deleteRectConflict(ICBSNode& curr, const Conflict& conflict)
+//{
+//	list<shared_ptr<Conflict>>::iterator it;
+//	if (!curr.rectCardinalConf.empty())
+//	{
+//		for (it = curr.rectCardinalConf.begin(); it != curr.rectCardinalConf.end(); ++it)
+//		{
+//			if ((**it) == conflict)
+//			{
+//				curr.rectCardinalConf.erase(it);
+//				return;
+//			}
+//		}
+//	}
+//	if (!curr.rectSemiConf.empty())
+//	{
+//		for (it = curr.rectSemiConf.begin(); it != curr.rectSemiConf.end(); ++it)
+//		{
+//			if ((**it) == conflict)
+//			{
+//				curr.rectSemiConf.erase(it);
+//				return;
+//			}
+//		}
+//	}
+//	if (!curr.rectNonConf.empty())
+//	{
+//		for (it = curr.rectNonConf.begin(); it != curr.rectNonConf.end(); ++it)
+//		{
+//			if ((**it) == conflict)
+//			{
+//				curr.rectNonConf.erase(it);
+//				return;
+//			}
+//		}
+//	}
+//}
+
+
+
+
+
+bool ICBSSearch::isCorridorConflict(std::shared_ptr<Conflict>& corridor, const std::shared_ptr<Conflict>& con, bool cardinal, ICBSNode* node)
 {
-	if (parent.unknownConf.empty())
-		return NULL;  // No conflict
-	std::shared_ptr<tuple<int, int, int, int, int>> choose = parent.unknownConf.front();
-	for (auto con : parent.unknownConf)
+	int a[2] = {con->a1, con->a2};
+	int  loc1, loc2, timestep;
+	constraint_type type;
+	std::tie(loc1, loc2, timestep, type) = con->constraint1.back();
+	int curr = -1;
+	if (getDegree(loc1, my_map, num_col, map_size) == 2)
 	{
-		if (get<4>(*con) < get<4>(*choose))
-			choose = con;
+		curr = loc1;
+		if (loc2 >= 0)
+			timestep--;
 	}
-	return choose;
+	else if (getDegree(loc2, my_map, num_col, map_size) == 2)
+		curr = loc2;
+	if (curr <= 0)
+		return false;
+	
+	int t[2];
+	for (int i = 0; i < 2; i++)
+		t[i] = getEnteringTime(*paths[a[i]], *paths[a[1-i]], timestep, my_map, num_col, map_size);
+	if (t[0] > t[1])
+	{
+		int temp = t[0]; t[0] = t[1]; t[1] = temp;
+		temp = a[0]; a[0] = a[1]; a[1] = temp;
+	}
+	int u[2];
+	for (int i = 0; i < 2; i++)
+		u[i] = paths[a[i]]->at(t[i]).location;
+	if (u[0] == u[1])
+		return false;
+	for (int i = 0; i < 2; i++)
+	{
+		bool found = false;
+		for (int time = t[i]; time < paths[a[i]]->size() && !found; time++)
+		{
+			if (paths[a[i]]->at(time).location == u[1 - i])
+				found = true;
+		}
+		if (!found)
+			return false;
+	}
+	std::pair<int, int> edge; // one edge in the corridor
+	int k = getCorridorLength(*paths[a[0]], t[0], u[1], edge);
+	
+	if (corridor2)
+	{
+		std::pair<int, int> edge_empty = make_pair(-1, -1);
+		updateConstraintTable(node, a[0]);
+		int t3 = getBypassLength(paths[a[0]]->front().location, u[1], edge_empty, my_map, num_col, map_size, constraintTable, INT_MAX);
+		int t3_ = getBypassLength(paths[a[0]]->front().location, u[1], edge, my_map, num_col, map_size, constraintTable, t3 + 2 * k  + 1);
+		updateConstraintTable(node, a[1]);
+		int t4 = getBypassLength(paths[a[1]]->front().location, u[0], edge_empty, my_map, num_col, map_size, constraintTable, INT_MAX);
+		int t4_ = getBypassLength(paths[a[1]]->front().location, u[0], edge, my_map, num_col, map_size, constraintTable, t3 + k + 1);
+		if (abs(t3 - t4) <= k && t3_ > t3 && t4_ > t4)
+		{
+
+			corridor = std::shared_ptr<Conflict>(new Conflict());
+			corridor->corridorConflict(a[0], a[1], u[1], u[0], t3, t4, t3_, t4_, k);
+			if (blocked(*(paths[corridor->a1]), corridor->constraint1) && blocked(*(paths[corridor->a2]), corridor->constraint2))
+				return true;
+		}
+	}
+	
+	if (!corridor4)
+		return false;
+	else if (cardinalCorridorReasoning && !cardinal)
+		return false;
+	// try 4-way splitting then
+	if (t[1] > t[0] + 2 * k - 1)
+		return false;
+
+	//get h
+	std::tuple<int, int, int> key;
+	if (u[0] < u[1])
+	{
+		key = std::make_tuple(u[0], u[1], k);
+	}
+	else
+	{
+		key = std::make_tuple(u[1], u[0], k);
+	}
+	
+	CorridorTable::const_iterator got = corridorTable.find(key);
+	int h;
+	if (got == corridorTable.end())
+	{
+		h = getBypassLength(u[0], u[1], edge, my_map, num_col, map_size);
+		corridorTable[key] = h;
+	}
+	else
+	{
+		h = got->second;
+	}
+	if (h > 0 && k >= h - 1)
+		return false;
+	
+	for (int i = 0; i < 2; i++)
+	{
+		bool satisfied = false;
+		for (int j = t[0] + k; j <= t[0] + std::min(2 * k, h - 1); j++)
+		{
+			if (getLocation(*paths[a[i]], j) == u[1-i])
+			{
+				satisfied = true;
+				break;
+			}
+		}
+		if (!satisfied)
+			return false;
+	}
+
+	corridor = std::shared_ptr<Conflict>(new Conflict());
+	corridor->corridorConflict(a[0], a[1], u[0], u[1], t[0], t[1], k, h);
+	// TODO: test whether block all paths
+	return true;
 }
 
-std::shared_ptr<tuple<int, int, int, int, int>> ICBSSearch::classifyConflicts(ICBSNode &parent)
+
+
+void ICBSSearch::removeLowPriorityConflicts(std::list<std::shared_ptr<Conflict>>& conflicts) const
 {
-	if (parent.rectCardinalConf.empty() && parent.rectSemiConf.empty() && parent.rectNonConf.empty() &&
-		parent.cardinalConf.empty() && parent.semiConf.empty() && parent.nonConf.empty() && parent.unknownConf.empty())
-		return NULL; // No conflict
-
-	// Classify all conflicts in unknownConf
-	while (!parent.unknownConf.empty())
+	if (conflicts.empty())
+		return;
+	std::unordered_map<int, std::shared_ptr<Conflict> > keep;
+	std::list<std::shared_ptr<Conflict>> to_delete;
+	for (auto conflict : conflicts)
 	{
-		std::shared_ptr<tuple<int, int, int, int, int>> con = parent.unknownConf.front();
-		parent.unknownConf.pop_front();
-		if (debug_mode)
-			cout << "classify conflict for: " << "<" << get<0>(*con) << "," << get<1>(*con) << ","
-			<< "(" << get<2>(*con) / num_col << "," << get<2>(*con) % num_col << ")" << ","
-			<< "(" << get<3>(*con) / num_col << "," << get<3>(*con) % num_col << ")" << ","
-			<< get<4>(*con) << ">; " << endl;
-
-		bool cardinal1 = false, cardinal2 = false;
-		if (get<4>(*con) >= paths[get<0>(*con)]->size())
-			cardinal1 = true;
-		else if (!paths[get<0>(*con)]->at(0).single)
+		int a1 = conflict->a1, a2 = conflict->a2;
+		int key = a1 * num_of_agents + a2;
+		auto p = keep.find(key);
+		if (p == keep.end())
 		{
-			buildMDD(parent, get<0>(*con));
+			keep[key] = conflict;
 		}
-		if (get<4>(*con) >= paths[get<1>(*con)]->size())
-			cardinal2 = true;
-		else if (!paths[get<1>(*con)]->at(0).single)
+		else if (*(p->second) < *conflict)
 		{
-			buildMDD(parent, get<1>(*con));
-		}
-
-		if (get<3>(*con) >= 0) // Edge conflict
-		{
-			cardinal1 = paths[get<0>(*con)]->at(get<4>(*con)).single && paths[get<0>(*con)]->at(get<4>(*con) - 1).single;
-			cardinal2 = paths[get<1>(*con)]->at(get<4>(*con)).single && paths[get<1>(*con)]->at(get<4>(*con) - 1).single;
-		}
-		else // vertex conflict
-		{
-			if (!cardinal1)
-				cardinal1 = paths[get<0>(*con)]->at(get<4>(*con)).single;
-			if (!cardinal2)
-				cardinal2 = paths[get<1>(*con)]->at(get<4>(*con)).single;
-		}
-		if (cardinal1 && cardinal2) 
-		{
-			parent.cardinalConf.push_back(con);
-			if (cons_strategy == constraint_strategy::ICBS)
-				return con;
-			continue;
-		}
-		else if (cardinal1 || cardinal2)
-		{
-			parent.semiConf.push_back(con);
+			to_delete.push_back(p->second);
+			keep[key] = conflict;
 		}
 		else
 		{
-			parent.nonConf.push_back(con);
-		}
-
-		if (cons_strategy == constraint_strategy::ICBS || cons_strategy == constraint_strategy::CBSH)
-			continue;
-		else if(get<3>(*con) >= 0) // Edge conflict
-			continue;
-		else if (paths[get<0>(*con)]->size() <= get<4>(*con) || paths[get<1>(*con)]->size() <= get<4>(*con))//conflict happens after agent reaches its goal
-			continue;
-
-		//Rectangle reasoning for semi and non cardinal vertex conflicts
-		int a1 = get<0>(*con);
-		int a2 = get<1>(*con);
-		if (debug_mode)
-			cout << "rectangle reasoning for semi and non cardinl vertex conflicts" << endl;
-		if (cons_strategy == constraint_strategy::CBSH_CR)//Identify cardinal rectangle by start and goals
-		{
-			if(isRectangleConflict(al.initial_locations[a1], al.initial_locations[a2], al.goal_locations[a1], al.goal_locations[a2],
-				paths[a1]->size() - 1, paths[a2]->size() - 1) &&
-				classifyRectangleConflict(al.initial_locations[a1], al.initial_locations[a2], al.goal_locations[a1], al.goal_locations[a2]) == 2)
-			{
-				std::pair<int, int> Rg = getRg(al.initial_locations[a1], al.goal_locations[a1], al.goal_locations[a2]);
-				parent.rectCardinalConf.push_back(std::shared_ptr<tuple<int, int, int, int, int>>
-					(new tuple<int, int, int, int, int>(a1, a2, -1 - Rg.first * num_col - Rg.second, 0, 0)));
-			}
-		}
-		else if (cons_strategy == constraint_strategy::CBSH_R)//Identify rectangle by start and goals
-		{
-			//cout << "identify rectangle by start and goals" << endl;
-			//Identify rectangles by start and goals
-			if (isRectangleConflict(al.initial_locations[a1], al.initial_locations[a2], al.goal_locations[a1], al.goal_locations[a2],
-				paths[a1]->size() - 1, paths[a2]->size() - 1))
-			{
-				int type = classifyRectangleConflict(al.initial_locations[a1], al.initial_locations[a2], al.goal_locations[a1], al.goal_locations[a2]);
-				std::pair<int, int> Rg = getRg(al.initial_locations[a1], al.goal_locations[a1], al.goal_locations[a2]);
-			
-				std::shared_ptr<tuple<int, int, int, int, int >> conflict = std::shared_ptr<tuple<int, int, int, int, int>>
-					(new tuple<int, int, int, int, int>(a1, a2, -1 - Rg.first * num_col - Rg.second, 0, 0));
-				if (type == 2) // cardinal rectangle
-				{
-					parent.rectCardinalConf.push_back(conflict);
-				}
-				else if (type == 1 && !findRectangleConflict(parent.parent, *conflict))
-				{
-					parent.rectSemiConf.push_back(conflict);
-				}
-				else if (type == 0 && !findRectangleConflict(parent.parent, *conflict))
-				{
-					parent.rectNonConf.push_back(conflict);
-				}
-			}
-		}
-		else if (cons_strategy == constraint_strategy::CBSH_RM)
-		{
-			/*bool inRec = false;
-			if (parent.discovedRectangles.count(get<0>(*con))) {
-				
-				for (auto& rectangles : parent.discovedRectangles[get<0>(*con)]) {
-					int x = get<2>(*con) / num_col;
-					int y = get<2>(*con) % num_col;
-					int Rsx = rectangles.first / num_col;
-					int Rsy = rectangles.first % num_col;
-					int Rgx = rectangles.second / num_col;
-					int Rgy = rectangles.second % num_col;
-					if (((Rgx - x)*(x - Rsx) >= 0) && ((Rgy - y)*(y - Rsy) >= 0)) {
-						inRec = true;
-					}
-
-				}
-			}
-			if (inRec) {
-				if(debug_mode)
-				cout << "In rectangle, pass this conflict" << endl;
-				continue;
-			}
-			if(debug_mode)
-			cout << "Finding rectangle" << endl;*/
-
-			ConflictDetial details;
-			details.originalConf = get<2>(*con);
-			details.originalT = get<4>(*con);
-			string conflictKey;
-			
-			int timestep = get<4>(*con);
-			std::list<int>	s1s = getStartCandidates(*paths[a1], timestep, num_col);
-			std::list<int>	g1s = getGoalCandidates(*paths[a1], timestep, num_col);
-			std::list<int>	s2s = getStartCandidates(*paths[a2], timestep, num_col);
-			std::list<int>	g2s = getGoalCandidates(*paths[a2], timestep, num_col);
-
-			// Try all possible combinations
-			bool found = false;
-			std::shared_ptr<tuple<int, int, int, int, int>> conflict;
-			int type = -1;
-			int area = 0;
-			int distance = 0;
-			
-			for (int t1_start: s1s)
-			{
-				for (int t1_end: g1s)
-				{
-					int s1 = paths[a1]->at(t1_start).location;
-					int g1 = paths[a1]->at(t1_end).location;
-					if (!isManhattanOptimal(s1, g1, t1_end - t1_start, num_col))
-						continue;
-					for (int t2_start: s2s)
-					{
-						for (int t2_end: g2s)
-						{
-							int s2 = paths[a2]->at(t2_start).location;
-							int g2 = paths[a2]->at(t2_end).location;
-							if (!isManhattanOptimal(s2, g2, t2_end - t2_start, num_col))
-								continue;
-							if (!isRectangleConflict(s1, s2, g1, g2, num_col))
-								continue;
-							std::pair<int, int> Rg = getRg(std::make_pair(s1 / num_col, s1 % num_col), std::make_pair(g1 / num_col, g1 % num_col), 
-								std::make_pair(g2 / num_col, g2 % num_col));
-							std::pair<int, int> Rs = getRs(std::make_pair(s1 / num_col, s1 % num_col), std::make_pair(s2 / num_col, s2 % num_col),
-								std::make_pair(g1 / num_col, g1 % num_col));
-							int new_area = (abs(Rs.first - Rg.first) + 1) * (abs(Rs.second - Rg.second) + 1);
-							int new_type = classifyRectangleConflict(s1, s2, g1, g2, Rg, num_col);
-							/*int new_distance = abs(t2_end / num_col - t2_start / num_col) + abs(t2_end %num_col - t2_start % num_col) +
-								abs(t1_end / num_col - t1_start / num_col) + abs(t1_end %num_col - t1_start % num_col);*/
-							//cout << "s1 " << s1 << " s2 " << s2 << " g1 " << g1 << " g2 " << g2 << " rg " << Rg.first << " " << Rg.second << endl;
-
-							if (new_type > type || (new_type == type && new_area > area)/*|| (new_type == type && new_area == area && new_distance>distance)*/)
-							{
-								//cout << get<0>(*con)<<" " << get<1>(*con) << " " << get<2>(*con) << " " << get<3>(*con) << " " << get<4>(*con) << " " << endl;
-								
-								conflict = std::shared_ptr<tuple<int, int, int, int, int>>
-									(new tuple<int, int, int, int, int>(get<0>(*con), get<1>(*con), -1 - Rg.first * num_col - Rg.second, t1_start, t2_start));
-								type = new_type;
-								area = new_area;
-								//distance = new_distance;
-								
-								details.a1 = get<0>(*con);
-								details.a2 = get<1>(*con);
-								details.s1 = s1;
-								details.s2 = s2;
-								
-								details.s1_t = t1_start;
-								details.g1 = g1;
-								details.g1_t = t1_end;
-								details.s2_t = t2_start;
-								details.g2 = g2;
-								details.g2_t = t2_end;
-								details.rg = Rg.first * num_col + Rg.second;
-								details.rs = Rs.first * num_col - Rs.second;
-								std::stringstream key;
-								key << get<0>(*con) << get<1>(*con) << -1 - Rg.first * num_col - Rg.second << t1_start << t2_start;
-								conflictKey = key.str();
-							}
-						}
-					}
-				}
-			}
-			if (type == 2)
-			{
-				assert(!parent.conflictDetailTable.count(conflictKey) && "rectangle exist in conflict detail table");
-				parent.rectCardinalConf.push_back(conflict);
-				parent.conflictDetailTable[conflictKey] = details;
-				if (debug_mode) {
-					cout << "Turn into rectangle conflict: <" << details.a1 << "," << details.a2 << "," << -1 - details.rg << "," << details.s1_t << "," << details.s2_t << ">" << endl;
-				}
-				//parent.discovedRectangles[details.a1].push_back(pair<int,int>(details.rs, details.rg));
-			}
-			else if (type == 1 && !findRectangleConflict(parent.parent, *conflict))
-			{
-				assert(!parent.conflictDetailTable.count(conflictKey) && "rectangle exist in conflict detail table");
-
-				parent.rectSemiConf.push_back(conflict);
-				parent.conflictDetailTable[conflictKey] = details;
-				if (debug_mode) {
-					cout << "Turn into rectangle conflict: <" << details.a1 << "," << details.a2 << "," << -1 - details.rg << "," << details.s1_t << "," << details.s2_t << ">" << endl;
-				}
-				//parent.discovedRectangles[details.a1].push_back(pair<int, int>(details.rs, details.rg));
-
-
-			}
-			else if (type == 0 && !findRectangleConflict(parent.parent, *conflict))
-			{
-				assert(!parent.conflictDetailTable.count(conflictKey) && "rectangle exist in conflict detail table");
-
-				parent.rectNonConf.push_back(conflict);
-				parent.conflictDetailTable[conflictKey] = details;
-				if (debug_mode) {
-					cout << "Turn into rectangle conflict: <" << details.a1 << "," << details.a2 << "," << -1 - details.rg << "," << details.s1_t << "," << details.s2_t << ">" << endl;
-				}
-				//parent.discovedRectangles[details.a1].push_back(pair<int, int>(details.rs, details.rg));
-
-
-			}
-			//cout << "Finding rectangle done" << endl;
-
+			to_delete.push_back(conflict);
 		}
 	}
 
-	std::shared_ptr<tuple<int, int, int, int, int>> choose;
-	int time = INT_MAX;
-	if (!parent.rectCardinalConf.empty()) // Choose the earliest rect cardinal
+	for (auto conflict : to_delete)
 	{
-		for (list<std::shared_ptr<tuple<int, int, int, int, int>>>::iterator it = parent.rectCardinalConf.begin(); it != parent.rectCardinalConf.end(); ++it)
-		{
-			int s1 = paths[get<0>(**it)]->at(get<3>(**it)).location;
-			int s2 = paths[get<1>(**it)]->at(get<4>(**it)).location;
-			std::pair<int, int>  S1 = std::make_pair(s1 / num_col, s1 % num_col);
-			std::pair<int, int> S2 = std::make_pair(s2 / num_col, s2 % num_col);
-			std::pair<int, int> Rg = std::make_pair(get<2>(**it) / num_col, get<2>(**it) % num_col);
-			std::pair<int, int> Rs = getRs(S1, S2, Rg);
-			int new_time = get<3>(**it) - abs(S1.first - Rs.first) - abs(S1.second - Rs.second);
-			if (new_time < time)
-			{
-				choose = (*it);
-				time = new_time;
-			}
-		}
+		conflicts.remove(conflict);
 	}
-	if (!parent.cardinalConf.empty()) // or choose the earliest cardinal
-	{
-		if (time == INT_MAX)
-			choose = parent.cardinalConf.front();
-		for (list<std::shared_ptr<tuple<int, int, int, int, int>>>::iterator it = parent.cardinalConf.begin(); it != parent.cardinalConf.end(); ++it)
-			if (get<4>(**it) < time)
-			{
-				choose = (*it);
-				time = get<4>(**it);
-			}
-	}
-	if (time < INT_MAX)
-		return choose;
-
-	if (!parent.rectSemiConf.empty()) // Choose the earliest semi rect
-	{
-		for (list<std::shared_ptr<tuple<int, int, int, int, int>>>::iterator it = parent.rectSemiConf.begin(); it != parent.rectSemiConf.end(); ++it)
-		{
-			int s1 = paths[get<0>(**it)]->at(get<3>(**it)).location;
-			int s2 = paths[get<1>(**it)]->at(get<4>(**it)).location;
-			std::pair<int, int>  S1 = std::make_pair(s1 / num_col, s1 % num_col);
-			std::pair<int, int> S2 = std::make_pair(s2 / num_col, s2 % num_col);
-			std::pair<int, int> Rg = std::make_pair(get<2>(**it) / num_col, get<2>(**it) % num_col);
-			std::pair<int, int> Rs = getRs(S1, S2, Rg);
-			int new_time = get<3>(**it) - abs(S1.first - Rs.first) - abs(S1.second - Rs.second);
-			if (new_time < time)
-			{
-				choose = (*it);
-				time = new_time;
-			}
-		}
-	}
-	if (time < INT_MAX)
-		return choose;
-	if (!parent.semiConf.empty()) // Choose the earliest semi
-	{
-		for (list<std::shared_ptr<tuple<int, int, int, int, int>>>::iterator it = parent.semiConf.begin(); it != parent.semiConf.end(); ++it)
-			if (get<4>(**it) < time)
-			{
-				choose = (*it);
-				time = get<4>(**it);
-			}
-		return choose;
-	}
-	if (time < INT_MAX)
-		return choose;
-	if (!parent.rectNonConf.empty()) // Choose a rect randomly
-	{
-		for (list<std::shared_ptr<tuple<int, int, int, int, int>>>::iterator it = parent.rectNonConf.begin(); it != parent.rectNonConf.end(); ++it)
-		{
-			int s1 = paths[get<0>(**it)]->at(get<3>(**it)).location;
-			int s2 = paths[get<1>(**it)]->at(get<4>(**it)).location;
-			std::pair<int, int>  S1 = std::make_pair(s1 / num_col, s1 % num_col);
-			std::pair<int, int> S2 = std::make_pair(s2 / num_col, s2 % num_col);
-			std::pair<int, int> Rg = std::make_pair(get<2>(**it) / num_col, get<2>(**it) % num_col);
-			std::pair<int, int> Rs = getRs(S1, S2, Rg);
-			int new_time = get<3>(**it) - abs(S1.first - Rs.first) - abs(S1.second - Rs.second);
-			if (new_time < time)
-			{
-				choose = (*it);
-				time = new_time;
-			}
-		}
-	}
-	if (time < INT_MAX)
-		return choose;
-	if (!parent.nonConf.empty())// Choose the earliest non
-	{
-		for (list<std::shared_ptr<tuple<int, int, int, int, int>>>::iterator it = parent.nonConf.begin(); it != parent.nonConf.end(); ++it)
-			if (get<4>(**it) < time)
-			{
-				choose = (*it);
-				time = get<4>(**it);
-			}
-	}
-	return choose;
 }
 
-template<class Map>
-bool MultiMapICBSSearch<Map>::findPathForSingleAgent(ICBSNode*  node, int ag, double lowerbound)
-{
-	// extract all constraints on agent ag
-	ICBSNode* curr = node;
-	vector < list< pair<int, int> > >* cons_vec = collectConstraints(curr, ag);
-	// build reservation table
-	size_t max_plan_len = node->makespan + 1;
-	ReservationTable* res_table = new ReservationTable(map_size,&paths,curr->agent_id);  // initialized to false
 
-	// find a path w.r.t cons_vec (and prioretize by res_table).
-	bool foundSol = search_engines[ag]->findPath(node->path, focal_w, cons_vec, res_table, max_plan_len, lowerbound,start,time_limit);
-	if (debug_mode) {
-		std::cout<< "Low level done. Nodes expanded: "<<search_engines[ag]->num_expanded<<std::endl;
-	}
-	LL_num_expanded += search_engines[ag]->num_expanded;
-	LL_num_generated += search_engines[ag]->num_generated;
-	delete (cons_vec);
-	delete (res_table);
-	if (foundSol)
-	{
-		node->g_val = node->g_val - paths[ag]->size() + node->path.size();
-		paths[ag] = &node->path;
-		node->makespan = std::max(node->makespan, node->path.size() - 1);
+bool ICBSSearch::traverse(const Path& path, int loc, int t) const
+{
+	if (t >= path.size())
+		if (loc == path.back().location)
+			return true;
+		else
+			return false;
+	else if (t >= 0 && path[t].location == loc)
 		return true;
+	else 
+		return false;
+}
+
+
+bool ICBSSearch::blocked(const Path& path, const std::list<Constraint>& constraints) const
+{
+	for (auto constraint : constraints)
+	{
+		int x, y, t;
+		constraint_type type;
+		tie(x, y, t, type) = constraint;
+		if (type == constraint_type::RANGE) // time range constraint
+		{
+			for (int i = y; i < t; i++)
+			{
+				if (traverse(path, x, i))
+					return true;
+			}
+		}
+		else if (type == constraint_type::BARRIER) // barrier constraint
+		{
+			int x1 = x / num_col, y1 = x % num_col;
+			int x2 = y / num_col, y2 = y % num_col;
+			if (x1 == x2)
+			{
+				if (y1 < y2)
+				{
+					for (int i = 0; i <= std::min(y2 - y1, t); i++)
+					{
+						if (traverse(path, x1 * num_col + y2 - i, t - i))
+							return true;
+					}
+				}
+				else
+				{
+					for (int i = 0; i <= std::min(y1 - y2, t); i++)
+					{
+						if (traverse(path, x1 * num_col + y2 + i, t - i))
+							return true;
+					}
+				}
+			}
+			else // y1== y2
+			{
+				if (x1 < x2)
+				{
+					for (int i = 0; i <= std::min(x2 - x1, t); i++)
+					{
+						if (traverse(path, (x2 - i) * num_col + y1, t - i))
+							return true;
+					}
+				}
+				else
+				{
+					for (int i = 0; i <= std::min(x1 - x2, t); i++)
+					{
+						if (traverse(path, (x2 + i) * num_col + y1, t - i))
+							return true;
+					}
+				}
+			}
+		}
+	}
+	return false;
+}
+
+
+std::shared_ptr<Conflict> ICBSSearch::chooseConflict(ICBSNode &parent)
+{
+	if (debug_mode)
+		cout << "Start choosing conflict" << endl;
+
+	std::shared_ptr<Conflict> choose;
+	if (parent.conflicts.empty() && parent.unknownConf.empty())
+		return NULL;
+	else if (!parent.conflicts.empty())
+	{
+		choose = parent.conflicts.back();
+		for (auto conflict : parent.conflicts)
+		{
+			if (*choose < *conflict)
+				choose = conflict;
+		}
 	}
 	else
 	{
-		return false;
+		choose = parent.unknownConf.back();
+		for (auto conflict : parent.unknownConf)
+		{
+			if (conflict->t < choose->t)
+				choose = conflict;
+		}
 	}
+
+	return choose;
 }
+
 
 bool ICBSSearch::generateChild(ICBSNode*  node, ICBSNode* curr)
 {
+	if (debug_mode)
+		cout << "generate child" << endl;
 	node->parent = curr;
 	node->g_val = curr->g_val;
 	node->makespan = curr->makespan;
 	node->depth = curr->depth + 1;
-
 	std::clock_t t1;
 
 	t1 = std::clock();
+	if (std::get<0>(node->constraints.front()) >= 0 &&
+		std::get<3>(node->constraints.front()) == constraint_type::LENGTH)
+	{
+		int x, agent, t;
+		constraint_type type;
+		tie(x, agent, t, type) = node->constraints.front();
+		for (int ag = 0; ag < num_of_agents; ag++)
+		{
+			if (ag == agent)
+			{
+				continue;
+			}
+			if (t < paths[ag]->size() && paths[ag]->at(t).location == x)
+			{
+				double lowerbound = (int)paths[ag]->size() - 1;
+				if (!findPathForSingleAgent(node, ag, lowerbound))
+					return false;
+			}
+		}
+	}
+	else
+	{
+		double lowerbound = (int)paths[node->agent_id]->size() - 1;
+		// if (curr->conflict->p == conflict_priority::CARDINAL && curr->conflict->type != conflict_type::CORRIDOR2)
+		//	lowerbound += 1;
+		if (!findPathForSingleAgent(node, node->agent_id, lowerbound))
+			return false;
+	}
 
 
-	double lowerbound;
-	if(get<4>(*curr->conflict) >= (int)paths[node->agent_id]->size()) //conflict happens after agent reaches its goal
-		lowerbound = get<4>(*curr->conflict) + 1;
-	else 
-		lowerbound = (int)paths[node->agent_id]->size() - 1;
-		
-	if (!findPathForSingleAgent(node, node->agent_id, lowerbound))
-		return false;
+
+
+	
 
 	
 	runtime_lowlevel += (std::clock() - t1) * 1000.0 / CLOCKS_PER_SEC;
@@ -743,20 +722,19 @@ bool ICBSSearch::generateChild(ICBSNode*  node, ICBSNode* curr)
 	{
 		node->h_val = node->parent->h_val - 1;		
 	}
-	else if (!node->cardinalConf.empty() || !node->rectCardinalConf.empty())
-	{
-		node->h_val = 1;
-	}
+	// else if (hasCardinalConflict(*node))
+	// {
+	// 	node->h_val = 1;
+	// }
 	else
 		node->h_val = 0;
 	node->f_val = node->g_val + node->h_val;
 
 	t1 = std::clock();
 	findConflicts(*node);
+	runtime_conflictdetection += (std::clock() - t1)  * 1000.0 / CLOCKS_PER_SEC;
 
-	runtime_conflictdetection += std::clock() - t1;
-
-	node->num_of_collisions = node->unknownConf.size() + node->cardinalConf.size() + node->semiConf.size() + node->nonConf.size() + node->rectCardinalConf.size();
+	node->num_of_collisions = node->unknownConf.size() + node->conflicts.size();
 
 	// update handles
 	node->open_handle = open_list.push(node);
@@ -768,6 +746,16 @@ bool ICBSSearch::generateChild(ICBSNode*  node, ICBSNode* curr)
 
 
 	return true;
+}
+
+bool ICBSSearch::hasCardinalConflict(const ICBSNode& node) const
+{
+	for (auto conflict : node.conflicts)
+	{
+		if (conflict->p = conflict_priority::CARDINAL)
+			return true;
+	}
+	return false;
 }
 
 
@@ -789,15 +777,14 @@ void ICBSSearch::printBT(const std::string& prefix, const ICBSNode* node, bool i
 	{
 		std::cout << prefix;
 		std::cout << (isLeft ? "├──" : "└──");
-		if(node->conflict!=nullptr) {
+		if (node->conflict != nullptr) {
 
 			// print the value of the node
-			std::cout << "<" << get<0>(*node->conflict) << " "
-				<< get<1>(*node->conflict) << " "
-				<< "(" << get<2>(*node->conflict) / num_col << ","
-				<< get<2>(*node->conflict) % num_col << "), "
-				<< get<3>(*node->conflict)<<","
-				<< get<4>(*node->conflict) << ">" << std::endl;
+			std::cout << "<" << node->conflict->a1 << " "
+				<< node->conflict->a2 << " "
+				<< "(" << "," << "), "
+				<< ","
+				<< node->conflict->t << ">" << std::endl;
 
 			// enter the next tree level - left and right branch
 
@@ -806,11 +793,9 @@ void ICBSSearch::printBT(const std::string& prefix, const ICBSNode* node, bool i
 			std::cout << "No choosen conflict" << std::endl;
 		}
 
-		if(node->leftChild!=NULL)
-		printBT(prefix + (isLeft ? "│   " : "    "), node->leftChild, true);
-
-		if(node->rightChild!=NULL)
-		printBT(prefix + (isLeft ? "│   " : "    "), node->rightChild, false);
+		for (int i = 0; i < node->children.size(); i++) {
+			printBT(prefix + (isLeft ? "│   " : "    "), node->children[i], i == node->children.size() - 1 ? false: true);
+		}
 	}
 }
 
@@ -819,33 +804,14 @@ void ICBSSearch::printHLTree()
 	printBT("", dummy_start, false);
 }
 
-boost::python::list ICBSSearch::outputPaths()
-{
-	boost::python::list result;
-	for (int i = 0; i < num_of_agents; i++)
-	{
-		boost::python::list agentPath;
-
-
-		for (int t = 0; t < paths[i]->size(); t++) {
-			boost::python::tuple location = boost::python::make_tuple(paths[i]->at(t).location / num_col, paths[i]->at(t).location % num_col, paths[i]->at(t).actionToHere);
-			agentPath.append(location);
-		}
-		result.append(agentPath);
-	}
-	return result;
-}
-
 
 // adding new nodes to FOCAL (those with min-f-val*f_weight between the old and new LB)
 void ICBSSearch::updateFocalList(double old_lower_bound, double new_lower_bound, double f_weight) 
 {
 	for (ICBSNode* n : open_list) {
-		if ( n->f_val > old_lower_bound &&
-			n->f_val <= new_lower_bound) {
+		if (n->f_val > old_lower_bound &&
+			n->f_val <= new_lower_bound)
 			n->focal_handle = focal_list.push(n);
-
-		}
 	}
 }
 
@@ -890,18 +856,19 @@ void ICBSSearch::printStrategy() const
 	case constraint_strategy::CBSH_RM:
 		cout << "  CBSH-RM:";
 		break;
+	case constraint_strategy::CBSH_GR:
+		cout << "  CBSH-GR:";
+		break;
 	default:
 		exit(10);
 	}
-}
 
+}
 template<class Map>
-bool MultiMapICBSSearch<Map>::runICBSSearch()
+bool MultiMapICBSSearch<Map>::runICBSSearch() 
 {
 	initializeDummyStart();
 
-	if (debug_mode)
-		cout << "Start search" << endl;
 	printStrategy();
 	// set timer
 	start = std::clock();
@@ -914,51 +881,53 @@ bool MultiMapICBSSearch<Map>::runICBSSearch()
 	runtime_updatecons = 0;
 	// start is already in the open_list
 
+	if (debug_mode)
+		cout << "Start searching:" << endl;
 	while (!focal_list.empty() && !solution_found) 
 	{
-		runtime = (std::clock() - start);
+		runtime = (std::clock() - start) * 1000.0 / CLOCKS_PER_SEC;
 		if (runtime > time_limit)
 		{  // timeout
-			timeout = true;
 			cout << "TIMEOUT  ; " << solution_cost << " ; " << min_f_val - dummy_start->g_val << " ; " <<
 				HL_num_expanded << " ; " << HL_num_generated << " ; " <<
-				LL_num_expanded << " ; " << LL_num_generated << " ; " << runtime/CLOCKS_PER_SEC << " ; " << endl;
+				LL_num_expanded << " ; " << LL_num_generated << " ; " << runtime << " ; " << 
+				num_standard << ";" << num_rectangle << "," <<
+				num_corridor2 << ";" << num_corridor4 << "," << num_target << endl;
 			break;
 		}
 		t1 = std::clock();
 		ICBSNode* curr = focal_list.top();
 		focal_list.pop();
 		open_list.erase(curr->open_handle);
-		runtime_listoperation += std::clock() - t1;
+		runtime_listoperation += (std::clock() - t1)  * 1000.0 / CLOCKS_PER_SEC;
 		// takes the paths_found_initially and UPDATE all constrained paths found for agents from curr to dummy_start (and lower-bounds)
 		t1 = std::clock();
 		updatePaths(curr);
-		runtime_updatepaths += std::clock() - t1;
+		runtime_updatepaths += (std::clock() - t1)  * 1000.0 / CLOCKS_PER_SEC;
+
 		if (cons_strategy == constraint_strategy::CBS)
 		{
 			t1 = std::clock();
-			curr->conflict = chooseEarliestConflict(*curr);
-			runtime_conflictdetection += std::clock() - t1;
+			curr->conflict = chooseConflict(*curr);
+			runtime_conflictdetection += (std::clock() - t1)  * 1000.0 / CLOCKS_PER_SEC;
 		}
 		else if (cons_strategy == constraint_strategy::ICBS) // No heuristics
 		{
 			t1 = std::clock();
-			curr->conflict = classifyConflicts(*curr);
-			runtime_conflictdetection += std::clock() - t1;
+			classifyConflicts(*curr);
+			curr->conflict = chooseConflict(*curr);
+			runtime_conflictdetection += (std::clock() - t1)  * 1000.0 / CLOCKS_PER_SEC;
 		}
 		else if(curr->conflict == NULL) //CBSH based, and h value has not been computed yet
 		{
 			t1 = std::clock();
-			curr->conflict = classifyConflicts(*curr);
-			runtime_conflictdetection += std::clock() - t1;
+			classifyConflicts(*curr);
+			curr->conflict = chooseConflict(*curr);
+			runtime_conflictdetection += (std::clock() - t1)  * 1000.0 / CLOCKS_PER_SEC;
 
 			t1 = std::clock();
-			if (debug_mode)
-				cout << "conpute heuristic" << endl;
 			curr->h_val = computeHeuristics(*curr);
-			if (debug_mode)
-				cout << "conpute heuristic done" << endl;
-			runtime_computeh += std::clock() - t1;
+			runtime_computeh += (std::clock() - t1)  * 1000.0 / CLOCKS_PER_SEC;
 			curr->f_val = curr->g_val + curr->h_val;
 
 			if (curr->f_val > focal_list_threshold)
@@ -973,295 +942,137 @@ bool MultiMapICBSSearch<Map>::runICBSSearch()
 					updateFocalList(focal_list_threshold, new_focal_list_threshold, focal_w);
 					focal_list_threshold = new_focal_list_threshold;
 				}
-				runtime_listoperation += std::clock() - t1;
+				runtime_listoperation += (std::clock() - t1)  * 1000.0 / CLOCKS_PER_SEC;
 				continue;
 			}
 		}
 
 		if (curr->conflict == NULL) //Fail to find a conflict => no conflicts
 		{  // found a solution (and finish the while look)
-			runtime = (std::clock() - start); 
+			runtime = (std::clock() - start) * 1000.0 / CLOCKS_PER_SEC;
 			solution_found = true;
 			solution_cost = curr->g_val;
+			if (debug_mode)
+				printHLTree();
+			if (screen == 2)
+				printPaths();
 			cout << solution_cost << " ; " << solution_cost - dummy_start->g_val << " ; " <<
 				HL_num_expanded << " ; " << HL_num_generated << " ; " <<
-				LL_num_expanded << " ; " << LL_num_generated << " ; " << runtime / CLOCKS_PER_SEC << " ; ";
-			cout << endl;
+				LL_num_expanded << " ; " << LL_num_generated << " ; " << runtime << " ; " << 
+				num_standard << ";" << num_rectangle << "," <<
+				num_corridor2 << ";" << num_corridor4 << "," << num_target << endl;
+			
 			break;
 		}
+
 		if (debug_mode) {
 
-			cout << "choose conflict: " << get<0>(*curr->conflict) << " " << get<1>(*curr->conflict) << " " << "(" << get<2>(*curr->conflict) / num_col << "," << get<2>(*curr->conflict) % num_col << ") " << get<4>(*curr->conflict) << endl;
+			cout << "choose conflict: " << curr->conflict->a1 << ","
+				<< curr->conflict->a2 << " " << "("  ") " << curr->conflict->t << endl;
 
 		}
-
-
 
 		 //Expand the node
 		HL_num_expanded++;
 		curr->time_expanded = HL_num_expanded;
-
-		ICBSNode* n1 = new ICBSNode();
-		ICBSNode* n2 = new ICBSNode();
-			
-		n1->agent_id = get<0>(*curr->conflict);
-		n2->agent_id = get<1>(*curr->conflict);
-
-		if (debug_mode) {
-			cout << "check conflict repeatance" << endl;
-			stringstream con;
-			con << get<0>(*curr->conflict) << get<1>(*curr->conflict) << get<2>(*curr->conflict) << get<3>(*curr->conflict) << get<4>(*curr->conflict);
-			curr->resolvedConflicts.insert(con.str());
-			
-			bool stop = false;
-			bool noRepeat = true;
-			ICBSNode* parent = curr->parent;
-			if (parent != NULL) {
-				cout << "Try find " << con.str() << " in curr's parent nodes" << endl;
-				while (!stop) {
-					cout << "1";
-					if (parent->parent == NULL) {
-						stop = true;
-						break;
-					}
-					std::unordered_set<std::string>::const_iterator it = parent->resolvedConflicts.find(con.str());
-					if (it!=parent->resolvedConflicts.end()) {
-						noRepeat = false;
-					}
-					assert(noRepeat && "Repeated conflict!");
-					parent = parent->parent;
-
-					
-
-				}
-			}
-			else {
-				cout << "no parent" << endl;
-
-			}
-			if (noRepeat) {
-				cout << "no repeatance" << endl;
-			}
-			else {
-				cout << "repeatance detected" << endl;
-
-			}
-
-		}
-
-
-		if (get<2>(*curr->conflict) < 0) // Rectangle conflict
-		{
+		if (curr->conflict->type == conflict_type::RECTANGLE)
 			numOfRectangle += 1;
-			int Rg = -1 - get<2>(*curr->conflict);
-			int S1_t = get<3>(*curr->conflict);
-			int S2_t = get<4>(*curr->conflict);
-			if (cons_strategy == constraint_strategy::CBSH_RM) // add modified barrier constraints
-			{
-				
-				if (debug_mode) {
-					cout << "add modified barrier constraint," << n1->agent_id << " " << n2->agent_id << endl;
-				}
-				if (kDelay==0){
-					addModifiedBarrierConstraints(*paths[get<0>(*curr->conflict)], *paths[get<1>(*curr->conflict)],
-					S1_t, S2_t, Rg, num_col, n1->constraints, n2->constraints);
-				}
-				else{
-					vector<shared_ptr<MDDEmpty>> a1kMDD;
-					vector<shared_ptr<MDDEmpty>> a2kMDD;
-					std::stringstream key;
-					key << get<0>(*curr->conflict) << get<1>(*curr->conflict) << get<2>(*curr->conflict) << get<3>(*curr->conflict) << get<4>(*curr->conflict);
 
-					const ConflictDetial detail = curr->conflictDetailTable[key.str()];
-					std::vector <std::list< std::pair<int, int> > >* constraints1 = collectConstraints(curr, get<0>(*curr->conflict));
-					std::vector <std::list< std::pair<int, int> > >* constraints2 = collectConstraints(curr, get<1>(*curr->conflict));
+		vector<ICBSNode*> children;
 
-					for (int i = 1; i <= kDelay; i++) {
-						MDD<Map>* a1MDD = new MDD<Map>();
-						MDD<Map>* a2MDD = new MDD<Map>();
-
-						a1MDD->buildMDD(*constraints1, paths[get<0>(*curr->conflict)]->size() - detail.s1_t + i,
-							*(search_engines[get<0>(*curr->conflict)]),detail.s1,detail.s1_t,
-							paths[get<0>(*curr->conflict)]->at(detail.s1_t).actionToHere);
-
-						a2MDD->buildMDD(*constraints2, paths[get<1>(*curr->conflict)]->size() - detail.s1_t + i,
-							*(search_engines[get<1>(*curr->conflict)]), detail.s2, detail.s2_t,
-							paths[get<1>(*curr->conflict)]->at(detail.s2_t).actionToHere);
-						a1kMDD.push_back(shared_ptr<MDDEmpty>(a1MDD));
-						a2kMDD.push_back(shared_ptr<MDDEmpty>(a2MDD));
-
-					}
-
-					addModifiedLongBarrierConstraints( *(paths[get<0>(*curr->conflict)]), *(paths[get<1>(*curr->conflict)]),
-					S1_t, S2_t, Rg,detail.g1,detail.g2, num_col, n1->constraints, n2->constraints, a1kMDD, a2kMDD, kDelay);
-
-					if (n1->constraints.size() == 0) {
-						for (int i = 0; i <= kDelay; i++) {
-							n1->constraints.push_back(make_tuple(detail.originalConf, -1, detail.originalT + i));
-						}
-					}
-					if (n2->constraints.size() == 0) {
-						for (int i = 0; i <= kDelay; i++) {
-							n2->constraints.push_back(make_tuple(detail.originalConf, -1, detail.originalT + i));
-						}
-					}
-				}
-
-			}
-			else // add barrier constraints
-			{
-				//get<0>(*curr->conflict) agent1 id, get<3>(*curr->conflict) agent1 conflict time
-				int S1 = paths[get<0>(*curr->conflict)]->at(get<3>(*curr->conflict)).location;
-				int S2 = paths[get<1>(*curr->conflict)]->at(get<4>(*curr->conflict)).location;
-				int G1 = paths[get<0>(*curr->conflict)]->back().location;
-				int G2 = paths[get<1>(*curr->conflict)]->back().location;
-
-				if (debug_mode) {
-					cout << "add barrier constraint," << n1->agent_id << " "<< n2->agent_id << endl;
-				}
-				if (kDelay == 0) {
-					addBarrierConstraints(S1, S2, S1_t, S2_t, Rg, num_col, n1->constraints, n2->constraints);
-				}
-				else {
-					if (shortBarrier)
-						addShortKDelayBarrierConstraints(S1, S2, S1_t, S2_t, Rg, num_col, n1->constraints, n2->constraints, kDelay);
-					else
-						addKDelayBarrierConstraints(S1, S2, S1_t, S2_t, Rg, G1, G2, num_col, n1->constraints, n2->constraints, kDelay, asymmetry_constraint);
-				}
-			}
-
-		}
-		else if (get<3>(*curr->conflict) < 0) // vertex conflict
+		if (curr->conflict->type == conflict_type::CORRIDOR4) // 4-way branching
 		{
-			if (asymmetry_constraint) {
-				//n1 is the agent that at time t, n2 is the agent between t and t + k, 
-				//thus for a asymmetric range constraint, constraint n1 is a single time constraint,
-				//constraint n2 is the range constraint from t-kdelay to t+kdelay
-				if (debug_mode) {
-					cout << "add asy range constraint" << endl;
-				}
-				n1->constraints.push_back(make_tuple(get<2>(*curr->conflict), -1, get<4>(*curr->conflict)));
-				for (int i = -kDelay; i <= kDelay; i++) {
-					if ((get<4>(*curr->conflict) + i) < 0)
-						continue;
-					n2->constraints.push_back(make_tuple(get<2>(*curr->conflict), -1, get<4>(*curr->conflict) + i));
-				}
-
-			}
-			else {
-				if (debug_mode) {
-					cout << "add sym range constraint" << endl;
-				}
-				for (int i = 0; i <= kDelay; i++) {
-					n1->constraints.push_back(make_tuple(get<2>(*curr->conflict), -1, get<4>(*curr->conflict) + i));
-					n2->constraints.push_back(make_tuple(get<2>(*curr->conflict), -1, get<4>(*curr->conflict) + i));
-				}
-			}
-
+			children.resize(4);
+			children[0] = new ICBSNode(curr->conflict->a1);
+			children[0]->constraints.push_back(curr->conflict->constraint1.front());
+			children[1] = new ICBSNode(curr->conflict->a1);
+			children[1]->constraints.push_back(curr->conflict->constraint1.back());
+			children[2] = new ICBSNode(curr->conflict->a2);
+			children[2]->constraints.push_back(curr->conflict->constraint2.front());
+			children[3] = new ICBSNode(curr->conflict->a2);
+			children[3]->constraints.push_back(curr->conflict->constraint2.back());
+			num_corridor4++;
 		}
-		else // edge conflict
+		else if (curr->conflict->type == conflict_type::STANDARD && curr->conflict->t == 0 && !option.ignore_t0) {
+
+			children.resize(1);
+			children[0] = new ICBSNode(curr->conflict->a1);
+			children[0]->constraints = curr->conflict->constraint1;
+			num_standard++;
+		}
+		else // 2-way branching
 		{
-			//if (asymmetry_constraint) {
-			//	if (debug_mode)
-			//		cout << "add asy range edge constraint" << endl;
-			//	n1->constraints.push_back(make_tuple(get<2>(*curr->conflict), get<3>(*curr->conflict), get<4>(*curr->conflict)));
-			//	for (int i = -kDelay; i <= kDelay; i++) {
-			//		if ((get<4>(*curr->conflict) + i) < 0)
-			//			continue;
-			//		n2->constraints.push_back(make_tuple(get<3>(*curr->conflict), get<2>(*curr->conflict), get<4>(*curr->conflict) + i));
-			//	}
-			//}
-			//else {
-			//	if (debug_mode) 
-			//		cout << "add sym range edge constraint" << endl;
-			//	for (int i = 0; i <= kDelay; i++) {
-			n1->constraints.push_back(make_tuple(get<2>(*curr->conflict), get<3>(*curr->conflict), get<4>(*curr->conflict) ));
-			n2->constraints.push_back(make_tuple(get<3>(*curr->conflict), get<2>(*curr->conflict), get<4>(*curr->conflict) ));
-			//	}
-			//}
-			//
+			
+			children.resize(2);
+			children[0] = new ICBSNode(curr->conflict->a1);
+			children[0]->constraints = curr->conflict->constraint1;
+			children[1] = new ICBSNode(curr->conflict->a2);
+			children[1]->constraints = curr->conflict->constraint2;
+			if (curr->conflict->type == conflict_type::CORRIDOR2)
+				num_corridor2++;
+			else if (curr->conflict->type == conflict_type::STANDARD)
+				num_standard++;
+			else if (curr->conflict->type == conflict_type::RECTANGLE)
+				num_rectangle++;
+			else if (curr->conflict->type == conflict_type::TARGET)
+				num_target++;
 		}
-		
 
-		bool Sol1 = false, Sol2 = false;
+		if (screen == 2)
+		{
+			std::cout << "Node " << curr->time_generated << " with f=" << curr->g_val << "+" << curr->h_val
+				<< " has " << std::endl;  
+			for (auto conflict : curr->conflicts)
+				std::cout << *conflict;
+			std::cout << "We choose " << *curr->conflict;
+		}
 		vector<vector<PathEntry>*> copy(paths);
-		if (debug_mode)
-			cout << "generate child 1" << endl;
-
-		//Agent1 is the base agent for a k-delay conflict. Thus if conflict time is 0, means agent 1's initial location
-		//conflict with agent 2's 0+1~0+k location. Thus we only diable node 1 when k-delay conflict happen on time 0.
-		
-
-		if (get<4>(*curr->conflict) != 0 || get<2>(*curr->conflict) < 0 || ignore_t0)
-			Sol1 = generateChild(n1, curr);
-		else if (debug_mode)
-			cout << "Time 0 conflict, ignore node 1" << endl;
-
-
-		paths = copy;
-		if (debug_mode)
-			cout << "generate child 2" << endl;
-		Sol2 = generateChild(n2, curr);
-
+		for (int i = 0; i < children.size(); i++)
+		{
+			if (generateChild(children[i], curr))
+			{
+				curr->children.push_back(children[i]);
+				if (screen == 2)
+					std::cout << "Generate #" << children[i]->time_generated
+						<< " with cost " << children[i]->g_val
+						<< " and " << children[i]->num_of_collisions << " conflicts " << std::endl;
+			}
+			else
+			{
+				delete children[i];
+			}
+			if (i < children.size() - 1)
+				paths = copy;
+		}
 		if (debug_mode) {
-			cout << "n1 constraints:";
-			std::list<std::tuple<int, int, int>>::iterator it;
-			for (it = n1->constraints.begin(); it != n1->constraints.end(); ++it) {
-				cout << "<(" << get<0>((*it)) / num_col << "," << get<0>((*it)) % num_col << ")" << ","
-					<< "(" << get<1>((*it)) / num_col << "," << get<1>((*it)) % num_col << ")" << ","
-					<< get<2>((*it)) << ">; ";
+			for (int i = 0; i < curr->children.size(); i++)
+			{
 
+				cout <<"Child "<<i<< " conflicts:"<< curr->children[i]->unknownConf.size();
+	//			for (auto &conit : curr->children[i]->unknownConf) {
+	///*				cout << "<" << get<0>(*conit) << "," << get<1>(*conit) << ","
+	//					<< "(" << get<2>(*conit) / num_col << "," << get<2>(*conit) % num_col << ")" << ","
+	//					<< "(" << get<3>(*conit) / num_col << "," << get<3>(*conit) % num_col << ")" << ","
+	//					<< get<4>(*conit) << ">; ";*/
+
+
+	//			}
+				cout << endl;
+
+				//cout << "n2 conflicts:";
+				//for (auto &conit : n2->unknownConf) {
+				//	cout << "<" << get<0>(*conit) << "," << get<1>(*conit) << ","
+				//		<< "(" << get<2>(*conit) / num_col << "," << get<2>(*conit) % num_col << "),"
+				//		<< "(" << get<3>(*conit) / num_col << "," << get<3>(*conit) % num_col << ")" << ","
+				//		<< get<4>(*conit) << ">; ";
+
+				//}
+				//cout << endl;
+				////exit(0);
 			}
-			cout << endl;
-
-			cout << "n1 conflicts:";
-			for (auto &conit : n1->unknownConf) {
-				cout << "<" << get<0>(*conit) << "," << get<1>(*conit) << ","
-					<<"("<< get<2>(*conit) / num_col << "," << get<2>(*conit) % num_col << ")" << ","
-					<< "(" << get<3>(*conit) / num_col << "," << get<3>(*conit) % num_col << ")" << ","
-					<< get<4>(*conit) << ">; ";
-
-			}
-			cout << endl;
-
-
-			cout << "n2 constraints:";
-			for (it = n2->constraints.begin(); it != n2->constraints.end(); ++it) {
-				cout << "<(" << get<0>((*it)) / num_col << "," << get<0>((*it)) % num_col << ")" << ","
-					<< "(" << get<1>((*it)) / num_col << "," << get<1>((*it)) % num_col << ")" << ","
-					<< get<2>((*it)) << ">; ";
-
-			}
-			cout << endl;
-
-			cout << "n2 conflicts:";
-			for (auto &conit : n2->unknownConf) {
-				cout << "<" << get<0>(*conit) << "," << get<1>(*conit) << ","
-					<<"("<< get<2>(*conit) / num_col << "," << get<2>(*conit) % num_col << "),"
-					<< "(" << get<3>(*conit) / num_col << "," << get<3>(*conit) % num_col << ")" << ","
-					<< get<4>(*conit) << ">; ";
-
-			}
-			cout << endl;
-			//exit(0);
 		}
 
-		if(!Sol1)
-		{
-			delete (n1);
-			n1 = NULL;
-		}
-		else {
-			curr->leftChild = n1;
-		}
-		if(!Sol2)
-		{
-			delete (n2);
-			n2 = NULL;
-		}
-		else {
-			curr->rightChild = n2;
-		}
+
 		curr->clear();
 		t1 = std::clock();
 		if (open_list.size() == 0) {
@@ -1276,7 +1087,7 @@ bool MultiMapICBSSearch<Map>::runICBSSearch()
 			updateFocalList(focal_list_threshold, new_focal_list_threshold, focal_w);
 			focal_list_threshold = new_focal_list_threshold;
 		}
-		runtime_listoperation += std::clock() - t1;
+		runtime_listoperation += (std::clock() - t1) * 1000.0 / CLOCKS_PER_SEC;
 
 	}  // end of while loop
 
@@ -1286,19 +1097,109 @@ bool MultiMapICBSSearch<Map>::runICBSSearch()
 		solution_cost = -2;
 		cout << "No solutions  ; " << solution_cost << " ; " << min_f_val - dummy_start->g_val << " ; " <<
 			HL_num_expanded << " ; " << HL_num_generated << " ; " <<
-			LL_num_expanded << " ; " << LL_num_generated << " ; " << runtime / CLOCKS_PER_SEC << " ; " <<
+			LL_num_expanded << " ; " << LL_num_generated << " ; " << runtime << " ; " << 
+			num_standard << ";" << num_rectangle << ";" <<
+			num_corridor2 << ";" << num_corridor4 << ";" << num_target << ";" <<
 			"|Open|=" << open_list.size() << endl;
 		solution_found = false;
 	}
-	//if (debug_mode)
-	//	printPaths();
-	if (debug_mode) {
-		printHLTree();
-	}
-
 	return solution_found;
 }
 
+
+
+
+inline void ICBSSearch::releaseClosedListNodes() 
+{
+	for (list<ICBSNode*>::iterator it = allNodes_table.begin(); it != allNodes_table.end(); it++)
+		delete *it;
+}
+
+inline void ICBSSearch::releaseOpenListNodes()
+{
+	while(!open_list.empty())
+	{
+		ICBSNode* curr = open_list.top();
+		open_list.pop();
+		delete curr;
+	}
+}
+
+
+template<class Map>
+MultiMapICBSSearch<Map>::~MultiMapICBSSearch()
+{
+	for (size_t i = 0; i < search_engines.size(); i++)
+		delete (search_engines[i]);
+	releaseClosedListNodes();
+	if (!mddTable.empty())
+	{
+		for (int i = 0; i < num_of_agents; i++)
+		{
+			for (auto mdd : mddTable[i])
+			{
+				delete mdd.second;
+			}
+		}
+	}
+}
+
+template<class Map>
+MultiMapICBSSearch<Map>::MultiMapICBSSearch(Map * ml, AgentsLoader & al, double f_w, constraint_strategy c, int time_limit, int screen, int kDlay, options options1)
+{
+	this->option = options1;
+	this->focal_w = f_w;
+	this->time_limit = time_limit;
+	this->screen = screen;
+	if (screen == 2||options1.debug)
+		debug_mode = true;
+
+
+	if (debug_mode)
+		cout << "[CBS] Initializing CBS" << endl;
+	cons_strategy = c;
+	HL_num_expanded = 0;
+	HL_num_generated = 0;
+
+	LL_num_expanded = 0;
+	LL_num_generated = 0;
+	this->num_col = ml->cols;
+	this->al = al;
+
+	num_of_agents = al.num_of_agents;
+	map_size = ml->rows*ml->cols;
+	solution_found = false;
+	solution_cost = -1;
+	kDelay = kDlay;
+	asymmetry_constraint = options1.asymmetry_constraint;
+	ignore_t0 = options1.ignore_t0;
+	shortBarrier = options1.shortBarrier;
+	search_engines = std::vector<SingleAgentICBS<Map>* >(num_of_agents);
+	if (debug_mode)
+		cout << "Initializing search engines" << endl;
+	for (int i = 0; i < num_of_agents; i++) {
+		int init_loc = ml->linearize_coordinate((al.initial_locations[i]).first, (al.initial_locations[i]).second);
+		int goal_loc = ml->linearize_coordinate((al.goal_locations[i]).first, (al.goal_locations[i]).second);
+		ComputeHeuristic<Map> ch(init_loc, goal_loc, ml, al.headings[i]);
+		search_engines[i] = new SingleAgentICBS<Map>(init_loc, goal_loc, ml,i, al.headings[i],kDelay);
+		ch.getHVals(search_engines[i]->my_heuristic);
+		/*if (debug_mode) {
+			std::cout << "Heuristic table for " << i << ": ";
+			for (int h = 0; h < search_engines[i]->my_heuristic.size(); h++) {
+				for (int heading = 0; heading < 5; heading++)
+					if (search_engines[i]->my_heuristic[h].heading[heading]<INT_MAX)
+					std::cout << "(" << h << ": "<<heading<<": " << search_engines[i]->my_heuristic[h].heading[heading] << ")";
+			}
+			std::cout << std::endl;
+
+		}*/
+
+	}
+
+	if (debug_mode) {
+		cout << "Initializing search engines done" << endl;
+	}
+}
 
 template<class Map>
 void MultiMapICBSSearch<Map>::initializeDummyStart() {
@@ -1313,11 +1214,18 @@ void MultiMapICBSSearch<Map>::initializeDummyStart() {
 	ReservationTable* res_table = new ReservationTable(map_size);  // initialized to false
 	for (int i = 0; i < num_of_agents; i++) {
 
-		//cout << "agent " << i << endl;
-		if (search_engines[i]->findPath(paths_found_initially[i], focal_w, NULL, res_table, dummy_start->makespan + 1, 0) == false)
+		if (search_engines[i]->findPath(paths_found_initially[i], focal_w, constraintTable, res_table, dummy_start->makespan + 1, 0) == false)
 			cout << "NO SOLUTION EXISTS";
-
+		
 		paths[i] = &paths_found_initially[i];
+		/*if (paths[i]->at(2).conflist == NULL) {
+			cout << "x" << endl;
+
+		}
+		else {
+			cout << paths[i]->at(2).conflist->size() << endl;
+
+		}*/
 		res_table->addPath(i, paths[i]);
 		dummy_start->makespan = max(dummy_start->makespan, paths_found_initially[i].size() - 1);
 
@@ -1346,114 +1254,86 @@ void MultiMapICBSSearch<Map>::initializeDummyStart() {
 	HL_num_generated++;
 	dummy_start->time_generated = HL_num_generated;
 	allNodes_table.push_back(dummy_start);
+	if (debug_mode)
+		cout << "Find initial conflict" << endl;
 	findConflicts(*dummy_start);
-
+	if (debug_mode)
+		cout << "Find initial conflict done" << endl;
 	min_f_val = dummy_start->f_val;
 	focal_list_threshold = min_f_val * focal_w;
 	if (debug_mode)
 	{
-		cout << "Initializing done" << endl;
 
 		cout << "Dummy start conflicts:";
 		for (auto &conit : dummy_start->unknownConf) {
-			cout << "<" << get<0>(*conit) << "," << get<1>(*conit) << ","
-				<< "(" << get<2>(*conit) / num_col << "," << get<2>(*conit) % num_col << ")" << ","
-				<< "(" << get<3>(*conit) / num_col << "," << get<3>(*conit) % num_col << ")" << ","
-				<< get<4>(*conit) << ">; ";
+			cout << "<" << conit->a1<< "," << conit->a2 << ","
+				<< "("  << ")" << ","
+				<< "("  << ")" << ","
+				<< conit->t<< ">; ";
 
 		}
 		cout << endl;
 	}
+
+	if (cons_strategy == constraint_strategy::CBSH_GR)
+		mddTable.resize(num_of_agents);
+	if(debug_mode)
+		cout << "Initializing done" << endl;
+
 }
 
-inline void ICBSSearch::releaseClosedListNodes() 
-{
-	for (list<ICBSNode*>::iterator it = allNodes_table.begin(); it != allNodes_table.end(); it++)
-		delete *it;
-}
+//template<class Map>
+//void MultiMapICBSSearch<Map>::buildMDD(ICBSNode& curr, int id)
+//{
+//	if (debug_mode)
+//		cout << "start build MDD" << endl;
+//	MDD<Map> * mdd = new MDD<Map>();
+//
+//	vector < list< pair<int, int> > >* cons_vec = collectConstraints(&curr, id);
+//	mdd->buildMDD(*cons_vec, paths[id]->size(), *search_engines[id]);
+//
+//	for (int i = 0; i < mdd->levels.size(); i++)
+//		paths[id]->at(i).single = mdd->levels[i].size() == 1;
+//	if (cons_strategy == constraint_strategy::CBSH_RM)
+//	{
+//		for (int i = 0; i < mdd->levels.size(); i++)
+//		{
+//			for (MDDNode* n : mdd->levels[i])
+//			{
+//				paths[id]->at(i).locations.push_back(n->location);
+//			}
+//		}
+//	}
+//	delete mdd;
+//	delete cons_vec;
+//	if (debug_mode)
+//		cout << "build MDD done" << endl;
+//}
 
-inline void ICBSSearch::releaseOpenListNodes()
+template<class Map>
+MDD<Map>* MultiMapICBSSearch<Map>::buildMDD(ICBSNode& node, int id)
 {
-	while(!open_list.empty())
+	MDD<Map>* mdd = NULL;
+	if (!mddTable.empty())
 	{
-		ICBSNode* curr = open_list.top();
-		open_list.pop();
-		delete curr;
+		ConstraintsHasher c(id, &node);
+		typename std::unordered_map<ConstraintsHasher, MDD<Map>*>::const_iterator got = mddTable[c.a].find(c);
+		if (got != mddTable[c.a].end())
+		{
+			mdd = got->second;
+		}
 	}
-}
-
-template<class Map>
-MultiMapICBSSearch<Map>::~MultiMapICBSSearch()
-{
-	for (size_t i = 0; i < search_engines.size(); i++)
-		delete (search_engines[i]);
-	releaseClosedListNodes();
-}
-
-template<class Map>
-MultiMapICBSSearch<Map>::MultiMapICBSSearch(Map* ml, AgentsLoader& al, double f_w, constraint_strategy c, int time_limit, int kDlay, options options1)
-{
-	this->focal_w = f_w;
-	this->time_limit = time_limit;
-
-	if (debug_mode)
-		cout << "Initializing CBS" << endl;
-	cons_strategy = c;
-	HL_num_expanded = 0;
-	HL_num_generated = 0;
-	LL_num_expanded = 0;
-	LL_num_generated = 0;
-	this->num_col = ml->cols;
-	this->al = al;
-	num_of_agents = al.num_of_agents;
-	map_size = ml->rows*ml->cols;
-	solution_found = false;
-	solution_cost = -1;
-	kDelay = kDlay;
-	asymmetry_constraint = options1.asymmetry_constraint;
-	debug_mode = options1.debug;
-	ignore_t0 = options1.ignore_t0;
-	shortBarrier = options1.shortBarrier;
-	search_engines = vector < SingleAgentICBS<Map>* >(num_of_agents);
-	if (debug_mode)
-		cout << "Initializing search engines" << endl;
-	for (int i = 0; i < num_of_agents; i++) {
-		int init_loc = ml->linearize_coordinate((al.initial_locations[i]).first, (al.initial_locations[i]).second);
-		int goal_loc = ml->linearize_coordinate((al.goal_locations[i]).first, (al.goal_locations[i]).second);
-		ComputeHeuristic<Map> ch(init_loc, goal_loc, ml, al.headings[i]);
-		search_engines[i] = new SingleAgentICBS<Map>(init_loc, goal_loc, ml,i, al.headings[i],kDelay);
-		ch.getHVals(search_engines[i]->my_heuristic);
-		/*if (debug_mode) {
-			std::cout << "Heuristic table for " << i << ": ";
-			for (int h = 0; h < search_engines[i]->my_heuristic.size(); h++) {
-				for (int heading = 0; heading < 5; heading++)
-					if (search_engines[i]->my_heuristic[h].heading[heading]<INT_MAX)
-					std::cout << "(" << h << ": "<<heading<<": " << search_engines[i]->my_heuristic[h].heading[heading] << ")";
-			}
-			std::cout << std::endl;
-
-		}*/
-
+	if (mdd == NULL)
+	{
+		mdd = new MDD<Map>();
+		// vector < list< pair<int, int> > >* cons_vec = collectConstraints(&node, id);
+		updateConstraintTable(&node, id);
+		mdd->buildMDD(constraintTable, paths[id]->size(), *search_engines[id]);
 	}
-
-	if (debug_mode) {
-		cout << "Initializing search engines done" << endl;
-	}
-}
-
-template<class Map>
-void MultiMapICBSSearch<Map>::buildMDD(ICBSNode& curr, int id)
-{
-	if (debug_mode)
-		cout << "start build MDD" << endl;
-	MDD<Map> * mdd = new MDD<Map>();
-
-	vector < list< pair<int, int> > >* cons_vec = collectConstraints(&curr, id);
-	mdd->buildMDD(*cons_vec, paths[id]->size(), *search_engines[id]);
 
 	for (int i = 0; i < mdd->levels.size(); i++)
 		paths[id]->at(i).single = mdd->levels[i].size() == 1;
-	if (cons_strategy == constraint_strategy::CBSH_RM)
+	if (cons_strategy == constraint_strategy::CBSH_RM || cons_strategy == constraint_strategy::CBSH_GR)
 	{
 		for (int i = 0; i < mdd->levels.size(); i++)
 		{
@@ -1463,14 +1343,510 @@ void MultiMapICBSSearch<Map>::buildMDD(ICBSNode& curr, int id)
 			}
 		}
 	}
-	delete mdd;
-	delete cons_vec;
-	if (debug_mode)
-		cout << "build MDD done" << endl;
+	if (!mddTable.empty())
+	{
+		ConstraintsHasher c(id, &node);
+		mddTable[c.a][c] = mdd;
+	}
+	return mdd;
 }
+
+template<class Map>
+bool MultiMapICBSSearch<Map>::findPathForSingleAgent(ICBSNode*  node, int ag, double lowerbound)
+{
+	if (debug_mode)
+		cout << "Start LL search" << endl;
+	// extract all constraints on agent ag
+	ICBSNode* curr = node;
+	// vector < list< pair<int, int> > >* cons_vec = collectConstraints(curr, ag);
+	updateConstraintTable(curr, ag);
+	// build reservation table
+	size_t max_plan_len = node->makespan + 1;
+
+	ReservationTable* res_table = new ReservationTable(map_size, &paths, curr->agent_id);  // initialized to false
+
+	// find a path
+	vector<PathEntry> newPath;
+
+	bool foundSol = search_engines[ag]->findPath(newPath, focal_w, constraintTable, res_table, max_plan_len, lowerbound, start, time_limit);
+
+	LL_num_expanded += search_engines[ag]->num_expanded;
+	LL_num_generated += search_engines[ag]->num_generated;
+	// delete (cons_vec);
+
+	delete (res_table);
+
+
+	if (foundSol)
+	{
+		node->paths.emplace_back(ag, newPath);
+
+		node->g_val = node->g_val - paths[ag]->size() + newPath.size();
+
+		paths[ag] = &node->paths.back().second;
+
+		node->makespan = std::max(node->makespan, newPath.size() - 1);
+
+		return true;
+	}
+	else
+	{
+
+		return false;
+	}
+}
+
+
+template<class Map>
+void MultiMapICBSSearch<Map>::updateConstraintTable(ICBSNode* curr, int agent_id)
+{
+	constraintTable.clear();
+	constraintTable.goal_location = search_engines[agent_id]->goal_location;
+	while (curr != dummy_start)
+	{
+		if (curr->agent_id == agent_id)
+		{
+			for (auto constraint : curr->constraints)
+			{
+				int x, y, z;
+				constraint_type type;
+				tie(x, y, z, type) = constraint;
+				if (type == constraint_type::RANGE) // time range constraint
+				{
+					constraintTable.insert(x, y, z + 1);
+				}
+				else if (type == constraint_type::BARRIER) // barrier constraint
+				{
+					int x1 = x / num_col, y1 = x % num_col;
+					int x2 = y / num_col, y2 = y % num_col;
+					if (x1 == x2)
+					{
+						if (y1 < y2)
+							for (int i = 0; i <= std::min(y2 - y1, z); i++)
+							{
+								constraintTable.insert(x1 * num_col + y2 - i, z - i, z - i + 1);
+							}
+						else
+							for (int i = 0; i <= std::min(y1 - y2, z); i++)
+							{
+								constraintTable.insert(x1 * num_col + y2 + i, z - i, z - i + 1);
+							}
+					}
+					else // y1== y2
+					{
+						if (x1 < x2)
+							for (int i = 0; i <= std::min(x2 - x1, z); i++)
+							{
+								constraintTable.insert((x2 - i) * num_col + y1, z - i, z - i + 1);
+							}
+						else
+							for (int i = 0; i <= std::min(x1 - x2, z); i++)
+							{
+								constraintTable.insert((x2 + i) * num_col + y1, z - i, z - i + 1);
+							}
+					}
+				}
+				else if (type == constraint_type::LENGTH)
+				{
+					if (x < 0 && y == agent_id)
+					{ // <-1, agent_id, t>: path of agent_id should be of length at least t + 1 
+						constraintTable.length_min = max(constraintTable.length_min, z + 1);
+					}
+					else if (x >= 0 && y == agent_id)
+					{ // <loc, agent_id, t>: path of agent_id should be of length at most t
+						constraintTable.length_max = min(constraintTable.length_max, z);
+					}
+					else if (x >= 0 && y != agent_id)
+					{ // <loc, agent_id, t>: any other agent cannot be at loc at or after timestep t
+						constraintTable.insert(x, z, INT_MAX);
+					}
+				}
+				else if (type == constraint_type::VERTEX)
+				{
+					constraintTable.insert(x, z, z + 1);
+				}
+				else // edge
+				{
+					constraintTable.insert(x * map_size + y, z, z + 1);
+				}
+			}
+		}
+		else if (!curr->constraints.empty())
+		{
+			int x, y, z;
+			constraint_type type;
+			tie(x, y, z, type) = curr->constraints.front();
+			if (type == constraint_type::LENGTH && x >= 0 && y != agent_id)
+			{
+				constraintTable.insert(x, z, INT_MAX);
+			}
+		}
+		curr = curr->parent;
+	}
+}
+
+template<class Map>
+void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
+{
+	if (parent.conflicts.empty() && parent.unknownConf.empty())
+		return; // No conflict
+
+	// Classify all conflicts in unknownConf
+	while (!parent.unknownConf.empty())
+	{
+		std::shared_ptr<Conflict> con = parent.unknownConf.front();
+		int a1 = con->a1, a2 = con->a2;
+		int loc1, loc2, timestep;
+		constraint_type type;
+		std::tie(loc1, loc2, timestep, type) = con->constraint1.back();
+		parent.unknownConf.pop_front();
+
+		bool cardinal1 = false, cardinal2 = false;
+		if (timestep >= paths[a1]->size())
+			cardinal1 = true;
+		else if (!paths[a1]->at(0).single)
+		{
+			MDD<Map>* mdd = buildMDD(parent, a1);
+			for (int i = 0; i < mdd->levels.size(); i++)
+				paths[a1]->at(i).single = mdd->levels[i].size() == 1;
+			if (mddTable.empty())
+				delete mdd;
+		}
+		if (timestep >= paths[a2]->size())
+			cardinal2 = true;
+		else if (!paths[a2]->at(0).single)
+		{
+			MDD<Map>* mdd = buildMDD(parent, a2);
+			for (int i = 0; i < mdd->levels.size(); i++)
+				paths[a2]->at(i).single = mdd->levels[i].size() == 1;
+			if (mddTable.empty())
+				delete mdd;
+		}
+
+		if (type == conflict_type::STANDARD && loc2 >= 0) // Edge conflict
+		{
+			cardinal1 = paths[a1]->at(timestep).single && paths[a1]->at(timestep - 1).single;
+			cardinal2 = paths[a2]->at(timestep).single && paths[a2]->at(timestep - 1).single;
+		}
+		else // vertex conflict or target conflict
+		{
+			if (!cardinal1)
+				cardinal1 = paths[a1]->at(timestep).single;
+			if (!cardinal2)
+				cardinal2 = paths[a2]->at(timestep).single;
+		}
+
+		if (cardinal1 && cardinal2)
+		{
+			con->p = conflict_priority::CARDINAL;
+		}
+		else if (cardinal1 || cardinal2)
+		{
+			con->p = conflict_priority::SEMI;
+		}
+		else
+		{
+			con->p = conflict_priority::NON;
+		}
+		if (con->p == conflict_priority::CARDINAL && cons_strategy == constraint_strategy::ICBS)
+		{
+			parent.conflicts.push_back(con);
+			return;
+		}
+
+		if (con->type == conflict_type::TARGET)
+		{
+			parent.conflicts.push_back(con);
+			continue;
+		}
+
+		// Corridor reasoning
+		std::shared_ptr<Conflict> corridor;
+		if ((corridor2 || corridor4) && isCorridorConflict(corridor, con, cardinal1 && cardinal2, &parent))
+		{
+			corridor->p = con->p;
+			parent.conflicts.push_back(corridor);
+			continue;
+		}
+
+		if (con->type == conflict_type::STANDARD &&
+			paths[con->a1]->size() <= con->t || paths[con->a2]->size() <= con->t) //conflict happens after agent reaches its goal
+		{
+			parent.conflicts.push_back(con);
+			continue;
+		}
+
+		//Rectangle reasoning for semi and non cardinal vertex conflicts
+		if (cons_strategy == constraint_strategy::CBSH_CR)//Identify cardinal rectangle by start and goals
+		{
+			if (isRectangleConflict(al.initial_locations[a1], al.initial_locations[a2], al.goal_locations[a1], al.goal_locations[a2],
+				paths[a1]->size() - 1, paths[a2]->size() - 1) &&
+				classifyRectangleConflict(al.initial_locations[a1], al.initial_locations[a2], al.goal_locations[a1], al.goal_locations[a2]) == 2)
+			{
+				std::pair<int, int> Rg = getRg(al.initial_locations[a1], al.goal_locations[a1], al.goal_locations[a2]);
+				std::pair<int, int> Rs = getRs(al.initial_locations[a1], al.initial_locations[a2], al.goal_locations[a1]);
+				int Rg_t = timestep + abs(Rg.first - loc1 / num_col) + abs(Rg.second - loc1 % num_col);
+
+				auto new_rectangle = std::shared_ptr<Conflict>(new Conflict());
+
+				new_rectangle->kRectangleConflict(a1, a2,
+					al.initial_locations[a1].first*num_col + al.initial_locations[a1].second,
+					al.initial_locations[a2].first*num_col+ al.initial_locations[a2].second, 
+					0, 0, Rs, Rg, Rg_t, 
+					al.goal_locations[a1].first*num_col + al.goal_locations[a1].second,
+					al.goal_locations[a2].first*num_col + al.goal_locations[a2].second,
+					num_col, kDelay, asymmetry_constraint);
+
+				new_rectangle->p = conflict_priority::CARDINAL;
+				parent.conflicts.push_back(new_rectangle);
+				continue;
+			}
+		}
+		else if (cons_strategy == constraint_strategy::CBSH_R)//Identify rectangle by start and goals
+		{
+			//cout << "identify rectangle by start and goals" << endl;
+			//Identify rectangles by start and goals
+			if (isRectangleConflict(al.initial_locations[a1], al.initial_locations[a2], al.goal_locations[a1], al.goal_locations[a2],
+				paths[a1]->size() - 1, paths[a2]->size() - 1))
+			{
+				int type = classifyRectangleConflict(al.initial_locations[a1], al.initial_locations[a2], al.goal_locations[a1], al.goal_locations[a2]);
+				std::pair<int, int> Rg = getRg(al.initial_locations[a1], al.goal_locations[a1], al.goal_locations[a2]);
+				std::pair<int, int> Rs = getRs(al.initial_locations[a1], al.initial_locations[a2], al.goal_locations[a1]);
+				int Rg_t = timestep + abs(Rg.first - loc1 / num_col) + abs(Rg.second - loc1 % num_col);
+
+				auto new_rectangle = std::shared_ptr<Conflict>(new Conflict());
+
+				new_rectangle->kRectangleConflict(a1, a2,
+					al.initial_locations[a1].first*num_col + al.initial_locations[a1].second, 
+					al.initial_locations[a2].first*num_col + al.initial_locations[a2].second,
+					 0, 0, Rs, Rg, Rg_t, 
+					al.goal_locations[a1].first*num_col + al.goal_locations[a1].second,
+					al.goal_locations[a2].first*num_col + al.goal_locations[a2].second,
+					num_col, kDelay, asymmetry_constraint);
+
+				 
+				if (type == 2)
+					new_rectangle->p = conflict_priority::CARDINAL;
+				else if (type == 1) // && !findRectangleConflict(parent.parent, *conflict))
+					new_rectangle->p = conflict_priority::SEMI;
+				else //if (type == 0 && !findRectangleConflict(parent.parent, *conflict))
+					new_rectangle->p = conflict_priority::NON;
+				parent.conflicts.push_back(new_rectangle);
+				continue;
+				
+			}
+		}
+		else if (rectangleMDD)
+		{
+			std::list<int>	s1s = getStartCandidates(*paths[a1], timestep, num_col);
+			std::list<int>	g1s = getGoalCandidates(*paths[a1], timestep, num_col);
+			std::list<int>	s2s = getStartCandidates(*paths[a2], timestep, num_col);
+			std::list<int>	g2s = getGoalCandidates(*paths[a2], timestep, num_col);
+
+			// Try all possible combinations
+			bool found = false;
+			std::shared_ptr<Conflict> rectangle; // = std::shared_ptr<Conflict>(new Conflict());
+			int type = -1;
+			int area = 0;
+			int distance = 0;
+
+			for (int t1_start : s1s)
+			{
+				for (int t1_end : g1s)
+				{
+					int s1 = paths[a1]->at(t1_start).location;
+					int g1 = paths[a1]->at(t1_end).location;
+					if (!isManhattanOptimal(s1, g1, t1_end - t1_start, num_col))
+						continue;
+					for (int t2_start : s2s)
+					{
+						for (int t2_end : g2s)
+						{
+							int s2 = paths[a2]->at(t2_start).location;
+							int g2 = paths[a2]->at(t2_end).location;
+							if (!isManhattanOptimal(s2, g2, t2_end - t2_start, num_col))
+								continue;
+							if (!isRectangleConflict(s1, s2, g1, g2, num_col))
+								continue;
+							std::pair<int, int> Rg = getRg(std::make_pair(s1 / num_col, s1 % num_col), std::make_pair(g1 / num_col, g1 % num_col),
+								std::make_pair(g2 / num_col, g2 % num_col));
+							std::pair<int, int> Rs = getRs(std::make_pair(s1 / num_col, s1 % num_col), std::make_pair(s2 / num_col, s2 % num_col),
+								std::make_pair(g1 / num_col, g1 % num_col));
+							int new_area = (abs(Rs.first - Rg.first) + 1) * (abs(Rs.second - Rg.second) + 1);
+							int new_type = classifyRectangleConflict(s1, s2, g1, g2, Rg, num_col);
+							int new_distance = abs(t2_end / num_col - t2_start / num_col) + abs(t2_end %num_col - t2_start % num_col) +
+								abs(t1_end / num_col - t1_start / num_col) + abs(t1_end %num_col - t1_start % num_col);
+
+							if (new_type > type || (new_type == type && new_area > area) || (new_type == type && new_area == area && new_distance > distance))
+							{
+								auto new_rectangle = std::shared_ptr<Conflict>(new Conflict());
+								int Rg_t = timestep + abs(Rg.first - loc1 / num_col) + abs(Rg.second - loc1 % num_col);
+								if (kDelay>0) {
+									vector<MDDPath*> a1kMDD;
+									vector<MDDPath*> a2kMDD;
+									for (int i = 1; i <= kDelay; i++) {
+										MDD<Map> a1MDD;
+										MDD<Map> a2MDD;
+
+										a1MDD.buildMDD(constraintTable, t1_end- t1_start + i,
+											*(search_engines[a1]), s1, t1_start,
+											paths[a1]->at(t1_start).actionToHere);
+
+										a2MDD.buildMDD(constraintTable, t2_end- t1_start + i,
+											*(search_engines[a2]), s2, t2_start,
+											paths[a2]->at(t2_start).actionToHere);
+
+										MDDPath* a1MDDPath = new MDDPath;
+										for (int i = 0; i < a1MDD.levels.size(); i++) {
+											std::unordered_set<int> level;
+											std::list<MDDNode*>::iterator it;
+											for (it = a1MDD.levels[i].begin(); it != a1MDD.levels[i].end(); ++it) {
+												level.insert((*it)->location);
+											}
+											a1MDDPath->levels.push_back(level);
+
+										}
+										a1kMDD.push_back(a1MDDPath);
+
+										MDDPath* a2MDDPath = new MDDPath;
+										for (int i = 0; i < a2MDD.levels.size(); i++) {
+											std::unordered_set<int> level;
+											std::list<MDDNode*>::iterator it;
+											for (it = a2MDD.levels[i].begin(); it != a2MDD.levels[i].end(); ++it) {
+												level.insert((*it)->location);
+											}
+											a2MDDPath->levels.push_back(level);
+
+										}
+										a1kMDD.push_back(a2MDDPath);
+
+									}
+
+									new_rectangle->kRectangleConflict(a1, a2, Rs, Rg,
+										make_pair(s1 / num_col, s1 % num_col),
+										make_pair(s2 / num_col, s2 % num_col),
+										Rg_t, paths,t1_start,t2_start,
+										make_pair(g1 / num_col, g1 % num_col),
+										make_pair(g2 / num_col, g2 % num_col),
+										num_col, a1kMDD, a2kMDD);
+								}
+								else {
+									new_rectangle->rectangleConflict(a1, a2, Rs, Rg,
+										make_pair(s1 / num_col, s1 % num_col),
+										make_pair(s2 / num_col, s2 % num_col),
+										Rg_t, paths, num_col);
+
+								}
+									
+								if (blocked(*paths[new_rectangle->a1], new_rectangle->constraint1) && blocked(*paths[new_rectangle->a2], new_rectangle->constraint2))
+								{
+									rectangle = new_rectangle;
+									if (new_type == 2)
+										rectangle->p = conflict_priority::CARDINAL;
+									else if (new_type == 1) // && !findRectangleConflict(parent.parent, *conflict))
+										rectangle->p = conflict_priority::SEMI;
+									else //if (type == 0 && !findRectangleConflict(parent.parent, *conflict))
+										rectangle->p = conflict_priority::NON;
+									type = new_type;
+									area = new_area;
+									distance = new_distance;
+								}
+								// rectangle = std::shared_ptr<tuple<int, int, int, int, int>>
+								//	(new tuple<int, int, int, int, int>(get<0>(*con), get<1>(*con), -1 - Rg.first * num_col - Rg.second, t1_start, t2_start));						
+							}
+						}
+					}
+				}
+			}
+			if (type >= 0)
+			{
+				parent.conflicts.push_back(rectangle);
+				continue;
+			}
+		}
+		else if (cons_strategy == constraint_strategy::CBSH_GR) // generalized rectangles 
+		{
+			if (loc2 >= 0) // Edge conflict
+				continue;
+			if (paths[a1]->size() <= timestep || paths[a2]->size() <= timestep)//conflict happens after agent reaches its goal
+				continue;
+
+			int from1 = (*paths[a1])[timestep - 1].location;
+			int from2 = (*paths[a2])[timestep - 1].location;
+			if (from1 == from2 || // same direction
+				from1 == loc1 || from2 == loc1 || //wait actions
+				abs(from1 - from2) == 2 || abs(from1 - from2) == num_col * 2) //opposite direction
+				continue;
+
+			std::list<int>	s1s = getStartCandidates(*paths[a1], timestep, loc1 - from1, loc1 - from2);
+			std::list<int>	g1s = getGoalCandidates(*paths[a1], timestep, loc1 - from1, loc1 - from2);
+			std::list<int>	s2s = getStartCandidates(*paths[a2], timestep, loc1 - from1, loc1 - from2);
+			std::list<int>	g2s = getGoalCandidates(*paths[a2], timestep, loc1 - from1, loc1 - from2);
+
+
+			MDD<Map>* mdd1 = NULL, *mdd2 = NULL;
+			ConstraintsHasher c(a1, &parent);
+			typename std::unordered_map<ConstraintsHasher, MDD<Map>*>::const_iterator got = mddTable[c.a].find(c);
+			if (got != mddTable[c.a].end())
+			{
+				mdd1 = got->second;
+			}
+			else
+			{
+				std::cout << "ERROR" << std::endl;
+			}
+			std::list<Constraint> B1;
+			bool haveBarriers = ExtractBarriers<Map>(*mdd1, loc1 - from1, loc1 - from2, paths[a1]->at(s1s.back()).location, paths[a1]->at(g1s.back()).location, s1s.back(), num_col, B1);
+			if (!haveBarriers)
+				continue;
+
+			c.a = a2;
+			got = mddTable[c.a].find(c);
+			if (got != mddTable[c.a].end())
+			{
+				mdd2 = got->second;
+			}
+			else
+			{
+				std::cout << "ERROR" << std::endl;
+			}
+			std::list<Constraint> B2;
+			haveBarriers = ExtractBarriers<Map>(*mdd2, loc1 - from2, loc1 - from1, paths[a2]->at(s2s.back()).location, paths[a2]->at(g2s.back()).location, s2s.back(), num_col, B2);
+			if (!haveBarriers)
+				continue;
+
+			// Try all possible combinations
+			int type = -1;
+			list<Constraint>::const_iterator b1_entry = B1.cbegin();
+			list<Constraint>::const_iterator b2_entry = B2.cbegin();
+			std::pair<int, int> Rs, Rg;
+			std::set<std::pair<int, int>> visitedRs;
+			generalizedRectangle<Map>(*paths[a1], *paths[a2], *mdd1, *mdd2, b1_entry, b2_entry, B1, B2, timestep, num_col, type, Rs, Rg, std::clock() * CLOCKS_PER_SEC * 1.0 / 1000 + time_limit - runtime, visitedRs);
+			if (type < 0)
+				continue;
+			int Rg_t = timestep + abs(Rg.first - loc1 / num_col) + abs(Rg.second - loc1 % num_col);
+			std::shared_ptr<Conflict> rectangle = std::shared_ptr<Conflict>(new Conflict());
+			rectangle->rectangleConflict(a1, a2, Rs, Rg, loc1 - from1, loc1 - from2, Rg_t, paths, num_col);
+			if (type == 2)
+				rectangle->p = conflict_priority::CARDINAL;
+			else if (type == 1) // && !findRectangleConflict(parent.parent, *conflict))
+				rectangle->p = conflict_priority::SEMI;
+			else //if (type == 0 && !findRectangleConflict(parent.parent, *conflict))
+				rectangle->p = conflict_priority::NON;
+			if (blocked(*paths[rectangle->a1], rectangle->constraint1) && blocked(*paths[rectangle->a2], rectangle->constraint2))
+			{
+				parent.conflicts.push_back(rectangle);
+				continue;
+			}
+		}
+		
+		parent.conflicts.push_back(con);
+	}
+
+	// remove conflicts that cannot be chosen, to save some memory
+	removeLowPriorityConflicts(parent.conflicts);
+}
+
 
 template class MultiMapICBSSearch<MapLoader>;
 template class MultiMapICBSSearch<FlatlandLoader>;
-
-
-

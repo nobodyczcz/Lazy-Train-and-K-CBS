@@ -1,5 +1,4 @@
 #include "SingleAgentICBS.h"
-#include "flat_map_loader.h"
 
 #include <iostream>
 #include <ctime>
@@ -12,10 +11,12 @@ void SingleAgentICBS<Map>::updatePath(LLNode* goal, std::vector<PathEntry> &path
 	num_of_conf = goal->num_internal_conf;
 	for(int t = goal->timestep; t >= 0; t--)
 	{
+
 		path[t].location = curr->loc;
 		path[t].actionToHere = curr->heading;
 		delete path[t].conflist;
 		path[t].conflist = curr->conflist;
+
 		curr->conflist = NULL;
 		curr = curr->parent;
 	}
@@ -98,7 +99,7 @@ bool SingleAgentICBS<Map>::validMove(int curr, int next) const
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // return true if a path found (and updates vector<int> path) or false if no path exists
 template<class Map>
-bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weight, const std::vector < std::list< std::pair<int, int> > >* constraints, 
+bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weight, ConstraintTable& constraint_table,
 	ReservationTable* res_table, size_t max_plan_len, double lowerbound, std::clock_t start_clock ,int time_limit)
 {
 	num_expanded = 0;
@@ -121,10 +122,9 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 	//cout << "start lower_bound: " << lower_bound << endl;
 	int time_generated = 0;
 	std:clock_t runtime;
-	int lastGoalConsTime = extractLastGoalTimestep(goal_location, constraints); // the last timestep of a constraint at the goal
 	//for (int h = 0; h < my_heuristic.size();h++) {
-	//	for (int heading = 0; heading<5;heading++)
-	//		std::cout << "(" << h << ": heading:"<<heading <<": "<< my_heuristic[h].heading[heading] << ")";
+	//	//for (int heading = 0; heading<5;heading++)
+	//		std::cout << "(" << h << ": heading:"<<-1 <<": "<< my_heuristic[h].heading[-1] << ")";
 	//}
 
 	while (!focal_list.empty()) 
@@ -145,13 +145,18 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 		//cout << "focal size " << focal_list.size() << endl;
 
 		// check if the popped node is a goal
-		if (curr->loc == goal_location && curr->timestep > lastGoalConsTime) 
+		if (curr->loc == goal_location && curr->timestep > constraint_table.length_min)
 		{
+
 			updatePath(curr, path);
+
 			releaseClosedListNodes(&allNodes_table);
+
 			open_list.clear();
 			focal_list.clear();
+
 			allNodes_table.clear();
+
 			return true;
 		}
 		//if(curr->parent != NULL)
@@ -178,7 +183,8 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 			int next_id = move.first;
 			time_generated += 1;
 			int next_timestep = curr->timestep + 1;
-			if (!isConstrained(curr->loc, next_id, next_timestep, constraints))
+			if (!constraint_table.is_constrained(next_id, next_timestep) &&
+				!constraint_table.is_constrained(curr->loc * map_size + next_id, next_timestep))
 			{
 				// compute cost to next_id via curr node
 				int next_g_val = curr->g_val + 1;
@@ -191,17 +197,18 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 						next_heading = curr->heading;
 					else
 						next_heading = move.second;
-				//cout<<"next_id "<< next_id <<" curr heading "<< curr->heading<<" next heading "<<next_heading <<endl;
+				//cout<<"next_id "<< next_id <<" curr heading "<< curr->heading<<" next heading "<<next_heading<<" h: "<< my_heuristic[next_id].heading[next_heading] <<endl;
 				int next_h_val = my_heuristic[next_id].heading[next_heading];
+
 				int next_internal_conflicts = 0;
-				ConflictList* conflicts = res_table->findConflict(agent_id, curr->loc, next_id, curr->timestep, kRobust);
+
+				OldConfList* conflicts = res_table->findConflict(agent_id, curr->loc, next_id, curr->timestep, kRobust);
 				next_internal_conflicts = curr->num_internal_conf + conflicts->size();
-				
+
 				// generate (maybe temporary) node
 				LLNode* next = new LLNode(next_id, next_g_val, next_h_val,	curr, next_timestep, next_internal_conflicts, false);
 				next->heading = next_heading;
 				next->actionToHere = move.second;
-				next->conflist = conflicts;
 				next->time_generated = time_generated;
 				//std::cout << "current: (" << curr->loc << "," << curr->heading << "," << curr->getFVal() << ") " << "next: (" << next->loc << "," << next->heading << "," << next->getFVal() << ")" << std::endl;
 
@@ -220,8 +227,10 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 						next->in_focallist = true;
 						//cout << "focal size " << focal_list.size() << endl;
 
+
 					}
-						
+					next->conflist = conflicts;
+
 					allNodes_table[next] = next;
 
 
@@ -254,7 +263,8 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 							existing_next->h_val = next_h_val;
 							existing_next->parent = curr;
 							existing_next->num_internal_conf = next_internal_conflicts;
-	
+							delete(existing_next->conflist);
+							existing_next->conflist = conflicts;
 							if (update_open) 
 								open_list.increase(existing_next->open_handle);  // increase because f-val improved
 							if (add_to_focal) 
@@ -275,6 +285,8 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 							existing_next->num_internal_conf = next_internal_conflicts;
 							existing_next->open_handle = open_list.push(existing_next);
 							existing_next->in_openlist = true;
+							delete(existing_next->conflist);
+							existing_next->conflist = conflicts;
 							if (existing_next->getFVal() <= lower_bound)
 								existing_next->focal_handle = focal_list.push(existing_next);
 						}
@@ -287,22 +299,28 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 		if (open_list.size() == 0)  // in case OPEN is empty, no path found
 			break;
 		LLNode* open_head = open_list.top();
+
 		if (open_head->getFVal() > min_f_val) 
 		{
 			double new_min_f_val = open_head->getFVal();
 			double new_lower_bound = std::max(lowerbound, f_weight * new_min_f_val);
+
 			for (LLNode* n : open_list) 
 			{
+
 				if (!n->in_focallist && n->getFVal() > lower_bound && n->getFVal() <= new_lower_bound) {
+
 					n->focal_handle = focal_list.push(n);
 					n->in_focallist = true;
 				}
 			}
+
 			min_f_val = new_min_f_val;
 			lower_bound = new_lower_bound;
 		}
+
 	}  // end while loop
-	  
+
 	  // no path found
 	releaseClosedListNodes(&allNodes_table);
 	open_list.clear();
@@ -314,9 +332,13 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 template<class Map>
 inline void SingleAgentICBS<Map>::releaseClosedListNodes(hashtable_t* allNodes_table)
 {
+
 	hashtable_t::iterator it;
-	for (it = allNodes_table->begin(); it != allNodes_table->end(); it++) 
-		delete ((*it).second);  
+	for (it = allNodes_table->begin(); it != allNodes_table->end(); ++it) {
+
+			delete ((*it).second);
+	}
+
 }
 
 template<class Map>

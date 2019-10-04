@@ -3,10 +3,10 @@
 
 #include <string>
 #include <vector>
+#include "common.h"
 
 using namespace std;
 
-enum constraint_strategy { CBS, ICBS, CBSH, CBSH_CR, CBSH_R, CBSH_RM, STRATEGY_COUNT };
 
 
 
