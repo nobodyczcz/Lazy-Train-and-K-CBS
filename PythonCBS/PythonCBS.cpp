@@ -8,7 +8,7 @@ namespace p = boost::python;
 
 
 template <class Map>
-PythonCBS<Map>::PythonCBS(p::object railEnv1, std::string algo, int kRobust, int t, bool debug) :railEnv(railEnv1) {
+PythonCBS<Map>::PythonCBS(p::object railEnv1, std::string algo, int kRobust, int t, bool debug,string corridor) :railEnv(railEnv1) {
 	std::cout << "algo: " << algo << std::endl;
 	options1.debug = debug;
 	options1.ignore_t0 = false;
@@ -17,6 +17,18 @@ PythonCBS<Map>::PythonCBS(p::object railEnv1, std::string algo, int kRobust, int
 	timeLimit = t;
 	this->algo = algo;
 	this->kRobust = kRobust;
+	if (corridor == "trainCorridor1") {
+		this->trainCorridor1 = true;
+		this->corridor2 = true;
+	}
+	if (corridor == "trainCorridor2") {
+		this->trainCorridor2 = true;
+		this->corridor2 = true;
+	}
+	if (corridor == "corridor2")
+		this->corridor2 = true;
+	if (corridor == "corridor4")
+		this->corridor4 = true;
 	if (algo == "ICBS")
 		s = constraint_strategy::ICBS;
 	else if (algo == "CBS")
@@ -29,6 +41,8 @@ PythonCBS<Map>::PythonCBS(p::object railEnv1, std::string algo, int kRobust, int
 		s = constraint_strategy::CBSH_R;
 	else if (algo == "CBSH-RM")
 		s = constraint_strategy::CBSH_RM;
+	else if (algo == "CBSH-GR")
+		s = constraint_strategy::CBSH_GR;
 	else
 	{
 		std::cout << "WRONG SOLVER NAME! Use CBSH as default" << std::endl;
@@ -59,7 +73,20 @@ p::list PythonCBS<Map>::getResult() {
 
 template <class Map>
 bool PythonCBS<Map>::search() {
-	icbs = new MultiMapICBSSearch <Map> (ml, *al, 1.0, s, timeLimit * CLOCKS_PER_SEC, kRobust, options1);
+	int screen;
+	if (options1.debug) {
+		screen = 2;
+	}
+	else {
+		screen = 0;
+	}
+	icbs = new MultiMapICBSSearch <Map> (ml, *al, 1.0, s, timeLimit * CLOCKS_PER_SEC,screen, kRobust, options1);
+	if(s == constraint_strategy::CBSH_RM)
+		icbs->rectangleMDD = true;
+	icbs->trainCorridor1 = trainCorridor1;
+	icbs->trainCorridor2 = trainCorridor2;
+	icbs->corridor2 = corridor2;
+	icbs->corridor4 = corridor4;
 	bool res =false;
 	res = icbs->runICBSSearch();
 
@@ -84,7 +111,9 @@ p::dict PythonCBS<Map>::getResultDetail() {
 	else
 		result["solution_cost"] = icbs->solution_cost;
 	result["algorithm"] = algo;
-	result["No_f_rectangle"] = icbs->numOfRectangle;
+	result["No_f_rectangle"] = icbs->num_rectangle;
+	result["num_corridor2"] = icbs->num_corridor2;
+	result["num_corridor4"] = icbs->num_corridor4;
 	return result;
 
 }
@@ -93,7 +122,7 @@ p::dict PythonCBS<Map>::getResultDetail() {
 BOOST_PYTHON_MODULE(libPythonCBS)  // Name here must match the name of the final shared library, i.e. mantid.dll or mantid.so
 {
 	using namespace boost::python;
-	class_<PythonCBS<FlatlandLoader>>("PythonCBS", init<object, string, int, int, bool>())
+	class_<PythonCBS<FlatlandLoader>>("PythonCBS", init<object, string, int, int, bool,string>())
 		.def("getResult", &PythonCBS<FlatlandLoader>::getResult)
 		.def("search", &PythonCBS<FlatlandLoader>::search)
 		.def("getResultDetail", &PythonCBS<FlatlandLoader>::getResultDetail);

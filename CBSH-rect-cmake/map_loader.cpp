@@ -6,8 +6,6 @@
 #include <bitset>
 
 
-
-
 using namespace boost;
 using namespace std;
 
@@ -15,7 +13,7 @@ using namespace std;
 MapLoader::MapLoader(){}
 
 
-vector<pair<int, int>> MapLoader::get_transitions(int loc, int heading, int noWait) {
+vector<pair<int, int>> MapLoader::get_transitions(int loc, int heading, int noWait) const {
 	vector<pair<int, int>> transitions;
 	int moveRange = 5;
 
@@ -34,10 +32,27 @@ vector<pair<int, int>> MapLoader::get_transitions(int loc, int heading, int noWa
 	return transitions;
 	
 }
-	
+bool MapLoader::getLoc(int loc)  {
+	return my_map[loc];
+}
+int MapLoader::getDegree(int loc)
+{
+	if (loc < 0 || loc >= map_size() || getLoc(loc))
+		return -1;
+	int degree = 0;
+	if (0 < loc - cols && !getLoc(loc - cols))
+		degree++;
+	if (loc + cols < map_size() && !getLoc(loc + cols))
+		degree++;
+	if (loc % cols > 0 && !getLoc(loc - 1))
+		degree++;
+	if (loc % cols < cols - 1 && !getLoc(loc + 1))
+		degree++;
+	return degree;
+}
 
 
-bool MapLoader::validMove(int curr, int next)
+bool MapLoader::validMove(int curr, int next) const
 {
 	if (next < 0 || next >= rows * cols)
 		return false;
@@ -166,7 +181,7 @@ bool* MapLoader::get_map() const {
 }
 
 MapLoader::~MapLoader() {
-  delete[] this->my_map;
+  //delete[] this->my_map;
   delete[] this->moves_offset;
 }
 

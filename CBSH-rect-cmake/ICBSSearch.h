@@ -10,6 +10,7 @@
 #include "common.h"
 #include "MDD.h"
 #include <unordered_map>
+#include <boost/python.hpp>
 
 struct options {
 	bool asymmetry_constraint;
@@ -30,6 +31,8 @@ public:
 	double runtime_listoperation;
 	double runtime_updatepaths;
 	double runtime_updatecons;
+	double RMTime = 0;
+
 	
 
 	ICBSNode* dummy_start;
@@ -114,7 +117,6 @@ protected:
 	// void copyConflicts(const std::list<std::shared_ptr<CConflict>>& conflicts,
 	// 	std::list<std::shared_ptr<CConflict>>& copy, int excluded_agent) const;
 	// void deleteRectConflict(ICBSNode& curr, const Conflict& conflict);
-	bool isCorridorConflict(std::shared_ptr<Conflict>& corridor, const std::shared_ptr<Conflict>& con, bool cardinal, ICBSNode* node);
 	bool hasCardinalConflict(const ICBSNode& node) const;
 	bool blocked(const Path& path, const std::list<Constraint>& constraint) const;
 	bool traverse(const Path& path, int loc, int t) const;
@@ -139,6 +141,7 @@ protected:
 	void printPaths(Path& path) const;
 	
 	void printStrategy() const;
+	bool timeout=false;
 };
 
 template<class Map>
@@ -151,16 +154,38 @@ public:
 	void updateConstraintTable(ICBSNode* cTurr, int agent_id);
 	void classifyConflicts(ICBSNode &parent);
 	void initializeDummyStart();
+	bool isCorridorConflict(std::shared_ptr<Conflict>& corridor, const std::shared_ptr<Conflict>& con, bool cardinal, ICBSNode* node);
 
 	bool findPathForSingleAgent(ICBSNode*  node, int ag, double lowerbound = 0);
 	// Runs the algorithm until the problem is solved or time is exhausted 
 	bool runICBSSearch();
 	~MultiMapICBSSearch();
+	boost::python::list outputPaths()
+	{
+		boost::python::list result;
+		for (int i = 0; i < num_of_agents; i++)
+		{
+			boost::python::list agentPath;
+
+
+			for (int t = 0; t < paths[i]->size(); t++) {
+				boost::python::tuple location = boost::python::make_tuple(paths[i]->at(t).location / num_col, paths[i]->at(t).location % num_col, paths[i]->at(t).actionToHere);
+				agentPath.append(location);
+			}
+			result.append(agentPath);
+		}
+		return result;
+	}
+	bool isTimeout() { return timeout; };
+
+	bool trainCorridor1 = false;
+	bool trainCorridor2 = false;
+
 protected:
 	std::vector<std::unordered_map<ConstraintsHasher, MDD<Map>*>> mddTable;
 	options option;
 	vector<SingleAgentICBS<Map> *> search_engines;  // used to find (single) agents' paths and mdd
-
+	Map* ml;
 
 
 

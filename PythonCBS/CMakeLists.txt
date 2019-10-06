@@ -35,6 +35,15 @@ ADD_LIBRARY(PythonCBS SHARED
 	../CBSH-rect-cmake/SingleAgentICBS.cpp
 	../CBSH-rect-cmake/ReservationTable.h
 	../CBSH-rect-cmake/ReservationTable.cpp
+	../CBSH-rect-cmake/Conflict.h
+	../CBSH-rect-cmake/Conflict.cpp
+	../CBSH-rect-cmake/ConstraintTable.cpp
+	../CBSH-rect-cmake/ConstraintTable.h
+	../CBSH-rect-cmake/CorridorReasoning.cpp
+	../CBSH-rect-cmake/CorridorReasoning.h
+	../CBSH-rect-cmake/egraph_reader.h
+	../CBSH-rect-cmake/common.h
+	../CBSH-rect-cmake/common.cpp
     
 )
 

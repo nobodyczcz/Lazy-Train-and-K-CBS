@@ -44,7 +44,7 @@ ComputeHeuristic<Map>::ComputeHeuristic(int start_location, int goal_location, M
 
 
 template<class Map>
-void ComputeHeuristic<Map>::getHVals(vector<hvals>& res)
+void ComputeHeuristic<Map>::getHVals(vector<hvals>& res,int limit)
 {
 	size_t root_location = goal_location;
 	res.resize(map_rows * map_cols);
@@ -97,8 +97,12 @@ void ComputeHeuristic<Map>::getHVals(vector<hvals>& res)
 
 
 			it = nodes.find(next);
-			if (it == nodes.end()) 
+			if (it == nodes.end())
 			{  // add the newly generated node to heap and hash table
+				if (next_g_val >= limit) {
+					delete(next);
+					continue;
+				}
 				next->open_handle = heap.push(next);
 				nodes[next] = next->open_handle;
 			}

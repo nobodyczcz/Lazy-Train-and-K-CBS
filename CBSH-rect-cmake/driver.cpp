@@ -62,10 +62,10 @@ int main(int argc, char** argv)
 		cout << "[CBS] Loading map and agents " << endl;
 	}
 	// read the map file and construct its two-dim array
-	MapLoader ml(vm["map"].as<string>());
+	MapLoader* ml = new MapLoader(vm["map"].as<string>());
 
 	// read agents' start and goal locations
-	AgentsLoader al(vm["agents"].as<string>(), ml, vm["agentNum"].as<int>());
+	AgentsLoader al(vm["agents"].as<string>(), *ml, vm["agentNum"].as<int>());
 	if (vm["screen"].as<int>() == 2) {
 		cout << "[CBS] Loading map and agents don2! " << endl;
 	}
@@ -122,7 +122,7 @@ int main(int argc, char** argv)
 		return -1;
 	}
 
-	MultiMapICBSSearch<MapLoader> icbs(&ml, al, 1.0, s, vm["cutoffTime"].as<int>() * CLOCKS_PER_SEC, vm["screen"].as<int>(), vm["kDelay"].as<int>(), options1);
+	MultiMapICBSSearch<MapLoader> icbs(ml, al, 1.0, s, vm["cutoffTime"].as<int>() * CLOCKS_PER_SEC, vm["screen"].as<int>(), vm["kDelay"].as<int>(), options1);
 	if (vm["solver"].as<string>() == "CBSH-RM")
 	{
 		icbs.rectangleMDD = true;
@@ -162,7 +162,7 @@ int main(int argc, char** argv)
 	stats.close();
 	if (vm["screen"].as<int>() == 2)
 		cout << "Done!!" << endl;
-
+	delete ml;
 	return 0;
 
 }

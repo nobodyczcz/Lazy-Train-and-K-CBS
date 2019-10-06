@@ -72,7 +72,7 @@ railCell FlatlandLoader::get_full_cell(int location) {
 }
 
 
-vector<pair<int, int>> FlatlandLoader::get_transitions(int location, int heading, bool noWait) {
+vector<pair<int, int>> FlatlandLoader::get_transitions(int location, int heading, bool noWait) const {
 	vector<pair<int, int>> transitions;
 	int cell_transition = railMap[location].transitions;
 	int bits = (cell_transition >> ((3 - heading) * 4));
@@ -98,6 +98,24 @@ vector<pair<int, int>> FlatlandLoader::get_transitions(int location, int heading
 
 	return transitions;
 }
+
+int FlatlandLoader::getDegree(int loc) {
+	if (loc < 0 || loc >= map_size())
+		return -1;
+	std::unordered_set<int> possibleMoves;
+	for (int heading = 0; heading < 4; heading++) {
+		int cell_transition = railMap[loc].transitions;
+		int bits = (cell_transition >> ((3 - heading) * 4));
+		int moves[4] = { (bits >> 3) & 1, (bits >> 2) & 1, (bits >> 1) & 1, (bits) & 1 };
+		for (int direction = 0; direction < 4;direction++) {
+			if (moves[direction] == 1) {
+				possibleMoves.insert(direction);
+			}
+		}
+	}
+	return possibleMoves.size();
+}
+
 FlatlandLoader::~FlatlandLoader(){
 	delete[] this->my_map;
 	delete[] this->moves_offset;

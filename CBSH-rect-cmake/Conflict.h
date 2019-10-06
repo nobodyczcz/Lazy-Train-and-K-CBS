@@ -111,30 +111,43 @@ public:
 		type = conflict_type::STANDARD;
 	}
 
-	void corridorConflict(int a1, int a2, int v1, int v2, int t3, int t4, int t3_, int t4_, int k)
+	void trainCorridorConflict(int a1, int a2, int v1, int v2, int t1, int t2, int e1, int e2, int k, int kRobust)
+	{
+		this->a1 = a1;
+		this->a2 = a2;
+		this->t = std::min(e1, e2);
+		this->originalConf1 = v1;
+		this->originalConf2 = v2;
+		this->constraint1.emplace_back(v1, t2, e2-1 + kRobust, constraint_type::RANGE);
+		this->constraint2.emplace_back(v2, t1, e1-1 + kRobust, constraint_type::RANGE);
+		type = conflict_type::CORRIDOR2;
+	}
+
+	// t3 
+	void corridorConflict(int a1, int a2, int v1, int v2, int t3, int t4, int t3_, int t4_, int k,int kRobust)
 	{
 		this->a1 = a1;
 		this->a2 = a2;
 		this->t = std::min(t3, t4);
 		this->originalConf1 = v1;
 		this->originalConf2 = v2;
-		this->constraint1.emplace_back(v1, t3, std::min(t3_ - 1, t4 + k), constraint_type::RANGE);
-		this->constraint2.emplace_back(v2, t4, std::min(t4_ - 1, t3 + k), constraint_type::RANGE);
+		this->constraint1.emplace_back(v1, t3, std::min(t3_ - 1 , t4 + k) + kRobust, constraint_type::RANGE);
+		this->constraint2.emplace_back(v2, t4, std::min(t4_ - 1 , t3 + k) + kRobust, constraint_type::RANGE);
 		type = conflict_type::CORRIDOR2;
 	}
 
 
-	void corridorConflict(int a1, int a2, int v1, int v2, int t1, int t2, int k, int h)
+	void corridorConflict(int a1, int a2, int v1, int v2, int t1, int t2, int k, int h, int kRobust)
 	{
 		this->a1 = a1;
 		this->a2 = a2;
 		this->t = std::min(t1, t2);
 		this->originalConf1 = v1;
 		this->originalConf2 = v2;
-		this->constraint1.emplace_back(v1, t1, t1 + 2 * k - 1, constraint_type::RANGE);
-		this->constraint1.emplace_back(v2, t1 + k, std::min(t2 + 2 * k, t1 + h - 1), constraint_type::RANGE);
-		this->constraint2.emplace_back(v2, t2, t2 + 2 * k - 1, constraint_type::RANGE);
-		this->constraint2.emplace_back(v1, t2 + k, std::min(t1 + 2 * k, t2 + h - 1), constraint_type::RANGE);
+		this->constraint1.emplace_back(v1, t1, t1 + 2 * k - 1 + kRobust, constraint_type::RANGE);
+		this->constraint1.emplace_back(v2, t1 + k, std::min(t2 + 2 * k, t1 + h - 1) + kRobust, constraint_type::RANGE);
+		this->constraint2.emplace_back(v2, t2, t2 + 2 * k - 1 + kRobust, constraint_type::RANGE);
+		this->constraint2.emplace_back(v1, t2 + k, std::min(t1 + 2 * k, t2 + h - 1) + kRobust, constraint_type::RANGE);
 		type = conflict_type::CORRIDOR4;
 	}
 

@@ -1,5 +1,6 @@
 #include "CorridorReasoning.h"
 
+
 bool validMove(int curr, int next, int map_cols, int map_size)
 {
 	if (next < 0 || next >= map_size)
@@ -33,20 +34,6 @@ int getDegree(int loc, const bool*map, int num_col, int map_size)
 	return degree;
 }
 
-int getEnteringTime(const std::vector<PathEntry>& path, const std::vector<PathEntry>& path2, int t,
-	const bool*map, int num_col, int map_size)
-{
-	if (t >= path.size())
-		t = path.size() - 1;
-	int loc = path[t].location;
-	while (loc != path.front().location && loc != path2.back().location &&
-		getDegree(loc, map, num_col, map_size) == 2)
-	{
-		t--;
-		loc = path[t].location;
-	}
-	return t;
-}
 
 int getCorridorLength(const std::vector<PathEntry>& path, int t_start, int loc_end, std::pair<int, int>& edge)
 {
@@ -82,7 +69,41 @@ int getCorridorLength(const std::vector<PathEntry>& path, int t_start, int loc_e
 	return length;
 }
 
-int getBypassLength(int start, int end, std::pair<int, int> blocked, const bool* my_map, int num_col, int map_size)
+template<class Map>
+int CorridorReasoning<Map>::getEnteringTime(const std::vector<PathEntry>& path, const std::vector<PathEntry>& path2, int t,
+	Map* map)
+{
+	if (t >= path.size())
+		t = path.size() - 1;
+	int loc = path[t].location;
+	while (loc != path.front().location && loc != path2.back().location &&
+		map->getDegree(loc) == 2)
+	{
+		t--;
+		loc = path[t].location;
+	}
+	return t;
+}
+
+template<class Map>
+int CorridorReasoning<Map>::getExitTime(const std::vector<PathEntry>& path, const std::vector<PathEntry>& path2, int t,
+	Map* map)
+{
+	if (t >= path.size())
+		t = path.size() - 1;
+	int loc = path[t].location;
+	while (loc != path.front().location && loc != path2.back().location &&
+		map->getDegree(loc) == 2)
+	{
+		t++;
+		loc = path[t].location;
+	}
+	return t;
+}
+
+
+template<class Map>
+int CorridorReasoning<Map>::getBypassLength(int start, int end, std::pair<int, int> blocked,  Map* my_map, int num_col, int map_size,int start_heading)
 {
 	int length = INT_MAX;
 	// generate a heap that can save nodes (and a open_handle)
@@ -96,10 +117,12 @@ int getBypassLength(int start, int end, std::pair<int, int> blocked, const bool*
 	google::dense_hash_map<LLNode*, fibonacci_heap<LLNode*, boost::heap::compare<LLNode::compare_node> >::handle_type, LLNode::NodeHasher, LLNode::eqnode>::iterator it; // will be used for find()
 
 	LLNode* root = new LLNode(start, 0, getMahattanDistance(start, end, num_col), NULL, 0);
+	root->heading = start_heading;
 	root->open_handle = heap.push(root);  // add root to heap
 	nodes[root] = root->open_handle;       // add root to hash_table (nodes)
 	int moves_offset[4] = { 1, -1, num_col, -num_col };
 	LLNode* curr = NULL;
+	int time_generated = 0;
 	while (!heap.empty())
 	{
 		curr = heap.top();
@@ -109,35 +132,50 @@ int getBypassLength(int start, int end, std::pair<int, int> blocked, const bool*
 			length = curr->g_val;
 			break;
 		}
-		for (int direction = 0; direction < 5; direction++)
+		vector<pair<int, int>> transitions = my_map->get_transitions(curr->loc, curr->heading, false);
+
+		for (const pair<int, int> move : transitions)
 		{
-			int next_loc = curr->loc + moves_offset[direction];
-			if (validMove(curr->loc, next_loc, num_col, map_size) && !my_map[next_loc])
-			{  // if that grid is not blocked
-				if ((curr->loc == blocked.first && next_loc == blocked.second) ||
-					(curr->loc == blocked.second && next_loc == blocked.first)) // use the prohibited edge
+			int next_loc = move.first;
+			time_generated += 1;
+
+			if ((curr->loc == blocked.first && next_loc == blocked.second) ||
+				(curr->loc == blocked.second && next_loc == blocked.first)) // use the prohibited edge
+			{
+				continue;
+			}
+			int next_g_val = curr->g_val + 1;
+			LLNode* next = new LLNode(next_loc, next_g_val, getMahattanDistance(next_loc, end, num_col), NULL, 0);
+			int next_heading;
+
+			if (curr->heading == -1) //heading == 4 means no heading info
+				next_heading = -1;
+			else
+				if (move.second == 4) //move == 4 means wait
+					next_heading = curr->heading;
+				else
+					next_heading = move.second;
+			next->heading = next_heading;
+			next->actionToHere = move.second;
+			next->time_generated = time_generated;
+
+			it = nodes.find(next);
+			if (it == nodes.end())
+			{  // add the newly generated node to heap and hash table
+				next->open_handle = heap.push(next);
+				nodes[next] = next->open_handle;
+			}
+			else {  // update existing node's g_val if needed (only in the heap)
+				delete(next);  // not needed anymore -- we already generated it before
+				LLNode* existing_next = (*it).first;
+				open_handle = (*it).second;
+				if (existing_next->g_val > next_g_val)
 				{
-					continue;
-				}
-				int next_g_val = curr->g_val + 1;
-				LLNode* next = new LLNode(next_loc, next_g_val, getMahattanDistance(next_loc, end, num_col), NULL, 0);
-				it = nodes.find(next);
-				if (it == nodes.end())
-				{  // add the newly generated node to heap and hash table
-					next->open_handle = heap.push(next);
-					nodes[next] = next->open_handle;
-				}
-				else {  // update existing node's g_val if needed (only in the heap)
-					delete(next);  // not needed anymore -- we already generated it before
-					LLNode* existing_next = (*it).first;
-					open_handle = (*it).second;
-					if (existing_next->g_val > next_g_val)
-					{
-						existing_next->g_val = next_g_val;
-						heap.update(open_handle);
-					}
+					existing_next->g_val = next_g_val;
+					heap.update(open_handle);
 				}
 			}
+			
 		}
 	}
 	for (it = nodes.begin(); it != nodes.end(); it++)
@@ -147,8 +185,8 @@ int getBypassLength(int start, int end, std::pair<int, int> blocked, const bool*
 	return length;
 }
 
-
-int getBypassLength(int start, int end, std::pair<int, int> blocked, const bool* my_map, int num_col, int map_size, ConstraintTable& constraint_table, int upper_bound)
+template<class Map>
+int CorridorReasoning<Map>::getBypassLength(int start, int end, std::pair<int, int> blocked,  Map* my_map, int num_col, int map_size, ConstraintTable& constraint_table, int upper_bound, std::vector<hvals> restable, int start_heading)
 {
 	int length = INT_MAX;
 	// generate a heap that can save nodes (and a open_handle)
@@ -162,10 +200,12 @@ int getBypassLength(int start, int end, std::pair<int, int> blocked, const bool*
 	google::dense_hash_map<LLNode*, fibonacci_heap<LLNode*, boost::heap::compare<LLNode::compare_node> >::handle_type, LLNode::NodeHasher, LLNode::eqnode>::iterator it; // will be used for find()
 
 	LLNode* root = new LLNode(start, 0, getMahattanDistance(start, end, num_col), NULL, 0);
+	root->heading = start_heading;
 	root->open_handle = heap.push(root);  // add root to heap
 	nodes[root] = root->open_handle;       // add root to hash_table (nodes)
 	int moves_offset[5] = { 1, -1, num_col, -num_col, 0};
 	LLNode* curr = NULL;
+	int time_generated = 0;
 	while (!heap.empty())
 	{
 		curr = heap.top();
@@ -175,21 +215,24 @@ int getBypassLength(int start, int end, std::pair<int, int> blocked, const bool*
 			length = curr->g_val;
 			break;
 		}
-		for (int direction = 0; direction < 5; direction++)
+		vector<pair<int, int>> transitions = my_map->get_transitions(curr->loc, curr->heading, false);
+
+		for (const pair<int, int> move : transitions)
 		{
-			int next_loc = curr->loc + moves_offset[direction];
+			int next_loc = move.first;
+			time_generated += 1;
+
 			int next_timestep = curr->timestep + 1;
 			if (constraint_table.latest_timestep <= curr->timestep)
 			{
-				if (direction == 4)
+				if (move.second == 4)
 				{
 					continue;
 				}
 				next_timestep--;
 			}
 			
-			if (validMove(curr->loc, next_loc, num_col, map_size) && !my_map[next_loc] && 
-				!constraint_table.is_constrained(next_loc, next_timestep) &&
+			if ( !constraint_table.is_constrained(next_loc, next_timestep) &&
 				!constraint_table.is_constrained(curr->loc * map_size + next_loc, next_timestep))
 			{  // if that grid is not blocked
 				if ((curr->loc == blocked.first && next_loc == blocked.second) ||
@@ -197,11 +240,26 @@ int getBypassLength(int start, int end, std::pair<int, int> blocked, const bool*
 				{
 					continue;
 				}
+				int next_heading;
+
+				if (curr->heading == -1) //heading == 4 means no heading info
+					next_heading = -1;
+				else
+					if (move.second == 4) //move == 4 means wait
+						next_heading = curr->heading;
+					else
+						next_heading = move.second;
+
 				int next_g_val = curr->g_val + 1;
-				int next_h_val = getMahattanDistance(next_loc, end, num_col);
+				int next_h_val = restable[next_loc].get_hval(next_heading);
 				if (next_g_val + next_h_val >= upper_bound) // the cost of the path is larger than the upper bound
 					continue;
 				LLNode* next = new LLNode(next_loc, next_g_val, next_h_val, NULL, next_timestep);
+
+				next->heading = next_heading;
+				next->actionToHere = move.second;
+				next->time_generated = time_generated;
+
 				it = nodes.find(next);
 				if (it == nodes.end())
 				{  // add the newly generated node to heap and hash table
@@ -230,6 +288,7 @@ int getBypassLength(int start, int end, std::pair<int, int> blocked, const bool*
 }
 
 
+
 bool isConstrained(int curr_id, int next_id, int next_timestep, const std::vector< std::list< std::pair<int, int> > >* cons)
 {
 	if (cons == NULL)
@@ -245,4 +304,14 @@ bool isConstrained(int curr_id, int next_id, int next_timestep, const std::vecto
 		}
 	}
 	return false;
-}
+};
+template class CorridorReasoning<MapLoader>;
+template class CorridorReasoning<FlatlandLoader>;
+
+//
+//template  int CorridorReasoning::getEnteringTime<MapLoader>(const std::vector<PathEntry>&, const std::vector<PathEntry>&, int, const MapLoader*);
+//template  int CorridorReasoning::getEnteringTime<FlatlandLoader>(const std::vector<PathEntry>&, const std::vector<PathEntry>& , int , const FlatlandLoader* );
+//template  int CorridorReasoning::getBypassLength<MapLoader>(int , int , std::pair<int, int> , const MapLoader* , int , int , int );
+//template  int CorridorReasoning::getBypassLength<MapLoader>(int , int , std::pair<int, int> , const MapLoader* , int , int , ConstraintTable& , int , int);
+//template  int CorridorReasoning::getBypassLength<FlatlandLoader>(int , int , std::pair<int, int> , const FlatlandLoader* , int , int , int );
+//template  int CorridorReasoning::getBypassLength<FlatlandLoader>(int , int , std::pair<int, int> , const FlatlandLoader* , int , int , ConstraintTable& , int , int );
