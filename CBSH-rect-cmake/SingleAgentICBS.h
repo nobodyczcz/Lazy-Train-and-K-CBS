@@ -29,6 +29,7 @@ public:
 	heap_open_t open_list;
 	heap_focal_t focal_list;
 	hashtable_t allNodes_table;
+	list<LLNode*> goal_nodes;
 	LLNode* empty_node;
 	LLNode* deleted_node;
 

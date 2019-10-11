@@ -123,14 +123,13 @@ void ComputeHeuristic<Map>::getHVals(vector<hvals>& res,int limit)
 	{
 		LLNode* s = (*it).first;
 		if (s->heading == -1) {
-			int heading;
-			heading = s->heading;
-			if (!res[s->loc].heading.count(heading)) {
-				res[s->loc].heading[heading] = s->g_val;
+
+			if (!res[s->loc].heading.count(-1)) {
+				res[s->loc].heading[-1] = s->g_val;
 
 			}
-			else if (s->g_val < res[s->loc].heading[heading]) {
-				res[s->loc].heading[heading] = s->g_val;
+			else if (s->g_val < res[s->loc].heading[-1]) {
+				res[s->loc].heading[-1] = s->g_val;
 
 
 			}

@@ -1160,13 +1160,13 @@ bool MultiMapICBSSearch<Map>::runICBSSearch()
 			children[3]->constraints.push_back(curr->conflict->constraint2.back());
 			num_corridor4++;
 		}
-		else if (curr->conflict->type == conflict_type::STANDARD && curr->conflict->t == 0 && !option.ignore_t0) {
+		//else if (curr->conflict->type == conflict_type::STANDARD && curr->conflict->t == 0 && !option.ignore_t0) {
 
-			children.resize(1);
-			children[0] = new ICBSNode(curr->conflict->a2);
-			children[0]->constraints = curr->conflict->constraint2;
-			num_standard++;
-		}
+		//	children.resize(1);
+		//	children[0] = new ICBSNode(curr->conflict->a2);
+		//	children[0]->constraints = curr->conflict->constraint2;
+		//	num_standard++;
+		//}
 		else // 2-way branching
 		{
 			
@@ -1406,7 +1406,7 @@ void MultiMapICBSSearch<Map>::initializeDummyStart() {
 	}
 	delete (res_table);
 
-
+	//printPaths();
 
 	if (debug_mode)
 		cout << "Initializing dummy start" << endl;
