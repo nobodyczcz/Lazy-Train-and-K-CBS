@@ -26,7 +26,7 @@ AgentsLoader::AgentsLoader(p::object agents) {
 	for (int i = 0; i < num_of_agents; i++) {
 		pair<int, int> initial;
 		pair<int, int> goal;
-		p::tuple iniTuple(agents[i].attr("position"));
+		p::tuple iniTuple(agents[i].attr("initial_position"));
 		initial.first = p::extract<int>(iniTuple[0]);
 		initial.second = p::extract<int>(iniTuple[1]);
 		p::tuple goalTuple(agents[i].attr("target"));

@@ -247,8 +247,22 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 		//collect conflict from path;
 		for (size_t t = 0; t < paths[a1]->size(); t++) {
 			if (paths[a1]->at(t).conflist != NULL && paths[a1]->at(t).conflist->size() != 0) {
-				
+				int preciousConflit[4];
 				for (auto& con : *(paths[a1]->at(t).conflist)) {
+					
+					//cout << "(" << abs(preciousConflit[2] - get<2>(*con)) << ")";
+					if (preciousConflit[0] == get<0>(*con) &&
+						preciousConflit[1] == get<1>(*con) &&
+						(abs(preciousConflit[2] - get<2>(*con)) == num_col || abs(preciousConflit[2] - get<2>(*con)) == 1) &&
+						abs(get<4>(*con) - preciousConflit[3]) == 1
+						) {
+						preciousConflit[0] = get<0>(*con);
+						preciousConflit[1] = get<1>(*con);
+						preciousConflit[2] = get<2>(*con);
+						preciousConflit[3] = get<4>(*con);
+						//cout << "continues conf, jump" << endl;
+						continue;
+					}
 					std::shared_ptr<Conflict> newConf(new Conflict());
 
 					if (targetReasoning && (get<3>(*con) < 0) && (get<4>(*con) >= paths[get<0>(*con)]->size() - 1)) {
@@ -261,11 +275,15 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 						newConf->edgeConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<3>(*con),get<4>(*con));
 					}
 					if (debug_mode)
-					cout << "<" << get<0>(*con) << "," << get<1>(*con) << ","
-						<< "(" << get<2>(*con) / num_col << "," << get<2>(*con) % num_col << ")" << ","
-						<< "(" << get<3>(*con) / num_col << "," << get<3>(*con) % num_col << ")" << ","
-						<< get<4>(*con)<<","<< get<5>(*con) << ">; ";
+						cout << "<" << get<0>(*con) << "," << get<1>(*con) << ","
+							<< "(" << get<2>(*con) / num_col << "," << get<2>(*con) % num_col << ")" << ","
+							<< "(" << get<3>(*con) / num_col << "," << get<3>(*con) % num_col << ")" << ","
+							<< get<4>(*con) << "," << get<5>(*con) << ">; ";
 					curr.unknownConf.emplace_back(newConf);
+					preciousConflit[0] = get<0>(*con);
+					preciousConflit[1] = get<1>(*con);
+					preciousConflit[2] = get<2>(*con);
+					preciousConflit[3] = get<4>(*con);
 
 				}
 				delete paths[curr.agent_id]->at(t).conflist;
@@ -294,7 +312,23 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 
 				if (paths[a1]->at(t).conflist == NULL || paths[a1]->at(t).conflist->size() == 0)
 					continue;
+
+				int preciousConflit[4];
 				for (auto& con : *(paths[a1]->at(t).conflist)) {
+					if (preciousConflit[0]== get<0>(*con) &&
+						preciousConflit[1] == get<1>(*con)&&
+						(abs(preciousConflit[2] - get<2>(*con)) ==num_col|| abs(preciousConflit[2] - get<2>(*con)) == 1)&&
+						abs(get<4>(*con)- preciousConflit[3]) == 1
+						) {
+						preciousConflit[0] = get<0>(*con);
+						preciousConflit[1] = get<1>(*con);
+						preciousConflit[2] = get<2>(*con);
+						preciousConflit[3] = get<4>(*con);
+						//cout << "continues conf, jump" << endl;
+
+						continue;
+					}
+
 					std::shared_ptr<Conflict> newConf(new Conflict());
 					
 					if (targetReasoning && (get<3>(*con) < 0) && (get<4>(*con) >= paths[get<0>(*con)]->size() - 1)) {
@@ -312,6 +346,12 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 						<< "(" << get<3>(*con) / num_col << "," << get<3>(*con) % num_col << ")" << ","
 						<< get<4>(*con) << "," << get<5>(*con) << ">; ";
 					curr.unknownConf.emplace_back(newConf);
+					preciousConflit[0] = get<0>(*con);
+					preciousConflit[1] = get<1>(*con);
+					preciousConflit[2] = get<2>(*con);
+					preciousConflit[3] = get<4>(*con);
+
+
 
 				}
 				delete paths[a1]->at(t).conflist;
@@ -503,18 +543,6 @@ bool MultiMapICBSSearch<Map>::isCorridorConflict(std::shared_ptr<Conflict>& corr
 			if (blocked(*(paths[corridor->a1]), corridor->constraint1) && blocked(*(paths[corridor->a2]), corridor->constraint2))
 				return true;
 		}
-		////cout << "iscorridor4.6" << endl;
-		/*int e[2];
-		e[0] = cp.getExitTime(*paths[a[0]], *paths[a[1 - 0]], t[0]+1, ml);
-		e[1] = cp.getExitTime(*paths[a[1]], *paths[a[1 - 1]], t[1]+1, ml);
-		int el[2];
-		el[0] = paths[a[0]]->at(t[0]+1).location;
-		el[1] = paths[a[1]]->at(t[1]+1).location;
-		corridor = std::shared_ptr<Conflict>(new Conflict());
-		corridor->trainCorridorConflict(a[0], a[1], el[0], el[1], t[0], t[1], e[0], e[1], k, kDelay);
-		if (blocked(*(paths[corridor->a1]), corridor->constraint1) && blocked(*(paths[corridor->a2]), corridor->constraint2))
-			return true;*/
-		//cout << "iscorridor45" << endl;
 
 	}
 	if (trainCorridor2) {

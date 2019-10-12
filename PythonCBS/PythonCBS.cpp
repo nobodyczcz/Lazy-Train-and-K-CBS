@@ -8,13 +8,14 @@ namespace p = boost::python;
 
 
 template <class Map>
-PythonCBS<Map>::PythonCBS(p::object railEnv1, std::string algo, int kRobust, int t, bool debug,string corridor) :railEnv(railEnv1) {
+PythonCBS<Map>::PythonCBS(p::object railEnv1, std::string algo, int kRobust, int t, bool debug, float f_w,string corridor) :railEnv(railEnv1) {
 	std::cout << "algo: " << algo << std::endl;
 	options1.debug = debug;
 	options1.ignore_t0 = false;
 	options1.shortBarrier = false;
 	options1.asymmetry_constraint = false;
 	timeLimit = t;
+	this->f_w = f_w;
 	this->algo = algo;
 	this->kRobust = kRobust;
 	if (corridor == "trainCorridor1") {
@@ -56,6 +57,7 @@ PythonCBS<Map>::PythonCBS(p::object railEnv1, std::string algo, int kRobust, int
 	std::cout << "load map " << p::extract<int>(rows)<<" x "<< p::extract<int>(cols) << std::endl;
 	//ml =  new MapLoader(railEnv.attr("rail"), p::extract<int>(rows), p::extract<int>(cols));
 	ml = new FlatlandLoader(railEnv.attr("rail"), p::extract<int>(rows), p::extract<int>(cols));
+	std::cout << "load agents " << std::endl;
 
 	al =  new AgentsLoader(railEnv.attr("agents"));
 	std::cout << "load done " << std::endl;
@@ -80,7 +82,7 @@ bool PythonCBS<Map>::search() {
 	else {
 		screen = 0;
 	}
-	icbs = new MultiMapICBSSearch <Map> (ml, *al, 1.0, s, timeLimit * CLOCKS_PER_SEC,screen, kRobust, options1);
+	icbs = new MultiMapICBSSearch <Map> (ml, *al, f_w, s, timeLimit * CLOCKS_PER_SEC,screen, kRobust, options1);
 	if(s == constraint_strategy::CBSH_RM)
 		icbs->rectangleMDD = true;
 	icbs->trainCorridor1 = trainCorridor1;
@@ -122,7 +124,7 @@ p::dict PythonCBS<Map>::getResultDetail() {
 BOOST_PYTHON_MODULE(libPythonCBS)  // Name here must match the name of the final shared library, i.e. mantid.dll or mantid.so
 {
 	using namespace boost::python;
-	class_<PythonCBS<FlatlandLoader>>("PythonCBS", init<object, string, int, int, bool,string>())
+	class_<PythonCBS<FlatlandLoader>>("PythonCBS", init<object, string, int, int, bool,float,string>())
 		.def("getResult", &PythonCBS<FlatlandLoader>::getResult)
 		.def("search", &PythonCBS<FlatlandLoader>::search)
 		.def("getResultDetail", &PythonCBS<FlatlandLoader>::getResultDetail);

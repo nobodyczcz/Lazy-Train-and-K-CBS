@@ -81,7 +81,7 @@ OldConfList* ReservationTable::findConflict(int agent, int currLoc, int nextLoc,
 
 				}
 			}
-
+			
 			if (goalTable.count(nextLoc)) {
 				goalAgentList::iterator it;
 				for (it = goalTable[nextLoc].begin(); it != goalTable[nextLoc].end(); ++it) {
@@ -99,19 +99,23 @@ OldConfList* ReservationTable::findConflict(int agent, int currLoc, int nextLoc,
 		}
 
 		//detect edge conflict, we do not detect k delay edge conflict, because, every k delay edge conflict cause k delay vertex conflit.
-		if (res_table[nextLoc].count(currT)) {
-			agentList::iterator it;
-			for (it = res_table[nextLoc][currT].begin(); it != res_table[nextLoc][currT].end(); ++it) {
+		//every edge conflict cause two k delay vertex conflict, thus don't need to detect edge conflicct when k is not 0.
+		if (kDelay == 0) {
+			if (res_table[nextLoc].count(currT)) {
+				agentList::iterator it;
+				for (it = res_table[nextLoc][currT].begin(); it != res_table[nextLoc][currT].end(); ++it) {
 
-				if (it->second.nextStep != NULL && it->second.nextStep->loc == currLoc) {
-					confs->push_back(std::shared_ptr<tuple<int, int, int, int, int, int>>(
-						new tuple<int, int, int, int, int, int>(
-							agent, it->second.agent_id, currLoc, nextLoc, nextT, 0)));
+					if (it->second.nextStep != NULL && it->second.nextStep->loc == currLoc) {
+						confs->push_back(std::shared_ptr<tuple<int, int, int, int, int, int>>(
+							new tuple<int, int, int, int, int, int>(
+								agent, it->second.agent_id, currLoc, nextLoc, nextT, 0)));
+					}
+
+
 				}
-						
-				
 			}
 		}
+		
 		
 	}
 	return confs;
