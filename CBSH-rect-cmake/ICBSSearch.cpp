@@ -251,7 +251,10 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 				for (auto& con : *(paths[a1]->at(t).conflist)) {
 					std::shared_ptr<Conflict> newConf(new Conflict());
 
-					if (get<3>(*con) < 0) {
+					if (targetReasoning && (get<3>(*con) < 0) && (get<4>(*con) >= paths[get<0>(*con)]->size() - 1)) {
+						newConf->targetConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<4>(*con));
+					}
+					else if (get<3>(*con) < 0) {
 						newConf->vertexConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<4>(*con), get<5>(*con),kDelay);
 					}
 					else {
@@ -293,7 +296,11 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 					continue;
 				for (auto& con : *(paths[a1]->at(t).conflist)) {
 					std::shared_ptr<Conflict> newConf(new Conflict());
-					if (get<3>(*con) < 0) {
+					
+					if (targetReasoning && (get<3>(*con) < 0) && (get<4>(*con) >= paths[get<0>(*con)]->size() - 1)) {
+						newConf->targetConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<4>(*con));
+					}
+					else if (get<3>(*con) < 0) {
 						newConf->vertexConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<4>(*con), get<5>(*con),kDelay);
 					}
 					else {
@@ -974,9 +981,9 @@ void ICBSSearch::printStrategy() const
 template<class Map>
 bool MultiMapICBSSearch<Map>::runICBSSearch() 
 {
+	printStrategy();
 	initializeDummyStart();
 
-	printStrategy();
 	// set timer
 	start = std::clock();
 	std::clock_t t1;
@@ -1384,7 +1391,8 @@ void MultiMapICBSSearch<Map>::initializeDummyStart() {
 	paths_found_initially.resize(num_of_agents);
 	ReservationTable* res_table = new ReservationTable(map_size);  // initialized to false
 	for (int i = 0; i < num_of_agents; i++) {
-
+		//cout << "******************************" << endl;
+		//cout << "Agent: " << i << endl;
 		if (search_engines[i]->findPath(paths_found_initially[i], focal_w, constraintTable, res_table, dummy_start->makespan + 1, 0) == false)
 			cout << "NO SOLUTION EXISTS";
 		
@@ -1538,7 +1546,8 @@ bool MultiMapICBSSearch<Map>::findPathForSingleAgent(ICBSNode*  node, int ag, do
 
 	// find a path
 	vector<PathEntry> newPath;
-
+	//cout << "**************" << endl;
+	//cout << "Single agent : " << curr->agent_id << endl;
 	bool foundSol = search_engines[ag]->findPath(newPath, focal_w, constraintTable, res_table, max_plan_len, lowerbound, start, time_limit);
 
 	LL_num_expanded += search_engines[ag]->num_expanded;

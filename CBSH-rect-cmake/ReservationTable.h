@@ -42,7 +42,8 @@ public:
 	typedef boost::unordered_map<int, AgentStep> agentList;//stores agents in a loc at a certain timestep
 	typedef boost::unordered_map<int, agentList> timeline;//key is time step, value is agentlist
 	typedef boost::unordered_map<int, timeline> map_table;//hash table, key is map location, value is time line
-
+	typedef boost::unordered_map<int, int> goalAgentList;
+	boost::unordered_map<int, goalAgentList> goalTable;
 	map_table res_table;
 	void addPath(int agent_id, std::vector<PathEntry>* path);
 	void addPaths(vector<vector<PathEntry>*>* paths, int exclude = -1);

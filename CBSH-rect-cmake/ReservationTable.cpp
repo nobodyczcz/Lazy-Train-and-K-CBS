@@ -33,6 +33,9 @@ void ReservationTable::addPath(int agent_id, std::vector<PathEntry>* path) {
 		res_table[loc][t][agent_id].preStep = preStep;
 		preStep = &(res_table[loc][t][agent_id]);
 
+		if (t == path->size() - 1) {
+			goalTable[loc][agent_id] = t;
+		}
 	}
 }
 
@@ -50,6 +53,11 @@ void ReservationTable::deletePath(int agent_id, std::vector<PathEntry>* path) {
 		if (res_table.count(loc)) {
 			if (res_table[loc].count(t)) {
 				res_table[loc][t].erase(agent_id);
+			}
+		}
+		if (t == path->size() - 1) {
+			if (goalTable[loc].count(agent_id)) {
+				goalTable[loc].erase(agent_id);
 			}
 		}
 	}
@@ -71,6 +79,21 @@ OldConfList* ReservationTable::findConflict(int agent, int currLoc, int nextLoc,
 						new tuple<int, int, int, int, int,int>(
 							k < 0 ? it->second.agent_id : agent, k < 0 ? agent : it->second.agent_id, nextLoc, -1, k < 0 ? t : nextT,k>=0?k:-k)));
 
+				}
+			}
+
+			if (goalTable.count(nextLoc)) {
+				goalAgentList::iterator it;
+				for (it = goalTable[nextLoc].begin(); it != goalTable[nextLoc].end(); ++it) {
+					for (int k = 0; k <= kDelay; k++) {
+
+						int t = nextT + k;
+						if (t >= it->second) {
+							confs->push_back(std::shared_ptr<tuple<int, int, int, int, int, int>>(
+								new tuple<int, int, int, int, int, int>(
+									it->first, agent, nextLoc, -1, t,k)));
+						}
+					}
 				}
 			}
 		}

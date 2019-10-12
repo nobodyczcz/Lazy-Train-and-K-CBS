@@ -149,7 +149,7 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 		//cout << "focal size " << focal_list.size() << endl;
 		//cout << "goal_location: " << goal_location << " curr time: " << curr->timestep << " length_min: " << constraint_table.length_min << endl;
 		// check if the popped node is a goal
-		if (curr->loc == goal_location && curr->timestep > constraint_table.length_min)
+		if (curr->loc == goal_location && curr->timestep >= constraint_table.length_min)
 		{
 			if (curr->parent == NULL || curr->parent->loc != goal_location)
 			{
@@ -168,15 +168,16 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 				return true;
 			}
 		}
+		
 
 		if (curr->timestep >= constraint_table.length_max) {
 			continue;
 
 		}
-		//if(curr->parent != NULL)
-		//	cout << "Parent loc: " << curr->parent->loc << " heading: " << curr->parent->heading << " f: " << curr->parent->getFVal() << " g: " << curr->parent->g_val << " h: "<< curr->parent->h_val<<" num_internal_conf: " << curr->parent->num_internal_conf << "current lower boundary: "<< lower_bound << endl;
-
-		//cout << "current loc: " << curr->loc << " heading: " << curr->heading<<" f: "<<curr->getFVal() << " g: " << curr->g_val << " h: " << curr->h_val << " num_internal_conf: " <<curr->num_internal_conf << "current lower boundary: " << lower_bound << endl;
+		/*if(curr->parent != NULL)
+			cout << "Parent loc: " << curr->parent->loc << " heading: " << curr->parent->heading << " f: " << curr->parent->getFVal() << " g: " << curr->parent->g_val << " h: "<< curr->parent->h_val<<" num_internal_conf: " << curr->parent->num_internal_conf << " current lower boundary: "<< lower_bound << endl;
+*/
+		//cout << "current loc: " << curr->loc << " heading: " << curr->heading<<" f: "<<curr->getFVal() << " g: " << curr->g_val << " h: " << curr->h_val << " num_internal_conf: " <<curr->num_internal_conf << " current lower boundary: " << lower_bound << endl;
 		//assert(curr->loc <= map_size && "loc out of map size");
 		//cout << "focal size " << focal_list.size() << endl;
 
