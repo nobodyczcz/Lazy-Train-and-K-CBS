@@ -151,7 +151,7 @@ int main(int argc, char** argv)
 	res = icbs.runICBSSearch();
 	ofstream stats;
 	stats.open(vm["output"].as<string>(), ios::app);
-	stats << icbs.runtime << "," <<
+	stats << icbs.runtime/ CLOCKS_PER_SEC << "," <<
 		icbs.HL_num_expanded << "," << icbs.HL_num_generated << "," <<
 		icbs.LL_num_expanded << "," << icbs.LL_num_generated << "," <<
 		vm["agents"].as<string>() << "," << icbs.solution_cost << "," << 
