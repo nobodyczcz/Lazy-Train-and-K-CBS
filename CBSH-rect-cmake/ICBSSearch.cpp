@@ -266,7 +266,7 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 					std::shared_ptr<Conflict> newConf(new Conflict());
 
 					if (targetReasoning && (get<3>(*con) < 0) && (get<4>(*con) >= paths[get<0>(*con)]->size() - 1 || get<4>(*con) >= paths[get<1>(*con)]->size() - 1)) {
-						newConf->targetConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<4>(*con));
+						newConf->targetConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<4>(*con),kDelay);
 					}
 					else if (get<3>(*con) < 0) {
 						newConf->vertexConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<4>(*con), get<5>(*con),kDelay);
@@ -332,7 +332,7 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 					std::shared_ptr<Conflict> newConf(new Conflict());
 					
 					if (targetReasoning && (get<3>(*con) < 0) && (get<4>(*con) >= paths[get<0>(*con)]->size() - 1 || get<4>(*con) >= paths[get<1>(*con)]->size() - 1)) {
-						newConf->targetConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<4>(*con));
+						newConf->targetConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<4>(*con),kDelay);
 
 					}
 					else if (get<3>(*con) < 0) {
@@ -387,27 +387,31 @@ void ICBSSearch::findTargetConflicts(int a1, int a2, ICBSNode& curr) {
 		int loc1 = paths[a1_]->back().location;// short one's goal location
 		for (size_t timestep = min_path_length; timestep < paths[a2_]->size(); timestep++)
 		{
-
-			//in future longer one can't pass through the goal location of shorter one.
-			int loc2 = paths[a2_]->at(timestep).location;
-			if (loc1 == loc2)
-			{
-				std::shared_ptr<Conflict> conflict(new Conflict());
-				if (targetReasoning)
+			//for (int k = 0; k <= kDelay; k++) {
+			//	//in future longer one can't pass through the goal location of shorter one.
+			//	if (timestep + k >= paths[a2_]->size())
+			//		continue;
+				int loc2 = paths[a2_]->at(timestep).location;
+				if (loc1 == loc2)
 				{
-					conflict->targetConflict(a1_, a2_, loc1, timestep);
+					std::shared_ptr<Conflict> conflict(new Conflict());
+					if (targetReasoning)
+					{
+						conflict->targetConflict(a1_, a2_, loc1, timestep, kDelay);
+					}
+					else
+					{
+						conflict->vertexConflict(a1_, a2_, loc1, timestep,kDelay,kDelay);
+					}
+					if (debug_mode)
+						cout << "<" << a1_ << "," << a2_ << ","
+						<< "(" << loc1 / num_col << "," << loc1 % num_col << ")" << ","
+						<< "(,)" << ","
+						<< timestep << "," "0" << ">; ";
+					curr.unknownConf.push_back(conflict);
 				}
-				else
-				{
-					conflict->vertexConflict(a1_, a2_, loc1, timestep);
-				}
-				if (debug_mode)
-				cout << "<" << a1_ << "," << a2_ << ","
-					<< "(" << loc1 / num_col << "," << loc1 % num_col << ")" << ","
-					<< "(,)" << ","
-					<< timestep << "," "0" << ">; ";
-				curr.unknownConf.push_back(conflict);
-			}
+			//}
+			
 		}
 	}
 }
@@ -819,7 +823,7 @@ bool ICBSSearch::generateChild(ICBSNode*  node, ICBSNode* curr)
 			{
 				continue;
 			}
-			if (t < paths[ag]->size() && paths[ag]->at(t).location == x)
+			if (t+kDelay < paths[ag]->size() && paths[ag]->at(t+kDelay).location == x)
 			{
 				double lowerbound = (int)paths[ag]->size() - 1;
 				if (!findPathForSingleAgent(node, ag, lowerbound))
@@ -1660,10 +1664,12 @@ void MultiMapICBSSearch<Map>::updateConstraintTable(ICBSNode* curr, int agent_id
 					if (x < 0 && y == agent_id)
 					{ // <-1, agent_id, t>: path of agent_id should be of length at least t + 1 
 						constraintTable.length_min = max(constraintTable.length_min, z + 1);
+
 					}
 					else if (x >= 0 && y == agent_id)
 					{ // <loc, agent_id, t>: path of agent_id should be of length at most t
 						constraintTable.length_max = min(constraintTable.length_max, z);
+
 					}
 					else if (x >= 0 && y != agent_id)
 					{ // <loc, agent_id, t>: any other agent cannot be at loc at or after timestep t
