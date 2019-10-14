@@ -287,6 +287,108 @@ int CorridorReasoning<Map>::getBypassLength(int start, int end, std::pair<int, i
 	return length;
 }
 
+template<class Map>
+int CorridorReasoning<Map>::getBypassLength(int start, int end, std::pair<int, int> blocked, Map* my_map, int num_col, int map_size, ConstraintTable& constraint_table, int upper_bound, int start_heading)
+{
+	int length = INT_MAX;
+	// generate a heap that can save nodes (and a open_handle)
+	boost::heap::fibonacci_heap< LLNode*, boost::heap::compare<LLNode::compare_node> > heap;
+	boost::heap::fibonacci_heap< LLNode*, boost::heap::compare<LLNode::compare_node> >::handle_type open_handle;
+	// generate hash_map (key is a node pointer, data is a node handler,
+	//                    NodeHasher is the hash function to be used,
+	//                    eqnode is used to break ties when hash values are equal)
+	google::dense_hash_map<LLNode*, fibonacci_heap<LLNode*, boost::heap::compare<LLNode::compare_node> >::handle_type, LLNode::NodeHasher, LLNode::eqnode> nodes;
+	nodes.set_empty_key(NULL);
+	google::dense_hash_map<LLNode*, fibonacci_heap<LLNode*, boost::heap::compare<LLNode::compare_node> >::handle_type, LLNode::NodeHasher, LLNode::eqnode>::iterator it; // will be used for find()
+
+	LLNode* root = new LLNode(start, 0, getMahattanDistance(start, end, num_col), NULL, 0);
+	root->heading = start_heading;
+	root->open_handle = heap.push(root);  // add root to heap
+	nodes[root] = root->open_handle;       // add root to hash_table (nodes)
+	int moves_offset[5] = { 1, -1, num_col, -num_col, 0 };
+	LLNode* curr = NULL;
+	int time_generated = 0;
+	while (!heap.empty())
+	{
+		curr = heap.top();
+		heap.pop();
+		if (curr->loc == end)
+		{
+			length = curr->g_val;
+			break;
+		}
+		vector<pair<int, int>> transitions = my_map->get_transitions(curr->loc, curr->heading, false);
+
+		for (const pair<int, int> move : transitions)
+		{
+			int next_loc = move.first;
+			time_generated += 1;
+
+			int next_timestep = curr->timestep + 1;
+			if (constraint_table.latest_timestep <= curr->timestep)
+			{
+				if (move.second == 4)
+				{
+					continue;
+				}
+				next_timestep--;
+			}
+
+			if (!constraint_table.is_constrained(next_loc, next_timestep) &&
+				!constraint_table.is_constrained(curr->loc * map_size + next_loc, next_timestep))
+			{  // if that grid is not blocked
+				if ((curr->loc == blocked.first && next_loc == blocked.second) ||
+					(curr->loc == blocked.second && next_loc == blocked.first)) // use the prohibited edge
+				{
+					continue;
+				}
+				int next_heading;
+
+				if (curr->heading == -1) //heading == 4 means no heading info
+					next_heading = -1;
+				else
+					if (move.second == 4) //move == 4 means wait
+						next_heading = curr->heading;
+					else
+						next_heading = move.second;
+
+				int next_g_val = curr->g_val + 1;
+				int next_h_val = getMahattanDistance(next_loc, end, num_col);
+				if (next_g_val + next_h_val >= upper_bound) // the cost of the path is larger than the upper bound
+					continue;
+				LLNode* next = new LLNode(next_loc, next_g_val, next_h_val, NULL, next_timestep);
+
+				next->heading = next_heading;
+				next->actionToHere = move.second;
+				next->time_generated = time_generated;
+
+				it = nodes.find(next);
+				if (it == nodes.end())
+				{  // add the newly generated node to heap and hash table
+					next->open_handle = heap.push(next);
+					nodes[next] = next->open_handle;
+				}
+				else {  // update existing node's g_val if needed (only in the heap)
+					delete(next);  // not needed anymore -- we already generated it before
+					LLNode* existing_next = (*it).first;
+					open_handle = (*it).second;
+					if (existing_next->g_val > next_g_val)
+					{
+						existing_next->g_val = next_g_val;
+						existing_next->timestep = next_timestep;
+						heap.update(open_handle);
+					}
+				}
+			}
+		}
+	}
+	for (it = nodes.begin(); it != nodes.end(); it++)
+	{
+		delete (*it).first;
+	}
+	return length;
+}
+
 
 
 bool isConstrained(int curr_id, int next_id, int next_timestep, const std::vector< std::list< std::pair<int, int> > >* cons)

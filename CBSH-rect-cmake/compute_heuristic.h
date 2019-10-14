@@ -18,7 +18,7 @@ struct hvals {
 			return heading[direction];
 		}
 		else {
-			return INT_MAX;
+			return 0;
 		}
 	}
 };

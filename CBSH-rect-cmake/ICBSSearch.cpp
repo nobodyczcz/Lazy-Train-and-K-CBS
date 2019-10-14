@@ -265,7 +265,7 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 					}
 					std::shared_ptr<Conflict> newConf(new Conflict());
 
-					if (targetReasoning && (get<3>(*con) < 0) && (get<4>(*con) >= paths[get<0>(*con)]->size() - 1)) {
+					if (targetReasoning && (get<3>(*con) < 0) && (get<4>(*con) >= paths[get<0>(*con)]->size() - 1 || get<4>(*con) >= paths[get<1>(*con)]->size() - 1)) {
 						newConf->targetConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<4>(*con));
 					}
 					else if (get<3>(*con) < 0) {
@@ -289,8 +289,7 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 				delete paths[curr.agent_id]->at(t).conflist;
 			}
 		}
-		//Detect any agent conflict with goal location
-		for (int a2 = 0; a2 < num_of_agents; a2++)
+		for (int a2 = a1 + 1; a2 < num_of_agents; a2++)
 		{
 			if (a1 == a2)
 				continue;
@@ -298,6 +297,7 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 			findTargetConflicts(a1, a2, curr);
 
 		}
+
 
 	}
 	else
@@ -331,8 +331,9 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 
 					std::shared_ptr<Conflict> newConf(new Conflict());
 					
-					if (targetReasoning && (get<3>(*con) < 0) && (get<4>(*con) >= paths[get<0>(*con)]->size() - 1)) {
+					if (targetReasoning && (get<3>(*con) < 0) && (get<4>(*con) >= paths[get<0>(*con)]->size() - 1 || get<4>(*con) >= paths[get<1>(*con)]->size() - 1)) {
 						newConf->targetConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<4>(*con));
+
 					}
 					else if (get<3>(*con) < 0) {
 						newConf->vertexConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<4>(*con), get<5>(*con),kDelay);
@@ -356,6 +357,7 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 				}
 				delete paths[a1]->at(t).conflist;
 			}
+
 			for (int a2 = a1 + 1; a2 < num_of_agents; a2++)
 			{
 				if (a1 == a2)
@@ -391,7 +393,7 @@ void ICBSSearch::findTargetConflicts(int a1, int a2, ICBSNode& curr) {
 			if (loc1 == loc2)
 			{
 				std::shared_ptr<Conflict> conflict(new Conflict());
-				if (targetReasoning && paths[a1]->size() == timestep + 1)
+				if (targetReasoning)
 				{
 					conflict->targetConflict(a1_, a2_, loc1, timestep);
 				}
@@ -559,22 +561,18 @@ bool MultiMapICBSSearch<Map>::isCorridorConflict(std::shared_ptr<Conflict>& corr
 	}
 	if (corridor2)
 	{
-		ComputeHeuristic<Map> compute(paths[a[0]]->front().location, u[1], ml, paths[a[0]]->front().actionToHere);
-		vector<hvals> restable;
-		compute.getHVals(restable, timestep*2);
+
 		std::pair<int, int> edge_empty = make_pair(-1, -1);
 		updateConstraintTable(node, a[0]);
 		//cout << "start: " << paths[a[0]]->front().location << " end:" << u[1] << " heading:" << paths[a[0]]->front().actionToHere << endl;
-		int t3 = cp.getBypassLength(paths[a[0]]->front().location, u[1], edge_empty, ml, num_col, map_size, constraintTable, INT_MAX, restable, paths[a[0]]->front().actionToHere);
-		int t3_ = cp.getBypassLength(paths[a[0]]->front().location, u[1], edge, ml, num_col, map_size, constraintTable, t3 + 2 * k  + 1, restable, paths[a[0]]->front().actionToHere);
+		int t3 = cp.getBypassLength(paths[a[0]]->front().location, u[1], edge_empty, ml, num_col, map_size, constraintTable, INT_MAX, paths[a[0]]->front().actionToHere);
+		int t3_ = cp.getBypassLength(paths[a[0]]->front().location, u[1], edge, ml, num_col, map_size, constraintTable, t3 + 2 * k  + 1, paths[a[0]]->front().actionToHere);
 		
-		ComputeHeuristic<Map> compute2(paths[a[1]]->front().location, u[0], ml, paths[a[1]]->front().actionToHere);
-		vector<hvals> restable2;
-		compute2.getHVals(restable2, timestep * 2);
+
 		updateConstraintTable(node, a[1]);
 		//cout << "start: " << paths[a[1]]->front().location << " end:" << u[0] << " heading:" << paths[a[1]]->front().actionToHere << endl;
-		int t4 = cp.getBypassLength(paths[a[1]]->front().location, u[0], edge_empty, ml, num_col, map_size, constraintTable, INT_MAX, restable2, paths[a[1]]->front().actionToHere);
-		int t4_ = cp.getBypassLength(paths[a[1]]->front().location, u[0], edge, ml, num_col, map_size, constraintTable, t3 + k + 1, restable2, paths[a[1]]->front().actionToHere);
+		int t4 = cp.getBypassLength(paths[a[1]]->front().location, u[0], edge_empty, ml, num_col, map_size, constraintTable, INT_MAX, paths[a[1]]->front().actionToHere);
+		int t4_ = cp.getBypassLength(paths[a[1]]->front().location, u[0], edge, ml, num_col, map_size, constraintTable, t3 + k + 1, paths[a[1]]->front().actionToHere);
 		//cout << t3 << "," << t3_ << "," << t4 << "," << t4_ << endl;
 		//cout << k << endl;
 		if (abs(t3 - t4) <= k && t3_ > t3 && t4_ > t4)
@@ -834,6 +832,7 @@ bool ICBSSearch::generateChild(ICBSNode*  node, ICBSNode* curr)
 		double lowerbound = (int)paths[node->agent_id]->size() - 1;
 		// if (curr->conflict->p == conflict_priority::CARDINAL && curr->conflict->type != conflict_type::CORRIDOR2)
 		//	lowerbound += 1;
+
 		if (!findPathForSingleAgent(node, node->agent_id, lowerbound))
 			return false;
 	}
@@ -1011,7 +1010,6 @@ bool MultiMapICBSSearch<Map>::runICBSSearch()
 {
 	printStrategy();
 	initializeDummyStart();
-
 	// set timer
 	start = std::clock();
 	std::clock_t t1;

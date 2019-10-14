@@ -123,7 +123,7 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 
 	lowerbound = std::max(lowerbound, (double)constraint_table.length_min);
 	lower_bound = std::max(lowerbound, f_weight * min_f_val);
-	//cout << "start lower_bound: " << lower_bound << endl;
+
 	int time_generated = 0;
 	std:clock_t runtime;
 	//for (int h = 0; h < my_heuristic.size();h++) {
@@ -176,11 +176,11 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 		}
 		/*if(curr->parent != NULL)
 			cout << "Parent loc: " << curr->parent->loc << " heading: " << curr->parent->heading << " f: " << curr->parent->getFVal() << " g: " << curr->parent->g_val << " h: "<< curr->parent->h_val<<" num_internal_conf: " << curr->parent->num_internal_conf << " current lower boundary: "<< lower_bound << endl;
-*/
-		//cout << "current loc: " << curr->loc << " heading: " << curr->heading<<" f: "<<curr->getFVal() << " g: " << curr->g_val << " h: " << curr->h_val << " num_internal_conf: " <<curr->num_internal_conf << " current lower boundary: " << lower_bound << endl;
-		//assert(curr->loc <= map_size && "loc out of map size");
-		//cout << "focal size " << focal_list.size() << endl;
 
+		cout << "current loc: " << curr->loc << " heading: " << curr->heading<<" f: "<<curr->getFVal() << " g: " << curr->g_val << " h: " << curr->h_val << " num_internal_conf: " <<curr->num_internal_conf << " current lower boundary: " << lower_bound << endl;
+		assert(curr->loc <= map_size && "loc out of map size");
+		cout << "focal size " << focal_list.size() << endl;
+*/
 
 		vector<pair<int, int>> transitions = ml->get_transitions(curr->loc, curr->heading,false);
 		//cout << "transitions : " ;
@@ -329,16 +329,18 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 		if (open_list.size() == 0)  // in case OPEN is empty, no path found
 			break;
 		LLNode* open_head = open_list.top();
+		
 
 		if (open_head->getFVal() > min_f_val) 
 		{
+
 			double new_min_f_val = open_head->getFVal();
 			double new_lower_bound = std::max(lowerbound, f_weight * new_min_f_val);
 
 			for (LLNode* n : open_list) 
 			{
 
-				if (n->getFVal() > lower_bound && n->getFVal() <= new_lower_bound) {
+				if (!n->in_focallist && n->getFVal() > lower_bound && n->getFVal() <= new_lower_bound) {
 
 					n->focal_handle = focal_list.push(n);
 					n->in_focallist = true;
@@ -347,6 +349,7 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 
 			min_f_val = new_min_f_val;
 			lower_bound = new_lower_bound;
+
 		}
 
 	}  // end while loop

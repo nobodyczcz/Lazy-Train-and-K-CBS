@@ -146,6 +146,7 @@ int main(int argc, char** argv)
 	if (vm.count("target"))
 	{
 		icbs.targetReasoning = vm["target"].as<bool>();
+
 	}
 	bool res;
 	res = icbs.runICBSSearch();
