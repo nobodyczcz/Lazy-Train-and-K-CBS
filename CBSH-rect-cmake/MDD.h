@@ -43,7 +43,14 @@ public:
 class MDDEmpty {
 public:
 	std::vector<std::list<MDDNode*>> levels;
-
+	int getMahattanDistance(int loc1, int loc2, int map_cols)
+	{
+		int loc1_x = loc1 / map_cols;
+		int loc1_y = loc1 % map_cols;
+		int loc2_x = loc2 / map_cols;
+		int loc2_y = loc2 % map_cols;
+		return std::abs(loc1_x - loc2_x) + std::abs(loc1_y - loc2_y);
+	}
 	virtual bool buildMDD( ConstraintTable& constraint_table,
 		int numOfLevels, SingleAgentICBS<MapLoader>& solver) {};
 	virtual bool buildMDD( ConstraintTable& constraint_table,
@@ -68,6 +75,8 @@ public:
 	bool buildMDD( ConstraintTable& constraints,
 		int numOfLevels,  SingleAgentICBS<Map> &solver);
 	bool buildMDD( ConstraintTable& constraints, int numOfLevels, SingleAgentICBS<Map> & solver, int start, int start_time,int start_heading=-1);
+	bool buildMDD(ConstraintTable& constraints, int numOfLevels, SingleAgentICBS<Map> & solver, int start, int start_time,int goal, int start_heading = -1);
+
 	MDDNode* find(int location, int level);
 	void deleteNode(MDDNode* node);
 	void clear();

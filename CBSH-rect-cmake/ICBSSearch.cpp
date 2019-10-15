@@ -243,62 +243,66 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 		if (debug_mode)
 			cout << "Find Conflicts" << endl;
 		// detect new conflicts
-		int a1 = curr.agent_id;
-		//collect conflict from path;
-		for (size_t t = 0; t < paths[a1]->size(); t++) {
-			if (paths[a1]->at(t).conflist != NULL && paths[a1]->at(t).conflist->size() != 0) {
-				int preciousConflit[4];
-				for (auto& con : *(paths[a1]->at(t).conflist)) {
-					
-					//cout << "(" << abs(preciousConflit[2] - get<2>(*con)) << ")";
-					if (preciousConflit[0] == get<0>(*con) &&
-						preciousConflit[1] == get<1>(*con) &&
-						(abs(preciousConflit[2] - get<2>(*con)) == num_col || abs(preciousConflit[2] - get<2>(*con)) == 1) &&
-						abs(get<4>(*con) - preciousConflit[3]) == 1
-						) {
+		for (list<int>::iterator it = new_agents.begin(); it != new_agents.end(); ++it)
+		{
+			int a1 = *it;
+			//collect conflict from path;
+			for (size_t t = 0; t < paths[a1]->size(); t++) {
+				if (paths[a1]->at(t).conflist != NULL && paths[a1]->at(t).conflist->size() != 0) {
+					int preciousConflit[4];
+					for (auto& con : *(paths[a1]->at(t).conflist)) {
+
+						//cout << "(" << abs(preciousConflit[2] - get<2>(*con)) << ")";
+						if (preciousConflit[0] == get<0>(*con) &&
+							preciousConflit[1] == get<1>(*con) &&
+							(abs(preciousConflit[2] - get<2>(*con)) == num_col || abs(preciousConflit[2] - get<2>(*con)) == 1) &&
+							abs(get<4>(*con) - preciousConflit[3]) == 1
+							) {
+							preciousConflit[0] = get<0>(*con);
+							preciousConflit[1] = get<1>(*con);
+							preciousConflit[2] = get<2>(*con);
+							preciousConflit[3] = get<4>(*con);
+							//cout << "continues conf, jump" << endl;
+							continue;
+						}
+						std::shared_ptr<Conflict> newConf(new Conflict());
+
+						if (targetReasoning && (get<3>(*con) < 0) && (get<4>(*con) >= paths[get<0>(*con)]->size() - 1)) {
+							newConf->targetConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<4>(*con), kDelay);
+						}
+						else if (targetReasoning && (get<3>(*con) < 0) && (get<4>(*con) >= paths[get<1>(*con)]->size() - 1)) {
+							newConf->targetConflict(get<1>(*con), get<0>(*con), get<2>(*con), get<4>(*con), kDelay);
+						}
+						else if (get<3>(*con) < 0) {
+							newConf->vertexConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<4>(*con), get<5>(*con), kDelay);
+						}
+						else {
+							newConf->edgeConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<3>(*con), get<4>(*con));
+						}
+						if (debug_mode)
+							cout << "<" << get<0>(*con) << "," << get<1>(*con) << ","
+							<< "(" << get<2>(*con) / num_col << "," << get<2>(*con) % num_col << ")" << ","
+							<< "(" << get<3>(*con) / num_col << "," << get<3>(*con) % num_col << ")" << ","
+							<< get<4>(*con) << "," << get<5>(*con) << ">; ";
+						curr.unknownConf.emplace_back(newConf);
 						preciousConflit[0] = get<0>(*con);
 						preciousConflit[1] = get<1>(*con);
 						preciousConflit[2] = get<2>(*con);
 						preciousConflit[3] = get<4>(*con);
-						//cout << "continues conf, jump" << endl;
-						continue;
-					}
-					std::shared_ptr<Conflict> newConf(new Conflict());
 
-					if (targetReasoning && (get<3>(*con) < 0) && (get<4>(*con) >= paths[get<0>(*con)]->size() - 1 || get<4>(*con) >= paths[get<1>(*con)]->size() - 1)) {
-						newConf->targetConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<4>(*con),kDelay);
 					}
-					else if (get<3>(*con) < 0) {
-						newConf->vertexConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<4>(*con), get<5>(*con),kDelay);
-					}
-					else {
-						newConf->edgeConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<3>(*con),get<4>(*con));
-					}
-					if (debug_mode)
-						cout << "<" << get<0>(*con) << "," << get<1>(*con) << ","
-							<< "(" << get<2>(*con) / num_col << "," << get<2>(*con) % num_col << ")" << ","
-							<< "(" << get<3>(*con) / num_col << "," << get<3>(*con) % num_col << ")" << ","
-							<< get<4>(*con) << "," << get<5>(*con) << ">; ";
-					curr.unknownConf.emplace_back(newConf);
-					preciousConflit[0] = get<0>(*con);
-					preciousConflit[1] = get<1>(*con);
-					preciousConflit[2] = get<2>(*con);
-					preciousConflit[3] = get<4>(*con);
-
+					delete paths[curr.agent_id]->at(t).conflist;
 				}
-				delete paths[curr.agent_id]->at(t).conflist;
+			}
+			for (int a2 = a1 + 1; a2 < num_of_agents; a2++)
+			{
+				if (a1 == a2)
+					continue;
+
+				findTargetConflicts(a1, a2, curr);
+
 			}
 		}
-		for (int a2 = a1 + 1; a2 < num_of_agents; a2++)
-		{
-			if (a1 == a2)
-				continue;
-
-			findTargetConflicts(a1, a2, curr);
-
-		}
-
-
 	}
 	else
 	{
@@ -331,9 +335,11 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 
 					std::shared_ptr<Conflict> newConf(new Conflict());
 					
-					if (targetReasoning && (get<3>(*con) < 0) && (get<4>(*con) >= paths[get<0>(*con)]->size() - 1 || get<4>(*con) >= paths[get<1>(*con)]->size() - 1)) {
-						newConf->targetConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<4>(*con),kDelay);
-
+					if (targetReasoning && (get<3>(*con) < 0) && (get<4>(*con) >= paths[get<0>(*con)]->size() - 1)) {
+						newConf->targetConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<4>(*con), kDelay);
+					}
+					else if (targetReasoning && (get<3>(*con) < 0) && (get<4>(*con) >= paths[get<1>(*con)]->size() - 1)) {
+						newConf->targetConflict(get<1>(*con), get<0>(*con), get<2>(*con), get<4>(*con), kDelay);
 					}
 					else if (get<3>(*con) < 0) {
 						newConf->vertexConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<4>(*con), get<5>(*con),kDelay);
@@ -1920,46 +1926,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 								cout << "s1 " << s1 << " s2 " << s2 << " g1 " << g1 << " g2 " << g2 << " rg " << Rg.first << " " << Rg.second <<" Rg_t "<< Rg_t<< endl;
 */
 								if (kDelay>0) {
-									/*vector<MDDPath*> a1kMDD;
-									vector<MDDPath*> a2kMDD;
-									for (int i = 1; i <= kDelay; i++) {
-										MDD<Map> a1MDD;
-										MDD<Map> a2MDD;
-
-										a1MDD.buildMDD(constraintTable, paths[a1]->size() - t1_start + i,
-											*(search_engines[a1]), s1, t1_start,
-											paths[a1]->at(t1_start).actionToHere);
-
-										a2MDD.buildMDD(constraintTable, paths[a1]->size() - t2_start + i,
-											*(search_engines[a2]), s2, t2_start,
-											paths[a2]->at(t2_start).actionToHere);
-
-										MDDPath* a1MDDPath = new MDDPath;
-										for (int i = 0; i < a1MDD.levels.size(); i++) {
-											std::unordered_set<int> level;
-											std::list<MDDNode*>::iterator it;
-											for (it = a1MDD.levels[i].begin(); it != a1MDD.levels[i].end(); ++it) {
-												level.insert((*it)->location);
-											}
-											a1MDDPath->levels.push_back(level);
-
-										}
-										a1kMDD.push_back(a1MDDPath);
-
-										MDDPath* a2MDDPath = new MDDPath;
-										for (int i = 0; i < a2MDD.levels.size(); i++) {
-											std::unordered_set<int> level;
-											std::list<MDDNode*>::iterator it;
-											for (it = a2MDD.levels[i].begin(); it != a2MDD.levels[i].end(); ++it) {
-												level.insert((*it)->location);
-											}
-											a2MDDPath->levels.push_back(level);
-
-										}
-										a2kMDD.push_back(a2MDDPath);
-									}*/
 									
-									//cout << "Create MDD Done" << endl;
 									new_rectangle->kRectangleConflict(a1, a2, Rs, Rg,
 										make_pair(s1 / num_col, s1 % num_col),
 										make_pair(s2 / num_col, s2 % num_col),
@@ -2021,12 +1988,12 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 						MDD<Map> a1MDD;
 						MDD<Map> a2MDD;
 
-						a1MDD.buildMDD(constraintTable, paths[a1]->size() - t1_startf + i,
-							*(search_engines[a1]), s1f, t1_startf,
+						a1MDD.buildMDD(constraintTable, t1_endf - t1_startf + i,
+							*(search_engines[a1]), s1f, t1_startf,g1f,
 							paths[a1]->at(t1_startf).actionToHere);
 
-						a2MDD.buildMDD(constraintTable, paths[a1]->size() - t2_startf + i,
-							*(search_engines[a2]), s2f, t2_startf,
+						a2MDD.buildMDD(constraintTable, t1_endf - t2_startf + i,
+							*(search_engines[a2]), s2f, t2_startf,g2f,
 							paths[a2]->at(t2_startf).actionToHere);
 
 						MDDPath* a1MDDPath = new MDDPath;

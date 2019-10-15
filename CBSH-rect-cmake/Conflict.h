@@ -347,7 +347,7 @@ public:
 		this->t = t;
 		this->originalConf1 = v;
 		this->constraint1.emplace_back(-1, a1, t+ kDelay, constraint_type::LENGTH); // length of a1 should be larger than t
-		this->constraint2.emplace_back(v, a1, t- kDelay, constraint_type::LENGTH); // length of a1 should be no larger than t, and other agents can not use v at and after timestep t
+		this->constraint2.emplace_back(v, a1, t-kDelay, constraint_type::LENGTH); // length of a1 should be no larger than t, and other agents can not use v at and after timestep t
 		type = conflict_type::TARGET;
 	}
 };
