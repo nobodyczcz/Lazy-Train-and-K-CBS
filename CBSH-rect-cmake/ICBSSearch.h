@@ -57,7 +57,7 @@ public:
 	bool corridor2 = false;
 	bool corridor4 = false;
 	bool cardinalCorridorReasoning = false;
-	bool targetReasoning;
+	bool targetReasoning=false;
 	int kDelay;
 	bool asymmetry_constraint;
 	int numOfRectangle = 0;

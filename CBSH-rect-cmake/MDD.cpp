@@ -180,8 +180,8 @@ bool MDD<Map>::buildMDD( ConstraintTable& constraints,
 			//cout << "newLoc " << newLoc << " heading " << new_heading<<" h "<< solver.my_heuristic[newLoc].heading[new_heading] << endl;
 
 			if (solver.my_heuristic[newLoc].heading.count(new_heading) && solver.my_heuristic[newLoc].heading[new_heading] < heuristicBound &&
-				!constraints.is_constrained(newLoc, node->level + 1) &&
-				!constraints.is_constrained(node->location * solver.map_size + newLoc, node->level + 1)) // valid move
+				!constraints.is_constrained(newLoc, start_time+node->level + 1) &&
+				!constraints.is_constrained(node->location * solver.map_size + newLoc, start_time+node->level + 1)) // valid move
 			{
 				std::list<MDDNode*>::reverse_iterator child = closed.rbegin();
 				bool find = false;
@@ -300,8 +300,8 @@ bool MDD<Map>::buildMDD(ConstraintTable& constraints,
 			//cout << "newLoc " << newLoc << " heading " << new_heading<<" h "<< solver.my_heuristic[newLoc].heading[new_heading] << endl;
 			int next_h_val = getMahattanDistance(newLoc, goal, solver.num_col);
 			if (next_h_val < heuristicBound &&
-				!constraints.is_constrained(newLoc, node->level + 1) &&
-				!constraints.is_constrained(node->location * solver.map_size + newLoc, node->level + 1)) // valid move
+				!constraints.is_constrained(newLoc, start_time+node->level + 1) &&
+				!constraints.is_constrained(node->location * solver.map_size + newLoc, start_time + node->level + 1)) // valid move
 			{
 				std::list<MDDNode*>::reverse_iterator child = closed.rbegin();
 				bool find = false;

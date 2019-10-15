@@ -1864,6 +1864,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 		}
 		else if (rectangleMDD)
 		{
+			
 			std::clock_t RM_Start = std::clock();
 			std::list<int>	s1s = getStartCandidates(*paths[a1], timestep, num_col);
 			std::list<int>	g1s = getGoalCandidates(*paths[a1], timestep, num_col);
@@ -1904,8 +1905,10 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 							int g2 = paths[a2]->at(t2_end).location;
 							if (!isManhattanOptimal(s2, g2, t2_end - t2_start, num_col))
 								continue;
+							
 							if (!isRectangleConflict(s1, s2, g1, g2, num_col))
 								continue;
+	
 							std::pair<int, int> Rg = getRg(std::make_pair(s1 / num_col, s1 % num_col), std::make_pair(g1 / num_col, g1 % num_col),
 								std::make_pair(g2 / num_col, g2 % num_col));
 							std::pair<int, int> Rs = getRs(std::make_pair(s1 / num_col, s1 % num_col), std::make_pair(s2 / num_col, s2 % num_col),
@@ -1917,8 +1920,8 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 
 							if (new_type > type || (new_type == type && new_area > area) || (new_type == type && new_area == area && new_distance > distance))
 							{
-								//cout << "Find one" << endl;
-
+								if (debug_mode)
+									cout << "find candidate rectangle rm" << endl;
 
 								auto new_rectangle = std::shared_ptr<Conflict>(new Conflict());
 								int Rg_t = con->t + abs(Rg.first - loc1 / num_col) + abs(Rg.second - loc1 % num_col);
@@ -1948,6 +1951,8 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 
 								if (blocked(*paths[new_rectangle->a1], new_rectangle->constraint1) && blocked(*paths[new_rectangle->a2], new_rectangle->constraint2))
 								{
+									if (debug_mode)
+										cout << "blocked" << endl;
 									//cout << "blocked, select this one" << endl;
 									rectangle = new_rectangle;
 									if (new_type == 2)
@@ -1971,6 +1976,10 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 									Rsf = Rs;
 									Rgf = Rg;
 								}
+								else {
+									if (debug_mode)
+										cout << "not blocked " << endl;
+								}
 
 								// rectangle = std::shared_ptr<tuple<int, int, int, int, int>>
 								//	(new tuple<int, int, int, int, int>(get<0>(*con), get<1>(*con), -1 - Rg.first * num_col - Rg.second, t1_start, t2_start));						
@@ -1981,18 +1990,21 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 			}
 			if (type >= 0)
 			{
+				auto new_rectangle = std::shared_ptr<Conflict>(new Conflict());
 				if (kDelay > 0) {
 					vector<MDDPath*> a1kMDD;
 					vector<MDDPath*> a2kMDD;
 					for (int i = 1; i <= kDelay; i++) {
 						MDD<Map> a1MDD;
 						MDD<Map> a2MDD;
+						updateConstraintTable(&parent, a1);
 
-						a1MDD.buildMDD(constraintTable, t1_endf - t1_startf + i,
+						a1MDD.buildMDD(constraintTable, t1_endf - t1_startf+1 + i,
 							*(search_engines[a1]), s1f, t1_startf,g1f,
 							paths[a1]->at(t1_startf).actionToHere);
 
-						a2MDD.buildMDD(constraintTable, t1_endf - t2_startf + i,
+						updateConstraintTable(&parent, a2);
+						a2MDD.buildMDD(constraintTable, t2_endf - t2_startf+1 + i,
 							*(search_engines[a2]), s2f, t2_startf,g2f,
 							paths[a2]->at(t2_startf).actionToHere);
 
@@ -2007,6 +2019,11 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 
 						}
 						a1kMDD.push_back(a1MDDPath);
+						if (debug_mode) {
+							cout << "a1 mdd k: " << i << endl;
+							a1MDDPath->print(num_col);
+						}
+						
 
 						MDDPath* a2MDDPath = new MDDPath;
 						for (int i = 0; i < a2MDD.levels.size(); i++) {
@@ -2019,23 +2036,30 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 
 						}
 						a2kMDD.push_back(a2MDDPath);
+						if (debug_mode) {
+							cout << "a2 mdd k: " << i << endl;
+							a2MDDPath->print(num_col);
+						}
+						
 					}
 					//cout << "Create MDD Done" << endl;
-					rectangle->constraint1.clear();
-					rectangle->constraint2.clear();
+					
 
-					rectangle->kRectangleConflict(a1, a2, Rsf, Rgf,
+					new_rectangle->kRectangleConflict(a1, a2, Rsf, Rgf,
 						make_pair(s1f / num_col, s1f % num_col),
 						make_pair(s2f / num_col, s2f % num_col),
 						Rg_tf, paths, t1_startf, t2_startf,
 						make_pair(g1f / num_col, g1f % num_col),
 						make_pair(g2f / num_col, g2f % num_col),
 						num_col, kDelay, &a1kMDD, &a2kMDD);
+					rectangle = new_rectangle;
 				
 				}
 				RMTime += std::clock() - RM_Start;
 
 				parent.conflicts.push_back(rectangle);
+				if (debug_mode)
+					cout << "add rectangle conflict" << *rectangle << endl;
 				continue;
 			}
 			else {

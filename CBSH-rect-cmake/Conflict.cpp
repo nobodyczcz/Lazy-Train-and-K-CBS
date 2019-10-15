@@ -428,9 +428,9 @@ bool addModifiedVerticalLongBarrierConstraint(const std::vector<PathEntry>& path
 			if (kMDD != NULL) {
 				//std::cout << "add constraint on k=" << i << " t=" << t2 << ": ";
 				for (int mdd = 0; mdd < (*kMDD).size(); mdd++) {
-					if ((t2 - St + i) >= (*kMDD)[mdd]->levels.size())
+					if ((t2 - St+1 + i) >= (*kMDD)[mdd]->levels.size())
 						continue;
-					if ((*kMDD)[mdd]->levels[t2 - St + i].count(loc)) {
+					if ((*kMDD)[mdd]->levels[t2 - St+1 + i].count(loc)) {
 						for (int consk = 0; consk <= k - i; consk++) {
 							//if constraint is on k=0, add more time range constraint until t=t+k
 							std::stringstream con;
