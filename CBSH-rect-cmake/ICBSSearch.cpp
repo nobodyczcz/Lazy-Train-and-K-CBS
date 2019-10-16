@@ -1920,8 +1920,6 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 
 							if (new_type > type || (new_type == type && new_area > area) || (new_type == type && new_area == area && new_distance > distance))
 							{
-								if (debug_mode)
-									cout << "find candidate rectangle rm" << endl;
 
 								auto new_rectangle = std::shared_ptr<Conflict>(new Conflict());
 								int Rg_t = con->t + abs(Rg.first - loc1 / num_col) + abs(Rg.second - loc1 % num_col);
@@ -1951,8 +1949,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 
 								if (blocked(*paths[new_rectangle->a1], new_rectangle->constraint1) && blocked(*paths[new_rectangle->a2], new_rectangle->constraint2))
 								{
-									if (debug_mode)
-										cout << "blocked" << endl;
+
 									//cout << "blocked, select this one" << endl;
 									rectangle = new_rectangle;
 									if (new_type == 2)
@@ -1991,57 +1988,57 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 			if (type >= 0)
 			{
 				auto new_rectangle = std::shared_ptr<Conflict>(new Conflict());
-				if (kDelay > 0) {
+				/*if (kDelay > 0) {
 					vector<MDDPath*> a1kMDD;
 					vector<MDDPath*> a2kMDD;
-					for (int i = 1; i <= kDelay; i++) {
+					for (int i = 1; i <= kDelay; i++) {*/
 						MDD<Map> a1MDD;
 						MDD<Map> a2MDD;
 						updateConstraintTable(&parent, a1);
 
-						a1MDD.buildMDD(constraintTable, t1_endf - t1_startf+1 + i,
+						a1MDD.buildMDD(constraintTable, t1_endf - t1_startf+1 + kDelay,
 							*(search_engines[a1]), s1f, t1_startf,g1f,
 							paths[a1]->at(t1_startf).actionToHere);
 
 						updateConstraintTable(&parent, a2);
-						a2MDD.buildMDD(constraintTable, t2_endf - t2_startf+1 + i,
+						a2MDD.buildMDD(constraintTable, t2_endf - t2_startf+1 + kDelay,
 							*(search_engines[a2]), s2f, t2_startf,g2f,
 							paths[a2]->at(t2_startf).actionToHere);
 
-						MDDPath* a1MDDPath = new MDDPath;
+						MDDPath a1MDDPath;
 						for (int i = 0; i < a1MDD.levels.size(); i++) {
 							std::unordered_set<int> level;
 							std::list<MDDNode*>::iterator it;
 							for (it = a1MDD.levels[i].begin(); it != a1MDD.levels[i].end(); ++it) {
 								level.insert((*it)->location);
 							}
-							a1MDDPath->levels.push_back(level);
+							a1MDDPath.levels.push_back(level);
 
 						}
-						a1kMDD.push_back(a1MDDPath);
+						//a1kMDD.push_back(a1MDDPath);
 						if (debug_mode) {
-							cout << "a1 mdd k: " << i << endl;
-							a1MDDPath->print(num_col);
+							cout << "a1 mdd k: "  << endl;
+							a1MDDPath.print(num_col);
 						}
 						
 
-						MDDPath* a2MDDPath = new MDDPath;
+						MDDPath a2MDDPath;
 						for (int i = 0; i < a2MDD.levels.size(); i++) {
 							std::unordered_set<int> level;
 							std::list<MDDNode*>::iterator it;
 							for (it = a2MDD.levels[i].begin(); it != a2MDD.levels[i].end(); ++it) {
 								level.insert((*it)->location);
 							}
-							a2MDDPath->levels.push_back(level);
+							a2MDDPath.levels.push_back(level);
 
 						}
-						a2kMDD.push_back(a2MDDPath);
+						//a2kMDD.push_back(a2MDDPath);
 						if (debug_mode) {
-							cout << "a2 mdd k: " << i << endl;
-							a2MDDPath->print(num_col);
+							cout << "a2 mdd k: " << endl;
+							a2MDDPath.print(num_col);
 						}
 						
-					}
+					
 					//cout << "Create MDD Done" << endl;
 					
 
@@ -2051,10 +2048,10 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 						Rg_tf, paths, t1_startf, t2_startf,
 						make_pair(g1f / num_col, g1f % num_col),
 						make_pair(g2f / num_col, g2f % num_col),
-						num_col, kDelay, &a1kMDD, &a2kMDD);
+						num_col, kDelay, &a1MDDPath, &a2MDDPath);
 					rectangle = new_rectangle;
 				
-				}
+				
 				RMTime += std::clock() - RM_Start;
 
 				parent.conflicts.push_back(rectangle);

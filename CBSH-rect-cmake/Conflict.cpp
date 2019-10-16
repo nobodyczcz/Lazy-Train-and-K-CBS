@@ -375,7 +375,7 @@ bool addModifiedVerticalBarrierConstraint(const std::vector<PathEntry>& path, in
 // add a vertival modified barrier constraint
 bool addModifiedVerticalLongBarrierConstraint(const std::vector<PathEntry>& path, int y,
 	int Ri_x, int Rg_x, int Rg_t, int num_col, int St,
-	std::list<Constraint>& constraints, int k, vector<MDDPath*>* kMDD)
+	std::list<Constraint>& constraints, int k, MDDPath* kMDD)
 {
 
 
@@ -425,27 +425,29 @@ bool addModifiedVerticalLongBarrierConstraint(const std::vector<PathEntry>& path
 			}
 
 
-			if (kMDD != NULL) {
-				//std::cout << "add constraint on k=" << i << " t=" << t2 << ": ";
-				for (int mdd = 0; mdd < (*kMDD).size(); mdd++) {
-					if ((t2 - St+1 + i) >= (*kMDD)[mdd]->levels.size())
-						continue;
-					if ((*kMDD)[mdd]->levels[t2 - St+1 + i].count(loc)) {
-						for (int consk = 0; consk <= k - i; consk++) {
-							//if constraint is on k=0, add more time range constraint until t=t+k
-							std::stringstream con;
-							con << loc << t2 + i + consk;
-							if (!added.count(con.str())) {
-								constraints.emplace_back(loc, -1, t2 + i + consk, constraint_type::VERTEX); // add constraints [t1, t2]
-								//std::cout << "kmdd loc: " << loc / 22 << "," << loc % 22 << " t: " << t2 + i + consk << "|";
-								added.insert(con.str());
-							}
-
-						}
+			//if (kMDD != NULL) {
+			//	//std::cout << "add constraint on k=" << i << " t=" << t2 << ": ";
+			//	for (int mdd = 0; mdd < (*kMDD).size(); mdd++) {
+			//		if ((t2 - St+1 + i) >= (*kMDD)[mdd]->levels.size())
+			//			continue;
+			if (kMDD==NULL||t2 - St + i >= kMDD->levels.size())
+				continue;
+			if ((kMDD)->levels[t2 - St + i].count(loc)) {
+				for (int consk = 0; consk <= k - i; consk++) {
+					//if constraint is on k=0, add more time range constraint until t=t+k
+					std::stringstream con;
+					con << loc << t2 + i + consk;
+					if (!added.count(con.str())) {
+						constraints.emplace_back(loc, -1, t2 + i + consk, constraint_type::VERTEX); // add constraints [t1, t2]
+						//std::cout << "kmdd loc: " << loc / 22 << "," << loc % 22 << " t: " << t2 + i + consk << "|";
+						added.insert(con.str());
 					}
 
 				}
 			}
+
+			//	}
+			//}
 			//std::cout << std::endl;
 		}
 
@@ -463,7 +465,7 @@ bool addModifiedVerticalLongBarrierConstraint(const std::vector<PathEntry>& path
 // add a horizontal modified barrier constraint
 bool addModifiedHorizontalLongBarrierConstraint(const std::vector<PathEntry>& path, int x,
 	int Ri_y, int Rg_y, int Rg_t, int num_col, int St,
-	std::list<Constraint>& constraints, int k, vector<MDDPath*>* kMDD)
+	std::list<Constraint>& constraints, int k, MDDPath* kMDD)
 {
 	/*for (int t = 0; t < path.size(); t++) {
 		std::cout << "(" << path.at(t).location / num_col << "," << path.at(t).location % num_col << ")";
@@ -517,37 +519,36 @@ bool addModifiedHorizontalLongBarrierConstraint(const std::vector<PathEntry>& pa
 							added.insert(con.str());
 						}
 					}
-
-
-
 				}
-				//std::cout << std::endl;
+			//	//std::cout << std::endl;
 			}
 
 
-			if (kMDD != NULL){
-				//std::cout << "add constraint on k=" << i << " t=" << t2 << ": ";
-				for (int mdd = 0; mdd < (*kMDD).size(); mdd++) {
-					if ((t2 - St + i) >= (*kMDD)[mdd]->levels.size())
-						continue;
-					if ((*kMDD)[mdd]->levels[t2 - St + i].count(loc)) {
-						for (int consk = 0; consk <= k - i; consk++) {
-							//if constraint is on k=0, add more time range constraint until t=t+k
-							std::stringstream con;
-							con << loc << t2 + i + consk;
-							if (!added.count(con.str())) {
-								constraints.emplace_back(loc, -1, t2 + i + consk, constraint_type::VERTEX); // add constraints [t1, t2]
-								//std::cout << "kmdd loc: " << loc / 22 << "," << loc % 22 << " t: " << t2 + i + consk << "|";
-								added.insert(con.str());
-							}
-
-						}
+			//if (kMDD != NULL){
+			//	//std::cout << "add constraint on k=" << i << " t=" << t2 << ": ";
+			//	for (int mdd = 0; mdd < (*kMDD).size(); mdd++) {
+			//		if ((t2 - St + i) >= (*kMDD)[mdd]->levels.size())
+			//			continue;
+			if (kMDD == NULL||t2 - St + i >= kMDD->levels.size())
+				continue;
+			if (kMDD->levels[t2 - St + i].count(loc)) {
+				for (int consk = 0; consk <= k - i; consk++) {
+					//if constraint is on k=0, add more time range constraint until t=t+k
+					std::stringstream con;
+					con << loc << t2 + i + consk;
+					if (!added.count(con.str())) {
+						constraints.emplace_back(loc, -1, t2 + i + consk, constraint_type::VERTEX); // add constraints [t1, t2]
+						//std::cout << "kmdd loc: " << loc / 22 << "," << loc % 22 << " t: " << t2 + i + consk << "|";
+						added.insert(con.str());
 					}
 
-
 				}
-
 			}
+
+
+			//	}
+
+			//}
 			
 			//std::cout << std::endl;
 		}

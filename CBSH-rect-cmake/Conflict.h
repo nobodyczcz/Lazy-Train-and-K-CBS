@@ -48,12 +48,12 @@ void addKDelayBarrierConstraints(int S1, int S2, int S1_t, int S2_t, int Rg, int
 // add a vertival modified barrier constraint
 bool addModifiedVerticalLongBarrierConstraint(const std::vector<PathEntry>& path, int y,
 	int Ri_x, int Rg_x, int Rg_t, int num_col, int St,
-	std::list<Constraint>& constraints, int k, std::vector<MDDPath*>* kMDD);
+	std::list<Constraint>& constraints, int k, MDDPath* kMDD);
 
 // add a horizontal modified barrier constraint
 bool addModifiedHorizontalLongBarrierConstraint(const std::vector<PathEntry>& path, int x,
 	int Ri_y, int Rg_y, int Rg_t, int num_col, int St,
-	std::list<Constraint>& constraints, int k, std::vector<MDDPath*>* kMDD);
+	std::list<Constraint>& constraints, int k, MDDPath* kMDD);
 
 
 
@@ -267,7 +267,7 @@ public:
 	bool kRectangleConflict(int a1, int a2, const std::pair<int, int>& Rs, const std::pair<int, int>& Rg,
 		const std::pair<int, int>& s1, const std::pair<int, int>& s2, int Rg_t,
 		const std::vector<Path*>& paths, int S1_t,int S2_t, const std::pair<int, int>& G1, const std::pair<int, int>& G2,
-		int num_col, int k, std::vector<MDDPath*>* a1kMDD=NULL, std::vector<MDDPath*>* a2kMDD=NULL ) // For K-RM
+		int num_col, int k, MDDPath* a1kMDD=NULL, MDDPath* a2kMDD=NULL ) // For K-RM
 	{
 		this->a1 = a1;
 		this->a2 = a2;
