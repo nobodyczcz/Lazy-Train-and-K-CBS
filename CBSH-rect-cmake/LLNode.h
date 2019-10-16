@@ -50,15 +50,15 @@ public:
 					if (n1->g_val == n2->g_val)
 					{
 
-					if (n1->h_val == n2->h_val) {
+					/*if (n1->h_val == n2->h_val) {*/
 					
 
 							return n1->timestep <= n2->timestep;  // break ties towards *more* depth - more work was done, even if it didn't reduce the number of conflicts or increase the cost yet
 
 					
 
-					}
-					return n1->h_val >= n2->h_val;
+				/*	}
+					return n1->h_val >= n2->h_val;*/
 					}
 					return n1->g_val < n2->g_val;// break ties towards *larger* g_val 
 				}

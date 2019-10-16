@@ -49,6 +49,35 @@ bool isRectangleConflict(int s1, int s2, int g1, int g2, int num_col)
 		return true;
 }
 
+//Identify special k rectangle conflicts for RM
+bool iskRectangleConflict(int s1, int s2, int g1, int g2, int num_col)
+{
+	if (s1 == s2) // A standard cardinal conflict
+		return false;
+	else if (s1 == g1 || s2 == g2) // s1 = g1 or  s2 = g2
+		return false;
+	int s1_x = s1 / num_col, s1_y = s1 % num_col;
+	int s2_x = s2 / num_col, s2_y = s2 % num_col;
+	int g1_x = g1 / num_col, g1_y = g1 % num_col;
+	int g2_x = g2 / num_col, g2_y = g2 % num_col;
+	//cout << "(" << s1_x << "," << s1_y << ")" << "(" << g1_x << "," << g1_y << ")" << endl;
+	//cout << "(" << s2_x << "," << s2_y << ")" << "(" << g2_x << "," << g2_y << ")" << endl;
+
+	if ((s2_x - s1_x) * (s1_x - g1_x) < 0 && (s2_y - s1_y) * (s1_y - g1_y) < 0) { // s1 always in the middle
+
+		return false;
+	}
+	else if ((s1_x - s2_x) * (s2_x - g2_x) < 0 && (s1_y - s2_y) * (s2_y - g2_y) < 0) { // s2 always in the middle
+		return false;
+	}
+	else if ((s1_x == g1_x && s2_y == g2_y) || (s1_y == g1_y && s2_x == g2_x)) { // area = 1
+
+		return false;
+	}
+	else
+		return true;
+}
+
 //Classify rectangle conflicts for CR/R
 // Return 2 if it is a cardinal rectangle conflict
 // Return 1 if it is a semi-cardinal rectangle conflict
