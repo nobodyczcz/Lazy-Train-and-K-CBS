@@ -99,7 +99,7 @@ void ComputeHeuristic<Map>::getHVals(vector<hvals>& res,int limit)
 			it = nodes.find(next);
 			if (it == nodes.end())
 			{  // add the newly generated node to heap and hash table
-				if (next_g_val >= limit) {
+				if (next_g_val > limit) {
 					delete(next);
 					continue;
 				}

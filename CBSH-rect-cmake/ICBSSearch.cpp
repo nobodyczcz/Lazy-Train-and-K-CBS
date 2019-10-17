@@ -267,12 +267,12 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 						}
 						std::shared_ptr<Conflict> newConf(new Conflict());
 
-						if (targetReasoning && (get<3>(*con) < 0) && (get<4>(*con) > paths[get<0>(*con)]->size() - 1)) {
-							newConf->targetConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<4>(*con), kDelay);
+						if (targetReasoning && (get<3>(*con) < 0) && (get<4>(*con) >= paths[get<0>(*con)]->size() - 1)) {
+							newConf->targetConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<4>(*con)+ get<5>(*con), kDelay);
 						}
-						else if (targetReasoning && (get<3>(*con) < 0) && (get<4>(*con) > paths[get<1>(*con)]->size() - 1)) {
-							newConf->targetConflict(get<1>(*con), get<0>(*con), get<2>(*con), get<4>(*con), kDelay);
-						}
+						//else if (targetReasoning && (get<3>(*con) < 0) && (get<4>(*con) >= paths[get<1>(*con)]->size() - 1)) {
+						//	newConf->targetConflict(get<1>(*con), get<0>(*con), get<2>(*con), get<4>(*con)+ get<5>(*con), kDelay);
+						//}
 						else if (get<3>(*con) < 0) {
 							newConf->vertexConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<4>(*con), get<5>(*con), kDelay);
 						}
@@ -294,14 +294,14 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 					delete paths[curr.agent_id]->at(t).conflist;
 				}
 			}
-			/*for (int a2 = a1 + 1; a2 < num_of_agents; a2++)
-			{
+			for (int a2 = 0; a2 < num_of_agents; a2++)
+			{//low level search can't find target conflict if a1<a2
 				if (a1 == a2)
 					continue;
 
 				findTargetConflicts(a1, a2, curr);
 
-			}*/
+			}
 		}
 	}
 	else
@@ -338,9 +338,9 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 					if (targetReasoning && (get<3>(*con) < 0) && (get<4>(*con) > paths[get<0>(*con)]->size() - 1)) {
 						newConf->targetConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<4>(*con), kDelay);
 					}
-					else if (targetReasoning && (get<3>(*con) < 0) && (get<4>(*con) > paths[get<1>(*con)]->size() - 1)) {
-						newConf->targetConflict(get<1>(*con), get<0>(*con), get<2>(*con), get<4>(*con), kDelay);
-					}
+					//else if (targetReasoning && (get<3>(*con) < 0) && (get<4>(*con) > paths[get<1>(*con)]->size() - 1)) {
+					//	newConf->targetConflict(get<1>(*con), get<0>(*con), get<2>(*con), get<4>(*con), kDelay);
+					//}
 					else if (get<3>(*con) < 0) {
 						newConf->vertexConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<4>(*con), get<5>(*con),kDelay);
 					}
@@ -364,14 +364,14 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 				delete paths[a1]->at(t).conflist;
 			}
 
-			/*for (int a2 = a1 + 1; a2 < num_of_agents; a2++)
-			{
+			for (int a2 = 0; a2 < num_of_agents; a2++)
+			{//low level search can't find target conflict if a1<a2
 				if (a1 == a2)
 					continue;
 
 				findTargetConflicts(a1, a2, curr);
 				
-			}*/
+			}
 		}
 	}
 	if (debug_mode)
@@ -384,12 +384,12 @@ void ICBSSearch::findTargetConflicts(int a1, int a2, ICBSNode& curr) {
 
 
 
-	if (paths[a1]->size() != paths[a2]->size())
+	if (paths[a1]->size() < paths[a2]->size())
 	{
 		//short one a1_ longer one a2_
 		//current short after goal code should work good for k robust
-		int a1_ = paths[a1]->size() < paths[a2]->size() ? a1 : a2;
-		int a2_ = paths[a1]->size() < paths[a2]->size() ? a2 : a1;
+		int a1_ = a1;
+		int a2_ = a2;
 		int loc1 = paths[a1_]->back().location;// short one's goal location
 		for (size_t timestep = min_path_length; timestep < paths[a2_]->size(); timestep++)
 		{
@@ -407,7 +407,7 @@ void ICBSSearch::findTargetConflicts(int a1, int a2, ICBSNode& curr) {
 					}
 					else
 					{
-						conflict->vertexConflict(a1_, a2_, loc1, timestep,kDelay,kDelay);
+						conflict->vertexConflict(a1_, a2_, loc1, timestep,0,kDelay);
 					}
 					if (debug_mode)
 						cout << "<" << a1_ << "," << a2_ << ","
@@ -1018,12 +1018,12 @@ void ICBSSearch::printStrategy() const
 template<class Map>
 bool MultiMapICBSSearch<Map>::runICBSSearch() 
 {
+	start = std::clock();
+	std::clock_t t1;
 	printStrategy();
 	initializeDummyStart();
 	// set timer
-	printPaths();
-	start = std::clock();
-	std::clock_t t1;
+	
 	runtime_computeh = 0;
 	runtime_lowlevel = 0;
 	runtime_listoperation = 0;
@@ -1141,12 +1141,13 @@ bool MultiMapICBSSearch<Map>::runICBSSearch()
 			if(debug_mode)
 			cout << "check conflict repeatance" << endl;
 			stringstream con;
-			con << curr->conflict->a1 <<","<< curr->conflict->a2 <<",("
-				<< curr->conflict->originalConf1 / num_col << ","
-				<< curr->conflict->originalConf1 % num_col << ")" << ",("
-				<< curr->conflict->originalConf2 / num_col << ","
-				<< curr->conflict->originalConf2 % num_col << "),"
-				<< curr->conflict->t<<"," << curr->conflict->k ;
+			con << *(curr->conflict);
+			//con << curr->conflict->a1 <<","<< curr->conflict->a2 <<",("
+			//	<< curr->conflict->originalConf1 / num_col << ","
+			//	<< curr->conflict->originalConf1 % num_col << ")" << ",("
+			//	<< curr->conflict->originalConf2 / num_col << ","
+			//	<< curr->conflict->originalConf2 % num_col << "),"
+			//	<< curr->conflict->t<<"," << curr->conflict->k ;
 			//*(curr->conflict);
 
 			curr->resolvedConflicts.insert(con.str());
@@ -1981,11 +1982,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 									Rsf = Rs;
 									Rgf = Rg;
 								}
-								else {
-									if (debug_mode)
-										cout << "not blocked " << endl;
-								}
-
+								
 								// rectangle = std::shared_ptr<tuple<int, int, int, int, int>>
 								//	(new tuple<int, int, int, int, int>(get<0>(*con), get<1>(*con), -1 - Rg.first * num_col - Rg.second, t1_start, t2_start));						
 							}
