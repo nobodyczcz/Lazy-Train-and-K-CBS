@@ -274,7 +274,10 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 						//	newConf->targetConflict(get<1>(*con), get<0>(*con), get<2>(*con), get<4>(*con)+ get<5>(*con), kDelay);
 						//}
 						else if (get<3>(*con) < 0) {
-							newConf->vertexConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<4>(*con), get<5>(*con), kDelay);
+							if(get<4>(*con) >= paths[get<0>(*con)]->size() - 1)
+								newConf->vertexConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<4>(*con) + get<5>(*con),0, kDelay);
+							else
+								newConf->vertexConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<4>(*con), get<5>(*con), kDelay);
 						}
 						else {
 							newConf->edgeConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<3>(*con), get<4>(*con));
@@ -342,7 +345,10 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 					//	newConf->targetConflict(get<1>(*con), get<0>(*con), get<2>(*con), get<4>(*con), kDelay);
 					//}
 					else if (get<3>(*con) < 0) {
-						newConf->vertexConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<4>(*con), get<5>(*con),kDelay);
+						if (get<4>(*con) >= paths[get<0>(*con)]->size() - 1)
+							newConf->vertexConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<4>(*con) + get<5>(*con), 0, kDelay);
+						else
+							newConf->vertexConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<4>(*con), get<5>(*con), kDelay);
 					}
 					else {
 						newConf->edgeConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<3>(*con), get<4>(*con));
@@ -2055,6 +2061,13 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 						make_pair(g2f / num_col, g2f % num_col),
 						num_col, kDelay, &a1MDDPath, &a2MDDPath);
 					rectangle = new_rectangle;
+
+					if (type == 2)
+						rectangle->p = conflict_priority::CARDINAL;
+					else if (type == 1) // && !findRectangleConflict(parent.parent, *conflict))
+						rectangle->p = conflict_priority::SEMI;
+					else //if (type == 0 && !findRectangleConflict(parent.parent, *conflict))
+						rectangle->p = conflict_priority::NON;
 				
 				
 				RMTime += std::clock() - RM_Start;
