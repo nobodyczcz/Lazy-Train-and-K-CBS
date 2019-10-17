@@ -908,7 +908,7 @@ void ICBSSearch::printPaths() const
 		std::cout << "Agent " << i << " (" << paths_found_initially[i].size() - 1 << " -->" <<
 			paths[i]->size() - 1 << "): ";
 		for (int t = 0; t < paths[i]->size(); t++)
-			std::cout << "(" << paths[i]->at(t).location / num_col << "," << paths[i]->at(t).location % num_col << ")->";
+			std::cout << t <<"(" << paths[i]->at(t).location / num_col << "," << paths[i]->at(t).location % num_col << ")->";
 		std::cout << std::endl;
 	}
 }
@@ -1021,6 +1021,7 @@ bool MultiMapICBSSearch<Map>::runICBSSearch()
 	printStrategy();
 	initializeDummyStart();
 	// set timer
+	printPaths();
 	start = std::clock();
 	std::clock_t t1;
 	runtime_computeh = 0;
@@ -1132,6 +1133,7 @@ bool MultiMapICBSSearch<Map>::runICBSSearch()
 				<< curr->conflict->originalConf2 / num_col << ","
 				<< curr->conflict->originalConf2 % num_col << ")"
 				<< curr->conflict->t << "," << curr->conflict->k << "," << curr->conflict->type << ">" << std::endl;
+			printPaths();
 
 		}
 

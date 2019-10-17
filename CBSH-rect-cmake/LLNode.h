@@ -46,10 +46,9 @@ public:
 		bool operator()(const LLNode* n1, const LLNode* n2) const // returns true if n1 > n2
 		{
 			
-				if (n1->num_internal_conf == n2->num_internal_conf) {
-					if (n1->g_val == n2->g_val)
-					{
-
+			if (n1->num_internal_conf == n2->num_internal_conf) {
+				if (n1->g_val == n2->g_val)
+				{
 					if (n1->h_val == n2->h_val) {
 					
 
@@ -59,10 +58,10 @@ public:
 
 					}
 					return n1->h_val >= n2->h_val;
-					}
-					return n1->g_val < n2->g_val;// break ties towards *larger* g_val 
 				}
-				return n1->num_internal_conf > n2->num_internal_conf;  // break ties towards fewer conflicts
+				return n1->g_val < n2->g_val;// break ties towards *larger* g_val 
+			}
+			return n1->num_internal_conf > n2->num_internal_conf;  // break ties towards fewer conflicts
 			
 
 		
