@@ -88,11 +88,10 @@ OldConfList* ReservationTable::findConflict(int agent, int currLoc, int nextLoc,
 			goalAgentList::iterator it;
 			for (it = goalTable[nextLoc].begin(); it != goalTable[nextLoc].end(); ++it) {
 
-				int t = nextT;
-				if (t > it->second) {
+				if (nextT > it->second) {
 					confs->push_back(std::shared_ptr<tuple<int, int, int, int, int, int>>(
 						new tuple<int, int, int, int, int, int>(
-							it->first, agent, nextLoc, -1, t, 0)));
+							it->first, agent, nextLoc, -1, nextT, 0)));
 
 				}
 			}

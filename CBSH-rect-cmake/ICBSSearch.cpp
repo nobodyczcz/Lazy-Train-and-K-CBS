@@ -267,10 +267,10 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 						}
 						std::shared_ptr<Conflict> newConf(new Conflict());
 
-						if (targetReasoning && (get<3>(*con) < 0) && (get<4>(*con) >= paths[get<0>(*con)]->size() - 1)) {
+						if (targetReasoning && (get<3>(*con) < 0) && (get<4>(*con) > paths[get<0>(*con)]->size() - 1)) {
 							newConf->targetConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<4>(*con), kDelay);
 						}
-						else if (targetReasoning && (get<3>(*con) < 0) && (get<4>(*con) >= paths[get<1>(*con)]->size() - 1)) {
+						else if (targetReasoning && (get<3>(*con) < 0) && (get<4>(*con) > paths[get<1>(*con)]->size() - 1)) {
 							newConf->targetConflict(get<1>(*con), get<0>(*con), get<2>(*con), get<4>(*con), kDelay);
 						}
 						else if (get<3>(*con) < 0) {
@@ -294,14 +294,14 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 					delete paths[curr.agent_id]->at(t).conflist;
 				}
 			}
-			for (int a2 = a1 + 1; a2 < num_of_agents; a2++)
+			/*for (int a2 = a1 + 1; a2 < num_of_agents; a2++)
 			{
 				if (a1 == a2)
 					continue;
 
 				findTargetConflicts(a1, a2, curr);
 
-			}
+			}*/
 		}
 	}
 	else
@@ -335,10 +335,10 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 
 					std::shared_ptr<Conflict> newConf(new Conflict());
 					
-					if (targetReasoning && (get<3>(*con) < 0) && (get<4>(*con) >= paths[get<0>(*con)]->size() - 1)) {
+					if (targetReasoning && (get<3>(*con) < 0) && (get<4>(*con) > paths[get<0>(*con)]->size() - 1)) {
 						newConf->targetConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<4>(*con), kDelay);
 					}
-					else if (targetReasoning && (get<3>(*con) < 0) && (get<4>(*con) >= paths[get<1>(*con)]->size() - 1)) {
+					else if (targetReasoning && (get<3>(*con) < 0) && (get<4>(*con) > paths[get<1>(*con)]->size() - 1)) {
 						newConf->targetConflict(get<1>(*con), get<0>(*con), get<2>(*con), get<4>(*con), kDelay);
 					}
 					else if (get<3>(*con) < 0) {
@@ -364,14 +364,14 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 				delete paths[a1]->at(t).conflist;
 			}
 
-			for (int a2 = a1 + 1; a2 < num_of_agents; a2++)
+			/*for (int a2 = a1 + 1; a2 < num_of_agents; a2++)
 			{
 				if (a1 == a2)
 					continue;
 
 				findTargetConflicts(a1, a2, curr);
 				
-			}
+			}*/
 		}
 	}
 	if (debug_mode)
@@ -1135,7 +1135,8 @@ bool MultiMapICBSSearch<Map>::runICBSSearch()
 
 		}
 
-		if (debug_mode) {
+		if (screen >= 1) {
+			if(debug_mode)
 			cout << "check conflict repeatance" << endl;
 			stringstream con;
 			con << curr->conflict->a1 <<","<< curr->conflict->a2 <<",("
@@ -1152,8 +1153,10 @@ bool MultiMapICBSSearch<Map>::runICBSSearch()
 			bool noRepeat = true;
 			ICBSNode* parent = curr->parent;
 			if (parent != NULL) {
+				if (debug_mode)
 				cout << "Try find " << con.str() << " in curr's parent nodes" << endl;
 				while (!stop) {
+					if (debug_mode)
 					cout << "1";
 					if (parent->parent == NULL) {
 						stop = true;
@@ -1170,13 +1173,16 @@ bool MultiMapICBSSearch<Map>::runICBSSearch()
 				}
 			}
 			else {
+				if (debug_mode)
 				cout << "no parent" << endl;
 
 			}
 			if (noRepeat) {
+				if (debug_mode)
 				cout << "no repeatance" << endl;
 			}
 			else {
+				if (debug_mode)
 				cout << "repeatance detected" << endl;
 			}
 
@@ -1673,7 +1679,7 @@ void MultiMapICBSSearch<Map>::updateConstraintTable(ICBSNode* curr, int agent_id
 
 					}
 					else if (x >= 0 && y == agent_id)
-					{ // <loc, agent_id, t>: path of agent_id should be of length at most t
+					{ // <loc, agent_id, t>: path of agent_id should be of length at most t !!not possible as y==agent will jump findpath
 						constraintTable.length_max = min(constraintTable.length_max, z);
 
 					}
