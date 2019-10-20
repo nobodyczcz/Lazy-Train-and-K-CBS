@@ -255,8 +255,9 @@ bool MDD<Map>::buildMDD(ConstraintTable& constraints,
 	open.push(root);
 	closed.push_back(root);
 	levels.resize(numOfLevels);
-	//cout << "start: " << solver.start_heading << endl;
-	//cout << "goal: " << solver.goal_location << endl;
+	//cout << "start: "<< start<<" heading: " << solver.start_heading << endl;
+	//cout << "goal: " << goal << endl;
+	//cout << "numOfLevels: " << numOfLevels << endl;
 
 	while (!open.empty())
 	{
@@ -268,13 +269,12 @@ bool MDD<Map>::buildMDD(ConstraintTable& constraints,
 			levels[numOfLevels - 1].push_back(node);
 			if (!open.empty())
 			{
-				//while (!open.empty())
-				//{
-				//	MDDNode* node = open.front();
-				//	open.pop();
-				//	cout << "loc: " << node->location << " heading: " << node->heading<<" h "<< solver.my_heuristic[node->location].heading[node->heading] <<" "<< solver.my_heuristic[node->location].heading.count(node->heading)<< endl;
-				//	
-				//}
+				while (!open.empty())
+				{
+					MDDNode* node = open.front();
+					open.pop();
+					//cout << "loc: " << node->location <<" goal: "<< goal << " heading: " << node->heading<<" level: "<<node->level<<" h "<< getMahattanDistance(node->location, goal, solver.num_col) <<" "<< solver.my_heuristic[node->location].heading.count(node->heading)<< endl;
+				}
 
 				std::cerr << "Failed to build MDD!" << std::endl;
 				exit(1);
@@ -297,7 +297,6 @@ bool MDD<Map>::buildMDD(ConstraintTable& constraints,
 				else
 					new_heading = move.second;
 			int newLoc = move.first;
-			//cout << "newLoc " << newLoc << " heading " << new_heading<<" h "<< solver.my_heuristic[newLoc].heading[new_heading] << endl;
 			int next_h_val = getMahattanDistance(newLoc, goal, solver.num_col);
 			if (next_h_val < heuristicBound &&
 				!constraints.is_constrained(newLoc, start_time+node->level + 1) &&
@@ -313,7 +312,7 @@ bool MDD<Map>::buildMDD(ConstraintTable& constraints,
 							find = true;
 							break;
 						}
-						else if ((*child)->location == solver.goal_location) { //if goal location ignore heading
+						else if ((*child)->location == goal) { //if goal location ignore heading
 							(*child)->parents.push_back(node); // then add corresponding parent link and child link
 							find = true;
 							break;

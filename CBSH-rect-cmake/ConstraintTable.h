@@ -18,7 +18,7 @@ public:
 	};
 
 private:
-	//unordered_map<size_t, std::unordered_set<int> > CT;
+	unordered_map<size_t, std::unordered_set<int> > CT_Single;
 	unordered_map<size_t, list<pair<int, int> > > CT;
 
 	

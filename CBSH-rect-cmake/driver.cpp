@@ -148,6 +148,8 @@ int main(int argc, char** argv)
 		icbs.targetReasoning = vm["target"].as<bool>();
 
 	}
+	if (icbs.corridor2)
+		cout << "corridor2" << endl;
 	bool res;
 	res = icbs.runICBSSearch();
 	ofstream stats;

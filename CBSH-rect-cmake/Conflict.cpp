@@ -399,7 +399,7 @@ bool addModifiedVerticalLongBarrierConstraint(const std::vector<PathEntry>& path
 	for (int t2 = Ri_t; t2 <= Rg_t; t2++)
 	{
 		int loc = (Ri_x + (t2 - Ri_t) * sign) * num_col + y;
-		//std::cout << "target loc: " << loc / 22 << "," << loc % 22 << std::endl;
+		//std::cout << "target loc: " << loc / num_col << "," << loc % num_col << std::endl;
 		for (int i = 0; i <= k; i++) {
 			//std::cout << "add constraint on k= " << i << " t=" << t2 << ": ";
 			if ((t2 + i < path.size())) {
@@ -413,7 +413,7 @@ bool addModifiedVerticalLongBarrierConstraint(const std::vector<PathEntry>& path
 						if (!added.count(con.str())) {
 
 							constraints.emplace_back(loc, -1, t2 + i + consk, constraint_type::VERTEX); // add constraints [t1, t2]
-							//std::cout << "self mdd loc: " << loc / 22 << "," << loc % 22 << " t: " << t2 << "|";
+							//std::cout << "self mdd loc: " << loc / num_col << "," << loc % num_col << " t: " << t2 << "|";
 							added.insert(con.str());
 						}
 					}
@@ -424,12 +424,6 @@ bool addModifiedVerticalLongBarrierConstraint(const std::vector<PathEntry>& path
 				//std::cout << std::endl;
 			}
 
-
-			//if (kMDD != NULL) {
-			//	//std::cout << "add constraint on k=" << i << " t=" << t2 << ": ";
-			//	for (int mdd = 0; mdd < (*kMDD).size(); mdd++) {
-			//		if ((t2 - St+1 + i) >= (*kMDD)[mdd]->levels.size())
-			//			continue;
 			if (kMDD==NULL||t2 - St + i >= kMDD->levels.size())
 				continue;
 			if ((kMDD)->levels[t2 - St + i].count(loc)) {
@@ -439,7 +433,7 @@ bool addModifiedVerticalLongBarrierConstraint(const std::vector<PathEntry>& path
 					con << loc << t2 + i + consk;
 					if (!added.count(con.str())) {
 						constraints.emplace_back(loc, -1, t2 + i + consk, constraint_type::VERTEX); // add constraints [t1, t2]
-						//std::cout << "kmdd loc: " << loc / 22 << "," << loc % 22 << " t: " << t2 + i + consk << "|";
+						//std::cout << "kmdd loc: " << loc / num_col << "," << loc % num_col << " t: " << t2 + i + consk << "|";
 						added.insert(con.str());
 					}
 
@@ -499,7 +493,7 @@ bool addModifiedHorizontalLongBarrierConstraint(const std::vector<PathEntry>& pa
 	for (int t2 = Ri_t; t2 <= Rg_t; t2++)
 	{
 		int loc = (Ri_y + (t2 - Ri_t) * sign) + x * num_col;
-		//std::cout << "target loc: " << loc / 22 << "," << loc % 22 << std::endl;
+		//std::cout << "target loc: " << loc / num_col << "," << loc % num_col << std::endl;
 		for (int i = 0; i <= k; i++) {
 			//std::cout << "add constraint on k= "<<i << " t=" << t2 << ": ";
 			if ((t2 + i < path.size())) {
@@ -515,7 +509,7 @@ bool addModifiedHorizontalLongBarrierConstraint(const std::vector<PathEntry>& pa
 						if (!added.count(con.str())) {
 
 							constraints.emplace_back(loc, -1, t2 + i + consk, constraint_type::VERTEX); // add constraints [t1, t2]
-							//std::cout << "self mdd loc: " << loc / 22 << "," << loc % 22 << " t: " << t2 << "|";
+							//std::cout << "self mdd loc: " << loc / num_col << "," << loc % num_col << " t: " << t2 << "|";
 							added.insert(con.str());
 						}
 					}
@@ -538,7 +532,7 @@ bool addModifiedHorizontalLongBarrierConstraint(const std::vector<PathEntry>& pa
 					con << loc << t2 + i + consk;
 					if (!added.count(con.str())) {
 						constraints.emplace_back(loc, -1, t2 + i + consk, constraint_type::VERTEX); // add constraints [t1, t2]
-						//std::cout << "kmdd loc: " << loc / 22 << "," << loc % 22 << " t: " << t2 + i + consk << "|";
+						//std::cout << "kmdd loc: " << loc / num_col << "," << loc % num_col << " t: " << t2 + i + consk << "|";
 						added.insert(con.str());
 					}
 

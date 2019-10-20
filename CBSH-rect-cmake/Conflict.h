@@ -306,6 +306,9 @@ public:
 
 			G1_t = Rg_t + abs(G1_y - Rg_y);
 			G2_t = Rg_t + abs(G2_x - Rg_x);
+			//cout << "s1t" << S1_t << "G1_t" << G1_t << "G1_y " << G1_y << endl;
+			//cout << "s2t" << S2_t << "G2_t" << G2_t << "G2_x " << G2_x << endl;
+
 			
 			if (!addModifiedHorizontalLongBarrierConstraint(*paths[a1], Rg_x, R1_y, G1_y, G1_t, num_col, S1_t, constraint1, k, a1kMDD))
 				return false;
@@ -329,6 +332,8 @@ public:
 
 			G1_t = Rg_t + abs(G1_x - Rg_x);
 			G2_t = Rg_t + abs(G2_y - Rg_y);
+			//cout << "s1t" << S1_t << "G1_t" << G1_t << "G1_y " << G1_y << endl;
+			//cout << "s2t" << S2_t << "G2_t" << G2_t << "G2_x " << G2_x << endl;
 			
 			if(!addModifiedVerticalLongBarrierConstraint(*paths[a1], Rg_y, R1_x, G1_x, G1_t, num_col, S1_t, constraint1, k, a1kMDD))
 				return false;

@@ -1,7 +1,14 @@
 #include "ConstraintTable.h"
 void ConstraintTable::insert(int loc, int t_min, int t_max)
 {
-	CT[loc].emplace_back(t_min, t_max);
+	if (t_max == 0) {
+		CT_Single[loc].emplace(t_min);
+		t_max = t_min + 1;
+	}
+	else {
+		CT[loc].emplace_back(t_min, t_max);
+	}
+	
 	if (loc == goal_location && t_max > length_min)
 	{
 		length_min = t_max;
@@ -14,6 +21,11 @@ void ConstraintTable::insert(int loc, int t_min, int t_max)
 
 bool ConstraintTable::is_constrained(int loc, int t)
 {
+	if (CT_Single.count(loc)) {
+		if (CT_Single[loc].count(t)) {
+			return true;
+		}
+	}
 	auto it = CT.find(loc);
 	if (it == CT.end())
 	{
