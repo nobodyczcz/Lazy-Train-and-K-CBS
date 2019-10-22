@@ -140,7 +140,7 @@ else()
 	set(Boost_USE_STATIC_LIBS OFF) 
 	set(Boost_USE_MULTITHREADED ON)  
 	set(Boost_USE_STATIC_RUNTIME OFF) 
-	FIND_PACKAGE(Boost REQUIRED COMPONENTS system program_options ${boostPython})
+	FIND_PACKAGE(Boost REQUIRED COMPONENTS system program_options)
 
 	# Detect and add SFML
 	# list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
@@ -154,7 +154,7 @@ else()
 
 	if(Boost_FOUND)
 		include_directories(${Boost_INCLUDE_DIRS})
-		target_link_libraries(CBS-K ${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
+		target_link_libraries(CBS-K ${Boost_LIBRARIES})
 	else()
 		 message(FATAL_ERROR "Could not find boost.")
 	endif()
