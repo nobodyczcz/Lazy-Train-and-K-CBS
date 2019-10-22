@@ -2021,7 +2021,6 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 					}
 				}
 			}
-			RMTime += std::clock() - RM_Start;
 
 			if (type >= 0)
 			{
@@ -2104,10 +2103,14 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 				parent.conflicts.push_back(rectangle);
 				if (debug_mode)
 					cout << "add " << *rectangle << endl;
+
+				RMTime += std::clock() - RM_Start;
+
 				continue;
+
 			}
 			else {
-				//RMTime += std::clock() - RM_Start;
+				RMTime += std::clock() - RM_Start;
 			}
 		}
 		else if (cons_strategy == constraint_strategy::CBSH_GR) // generalized rectangles 
