@@ -132,6 +132,11 @@ else()
 	endif ()
 	include_directories(SYSTEM ${SPARSEHASH_INCLUDE_DIRS})
 
+	find_package(PythonInterp 3.6 REQUIRED)
+
+	# This goes after, since it uses PythonInterp as hint
+	find_package(PythonLibs 3.6 REQUIRED)
+	include_directories(${PYTHON_INCLUDE_DIRS})
 
 	set(Boost_USE_STATIC_LIBS OFF) 
 	set(Boost_USE_MULTITHREADED ON)  
