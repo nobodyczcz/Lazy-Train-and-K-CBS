@@ -126,7 +126,7 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 	lower_bound = std::max(lowerbound, f_weight * min_f_val);
 
 	int time_generated = 0;
-	std:clock_t runtime;
+	//std:clock_t runtime;
 	//for (int h = 0; h < my_heuristic.size();h++) {
 	//	//for (int heading = 0; heading<5;heading++)
 	//		std::cout << "(" << h << ": heading:"<<-1 <<": "<< my_heuristic[h].heading[-1] << ")";
