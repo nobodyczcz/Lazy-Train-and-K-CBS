@@ -28,6 +28,7 @@ public:
 	bool in_focallist = false;
 	OldConfList* conflist=NULL;
 
+
 	// the following is used to comapre nodes in the OPEN list
 	struct compare_node 
 	{
@@ -143,6 +144,7 @@ public:
 	{
 		bool operator()(const LLNode* s1, const LLNode* s2) const 
 		{
+
 			return (s1 == s2) || (s1 && s2 &&
 				s1->loc == s2->loc &&
 				s1->timestep == s2->timestep && s1->heading == s2->heading);

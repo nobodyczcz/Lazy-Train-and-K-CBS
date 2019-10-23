@@ -211,14 +211,13 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 			int next_id = move.first;
 			time_generated += 1;
 			int next_timestep = curr->timestep + 1;
-			//if (max_plan_len <= curr->timestep)
-			//{
-			//	if (next_id == curr->loc)
-			//	{
-			//		continue;
-			//	}
-			//	next_timestep--;
-			//}
+			if (max_plan_len <= curr->timestep)
+			{
+				if (next_id == curr->loc)
+				{
+					continue;
+				}
+			}
 			if (!constraint_table.is_constrained(next_id, next_timestep) &&
 				!constraint_table.is_constrained(curr->loc * map_size + next_id, next_timestep))
 			{
@@ -351,9 +350,10 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 			for (LLNode* n : open_list) 
 			{
 
-				if (n->getFVal() > lower_bound && n->getFVal() <= new_lower_bound) {
+				if (!n->in_focallist && n->getFVal() > lower_bound && n->getFVal() <= new_lower_bound) {
 
 					n->focal_handle = focal_list.push(n);
+					n->in_focallist = true;
 				}
 			}
 
