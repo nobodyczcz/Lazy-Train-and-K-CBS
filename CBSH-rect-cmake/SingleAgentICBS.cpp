@@ -122,6 +122,7 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 	min_f_val = start->getFVal();
 
 	lowerbound = std::max(lowerbound, (double)constraint_table.length_min);
+
 	lower_bound = std::max(lowerbound, f_weight * min_f_val);
 
 	int time_generated = 0;
@@ -133,12 +134,12 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 
 	while (!focal_list.empty()) 
 	{
-		if (time_limit != 0) {
-			runtime = std::clock() - start_clock;
-			if (runtime > time_limit) {
-				return false;
-			}
-		}
+		//if (time_limit != 0) {
+		//	runtime = std::clock() - start_clock;
+		//	if (runtime > time_limit) {
+		//		return false;
+		//	}
+		//}
 		//cout << "focal size " << focal_list.size() << endl;
 
 		LLNode* curr = focal_list.top(); focal_list.pop();
@@ -151,7 +152,18 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 		// check if the popped node is a goal
 		if (curr->loc == goal_location && curr->timestep >= constraint_table.length_min)
 		{
-			if (curr->parent == NULL || curr->parent->loc != goal_location)
+			bool parentAtGoal = false;
+			LLNode* temp = curr;
+			for (int x = 0; x <= kRobust; x++) {
+				if (temp->parent == NULL) {
+					break;
+				}
+				if (temp->parent->loc == goal_location) {
+					parentAtGoal = true;
+				}
+				temp = temp->parent;
+			}
+			if (curr->parent == NULL || !parentAtGoal)
 			{
 				//cout << num_generated << endl;
 
@@ -227,10 +239,9 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 				if (next_g_val + next_h_val > constraint_table.length_max)
 					continue;
 
-				int next_internal_conflicts = 0;
 
 				OldConfList* conflicts = res_table->findConflict(agent_id, curr->loc, next_id, curr->timestep, kRobust);
-				next_internal_conflicts = curr->num_internal_conf + conflicts->size();
+				int next_internal_conflicts = curr->num_internal_conf + conflicts->size();
 
 				// generate (maybe temporary) node
 				LLNode* next = new LLNode(next_id, next_g_val, next_h_val,	curr, next_timestep, next_internal_conflicts, false);
@@ -340,10 +351,9 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 			for (LLNode* n : open_list) 
 			{
 
-				if (!n->in_focallist && n->getFVal() > lower_bound && n->getFVal() <= new_lower_bound) {
+				if (n->getFVal() > lower_bound && n->getFVal() <= new_lower_bound) {
 
 					n->focal_handle = focal_list.push(n);
-					n->in_focallist = true;
 				}
 			}
 

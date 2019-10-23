@@ -10,7 +10,13 @@ public:
 	int goal_location;
 	int latest_timestep = 0; // No negative constraints after this timestep.
 
-	void clear(){CT.clear(); length_min = 0, length_max = INT_MAX; latest_timestep = 0;}
+	void clear(){
+		CT.clear(); 
+		length_min = 0, 
+		length_max = INT_MAX; 
+		latest_timestep = 0;
+		CT_Single.clear();
+	}
 	void insert(int loc, int t_min, int t_max);
 	bool is_constrained(int loc, int t);
 	void printSize() {
