@@ -135,9 +135,9 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 
 	while (!focal_list.empty()) 
 	{
-		if (num_generated % 10000 > time_check_count && time_limit != 0) {
+		if (num_generated / 10000 > time_check_count && time_limit != 0) {
 			runtime = std::clock() - start_clock;
-			time_check_count = num_generated % 10000;
+			time_check_count = num_generated / 10000;
 			if (runtime > time_limit) {
 				return false;
 			}
