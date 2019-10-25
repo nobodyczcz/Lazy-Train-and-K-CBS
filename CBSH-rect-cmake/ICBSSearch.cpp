@@ -1407,6 +1407,8 @@ MultiMapICBSSearch<Map>::MultiMapICBSSearch(Map* ml, AgentsLoader& al, double f_
 	if (debug_mode)
 		cout << "Initializing search engines" << endl;
 	for (int i = 0; i < num_of_agents; i++) {
+		if (debug_mode)
+			cout << "initializing agent "<< i << endl;
 		int init_loc = ml->linearize_coordinate((al.initial_locations[i]).first, (al.initial_locations[i]).second);
 		int goal_loc = ml->linearize_coordinate((al.goal_locations[i]).first, (al.goal_locations[i]).second);
 		ComputeHeuristic<Map> ch(init_loc, goal_loc, ml, al.headings[i]);
