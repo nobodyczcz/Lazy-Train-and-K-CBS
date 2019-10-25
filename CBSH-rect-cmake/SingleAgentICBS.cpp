@@ -126,7 +126,8 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 	lower_bound = std::max(lowerbound, f_weight * min_f_val);
 
 	int time_generated = 0;
-	//std:clock_t runtime;
+	int time_check_count=0
+	std:clock_t runtime;
 	//for (int h = 0; h < my_heuristic.size();h++) {
 	//	//for (int heading = 0; heading<5;heading++)
 	//		std::cout << "(" << h << ": heading:"<<-1 <<": "<< my_heuristic[h].heading[-1] << ")";
@@ -134,12 +135,13 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 
 	while (!focal_list.empty()) 
 	{
-		//if (time_limit != 0) {
-		//	runtime = std::clock() - start_clock;
-		//	if (runtime > time_limit) {
-		//		return false;
-		//	}
-		//}
+		if (num_generated % 10000 > time_check_count && time_limit != 0) {
+			runtime = std::clock() - start_clock;
+			time_check_count = num_generated % 10000;
+			if (runtime > time_limit) {
+				return false;
+			}
+		}
 		//cout << "focal size " << focal_list.size() << endl;
 
 		LLNode* curr = focal_list.top(); focal_list.pop();
@@ -191,8 +193,8 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 
 		cout << "current loc: " << curr->loc << " heading: " << curr->heading<<" f: "<<curr->getFVal() << " g: " << curr->g_val << " h: " << curr->h_val << " num_internal_conf: " <<curr->num_internal_conf << " current lower boundary: " << lower_bound << endl;
 		assert(curr->loc <= map_size && "loc out of map size");
-		cout << "focal size " << focal_list.size() << endl;
-*/
+		cout << "focal size " << focal_list.size() << endl;*/
+
 
 		vector<pair<int, int>> transitions = ml->get_transitions(curr->loc, curr->heading,false);
 		//cout << "transitions : " ;
@@ -242,6 +244,8 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 				OldConfList* conflicts = res_table->findConflict(agent_id, curr->loc, next_id, curr->timestep, kRobust);
 				int next_internal_conflicts = curr->num_internal_conf + conflicts->size();
 
+				
+
 				// generate (maybe temporary) node
 				LLNode* next = new LLNode(next_id, next_g_val, next_h_val,	curr, next_timestep, next_internal_conflicts, false);
 				next->heading = next_heading;
@@ -253,8 +257,11 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 				it = allNodes_table.find(next);
 				if (it == allNodes_table.end() || (next_id == goal_location && constraint_table.length_min > 0))
 				{
+
 					//cout << "Possible child loc: " << next->loc << " heading: " << next->heading << " f: " << next->getFVal() << " g: " << next->g_val << " h: " << next->h_val<< " num_internal_conf: " << next->num_internal_conf << endl;
 					//cout << "h: " << my_heuristic[next_id].get_hval(next_heading) << endl;
+					
+
 					next->open_handle = open_list.push(next);
 					next->in_openlist = true;
 					num_generated++;

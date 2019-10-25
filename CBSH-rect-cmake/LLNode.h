@@ -62,17 +62,14 @@ public:
 			//}
 			//return n1->g_val < n2->g_val;// break ties towards *larger* g_val 
 
-			
+			//
 			//if (n1->num_internal_conf == n2->num_internal_conf) {
 			//	if (n1->g_val == n2->g_val)
 			//	{
 
-			//	if (n1->timestep == n2->timestep) {
 			//		return n1->time_generated > n2->time_generated; // break ties towards earlier generated nodes -
 			//														// explore the tree more broadly (despite preferring depth)
 			//														// (time_generated can't be equal)
-			//	}
-			//	return n1->timestep < n2->timestep;  // break ties towards *more* depth - more work was done, even if it didn't reduce the number of conflicts or increase the cost yet
 			//	}
 			//	return n1->g_val < n2->g_val;// break ties towards *larger* g_val 
 			//}
