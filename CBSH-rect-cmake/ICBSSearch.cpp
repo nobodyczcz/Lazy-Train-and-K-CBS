@@ -301,7 +301,15 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 			{//low level search can't find target conflict if a1<a2
 				if (a1 == a2)
 					continue;
-
+				bool skip = false;
+				for (list<int>::iterator it2 = new_agents.begin(); it2 != it; ++it2)
+				{
+					if (*it2 == a2)
+					{
+						skip = true;
+						break;
+					}
+				}
 				findTargetConflicts(a1, a2, curr);
 
 			}
@@ -835,7 +843,15 @@ bool ICBSSearch::generateChild(ICBSNode*  node, ICBSNode* curr)
 			{
 				continue;
 			}
-			if (t+kDelay < paths[ag]->size() && paths[ag]->at(t+kDelay).location == x)
+
+			//bool replan = false;
+			//for (int k = 0; k <= kDelay; k++) {
+			//	if (t + k < paths[ag]->size() && paths[ag]->at(t + k).location == x) {
+			//		replan = true;
+			//	}
+			//}
+
+			if (t < paths[ag]->size() && paths[ag]->at(t).location == x)
 			{
 				double lowerbound = (int)paths[ag]->size() - 1;
 				if (!findPathForSingleAgent(node, ag, lowerbound))
