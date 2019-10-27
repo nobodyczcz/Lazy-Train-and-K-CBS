@@ -1155,7 +1155,9 @@ bool MultiMapICBSSearch<Map>::runICBSSearch()
 				<< curr->conflict->originalConf2 / num_col << ","
 				<< curr->conflict->originalConf2 % num_col << ")"
 				<< curr->conflict->t << "," << curr->conflict->k << "," << curr->conflict->type << ">" << std::endl;
-			printPaths();
+			
+			if (screen>=3)
+				printPaths();
 
 		}
 
@@ -1972,7 +1974,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 							int new_distance = abs(t2_end / num_col - t2_start / num_col) + abs(t2_end %num_col - t2_start % num_col) +
 								abs(t1_end / num_col - t1_start / num_col) + abs(t1_end %num_col - t1_start % num_col);
 
-							if (new_type > type || (new_type == type && new_area > area) || (kDelay>0 && new_type == type && new_area == area && new_distance > distance))
+							if (new_type > type || (new_type == type && new_area > area) || (new_type == type && new_area == area && new_distance > distance))
 							{
 
 								auto new_rectangle = std::shared_ptr<Conflict>(new Conflict());
@@ -1980,7 +1982,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 								/*cout << "loc:" << loc1 << " t:" << timestep << endl;
 								cout << "s1 " << s1 << " s2 " << s2 << " g1 " << g1 << " g2 " << g2 << " rg " << Rg.first << " " << Rg.second <<" Rg_t "<< Rg_t<< endl;
 */
-								if (kDelay>0) {
+								//if (kDelay>0) {
 									
 									new_rectangle->kRectangleConflict(a1, a2, Rs, Rg,
 										make_pair(s1 / num_col, s1 % num_col),
@@ -1989,14 +1991,14 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 										make_pair(g1 / num_col, g1 % num_col),
 										make_pair(g2 / num_col, g2 % num_col),
 										num_col, kDelay);
-								}
+								/*}
 								else {
 									new_rectangle->rectangleConflict(a1, a2, Rs, Rg,
 										make_pair(s1 / num_col, s1 % num_col),
 										make_pair(s2 / num_col, s2 % num_col),
 										Rg_t, paths, num_col);
 
-								}
+								}*/
 								/*printPaths(*paths[new_rectangle->a1]);
 								printPaths(*paths[new_rectangle->a2]);
 								cout << *new_rectangle << endl;*/
