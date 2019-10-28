@@ -252,7 +252,7 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 					int preciousConflit[4];
 					for (auto& con : *(paths[a1]->at(t).conflist)) {
 						if (debug_mode)
-							cout << "<" << get<0>(*con) << "," << get<1>(*con) << ","
+							cout << "l<" << get<0>(*con) << "," << get<1>(*con) << ","
 							<< "(" << get<2>(*con) / num_col << "," << get<2>(*con) % num_col << ")" << ","
 							<< "(" << get<3>(*con) / num_col << "," << get<3>(*con) % num_col << ")" << ","
 							<< get<4>(*con) << "," << get<5>(*con) << ">; ";
@@ -395,7 +395,9 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 void ICBSSearch::findTargetConflicts(int a1, int a2, ICBSNode& curr) {
 	size_t min_path_length = paths[a1]->size() < paths[a2]->size() ? paths[a1]->size() : paths[a2]->size();
 	//collect conflict from path;
-
+	if (a1 == a2) {
+		return;
+	}
 
 
 	if (paths[a1]->size() < paths[a2]->size())
@@ -1288,6 +1290,7 @@ bool MultiMapICBSSearch<Map>::runICBSSearch()
 					std::cout << "Generate #" << children[i]->time_generated
 						<< " with cost " << children[i]->g_val
 						<< " and " << children[i]->num_of_collisions << " conflicts " << std::endl;
+
 			}
 			else
 			{
@@ -1622,7 +1625,7 @@ bool MultiMapICBSSearch<Map>::findPathForSingleAgent(ICBSNode*  node, int ag, do
 	// build reservation table
 	size_t max_plan_len = node->makespan + 1;
 
-	ReservationTable* res_table = new ReservationTable(map_size, &paths, curr->agent_id);  // initialized to false
+	ReservationTable* res_table = new ReservationTable(map_size, &paths, ag);  // initialized to false
 
 	// find a path
 	vector<PathEntry> newPath;
