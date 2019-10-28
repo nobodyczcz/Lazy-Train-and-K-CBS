@@ -251,7 +251,11 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 				if (paths[a1]->at(t).conflist != NULL && paths[a1]->at(t).conflist->size() != 0) {
 					int preciousConflit[4];
 					for (auto& con : *(paths[a1]->at(t).conflist)) {
-
+						if (debug_mode)
+							cout << "<" << get<0>(*con) << "," << get<1>(*con) << ","
+							<< "(" << get<2>(*con) / num_col << "," << get<2>(*con) % num_col << ")" << ","
+							<< "(" << get<3>(*con) / num_col << "," << get<3>(*con) % num_col << ")" << ","
+							<< get<4>(*con) << "," << get<5>(*con) << ">; ";
 						//cout << "(" << abs(preciousConflit[2] - get<2>(*con)) << ")";
 						if (preciousConflit[0] == get<0>(*con) &&
 							preciousConflit[1] == get<1>(*con) &&
@@ -282,11 +286,7 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 						else {
 							newConf->edgeConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<3>(*con), get<4>(*con));
 						}
-						if (debug_mode)
-							cout << "<" << get<0>(*con) << "," << get<1>(*con) << ","
-							<< "(" << get<2>(*con) / num_col << "," << get<2>(*con) % num_col << ")" << ","
-							<< "(" << get<3>(*con) / num_col << "," << get<3>(*con) % num_col << ")" << ","
-							<< get<4>(*con) << "," << get<5>(*con) << ">; ";
+
 						curr.unknownConf.emplace_back(newConf);
 						preciousConflit[0] = get<0>(*con);
 						preciousConflit[1] = get<1>(*con);
@@ -294,7 +294,7 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 						preciousConflit[3] = get<4>(*con);
 
 					}
-					delete paths[curr.agent_id]->at(t).conflist;
+					delete paths[a1]->at(t).conflist;
 				}
 			}
 			for (int a2 = 0; a2 < num_of_agents; a2++)
