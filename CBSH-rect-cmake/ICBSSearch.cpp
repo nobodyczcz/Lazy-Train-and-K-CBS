@@ -844,14 +844,23 @@ bool ICBSSearch::generateChild(ICBSNode*  node, ICBSNode* curr)
 				continue;
 			}
 
-			//bool replan = false;
-			//for (int k = 0; k <= kDelay; k++) {
-			//	if (t + k < paths[ag]->size() && paths[ag]->at(t + k).location == x) {
-			//		replan = true;
-			//	}
-			//}
+			if (t > paths[ag]->size()) {
+				continue;
+			}
+			bool replan = false;
+			/*for (int k = 0; k <= kDelay; k++) {
+				if (t + k < paths[ag]->size() && paths[ag]->at(t + k).location == x) {
+					replan = true;
+				}
+			}*/
+			for (int tg = t; tg < paths[ag]->size(); tg++) {
+				if (paths[ag]->at(tg).location == x) {
+					replan = true;
+					break;
+				}
+			}
 
-			if (t < paths[ag]->size() && paths[ag]->at(t).location == x)
+			if (replan)
 			{
 				double lowerbound = (int)paths[ag]->size() - 1;
 				if (!findPathForSingleAgent(node, ag, lowerbound))
@@ -1789,7 +1798,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 			if (!cardinal1)
 				cardinal1 = paths[a1]->at(timestep).single;
 			if (!cardinal2)
-				cardinal2 = paths[a2]->at(timestep).single;
+				cardinal2 = paths[a2]->at(timestep+con->k).single;
 		}
 
 		if (cardinal1 && cardinal2)
