@@ -115,6 +115,7 @@ public:
 	{
 		this->a1 = a1;
 		this->a2 = a2;
+		this->k = k;
 		this->t = std::min(e1, e2);
 		this->originalConf1 = v1;
 		this->originalConf2 = v2;
@@ -128,6 +129,7 @@ public:
 	{
 		this->a1 = a1;
 		this->a2 = a2;
+		this->k = k;
 		this->t = std::min(t3, t4);
 		this->originalConf1 = v1;
 		this->originalConf2 = v2;
@@ -144,6 +146,7 @@ public:
 		this->t = std::min(t1, t2);
 		this->originalConf1 = v1;
 		this->originalConf2 = v2;
+		this->k = k;
 		this->constraint1.emplace_back(v1, t1, t1 + 2 * k - 1 + kRobust, constraint_type::RANGE);
 		this->constraint1.emplace_back(v2, t1 + k, std::min(t2 + 2 * k, t1 + h - 1) + kRobust, constraint_type::RANGE);
 		this->constraint2.emplace_back(v2, t2, t2 + 2 * k - 1 + kRobust, constraint_type::RANGE);
@@ -155,6 +158,7 @@ public:
 	{
 		this->a1 = a1;
 		this->a2 = a2;
+		this->k = 0;
 		this->t = Rg_t - abs(Rg.first - Rs.first) - abs(Rg.second - Rs.second);
 		this->originalConf1 = Rs.first*num_col + Rs.second;
 		this->originalConf2 = Rg.first*num_col + Rg.second;;
@@ -189,6 +193,7 @@ public:
 	{
 		this->a1 = a1;
 		this->a2 = a2;
+		this->k = 0;
 		this->t = Rg_t - abs(Rg.first - Rs.first) - abs(Rg.second - Rs.second);
 		this->originalConf1 = Rs.first*num_col + Rs.second;
 		this->originalConf2 = Rg.first*num_col + Rg.second;;
@@ -350,6 +355,7 @@ public:
 		this->a1 = a1;
 		this->a2 = a2;
 		this->t = t;
+		this->k = 0;
 		this->originalConf1 = v;
 		this->constraint1.emplace_back(-1, a1, t + kDelay/* kDelay>0? t + kDelay+1:t*/, constraint_type::LENGTH); // length of a1 should be larger than t
 		this->constraint2.emplace_back(v, a1, t, constraint_type::LENGTH); // length of a1 should be no larger than t, and other agents can not use v at and after timestep t

@@ -1763,9 +1763,9 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 		int a1 = con->a1, a2 = con->a2;
 		int loc1, loc2, timestep;
 		constraint_type type;
-		std::tie(loc1, loc2, timestep, type) = con->constraint1.back();
+		std::tie(loc1, loc2, timestep, type) = con->constraint1.front();
 		parent.unknownConf.pop_front();
-
+		
 		bool cardinal1 = false, cardinal2 = false;
 		if (timestep >= paths[a1]->size())
 			cardinal1 = true;
