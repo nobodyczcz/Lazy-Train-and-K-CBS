@@ -1079,7 +1079,8 @@ bool MultiMapICBSSearch<Map>::runICBSSearch()
 				LL_num_expanded << " ; " << LL_num_generated << " ; " << runtime / CLOCKS_PER_SEC << " ; "
 				<< RMTime/CLOCKS_PER_SEC<<";"<<
 				num_standard << ";" << num_rectangle << "," <<
-				num_corridor2 << ";" << num_corridor4 << "," << num_target << endl;
+				num_corridor2 << ";" << num_corridor4 << "," << num_target << "," << num_0FlipRectangle << "," <<
+				num_1FlipRectangle << "," << num_2FlipRectangle << endl;
 			if(debug_mode)
 			printHLTree();
 			if (screen >= 3)
@@ -1156,7 +1157,8 @@ bool MultiMapICBSSearch<Map>::runICBSSearch()
 				LL_num_expanded << " ; " << LL_num_generated << " ; " << runtime / CLOCKS_PER_SEC << " ; " 
 				<< RMTime / CLOCKS_PER_SEC << ";"<<
 				num_standard << ";" << num_rectangle << "," <<
-				num_corridor2 << ";" << num_corridor4 << "," << num_target << endl;
+				num_corridor2 << ";" << num_corridor4 << "," << num_target << "," << num_0FlipRectangle << "," <<
+				num_1FlipRectangle << "," << num_2FlipRectangle << endl;
 			
 			break;
 		}
@@ -1371,7 +1373,8 @@ bool MultiMapICBSSearch<Map>::runICBSSearch()
 			LL_num_expanded << " ; " << LL_num_generated << " ; " << runtime / CLOCKS_PER_SEC << " ; " 
 			<< RMTime / CLOCKS_PER_SEC << ";" <<
 			num_standard << ";" << num_rectangle << ";" <<
-			num_corridor2 << ";" << num_corridor4 << ";" << num_target << ";" <<
+			num_corridor2 << ";" << num_corridor4 << ";" << num_target << "," << num_0FlipRectangle << "," <<
+			num_1FlipRectangle << "," << num_2FlipRectangle << 
 			"|Open|=" << open_list.size() << endl;
 		timeout = true;
 		solution_found = false;
