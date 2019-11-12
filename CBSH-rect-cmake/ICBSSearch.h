@@ -46,6 +46,9 @@ public:
 	uint64_t num_corridor2 = 0;
 	uint64_t num_corridor4 = 0;
 	uint64_t num_rectangle = 0;
+	uint64_t num_0FlipRectangle = 0;
+	uint64_t num_1FlipRectangle = 0;
+	uint64_t num_2FlipRectangle = 0;
 	uint64_t num_target = 0;
 	uint64_t num_standard = 0;
 

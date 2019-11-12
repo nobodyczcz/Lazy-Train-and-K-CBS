@@ -170,7 +170,9 @@ int main(int argc, char** argv)
 		icbs.min_f_val - icbs.dummy_start->g_val << "," <<
 		vm["solver"].as<string>()  << "," <<
 		icbs.num_standard << "," << icbs.num_rectangle << "," <<
-		icbs.num_corridor2 << "," << icbs.num_corridor4 << "," << icbs.num_target << endl;
+		icbs.num_corridor2 << "," << icbs.num_corridor4 << "," << 
+		icbs.num_target<<","<< icbs.num_0FlipRectangle<<","<<
+		icbs.num_1FlipRectangle << ","<< icbs.num_2FlipRectangle << endl;
 	stats.close();
 	if (vm["screen"].as<int>() == 2)
 		cout << "Done!!" << endl;

@@ -1233,8 +1233,10 @@ bool MultiMapICBSSearch<Map>::runICBSSearch()
 		 //Expand the node
 		HL_num_expanded++;
 		curr->time_expanded = HL_num_expanded;
-		if (curr->conflict->type == conflict_type::RECTANGLE)
+		if (curr->conflict->type == conflict_type::RECTANGLE) {
+
 			numOfRectangle += 1;
+		}
 
 		vector<ICBSNode*> children;
 
@@ -1270,8 +1272,18 @@ bool MultiMapICBSSearch<Map>::runICBSSearch()
 				num_corridor2++;
 			else if (curr->conflict->type == conflict_type::STANDARD)
 				num_standard++;
-			else if (curr->conflict->type == conflict_type::RECTANGLE)
+			else if (curr->conflict->type == conflict_type::RECTANGLE) {
+				if (curr->conflict->flipType == 1) {
+					num_1FlipRectangle++;
+				}
+				else if (curr->conflict->flipType == 2) {
+					num_2FlipRectangle++;
+				}
+				else {
+					num_0FlipRectangle++;
+				}
 				num_rectangle++;
+			}
 			else if (curr->conflict->type == conflict_type::TARGET)
 				num_target++;
 		}
