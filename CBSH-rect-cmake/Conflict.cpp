@@ -557,3 +557,120 @@ bool addModifiedHorizontalLongBarrierConstraint(const std::vector<PathEntry>& pa
 
 
 }
+
+	// add a vertival modified barrier constraint
+bool addFlippedVerticalLongBarrierConstraint(const std::vector<PathEntry>& path, int y,
+	vector<int> vertical,vector<int> verticalMin,vector<int> verticalMax, int num_col, int St,
+	std::list<Constraint>& constraints, int k, MDDPath* kMDD)
+	{
+		//std::cout << "vertical y:" << y<<" Rix:"<<Ri_x<<" Rgx:"<< Rg_x<<" t:"<<Rg_t << std::endl;
+
+		std::unordered_set<string> added;
+
+		for (int count = 0;count<vertical.size();count++)
+		{
+			int loc = vertical[count] * num_col + y;
+			int tMin = verticalMin[count];
+			int tMax = verticalMax[count];
+			if (tMin > tMax)
+				continue;
+			//std::cout << "target loc: " << loc / num_col << "," << loc % num_col << std::endl;
+			for (int t = tMin; t <= tMax; t++) {
+				//std::cout << "add constraint on k= " << i << " t=" << t2 << ": ";
+				if ((t+St < path.size())) {
+					std::list<int>::const_iterator it = std::find(path[t + St].locations.begin(), path[t + St].locations.end(), loc);
+					if (it != path[t + St].locations.end())
+					{
+						std::stringstream con;
+						con << loc << t + St;
+						if (!added.count(con.str())) {
+
+							constraints.emplace_back(loc, -1, t + St, constraint_type::VERTEX); // add constraints [t1, t2]
+							//std::cout << "self mdd loc: " << loc / num_col << "," << loc % num_col << " t: " << t2 << "|";
+							added.insert(con.str());
+						}
+					}
+					//std::cout << std::endl;
+				}
+
+				if (kMDD == NULL || t >= kMDD->levels.size())
+					continue;
+				if ((kMDD)->levels[t].count(loc)) {
+					std::stringstream con;
+					con << loc << t + St;
+					if (!added.count(con.str())) {
+						constraints.emplace_back(loc, -1, t+St, constraint_type::VERTEX); // add constraints [t1, t2]
+						//std::cout << "kmdd loc: " << loc / num_col << "," << loc % num_col << " t: " << t2 + i + consk << "|";
+						added.insert(con.str());
+					}
+				}
+			}
+
+		}
+		if (constraints.empty())
+		{
+			// std::cout << "Fail to add modified barrier constraints!" << std::endl;
+			return false;
+		}
+		else
+			return true;
+	}
+
+
+	// add a horizontal modified barrier constraint
+bool addFlippedHorizontalLongBarrierConstraint(const std::vector<PathEntry>& path, int x,
+	vector<int> horizontal, vector<int> horizontalMin, vector<int> horizontalMax, int num_col, int St,
+	std::list<Constraint>& constraints, int k, MDDPath* kMDD)
+	{
+		//std::cout << "Horizontal x:" << x << " Riy:" << Ri_y << "Rgy:" << Rg_y << " t:" << Rg_t << std::endl;
+
+		std::unordered_set<string> added;
+		for (int count = 0; count < horizontal.size(); count++)
+		{
+			int loc = x*num_col + horizontal[count] ;
+			int tMin = horizontalMin[count];
+			int tMax = horizontalMax[count];
+			if (tMin > tMax)
+				continue;
+			//std::cout << "target loc: " << loc / num_col << "," << loc % num_col << std::endl;
+			for (int t = tMin; t <= tMax; t++) {
+				//std::cout << "add constraint on t=" << t + St << ": ";
+				if ((t + St < path.size())) {
+					std::list<int>::const_iterator it = std::find(path[t + St].locations.begin(), path[t + St].locations.end(), loc);
+					if (it != path[t + St].locations.end())
+					{
+						std::stringstream con;
+						con << loc << t + St;
+						if (!added.count(con.str())) {
+
+							constraints.emplace_back(loc, -1, t + St, constraint_type::VERTEX); // add constraints [t1, t2]
+							//std::cout << "self mdd loc: " << loc / num_col << "," << loc % num_col << " t: " << t+St << "|";
+							added.insert(con.str());
+						}
+					}
+					//std::cout << std::endl;
+				}
+
+				if (kMDD == NULL || t >= kMDD->levels.size())
+					continue;
+				if ((kMDD)->levels[t].count(loc)) {
+					std::stringstream con;
+					con << loc << t + St;
+					if (!added.count(con.str())) {
+						constraints.emplace_back(loc, -1, t + St, constraint_type::VERTEX); // add constraints [t1, t2]
+						//std::cout << "kmdd loc: " << loc / num_col << "," << loc % num_col << " t: " << t2 + i + consk << "|";
+						added.insert(con.str());
+					}
+				}
+			}
+		}
+		if (constraints.empty())
+		{
+			// std::cout << "Fail to add modified barrier constraints!" << std::endl;
+			return false;
+		}
+		else
+			return true;
+
+
+	}

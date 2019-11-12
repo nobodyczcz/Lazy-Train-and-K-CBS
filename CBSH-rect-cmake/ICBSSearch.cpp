@@ -1067,6 +1067,8 @@ bool MultiMapICBSSearch<Map>::runICBSSearch()
 
 	if (debug_mode)
 		cout << "Start searching:" << endl;
+	if (screen >= 3)
+		al.printAgentsInitGoal();
 	while (!focal_list.empty() && !solution_found) 
 	{
 		runtime = (std::clock() - start);
@@ -1080,6 +1082,8 @@ bool MultiMapICBSSearch<Map>::runICBSSearch()
 				num_corridor2 << ";" << num_corridor4 << "," << num_target << endl;
 			if(debug_mode)
 			printHLTree();
+			if (screen >= 3)
+				printPaths();
 			timeout = true;
 			break;
 		}
@@ -1145,7 +1149,7 @@ bool MultiMapICBSSearch<Map>::runICBSSearch()
 			solution_cost = curr->g_val;
 			if (debug_mode)
 				printHLTree();
-			if (screen == 2)
+			if (screen >= 2)
 				printPaths();
 			cout << solution_cost << " ; " << solution_cost - dummy_start->g_val << " ; " <<
 				HL_num_expanded << " ; " << HL_num_generated << " ; " <<
@@ -1272,7 +1276,7 @@ bool MultiMapICBSSearch<Map>::runICBSSearch()
 				num_target++;
 		}
 
-		if (screen == 2)
+		if (screen >= 2)
 		{
 			std::cout << "Node " << curr->time_generated << " with f=" << curr->g_val << "+" << curr->h_val
 				<< " has " << std::endl;  
@@ -1286,7 +1290,7 @@ bool MultiMapICBSSearch<Map>::runICBSSearch()
 			if (generateChild(children[i], curr))
 			{
 				curr->children.push_back(children[i]);
-				if (screen == 2)
+				if (screen >= 2)
 					std::cout << "Generate #" << children[i]->time_generated
 						<< " with cost " << children[i]->g_val
 						<< " and " << children[i]->num_of_collisions << " conflicts " << std::endl;
@@ -1410,7 +1414,7 @@ MultiMapICBSSearch<Map>::MultiMapICBSSearch(Map* ml, AgentsLoader& al, double f_
 	this->focal_w = f_w;
 	this->time_limit = time_limit;
 	this->screen = screen;
-	if (screen == 2||options1.debug)
+	if (screen >= 2||options1.debug)
 		debug_mode = true;
 
 
@@ -1848,6 +1852,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 			continue;
 		}
 
+		//Check is this conflict in previous detected rectangle.
 		bool inRectangle = false;
 		if (a1 == previousRetangle[0] && a2 == previousRetangle[1]) {
 
@@ -1958,6 +1963,12 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 			int s2f;
 			int g1f;
 			int g2f;
+			int flipTypef;
+
+			int flipType=-1;
+			if (screen >= 4) {
+				cout << "try find rectangle" << endl;
+			}
 
 			for (int t1_start : s1s)
 			{
@@ -1965,8 +1976,12 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 				{
 					int s1 = paths[a1]->at(t1_start).location;
 					int g1 = paths[a1]->at(t1_end).location;
-					if (!isManhattanOptimal(s1, g1, t1_end - t1_start, num_col))
+					if (!isManhattanOptimal(s1, g1, t1_end - t1_start, num_col)) {
+						if (screen >= 4)
+						cout << "s1 g1 not optimal" << endl;
 						continue;
+					}
+					
 					for (int t2_start : s2s)
 					{
 						for (int t2_end : g2s)
@@ -1974,49 +1989,97 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 
 							int s2 = paths[a2]->at(t2_start).location;
 							int g2 = paths[a2]->at(t2_end).location;
-							if (!isManhattanOptimal(s2, g2, t2_end - t2_start, num_col))
+							if (!isManhattanOptimal(s2, g2, t2_end - t2_start, num_col)) {
+								if (screen >= 4)
+								cout << "s2 g2 not optimal" << endl;
+
 								continue;
+							}
 							
-							if (!isRectangleConflict(s1, s2, g1, g2, num_col))
+							if (option.flippedRec) {
+								int flipped = isFlippedRectangleConflict(s1, s2, g1, g2, num_col);
+								if (flipped == -1 || (flipped >= 1 && kDelay == 0)) //flipped == -1 means not a rectangle. 
+																				//0 means rectangle with no flip. 1 is 1 flip. 2 is 2 flip.
+								{
+									if (screen >= 4)
+									cout << "not flipped" << endl;
+
+									continue;
+								}
+								flipType = flipped;
+							}
+							else if (!isRectangleConflict(s1, s2, g1, g2, num_col))
 								continue;
-	
-							std::pair<int, int> Rg = getRg(std::make_pair(s1 / num_col, s1 % num_col), std::make_pair(g1 / num_col, g1 % num_col),
-								std::make_pair(g2 / num_col, g2 % num_col));
-							std::pair<int, int> Rs = getRs(std::make_pair(s1 / num_col, s1 % num_col), std::make_pair(s2 / num_col, s2 % num_col),
-								std::make_pair(g1 / num_col, g1 % num_col));
-							int new_area = (abs(Rs.first - Rg.first) + 1) * (abs(Rs.second - Rg.second) + 1);
-							int new_type = classifyRectangleConflict(s1, s2, g1, g2, Rg, num_col);
+
+
+							int new_type, new_area;
+							std::pair<int, int> Rg, Rs;
+
+							if (option.flippedRec) {
+								Rg = getFlippedRg(std::make_pair(s1 / num_col, s1 % num_col), std::make_pair(s2 / num_col, s2 % num_col), 
+									std::make_pair(g1 / num_col, g1 % num_col),std::make_pair(g2 / num_col, g2 % num_col),flipType);
+								Rs = getFlippedRs(std::make_pair(s1 / num_col, s1 % num_col), std::make_pair(s2 / num_col, s2 % num_col),
+									std::make_pair(g1 / num_col, g1 % num_col), std::make_pair(g2 / num_col, g2 % num_col), flipType);
+								new_area = (abs(Rs.first - Rg.first) + 1) * (abs(Rs.second - Rg.second) + 1);
+								bool kFullyBlocked = isKFullyBlocked(std::make_pair(s1 / num_col, s1 % num_col), std::make_pair(s2 / num_col, s2 % num_col),
+									Rs, Rg, kDelay);
+								new_type = classifyFlippedRectangleConflict(s1, s2, g1, g2, Rg, Rs, num_col, flipType, kFullyBlocked);
+							}
+							else {
+								Rg = getRg(std::make_pair(s1 / num_col, s1 % num_col), std::make_pair(g1 / num_col, g1 % num_col),
+									std::make_pair(g2 / num_col, g2 % num_col));
+								Rs = getRs(std::make_pair(s1 / num_col, s1 % num_col), std::make_pair(s2 / num_col, s2 % num_col),
+									std::make_pair(g1 / num_col, g1 % num_col));
+								new_area = (abs(Rs.first - Rg.first) + 1) * (abs(Rs.second - Rg.second) + 1);
+								new_type = classifyRectangleConflict(s1, s2, g1, g2, Rg, num_col);
+								
+							}
 							int new_distance = abs(t2_end / num_col - t2_start / num_col) + abs(t2_end %num_col - t2_start % num_col) +
 								abs(t1_end / num_col - t1_start / num_col) + abs(t1_end %num_col - t1_start % num_col);
 
+							
 							if (new_type > type || (new_type == type && new_area > area) || (new_type == type && new_area == area && new_distance > distance))
 							{
+								if (screen >= 4) {
+									cout << "s1: " << s1 / num_col << " "<< s1 % num_col << endl;
+									cout << "g1: " << g1 / num_col << " "<< g1 % num_col << endl;
+
+									cout << "s2: " << s2 / num_col << " "<< s2 % num_col << endl;
+									cout << "g2: " << g2 / num_col << " "<< g2 % num_col << endl;
+									
+									cout << "Rs: " << Rs.first << " " << Rs.second << endl;
+									cout << "Rg: " << Rg.first << " " << Rg.second << endl;
+
+									cout << "type " << new_type << " flip type " << flipType << endl;
+								}
 
 								auto new_rectangle = std::shared_ptr<Conflict>(new Conflict());
 								int Rg_t = con->t + abs(Rg.first - loc1 / num_col) + abs(Rg.second - loc1 % num_col);
 								/*cout << "loc:" << loc1 << " t:" << timestep << endl;
 								cout << "s1 " << s1 << " s2 " << s2 << " g1 " << g1 << " g2 " << g2 << " rg " << Rg.first << " " << Rg.second <<" Rg_t "<< Rg_t<< endl;
-*/
-								//if (kDelay>0) {
-									
+*/								
+								if (option.flippedRec) {
+									new_rectangle->flippedRectangleConflict(a1, a2, Rs, Rg,
+										make_pair(s1 / num_col, s1 % num_col),
+										make_pair(s2 / num_col, s2 % num_col),
+										Rg_t, paths, t1_start, t2_start,
+										make_pair(g1 / num_col, g1 % num_col),
+										make_pair(g2 / num_col, g2 % num_col),
+										num_col, kDelay, flipType);
+
+								}
+								else{
 									new_rectangle->kRectangleConflict(a1, a2, Rs, Rg,
 										make_pair(s1 / num_col, s1 % num_col),
 										make_pair(s2 / num_col, s2 % num_col),
-										Rg_t, paths,t1_start,t2_start,
+										Rg_t, paths, t1_start, t2_start,
 										make_pair(g1 / num_col, g1 % num_col),
 										make_pair(g2 / num_col, g2 % num_col),
 										num_col, kDelay);
-								/*}
-								else {
-									new_rectangle->rectangleConflict(a1, a2, Rs, Rg,
-										make_pair(s1 / num_col, s1 % num_col),
-										make_pair(s2 / num_col, s2 % num_col),
-										Rg_t, paths, num_col);
-
-								}*/
-								/*printPaths(*paths[new_rectangle->a1]);
-								printPaths(*paths[new_rectangle->a2]);
-								cout << *new_rectangle << endl;*/
+								}
+								if (screen >= 4) {
+									cout << *new_rectangle << endl;
+								}
 
 								if (blocked(*paths[new_rectangle->a1], new_rectangle->constraint1) && blocked(*paths[new_rectangle->a2], new_rectangle->constraint2))
 								{
@@ -2047,6 +2110,11 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 									g2f= g2;
 									Rsf = Rs;
 									Rgf = Rg;
+									flipTypef = flipType;
+								}
+								else {
+									if (screen >= 4)
+										cout << "not blocked" << endl;
 								}
 								
 								// rectangle = std::shared_ptr<tuple<int, int, int, int, int>>
@@ -2115,14 +2183,25 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 
 					//cout << "Create MDD Done" << endl;
 
-
-					new_rectangle->kRectangleConflict(a1, a2, Rsf, Rgf,
-						make_pair(s1f / num_col, s1f % num_col),
-						make_pair(s2f / num_col, s2f % num_col),
-						Rg_tf, paths, t1_startf, t2_startf,
-						make_pair(g1f / num_col, g1f % num_col),
-						make_pair(g2f / num_col, g2f % num_col),
-						num_col, kDelay, &a1MDDPath, &a2MDDPath);
+					if (option.flippedRec) {
+						new_rectangle->flippedRectangleConflict(a1, a2, Rsf, Rgf,
+							make_pair(s1f / num_col, s1f % num_col),
+							make_pair(s2f / num_col, s2f % num_col),
+							Rg_tf, paths, t1_startf, t2_startf,
+							make_pair(g1f / num_col, g1f % num_col),
+							make_pair(g2f / num_col, g2f % num_col),
+							num_col, kDelay,flipTypef, &a1MDDPath, &a2MDDPath);
+					}
+					else {
+						new_rectangle->kRectangleConflict(a1, a2, Rsf, Rgf,
+							make_pair(s1f / num_col, s1f % num_col),
+							make_pair(s2f / num_col, s2f % num_col),
+							Rg_tf, paths, t1_startf, t2_startf,
+							make_pair(g1f / num_col, g1f % num_col),
+							make_pair(g2f / num_col, g2f % num_col),
+							num_col, kDelay, &a1MDDPath, &a2MDDPath);
+					}
+					
 					rectangle = new_rectangle;
 				}
 

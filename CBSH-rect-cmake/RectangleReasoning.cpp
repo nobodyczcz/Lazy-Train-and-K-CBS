@@ -49,34 +49,8 @@ bool isRectangleConflict(int s1, int s2, int g1, int g2, int num_col)
 		return true;
 }
 
-//Identify special k rectangle conflicts for RM
-bool iskRectangleConflict(int s1, int s2, int g1, int g2, int num_col)
-{
-	if (s1 == s2) // A standard cardinal conflict
-		return false;
-	else if (s1 == g1 || s2 == g2) // s1 = g1 or  s2 = g2
-		return false;
-	int s1_x = s1 / num_col, s1_y = s1 % num_col;
-	int s2_x = s2 / num_col, s2_y = s2 % num_col;
-	int g1_x = g1 / num_col, g1_y = g1 % num_col;
-	int g2_x = g2 / num_col, g2_y = g2 % num_col;
-	//cout << "(" << s1_x << "," << s1_y << ")" << "(" << g1_x << "," << g1_y << ")" << endl;
-	//cout << "(" << s2_x << "," << s2_y << ")" << "(" << g2_x << "," << g2_y << ")" << endl;
 
-	if ((s2_x - s1_x) * (s1_x - g1_x) < 0 && (s2_y - s1_y) * (s1_y - g1_y) < 0) { // s1 always in the middle
 
-		return false;
-	}
-	else if ((s1_x - s2_x) * (s2_x - g2_x) < 0 && (s1_y - s2_y) * (s2_y - g2_y) < 0) { // s2 always in the middle
-		return false;
-	}
-	else if ((s1_x == g1_x && s2_y == g2_y) || (s1_y == g1_y && s2_x == g2_x)) { // area = 1
-
-		return false;
-	}
-	else
-		return true;
-}
 
 //Classify rectangle conflicts for CR/R
 // Return 2 if it is a cardinal rectangle conflict
@@ -85,12 +59,12 @@ bool iskRectangleConflict(int s1, int s2, int g1, int g2, int num_col)
 int classifyRectangleConflict(const std::pair<int, int>& s1, const std::pair<int, int>& s2,
 	const std::pair<int, int>& g1, const std::pair<int, int>& g2)
 {
-		int cardinal1 = 0, cardinal2 = 0;
-		if ((s1.first - s2.first) * (g1.first - g2.first) <= 0)
-			cardinal1++;
-		if ((s1.second - s2.second) * (g1.second - g2.second) <= 0)
-			cardinal2++;
-		return cardinal1 + cardinal2;
+	int cardinal1 = 0, cardinal2 = 0;
+	if ((s1.first - s2.first) * (g1.first - g2.first) <= 0)
+		cardinal1++;
+	if ((s1.second - s2.second) * (g1.second - g2.second) <= 0)
+		cardinal2++;
+	return cardinal1 + cardinal2;
 }
 
 //Classify rectangle conflicts for RM
@@ -161,6 +135,366 @@ std::pair<int, int> getRg(const std::pair<int, int>& s1, const std::pair<int, in
 	else
 		y = std::max(g1.second, g2.second);
 	return std::make_pair(x, y);
+}
+
+//Identify flipped rectangle conflicts for RM
+int isFlippedRectangleConflict(int s1, int s2, int g1, int g2, int num_col)
+{
+	if (s1 == s2) // A standard cardinal conflict
+		return false;
+	else if (s1 == g1 || s2 == g2) // s1 = g1 or  s2 = g2
+		return false;
+	int s1_x = s1 / num_col, s1_y = s1 % num_col;
+	int s2_x = s2 / num_col, s2_y = s2 % num_col;
+	int g1_x = g1 / num_col, g1_y = g1 % num_col;
+	int g2_x = g2 / num_col, g2_y = g2 % num_col;
+	//cout << "(" << s1_x << "," << s1_y << ")" << "(" << g1_x << "," << g1_y << ")" << endl;
+	//cout << "(" << s2_x << "," << s2_y << ")" << "(" << g2_x << "," << g2_y << ")" << endl;
+
+	
+	if ((s1_x == g1_x && s2_y == g2_y) || (s1_y == g1_y && s2_x == g2_x)) { // area = 1
+
+		return -1;
+	}
+	else if ((s1_x - g1_x) * (s2_x - g2_x) < 0 && (s1_y - g1_y) * (s2_y - g2_y) < 0) { // 2 flipped
+		if ((s2_x - g1_x) * (g1_x - g2_x) < 0 && (s2_y - g1_y) * (g1_y - g2_y) < 0) { 
+
+			return -1;
+		}
+		else if ((s1_x - g2_x) * (g2_x - g1_x) < 0 && (s1_y - g2_y) * (g2_y - g1_y) < 0) { 
+			return -1;
+		}
+		return 2;
+	}
+	else if ((s1_x - g1_x) * (s2_x - g2_x) < 0 || (s1_y - g1_y) * (s2_y - g2_y) < 0) { // 1 flipped
+		if ((s1_y - g1_y) * (s2_y - g2_y) < 0) {
+			if ((s1_y - s2_y)*(s2_y - g2_y) > 0 || (s2_x - g2_x)*(g2_x - s1_x) > 0)
+			return -1;
+		}
+		else {
+			if ((s1_x - s2_x)*(s2_x - g2_x) > 0 || (s2_y - g2_y)*(g2_y - s1_y) > 0)
+				return -1;
+		}
+		return 1;
+	}
+	else {
+		if ((s2_x - s1_x) * (s1_x - g1_x) < 0 && (s2_y - s1_y) * (s1_y - g1_y) < 0) { // s1 always in the middle
+
+			return -1;
+		}
+		else if ((s1_x - s2_x) * (s2_x - g2_x) < 0 && (s1_y - s2_y) * (s2_y - g2_y) < 0) { // s2 always in the middle
+			return -1;
+		}
+		return 0;
+	}
+		
+}
+
+//Classify rectangle conflicts for flipped RM
+// Return 2 if it is a cardinal rectangle conflict
+// Return 1 if it is a semi-cardinal rectangle conflict
+// Return 0 if it is a non-cardinal rectangle conflict
+int classifyFlippedRectangleConflict(int s1, int s2, int g1, int g2, const std::pair<int, int>& Rg, const std::pair<int, int>& Rs, int num_col, int flipType, bool kFullyBlocked)
+{
+	if (!kFullyBlocked)
+		return 0;
+	int cardinal1 = 0, cardinal2 = 0;
+
+	int s1_x = s1 / num_col, s1_y = s1 % num_col;
+	int s2_x = s2 / num_col, s2_y = s2 % num_col;
+	int g1_x = g1 / num_col, g1_y = g1 % num_col;
+	int g2_x = g2 / num_col, g2_y = g2 % num_col;
+
+	if (flipType == 2) {
+		if (s1_x == s2_x || s1_y == s2_y)// for two flipped case, both g1 and g2 can not in same line with s1 s2 (it will be a one flipped case).
+			return 0;
+		
+		if (Rs.first == s1_x && Rs.second == s1_y) {
+			cardinal1 = 1;
+		}
+		else if (Rs.first == s1_x && Rg.first == g1_x) {
+			cardinal1 = 1;
+		}
+		else if (Rs.second == s1_y && Rg.second == g1_y) {
+			cardinal1 = 1;
+		}
+		else if (Rg.first == g1_x && Rg.second == g1_y) {
+			cardinal1 = 1;
+		}
+
+		if (Rg.first == s2_x && Rg.second == s2_y) {
+			cardinal2 = 1;
+		}
+		else if (Rg.first == s2_x && Rs.first==g2_x){
+			cardinal2 = 1;
+		}
+		else if(Rg.second == s2_y && Rs.second==g2_y){
+			cardinal2 = 1;
+		}
+		else if (Rs.first == g2_x && Rs.second == g2_y) {
+			cardinal2 = 1;
+		}
+			
+
+	}
+	else if (flipType == 1) {
+		if ((s1_y - g1_y) * (s2_y - g2_y) < 0) {//y dimension flipped
+			if (Rs.first == s1_x) {
+				if (Rg.second == s1_y)
+					cardinal1 = 1;
+				else if(Rg.first == g1_x)
+					cardinal1 = 1;
+			}
+			else {
+				if (Rg.second == s1_y) {
+					if (Rs.second == g1_y)
+						cardinal1 = 1;
+				}
+				else {
+					if (Rg.first == g1_x && Rs.second==g1_y)
+						cardinal1 = 1;
+				}
+			}
+
+			if (Rs.first == s2_x) {
+				if (Rs.second == s2_y)
+					cardinal2 = 1;
+				else if (Rg.first == g2_x)
+					cardinal2 = 1;
+			}
+			else {
+				if (Rs.second == s2_y) {
+					if (Rg.second == g2_y)
+						cardinal2 = 1;
+				}
+				else {
+					if (Rg.first == g1_x && Rg.second==g1_y)
+						cardinal2 = 1;
+				}
+			}
+
+		}
+		else {//x dimension flipped
+			if (Rs.second == s1_y) {
+				if (Rg.first == s1_x)
+					cardinal1 = 1;
+				else if (Rg.second == g1_y)
+					cardinal1 = 1;
+			}
+			else {
+				if (Rg.first == s1_x) {
+					if (Rs.first == g1_x)
+						cardinal1 = 1;
+				}
+				else {
+					if (Rg.second == g1_y && Rs.first == g1_x)
+						cardinal1 = 1;
+				}
+			}
+
+			if (Rs.second == s2_y) {
+				if (Rs.first == s2_x)
+					cardinal2 = 1;
+				else if (Rg.second == g2_y)
+					cardinal2 = 1;
+			}
+			else {
+				if (Rs.first == s2_x) {
+					if (Rg.first == g2_x)
+						cardinal2 = 1;
+				}
+				else {
+					if (Rg.second == g1_y && Rg.first == g1_x)
+						cardinal2 = 1;
+				}
+			}
+		}
+	}
+	else {//non flip
+		if ((s1_x == s2_x && (s1_y - s2_y) * (s2_y - Rg.second) >= 0) ||
+			(s1_x != s2_x && (s1_x - s2_x)*(s2_x - Rg.first) < 0))
+		{
+			if (Rg.first == g1_x)
+				cardinal1 = 1;
+			if (Rg.second == g2_y)
+				cardinal2 = 1;
+		}
+		else
+		{
+			if (Rg.second == g1_y)
+				cardinal1 = 1;
+			if (Rg.first == g2_x)
+				cardinal2 = 1;
+		}
+
+		
+	}
+	return cardinal1 + cardinal2;
+
+	
+}
+
+std::pair<int, int> getFlippedRs(const std::pair<int, int>& s1, const std::pair<int, int>& s2, const std::pair<int, int>& g1, const std::pair<int, int>& g2, int flipType)
+{
+	int x, y;
+
+	if (flipType == 2) {
+		if (s1.first == g1.first)
+			x = g1.first;
+		else if (s1.first < g1.first)
+			x = std::max(s1.first, g2.first);
+		else
+			x = std::min(s1.first, g2.first);
+
+		if (s1.second == g1.second)
+			y = g1.second;
+		else if (s1.second < g1.second)
+			y = std::max(s1.second, g2.second);
+		else
+			y = std::min(s1.second, g2.second);
+	}
+	else if (flipType == 1) {
+		if ((s1.second - g1.second) * (s2.second - g2.second) < 0) {//y dimension flipped
+			if (s1.first == g1.first)
+				x = g1.first;
+			else if (s1.first < g1.first)
+				x = std::max(s2.first, s1.first);
+			else
+				x = std::min(s2.first, s1.first);
+
+			if (s1.second == g1.second)
+				y = g1.second;
+			else if (s1.second < g1.second)
+				y = std::min(g1.second, s2.second);
+			else
+				y = std::max(g1.second, s2.second);
+		}
+		else {//x dimension flipped
+			if (s1.first == g1.first)
+				x = g1.first;
+			else if (s1.first < g1.first)
+				x = std::min(s2.first, g1.first);
+			else
+				x = std::max(s2.first, g1.first);
+
+			if (s1.second == g1.second)
+				y = g1.second;
+			else if (s1.second < g1.second)
+				y = std::max(s1.second, s2.second);
+			else
+				y = std::min(s1.second, s2.second);
+		}
+	}
+	else {
+		if (s1.first == g1.first)
+			x = s1.first;
+		else if (s1.first < g1.first)
+			x = std::max(s1.first, s2.first);
+		else
+			x = std::min(s1.first, s2.first);
+		if (s1.second == g1.second)
+			y = s1.second;
+		else if (s1.second < g1.second)
+			y = std::max(s1.second, s2.second);
+		else
+			y = std::min(s1.second, s2.second);
+	}
+
+	return std::make_pair(x, y);
+
+}
+
+std::pair<int, int> getFlippedRg(const std::pair<int, int>& s1, const std::pair<int, int>& s2, const std::pair<int, int>& g1, const std::pair<int, int>& g2, int flipType)
+{
+	int x, y;
+
+	if (flipType==2){
+		if (s1.first == g1.first)
+			x = g1.first;
+		else if (s1.first < g1.first)
+			x = std::min(s2.first, g1.first);
+		else
+			x = std::max(s2.first, g1.first);
+
+		if (s1.second == g1.second)
+			y = g1.second;
+		else if (s1.second < g1.second)
+			y = std::min(g1.second, s2.second);
+		else
+			y = std::max(g1.second, s2.second);
+	}
+	else if (flipType == 1) {
+		if ((s1.second - g1.second) * (s2.second - g2.second) < 0) {//y dimension flipped
+			if (s1.first == g1.first)
+				x = g1.first;
+			else if (s1.first < g1.first)
+				x = std::min(g2.first, g1.first);
+			else
+				x = std::max(g2.first, g1.first);
+
+			if (s1.second == g1.second)
+				y = g1.second;
+			else if (s1.second < g1.second)
+				y = std::max(g2.second, s1.second);
+			else
+				y = std::min(g2.second, s1.second);
+		}
+		else {// x dimension flipped
+			if (s1.first == g1.first)
+				x = g1.first;
+			else if (s1.first < g1.first)
+				x = std::max(s1.first, g2.first);
+			else
+				x = std::min(s1.first, g2.first);
+
+			if (s1.second == g1.second)
+				y = g1.second;
+			else if (s1.second < g1.second)
+				y = std::min(g1.second, g2.second);
+			else
+				y = std::max(g1.second, g2.second);
+		}
+		
+
+		
+	}
+	else {
+		if (s1.first == g1.first)
+			x = g1.first;
+		else if (s1.first < g1.first)
+			x = std::min(g1.first, g2.first);
+		else
+			x = std::max(g1.first, g2.first);
+
+		if (s1.second == g1.second)
+			y = g1.second;
+		else if (s1.second < g1.second)
+			y = std::min(g1.second, g2.second);
+		else
+			y = std::max(g1.second, g2.second);
+	}
+
+	return std::make_pair(x, y);
+
+}
+
+bool isKFullyBlocked(const std::pair<int, int>& s1, const std::pair<int, int>& s2, 
+	const std::pair<int, int>& Rs, const std::pair<int, int>& Rg, int k) {
+	int c1 = getMahattanDistance(s1.first, s1.second, Rs.first, Rs.second)
+		- getMahattanDistance(s2.first, s2.second, Rs.first, Rs.second);
+	int c2 = getMahattanDistance(s1.first, s1.second, Rs.first, Rg.second)
+		- getMahattanDistance(s2.first, s2.second, Rs.first, Rg.second);
+	int c3 = getMahattanDistance(s1.first, s1.second, Rg.first, Rs.second)
+		- getMahattanDistance(s2.first, s2.second, Rg.first, Rs.second);
+	int c4 = getMahattanDistance(s1.first, s1.second, Rg.first, Rg.second)
+		- getMahattanDistance(s2.first, s2.second, Rg.first, Rg.second);
+	int minC = min({ c1,c2,c3,c4 });
+	if (minC <= k)
+		return true;
+	else
+		return false;
+	
+
 }
 
 //Compute start candidates for RM

@@ -26,7 +26,9 @@ vector<pair<int, int>> MapLoader::get_transitions(int loc, int heading, int noWa
 		if (validMove(loc, next_loc) && !my_map[next_loc])
 		{
 			transitions.push_back(move);
+			
 		}
+
 	}
 		
 	return transitions;

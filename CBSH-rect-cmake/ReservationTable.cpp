@@ -66,6 +66,7 @@ void ReservationTable::deletePath(int agent_id, std::vector<PathEntry>* path) {
 OldConfList* ReservationTable::findConflict(int agent, int currLoc, int nextLoc, int currT,int kDelay) {
 	OldConfList* confs =  new OldConfList;
 	int nextT = currT + 1;
+	//cout << "currloc " << currLoc << " nextloc " << nextLoc << endl;
 	if (res_table.count(nextLoc)) {
 		//detect vertex conflict and k delay vertex conflict
 		for (int k = -kDelay;  k <= kDelay; k++) {

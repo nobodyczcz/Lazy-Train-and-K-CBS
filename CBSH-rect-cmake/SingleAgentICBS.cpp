@@ -118,6 +118,11 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 	start->focal_handle = focal_list.push(start);
 	start->in_openlist = true;
 	start->time_generated = 0;
+	OldConfList* conflicts = res_table->findConflict(agent_id, start->loc, start->loc, -1, kRobust);
+	start->conflist = conflicts;
+	start->num_internal_conf= conflicts->size();
+
+
 	allNodes_table[start] = start;
 	min_f_val = start->getFVal();
 

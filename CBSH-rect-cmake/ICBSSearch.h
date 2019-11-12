@@ -17,6 +17,7 @@ struct options {
 	bool debug;
 	bool ignore_t0;
 	bool shortBarrier;
+	bool flippedRec;
 };
 
 

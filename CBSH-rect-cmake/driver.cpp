@@ -30,7 +30,7 @@ int main(int argc, char** argv)
 		("output,o", po::value<std::string>()->required(), "output file for schedule")
 		("solver,s", po::value<std::string>()->required(), "solvers (CBS, ICBS, CBSH, CBSH-CR, CBSH-R, CBSH-RM, CBSH-GR")
 		("agentNum,k", po::value<int>()->default_value(0), "number of agents")
-		("cutoffTime,t", po::value<int>()->default_value(7200), "cutoff time (seconds)")
+		("cutoffTime,t", po::value<float>()->default_value(7200), "cutoff time (seconds)")
 		("seed,d", po::value<int>()->default_value(0), "random seed")
 		("screen", po::value<int>()->default_value(0), "screen option (0: none; 1: results; 2:all)")
 		("cardinalRect", po::value<bool>(), "only consider cardinal rectangle conflicts")
@@ -44,6 +44,7 @@ int main(int argc, char** argv)
 		("short", "do not use long barrier constraint to resolve k delay rectangle conflict")
 		("only_generate_instance", po::value<std::string>()->default_value(""),"no searching")
 		("debug", "debug mode")
+		("flipped_rectangle", "resolving flipped rectangle symmetry conflict for RM")
 
 	;
 
@@ -78,12 +79,21 @@ int main(int argc, char** argv)
 	else {
 		options1.asymmetry_constraint = false;
 	}
+
 	if (vm.count("debug")) {
 		options1.debug = true;
 	}
 	else {
 		options1.debug = false;
 	}
+
+	if (vm.count("flipped_rectangle")) {
+		options1.flippedRec = true;
+	}
+	else {
+		options1.flippedRec = false;
+	}
+
 	if (vm.count("ignore-t0")) {
 		options1.ignore_t0 = true;
 	}
@@ -122,7 +132,7 @@ int main(int argc, char** argv)
 		return -1;
 	}
 
-	MultiMapICBSSearch<MapLoader> icbs(ml, al, 1.0, s, vm["cutoffTime"].as<int>() * CLOCKS_PER_SEC, vm["screen"].as<int>(), vm["kDelay"].as<int>(), options1);
+	MultiMapICBSSearch<MapLoader> icbs(ml, al, 1.0, s, vm["cutoffTime"].as<float>() * CLOCKS_PER_SEC, vm["screen"].as<int>(), vm["kDelay"].as<int>(), options1);
 	if (vm["solver"].as<string>() == "CBSH-RM")
 	{
 		icbs.rectangleMDD = true;
