@@ -584,10 +584,13 @@ bool addFlippedVerticalLongBarrierConstraint(const std::vector<PathEntry>& path,
 						std::stringstream con;
 						con << loc << t;
 						if (!added.count(con.str())) {
-
-							constraints.emplace_back(loc, -1, t, constraint_type::VERTEX); // add constraints [t1, t2]
+							if(t==tMax)
+								constraints.emplace_back(loc, -1, t, constraint_type::VERTEX); // add constraints [t1, t2]
+							else
+								constraints.emplace_back(loc, t, tMax+1, constraint_type::RANGE); // add constraints [t1, t2]
 							//std::cout << "self mdd loc: " << loc / num_col << "," << loc % num_col << " t: " << t << "|";
 							added.insert(con.str());
+							break;
 						}
 					}
 				}
@@ -602,9 +605,13 @@ bool addFlippedVerticalLongBarrierConstraint(const std::vector<PathEntry>& path,
 					std::stringstream con;
 					con << loc << t;
 					if (!added.count(con.str())) {
-						constraints.emplace_back(loc, -1, t, constraint_type::VERTEX); // add constraints [t1, t2]
+						if (t == tMax)
+							constraints.emplace_back(loc, -1, t, constraint_type::VERTEX); // add constraints [t1, t2]
+						else
+							constraints.emplace_back(loc, t, tMax+1, constraint_type::RANGE); // add constraints [t1, t2]
 						//std::cout << "kmdd loc: " << loc / num_col << "," << loc % num_col << " t: " << t2 + i + consk << "|";
 						added.insert(con.str());
+						break;
 					}
 				}
 			}
@@ -645,10 +652,13 @@ bool addFlippedHorizontalLongBarrierConstraint(const std::vector<PathEntry>& pat
 						std::stringstream con;
 						con << loc << t;
 						if (!added.count(con.str())) {
-
-							constraints.emplace_back(loc, -1, t, constraint_type::VERTEX); // add constraints [t1, t2]
+							if (t == tMax)
+								constraints.emplace_back(loc, -1, t, constraint_type::VERTEX); // add constraints [t1, t2]
+							else
+								constraints.emplace_back(loc, t, tMax+1, constraint_type::RANGE); // add constraints [t1, t2]
 							//std::cout << "self mdd loc: " << loc / num_col << "," << loc % num_col << " t: " << t << "|";
 							added.insert(con.str());
+							break;
 						}
 					}
 					
@@ -664,9 +674,13 @@ bool addFlippedHorizontalLongBarrierConstraint(const std::vector<PathEntry>& pat
 					std::stringstream con;
 					con << loc << t;
 					if (!added.count(con.str())) {
-						constraints.emplace_back(loc, -1, t, constraint_type::VERTEX); // add constraints [t1, t2]
+						if (t == tMax)
+							constraints.emplace_back(loc, -1, t, constraint_type::VERTEX); // add constraints [t1, t2]
+						else
+							constraints.emplace_back(loc, t, tMax+1, constraint_type::RANGE); // add constraints [t1, t2]
 						//std::cout << "kmdd loc: " << loc / num_col << "," << loc % num_col << " t: " << t2 + i + consk << "|";
 						added.insert(con.str());
+						break;
 					}
 				}
 			}

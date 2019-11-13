@@ -174,11 +174,11 @@ int isFlippedRectangleConflict(int s1, int s2, int g1, int g2, int num_col)
 		if ((g2_x - s1_x) * (s1_x - g1_x) < 0 && (g2_y - s1_y) * (s1_y - g1_y) < 0) { // s1 always in the middle
 
 
-			return -1;
+			return -3;
 		}
 		else if ((g1_x - s2_x) * (s2_x - g2_x) < 0 && (g1_y - s2_y) * (s2_y - g2_y) < 0) { // s2 always in the middle
 
-			return -1;
+			return -3;
 		}
 		return 2;
 	}
