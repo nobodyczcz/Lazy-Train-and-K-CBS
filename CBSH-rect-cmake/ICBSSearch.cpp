@@ -1783,11 +1783,12 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 	{
 		std::shared_ptr<Conflict> con = parent.unknownConf.front();
 		int a1 = con->a1, a2 = con->a2;
-		int loc1, loc2, timestep;
+		int loc1, loc2, timestep,timestep2;
 		constraint_type type;
 		loc1 = con->originalConf1;
 		loc2 = con->originalConf2;
 		timestep = con->t;
+		timestep2 = timestep + con->k;
 		//std::tie(loc1, loc2, timestep, type) = con->constraint1.front();
 		parent.unknownConf.pop_front();
 		
@@ -1802,7 +1803,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 			if (mddTable.empty())
 				delete mdd;
 		}
-		if (timestep >= paths[a2]->size())
+		if (timestep2 >= paths[a2]->size())
 			cardinal2 = true;
 		else if (!paths[a2]->at(0).single)
 		{
@@ -1816,14 +1817,14 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 		if (type == conflict_type::STANDARD && loc2 >= 0) // Edge conflict
 		{
 			cardinal1 = paths[a1]->at(timestep).single && paths[a1]->at(timestep - 1).single;
-			cardinal2 = paths[a2]->at(timestep).single && paths[a2]->at(timestep - 1).single;
+			cardinal2 = paths[a2]->at(timestep2).single && paths[a2]->at(timestep2 - 1).single;
 		}
 		else // vertex conflict or target conflict
 		{
 			if (!cardinal1)
 				cardinal1 = paths[a1]->at(timestep).single;
 			if (!cardinal2)
-				cardinal2 = paths[a2]->at(timestep+con->k).single;
+				cardinal2 = paths[a2]->at(timestep2).single;
 		}
 
 		if (cardinal1 && cardinal2)
@@ -1957,8 +1958,8 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 			
 			std::list<int>	s1s = getStartCandidates(*paths[a1], timestep, num_col);
 			std::list<int>	g1s = getGoalCandidates(*paths[a1], timestep, num_col);
-			std::list<int>	s2s = getStartCandidates(*paths[a2], timestep, num_col);
-			std::list<int>	g2s = getGoalCandidates(*paths[a2], timestep, num_col);
+			std::list<int>	s2s = getStartCandidates(*paths[a2], timestep2, num_col);
+			std::list<int>	g2s = getGoalCandidates(*paths[a2], timestep2, num_col);
 
 			
 			// Try all possible combinations
@@ -2013,11 +2014,18 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 							
 							if (option.flippedRec) {
 								int flipped = isFlippedRectangleConflict(s1, s2, g1, g2, num_col);
-								if (flipped == -1 || (flipped >= 1 && kDelay == 0)) //flipped == -1 means not a rectangle. 
+								if (flipped <= -1) //flipped <= -1 means not a rectangle. 
 																				//0 means rectangle with no flip. 1 is 1 flip. 2 is 2 flip.
 								{
-									if (screen >= 4)
-									cout << "not flipped" << endl;
+									if (screen >= 4) {
+										cout << "s1: " << s1 / num_col << " " << s1 % num_col << endl;
+										cout << "g1: " << g1 / num_col << " " << g1 % num_col << endl;
+										cout << "s2: " << s2 / num_col << " " << s2 % num_col << endl;
+										cout << "g2: " << g2 / num_col << " " << g2 % num_col << endl;
+										cout << "flip type: "<<flipped << endl;
+
+										cout << "not flipped" << endl;
+									}
 
 									continue;
 								}

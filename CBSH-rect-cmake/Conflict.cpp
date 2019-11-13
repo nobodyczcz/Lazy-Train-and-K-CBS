@@ -514,7 +514,7 @@ bool addModifiedHorizontalLongBarrierConstraint(const std::vector<PathEntry>& pa
 						}
 					}
 				}
-			//	//std::cout << std::endl;
+			//std::cout << std::endl;
 			}
 
 
@@ -576,30 +576,33 @@ bool addFlippedVerticalLongBarrierConstraint(const std::vector<PathEntry>& path,
 				continue;
 			//std::cout << "target loc: " << loc / num_col << "," << loc % num_col << std::endl;
 			for (int t = tMin; t <= tMax; t++) {
-				//std::cout << "add constraint on k= " << i << " t=" << t2 << ": ";
-				if ((t+St < path.size())) {
-					std::list<int>::const_iterator it = std::find(path[t + St].locations.begin(), path[t + St].locations.end(), loc);
-					if (it != path[t + St].locations.end())
+				//std::cout << "add constraint on t=" << t << ": ";
+				if ((t < path.size())) {
+					std::list<int>::const_iterator it = std::find(path[t].locations.begin(), path[t].locations.end(), loc);
+					if (it != path[t].locations.end())
 					{
 						std::stringstream con;
-						con << loc << t + St;
+						con << loc << t;
 						if (!added.count(con.str())) {
 
-							constraints.emplace_back(loc, -1, t + St, constraint_type::VERTEX); // add constraints [t1, t2]
-							//std::cout << "self mdd loc: " << loc / num_col << "," << loc % num_col << " t: " << t2 << "|";
+							constraints.emplace_back(loc, -1, t, constraint_type::VERTEX); // add constraints [t1, t2]
+							//std::cout << "self mdd loc: " << loc / num_col << "," << loc % num_col << " t: " << t << "|";
 							added.insert(con.str());
 						}
 					}
-					//std::cout << std::endl;
 				}
+				//else {
+				//	std::cout << "t: " << t << " > " << path.size();
+				//}
+				//std::cout << std::endl;
 
 				if (kMDD == NULL || t >= kMDD->levels.size())
 					continue;
 				if ((kMDD)->levels[t].count(loc)) {
 					std::stringstream con;
-					con << loc << t + St;
+					con << loc << t;
 					if (!added.count(con.str())) {
-						constraints.emplace_back(loc, -1, t+St, constraint_type::VERTEX); // add constraints [t1, t2]
+						constraints.emplace_back(loc, -1, t, constraint_type::VERTEX); // add constraints [t1, t2]
 						//std::cout << "kmdd loc: " << loc / num_col << "," << loc % num_col << " t: " << t2 + i + consk << "|";
 						added.insert(con.str());
 					}
@@ -634,30 +637,34 @@ bool addFlippedHorizontalLongBarrierConstraint(const std::vector<PathEntry>& pat
 				continue;
 			//std::cout << "target loc: " << loc / num_col << "," << loc % num_col << std::endl;
 			for (int t = tMin; t <= tMax; t++) {
-				//std::cout << "add constraint on t=" << t + St << ": ";
-				if ((t + St < path.size())) {
-					std::list<int>::const_iterator it = std::find(path[t + St].locations.begin(), path[t + St].locations.end(), loc);
-					if (it != path[t + St].locations.end())
+				//std::cout << "add constraint on t=" << t << ": ";
+				if (t < path.size()) {
+					std::list<int>::const_iterator it = std::find(path[t].locations.begin(), path[t].locations.end(), loc);
+					if (it != path[t].locations.end())
 					{
 						std::stringstream con;
-						con << loc << t + St;
+						con << loc << t;
 						if (!added.count(con.str())) {
 
-							constraints.emplace_back(loc, -1, t + St, constraint_type::VERTEX); // add constraints [t1, t2]
-							//std::cout << "self mdd loc: " << loc / num_col << "," << loc % num_col << " t: " << t+St << "|";
+							constraints.emplace_back(loc, -1, t, constraint_type::VERTEX); // add constraints [t1, t2]
+							//std::cout << "self mdd loc: " << loc / num_col << "," << loc % num_col << " t: " << t << "|";
 							added.insert(con.str());
 						}
 					}
-					//std::cout << std::endl;
+					
 				}
+				//else {
+				//	std::cout << "t: " << t << " > " << path.size();
+				//}
+				//std::cout << std::endl;
 
 				if (kMDD == NULL || t >= kMDD->levels.size())
 					continue;
 				if ((kMDD)->levels[t].count(loc)) {
 					std::stringstream con;
-					con << loc << t + St;
+					con << loc << t;
 					if (!added.count(con.str())) {
-						constraints.emplace_back(loc, -1, t + St, constraint_type::VERTEX); // add constraints [t1, t2]
+						constraints.emplace_back(loc, -1, t, constraint_type::VERTEX); // add constraints [t1, t2]
 						//std::cout << "kmdd loc: " << loc / num_col << "," << loc % num_col << " t: " << t2 + i + consk << "|";
 						added.insert(con.str());
 					}
