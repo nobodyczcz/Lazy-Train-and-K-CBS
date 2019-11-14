@@ -2031,8 +2031,12 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 									if (screen >= 4) {
 										cout << "s1: " << s1 / num_col << " " << s1 % num_col << endl;
 										cout << "g1: " << g1 / num_col << " " << g1 % num_col << endl;
+										cout << "s1_t: " << t1_start << endl;
+
 										cout << "s2: " << s2 / num_col << " " << s2 % num_col << endl;
 										cout << "g2: " << g2 / num_col << " " << g2 % num_col << endl;
+										cout << "s2_t: " << t2_start << endl;
+
 										cout << "flip type: "<<flipped << endl;
 
 										cout << "not flipped" << endl;
@@ -2077,10 +2081,12 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 								if (screen >= 4) {
 									cout << "s1: " << s1 / num_col << " "<< s1 % num_col << endl;
 									cout << "g1: " << g1 / num_col << " "<< g1 % num_col << endl;
+									cout << "s1_t: " << t1_start << endl;
 
 									cout << "s2: " << s2 / num_col << " "<< s2 % num_col << endl;
 									cout << "g2: " << g2 / num_col << " "<< g2 % num_col << endl;
-									
+									cout << "s2_t: " << t2_start << endl;
+
 									cout << "Rs: " << Rs.first << " " << Rs.second << endl;
 									cout << "Rg: " << Rg.first << " " << Rg.second << endl;
 
