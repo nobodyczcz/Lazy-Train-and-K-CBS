@@ -1182,14 +1182,22 @@ bool MultiMapICBSSearch<Map>::runICBSSearch()
 			if(debug_mode)
 			cout << "check conflict repeatance" << endl;
 			stringstream con;
-			con << *(curr->conflict);
-			//con << curr->conflict->a1 <<","<< curr->conflict->a2 <<",("
-			//	<< curr->conflict->originalConf1 / num_col << ","
-			//	<< curr->conflict->originalConf1 % num_col << ")" << ",("
-			//	<< curr->conflict->originalConf2 / num_col << ","
-			//	<< curr->conflict->originalConf2 % num_col << "),"
-			//	<< curr->conflict->t<<"," << curr->conflict->k ;
-			//*(curr->conflict);
+			//con << *(curr->conflict);
+			if (curr->conflict->k == 0) {
+				con << min(curr->conflict->a1, curr->conflict->a2) << ",";
+				con << max(curr->conflict->a1, curr->conflict->a2);
+			}
+			else {
+				con << curr->conflict->a1 << ",";
+				con << curr->conflict->a2;
+			}
+			con << ",("
+			<< curr->conflict->originalConf1 / num_col << ","
+			<< curr->conflict->originalConf1 % num_col << ")" << ",("
+			<< curr->conflict->originalConf2 / num_col << ","
+			<< curr->conflict->originalConf2 % num_col << "),"
+			<< curr->conflict->t<<"," << curr->conflict->k ;
+
 
 			curr->resolvedConflicts.insert(con.str());
 
@@ -1211,7 +1219,10 @@ bool MultiMapICBSSearch<Map>::runICBSSearch()
 						noRepeat = false;
 						printHLTree();
 					}
-					assert(noRepeat && "Repeated conflict!");
+					if (!noRepeat) {
+						cout << "Repeatance detected!!!" << endl;
+						exit(1);
+					}
 					parent = parent->parent;
 
 				}
@@ -1895,7 +1906,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 				std::pair<int, int> Rs = getRs(al.initial_locations[a1], al.initial_locations[a2], al.goal_locations[a1]);
 				int Rg_t = con->t + abs(Rg.first - loc1 / num_col) + abs(Rg.second - loc1 % num_col);
 
-				auto new_rectangle = std::shared_ptr<Conflict>(new Conflict());
+				auto new_rectangle = std::shared_ptr<Conflict>(new Conflict(loc1,timestep));
 
 				new_rectangle->kRectangleConflict(a1, a2,
 					al.initial_locations[a1].first*num_col + al.initial_locations[a1].second,
@@ -1925,7 +1936,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 				std::pair<int, int> Rs = getRs(al.initial_locations[a1], al.initial_locations[a2], al.goal_locations[a1]);
 				int Rg_t = con->t + abs(Rg.first - loc1 / num_col) + abs(Rg.second - loc1 % num_col);
 
-				auto new_rectangle = std::shared_ptr<Conflict>(new Conflict());
+				auto new_rectangle = std::shared_ptr<Conflict>(new Conflict(loc1,timestep));
 
 				new_rectangle->kRectangleConflict(a1, a2,
 					al.initial_locations[a1].first*num_col + al.initial_locations[a1].second, 
@@ -2014,7 +2025,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 							
 							if (option.flippedRec) {
 								int flipped = isFlippedRectangleConflict(s1, s2, g1, g2, num_col);
-								if (flipped <= -1) //flipped <= -1 means not a rectangle. 
+								if (flipped <= -1 || (flipped>=1 && kDelay==0)) //flipped <= -1 means not a rectangle. 
 																				//0 means rectangle with no flip. 1 is 1 flip. 2 is 2 flip.
 								{
 									if (screen >= 4) {
@@ -2045,7 +2056,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 									std::make_pair(g1 / num_col, g1 % num_col), std::make_pair(g2 / num_col, g2 % num_col), flipType);
 								new_area = (abs(Rs.first - Rg.first) + 1) * (abs(Rs.second - Rg.second) + 1);
 								bool kFullyBlocked = isKFullyBlocked(std::make_pair(s1 / num_col, s1 % num_col), std::make_pair(s2 / num_col, s2 % num_col),
-									Rs, Rg, kDelay);
+									Rs, Rg, kDelay,t1_start,t2_start);
 								new_type = classifyFlippedRectangleConflict(s1, s2, g1, g2, Rg, Rs, num_col, flipType, kFullyBlocked);
 							}
 							else {
@@ -2076,7 +2087,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 									cout << "type " << new_type << " flip type " << flipType << endl;
 								}
 
-								auto new_rectangle = std::shared_ptr<Conflict>(new Conflict());
+								auto new_rectangle = std::shared_ptr<Conflict>(new Conflict(loc1,timestep));
 								int Rg_t = con->t + abs(Rg.first - loc1 / num_col) + abs(Rg.second - loc1 % num_col);
 								/*cout << "loc:" << loc1 << " t:" << timestep << endl;
 								cout << "s1 " << s1 << " s2 " << s2 << " g1 " << g1 << " g2 " << g2 << " rg " << Rg.first << " " << Rg.second <<" Rg_t "<< Rg_t<< endl;
@@ -2152,7 +2163,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 			{
 				
 				if (kDelay > 0) {
-					auto new_rectangle = std::shared_ptr<Conflict>(new Conflict());
+					auto new_rectangle = std::shared_ptr<Conflict>(new Conflict(loc1,timestep));
 					/*if (kDelay > 0) {
 						vector<MDDPath*> a1kMDD;
 						vector<MDDPath*> a2kMDD;
@@ -2181,7 +2192,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 
 					}
 					//a1kMDD.push_back(a1MDDPath);
-					if (debug_mode) {
+					if (screen>=4) {
 						cout << "a1 mdd k: " << endl;
 						a1MDDPath.print(num_col);
 					}
@@ -2198,7 +2209,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 
 					}
 					//a2kMDD.push_back(a2MDDPath);
-					if (debug_mode) {
+					if (screen>=4) {
 						cout << "a2 mdd k: " << endl;
 						a2MDDPath.print(num_col);
 					}
@@ -2238,7 +2249,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 				
 
 				parent.conflicts.push_back(rectangle);
-				if (debug_mode)
+				if (screen>=4)
 					cout << "add " << *rectangle << endl;
 
 				RMTime += std::clock() - RM_Start;

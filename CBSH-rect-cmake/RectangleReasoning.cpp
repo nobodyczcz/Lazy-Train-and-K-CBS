@@ -511,17 +511,17 @@ std::pair<int, int> getFlippedRg(const std::pair<int, int>& s1, const std::pair<
 }
 
 bool isKFullyBlocked(const std::pair<int, int>& s1, const std::pair<int, int>& s2, 
-	const std::pair<int, int>& Rs, const std::pair<int, int>& Rg, int k) {
-	int c1 = getMahattanDistance(s1.first, s1.second, Rs.first, Rs.second)
-		- getMahattanDistance(s2.first, s2.second, Rs.first, Rs.second);
-	int c2 = getMahattanDistance(s1.first, s1.second, Rs.first, Rg.second)
-		- getMahattanDistance(s2.first, s2.second, Rs.first, Rg.second);
-	int c3 = getMahattanDistance(s1.first, s1.second, Rg.first, Rs.second)
-		- getMahattanDistance(s2.first, s2.second, Rg.first, Rs.second);
-	int c4 = getMahattanDistance(s1.first, s1.second, Rg.first, Rg.second)
-		- getMahattanDistance(s2.first, s2.second, Rg.first, Rg.second);
-	int minC = min({ c1,c2,c3,c4 });
-	if (minC <= k)
+	const std::pair<int, int>& Rs, const std::pair<int, int>& Rg, int k,int s1_t, int s2_t) {
+	int c1 = getMahattanDistance(s1.first, s1.second, Rs.first, Rs.second)+s1_t
+		- getMahattanDistance(s2.first, s2.second, Rs.first, Rs.second)+s2_t;
+	int c2 = getMahattanDistance(s1.first, s1.second, Rs.first, Rg.second) + s1_t
+		- getMahattanDistance(s2.first, s2.second, Rs.first, Rg.second) + s2_t;
+	int c3 = getMahattanDistance(s1.first, s1.second, Rg.first, Rs.second) + s1_t
+		- getMahattanDistance(s2.first, s2.second, Rg.first, Rs.second) + s2_t;
+	int c4 = getMahattanDistance(s1.first, s1.second, Rg.first, Rg.second) + s1_t
+		- getMahattanDistance(s2.first, s2.second, Rg.first, Rg.second) + s2_t;
+	int maxC = max({ abs(c1),abs(c2),abs(c3),abs(c4) });
+	if (maxC <= k)
 		return true;
 	else
 		return false;

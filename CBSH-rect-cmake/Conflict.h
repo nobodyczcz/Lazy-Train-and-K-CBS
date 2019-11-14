@@ -84,6 +84,7 @@ public:
 	int g2_t;
 	int rs;
 	int rg;
+	int t_sg;
 	int originalConf1;
 	int originalConf2=-1;
 	int originalT;
@@ -92,6 +93,13 @@ public:
 	std::list<Constraint> constraint2;
 	conflict_type type;
 	conflict_priority p = conflict_priority::UNKNOWN;
+
+	Conflict() {};
+	Conflict(int v,int t) {
+		this->originalConf1 = v;
+		this->originalConf2 = -1;
+		this->t = t;
+	};
 
 	void vertexConflict(int a1, int a2, int v, int t,int k=0,int kRobust =0)
 	{
@@ -170,9 +178,9 @@ public:
 		this->a1 = a1;
 		this->a2 = a2;
 		this->k = 0;
-		this->t = Rg_t - abs(Rg.first - Rs.first) - abs(Rg.second - Rs.second);
-		this->originalConf1 = Rs.first*num_col + Rs.second;
-		this->originalConf2 = Rg.first*num_col + Rg.second;;
+		this->t_sg = Rg_t - abs(Rg.first - Rs.first) - abs(Rg.second - Rs.second);
+		this->rs = Rs.first*num_col + Rs.second;
+		this->rg = Rg.first*num_col + Rg.second;;
 		if (abs(move1) == 1 || abs(move2) > 1) // first agent moves horizontally and second agent moves vertically
 		{
 			if (!addModifiedVerticalBarrierConstraint(*paths[a1], Rg.second, Rs.first, Rg.first, Rg_t, num_col, constraint1))
@@ -205,9 +213,9 @@ public:
 		this->a1 = a1;
 		this->a2 = a2;
 		this->k = 0;
-		this->t = Rg_t - abs(Rg.first - Rs.first) - abs(Rg.second - Rs.second);
-		this->originalConf1 = Rs.first*num_col + Rs.second;
-		this->originalConf2 = Rg.first*num_col + Rg.second;;
+		this->t_sg = Rg_t - abs(Rg.first - Rs.first) - abs(Rg.second - Rs.second);
+		this->rs = Rs.first*num_col + Rs.second;
+		this->rg = Rg.first*num_col + Rg.second;;
 		if (s1.first == s2.first)
 		{
 			if ((s1.second - s2.second) * (s2.second - Rg.second) >= 0)
@@ -269,9 +277,9 @@ public:
 	{
 		this->a1 = a1;
 		this->a2 = a2;
-		this->t = Rg_t - abs(Rg.first - Rs.first) - abs(Rg.second - Rs.second);
-		this->originalConf1 = Rs.first*num_col + Rs.second;
-		this->originalConf2 = Rg.first*num_col + Rg.second;
+		this->t_sg = Rg_t - abs(Rg.first - Rs.first) - abs(Rg.second - Rs.second);
+		this->rs = Rs.first*num_col + Rs.second;
+		this->rg = Rg.first*num_col + Rg.second;
 		this->k = k;
 		addKDelayBarrierConstraints(S1, S2, S1_t, S2_t, Rg.first*num_col+Rg.second, G1, G2, num_col,
 			constraint1, constraint2,k, asymmetry_constraint);
@@ -287,9 +295,9 @@ public:
 	{
 		this->a1 = a1;
 		this->a2 = a2;
-		this->t = Rg_t - abs(Rg.first - Rs.first) - abs(Rg.second - Rs.second);
-		this->originalConf1 = Rs.first*num_col + Rs.second;
-		this->originalConf2 = Rg.first*num_col + Rg.second;
+		this->t_sg = Rg_t - abs(Rg.first - Rs.first) - abs(Rg.second - Rs.second);
+		this->rs = Rs.first*num_col + Rs.second;
+		this->rg = Rg.first*num_col + Rg.second;
 		this->k = k;
 
 		int s1_x = s1.first;
@@ -368,9 +376,9 @@ public:
 	{
 		this->a1 = a1;
 		this->a2 = a2;
-		this->t = Rg_t - abs(Rg.first - Rs.first) - abs(Rg.second - Rs.second);
-		this->originalConf1 = Rs.first*num_col + Rs.second;
-		this->originalConf2 = Rg.first*num_col + Rg.second;
+		this->t_sg = Rg_t - abs(Rg.first - Rs.first) - abs(Rg.second - Rs.second);
+		this->rs = Rs.first*num_col + Rs.second;
+		this->rg = Rg.first*num_col + Rg.second;
 		this->k = k;
 		this->flipType = flipType;
 
@@ -396,7 +404,7 @@ public:
 		vector<int> verticalMax;
 
 		if (flipType == 2) {
-			if (Rg.first != g1_x || (Rg.second == g1_y && Rg.first == g1_x)) {
+			if (Rg.first != g1_x ) {
 				G1_x = Rg.first;
 				G1_y = g2_y;
 				R1_y = s2_y;
@@ -415,7 +423,7 @@ public:
 					return false;
 			}
 
-			if (Rg.second != g1_y || (Rg.second == g1_y && Rg.first == g1_x)) {
+			if (Rg.second != g1_y ) {
 				G1_y = Rg.second;
 				G1_x = g2_x;
 				R1_x = s2_x;
@@ -435,7 +443,23 @@ public:
 
 			}
 
-			if (Rs.first != g2_x || (Rs.second == g2_y && Rs.first == g2_x)) {
+			if ((Rg.second == g1_y && Rg.first == g1_x)) {
+				int loc = g1_x * num_col + g1_y;
+				int tMin = getMahattanDistance(s1_x, s1_y, g1_x, g1_y) + S1_t;
+				int tMax = getMahattanDistance(s2_x, s2_y, g1_x, g1_y) + S2_t;
+
+				if (tMin < tMax) {
+					constraint1.emplace_back(loc, t, tMax + 1, constraint_type::RANGE);
+				}
+				else if (tMin == tMax) {
+					constraint1.emplace_back(loc, -1, t, constraint_type::VERTEX);
+				}
+
+			}
+
+			
+
+			if (Rs.first != g2_x ) {
 				G2_x = Rs.first;
 				G2_y = g1_y;
 				R2_y = s1_y;
@@ -454,7 +478,7 @@ public:
 					return false;
 			}
 
-			if (Rs.second != g2_y || (Rs.second == g2_y && Rs.first == g2_x)) {
+			if (Rs.second != g2_y) {
 				G2_y = Rs.second;
 				G2_x = g1_x;
 				R2_x = s1_x;
@@ -474,13 +498,27 @@ public:
 
 			}
 
+			if ((Rs.second == g2_y && Rs.first == g2_x)) {
+				int loc = g2_x * num_col + g2_y;
+				int tMin = getMahattanDistance(s2_x, s2_y, g2_x, g2_y) + S2_t;
+				int tMax = getMahattanDistance(s1_x, s1_y, g2_x, g2_y) + S1_t;
+
+				if (tMin < tMax) {
+					constraint1.emplace_back(loc, t, tMax + 1, constraint_type::RANGE);
+				}
+				else if (tMin == tMax) {
+					constraint1.emplace_back(loc, -1, t, constraint_type::VERTEX);
+				}
+
+			}
+
 
 
 
 		}
-		else if (flipType == 1) {
+		else if (flipType == 1) {//1 flipped case
 			if ((s1_y - g1_y) * (s2_y - g2_y) < 0) {// y dimension flipped
-				if (Rs.second != g1_y || (Rs.second == g1_y&& Rg.first == g1_x)) {//s1 vertical border need constraint
+				if (Rs.second != g1_y) {//s1 vertical border need constraint
 					G1_y = Rs.second;
 					G1_x = g2_x;
 					R1_x = s2_x;
@@ -500,7 +538,7 @@ public:
 
 				}
 
-				if (Rg.first != g1_x|| (Rs.second == g1_y && Rg.first == g1_x)) {//s1 horizontoal border need constraint
+				if (Rg.first != g1_x) {//s1 horizontoal border need constraint
 					G1_x = Rg.first;
 					G1_y = g2_y;
 					R1_y = s2_y;
@@ -520,9 +558,23 @@ public:
 
 				}
 
+				if ((Rs.second == g1_y && Rg.first == g1_x) && (Rs.second == g1_y && Rg.first == g1_x)) {
+					int loc = g1_x * num_col + g1_y;
+					int tMin = getMahattanDistance(s1_x, s1_y, g1_x, g1_y) + S1_t;
+					int tMax = getMahattanDistance(s2_x, s2_y, g1_x, g1_y) + S2_t;
+
+					if (tMin < tMax) {
+						constraint1.emplace_back(loc, t, tMax + 1, constraint_type::RANGE);
+					}
+					else if (tMin == tMax) {
+						constraint1.emplace_back(loc, -1, t, constraint_type::VERTEX);
+					}
+
+				}
+
 			}
 			else {// x dimension flipped
-				if (Rg.second != g1_y|| (Rg.second == g1_y && Rs.first == g1_x)) {//s1 vertical border need constraint
+				if (Rg.second != g1_y) {//s1 vertical border need constraint
 					G1_y = Rg.second;
 					G1_x = g2_x;
 					R1_x = s2_x;
@@ -542,7 +594,7 @@ public:
 
 				}
 
-				if (Rs.first != g1_x || (Rg.second == g1_y && Rs.first == g1_x)) {//s1 horizontoal border need constraint
+				if (Rs.first != g1_x) {//s1 horizontoal border need constraint
 					G1_x = Rs.first;
 					G1_y = g2_y;
 					R1_y = s2_y;
@@ -561,10 +613,24 @@ public:
 						return false;
 
 				}
+
+				if ((Rg.second == g1_y && Rs.first == g1_x)) {
+					int loc = g1_x * num_col + g1_y;
+					int tMin = getMahattanDistance(s1_x, s1_y, g1_x, g1_y) + S1_t;
+					int tMax = getMahattanDistance(s2_x, s2_y, g1_x, g1_y) + S2_t;
+
+					if (tMin < tMax) {
+						constraint1.emplace_back(loc, t, tMax + 1, constraint_type::RANGE);
+					}
+					else if (tMin == tMax) {
+						constraint1.emplace_back(loc, -1, t, constraint_type::VERTEX);
+					}
+
+				}
 			}
 
 			//for both dimension flip, s2 use same method as Rg is at the corner of close g2
-			if (Rg.second != g2_y||(Rg.second == g2_y&& Rg.first == g2_x)) {//s2 vertical border need constraint
+			if (Rg.second != g2_y) {//s2 vertical border need constraint
 				G2_y = Rg.second;
 				G2_x = g1_x;
 				R2_x = s1_x;
@@ -584,7 +650,7 @@ public:
 
 			}
 
-			if (Rg.first != g2_x || (Rg.second == g2_y && Rg.first == g2_x)) {//s2 horizontoal border need constraint
+			if (Rg.first != g2_x) {//s2 horizontoal border need constraint
 				G2_x = Rg.first;
 				G2_y = g1_y;
 				R2_y = s1_y;
@@ -601,6 +667,20 @@ public:
 
 				if (!addFlippedHorizontalLongBarrierConstraint(*paths[a2], G2_x, horizontal, horizontalMin, horizontalMax, num_col, S2_t, constraint2, k, a2kMDD))
 					return false;
+
+			}
+
+			if ((Rg.second == g2_y && Rg.first == g2_x)) {
+				int loc = g2_x * num_col + g2_y;
+				int tMin = getMahattanDistance(s2_x, s2_y, g2_x, g2_y) + S2_t;
+				int tMax = getMahattanDistance(s1_x, s1_y, g2_x, g2_y) + S1_t;
+
+				if (tMin < tMax) {
+					constraint1.emplace_back(loc, t, tMax + 1, constraint_type::RANGE);
+				}
+				else if (tMin == tMax) {
+					constraint1.emplace_back(loc, -1, t, constraint_type::VERTEX);
+				}
 
 			}
 			

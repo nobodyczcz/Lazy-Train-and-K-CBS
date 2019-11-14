@@ -60,7 +60,7 @@ bool isManhattanOptimal(int loc1, int loc2, int dt, int num_col);
 //bool findRectangleConflict(const ICBSNode* curr, const std::tuple<int, int, int, int, int>& conflict); 
 
 bool isKFullyBlocked(const std::pair<int, int>& s1, const std::pair<int, int>& s2, 
-	const std::pair<int, int>& Rs, const std::pair<int, int>& Rg, int k);
+	const std::pair<int, int>& Rs, const std::pair<int, int>& Rg, int k, int s1_t, int s2_t);
 std::list<int>  getStartCandidates(const std::vector<PathEntry>& path, int timestep, int dir1, int dir2);
 
 std::list<int>  getGoalCandidates(const std::vector<PathEntry>& path, int timestep, int dir1, int dir2);

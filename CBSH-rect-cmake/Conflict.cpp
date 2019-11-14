@@ -22,13 +22,14 @@ std::ostream& operator<<(std::ostream& os, const Conflict& conflict)
 			os << "non-cardinal ";
 			break;
 	}
+
 	switch (conflict.type)
 	{
 		case conflict_type::STANDARD:
 			os << "standard";
 			break;
 		case conflict_type::RECTANGLE:
-			os << "rectangle";
+			os <<conflict.flipType << " flip rectangle";
 			break;
 		case conflict_type::CORRIDOR2:
 			os << "corrdior2";
