@@ -141,9 +141,9 @@ std::pair<int, int> getRg(const std::pair<int, int>& s1, const std::pair<int, in
 int isFlippedRectangleConflict(int s1, int s2, int g1, int g2, int num_col)
 {
 	if (s1 == s2) // A standard cardinal conflict
-		return false;
+		return -4;
 	else if (s1 == g1 || s2 == g2) // s1 = g1 or  s2 = g2
-		return false;
+		return -4;
 	int s1_x = s1 / num_col, s1_y = s1 % num_col;
 	int s2_x = s2 / num_col, s2_y = s2 % num_col;
 	int g1_x = g1 / num_col, g1_y = g1 % num_col;
