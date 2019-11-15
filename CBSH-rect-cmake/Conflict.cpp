@@ -64,7 +64,15 @@ bool operator < (const Conflict& conflict1, const Conflict& conflict2) // return
 	else if (conflict2.type == conflict_type::TARGET)
 		return true;
 	
-	if (conflict1.p < conflict2.p)
+
+	if (conflict1.type == conflict_type::RECTANGLE && conflict2.type == conflict_type::RECTANGLE && conflict2.flipType != conflict1.flipType)
+	{
+		if (conflict1.flipType < conflict2.flipType)
+			return false;
+		else
+			return true;
+	}
+	else if (conflict1.p < conflict2.p)
 		return false;
 	else if (conflict1.p > conflict2.p)
 		return true;
@@ -99,11 +107,15 @@ bool operator < (const Conflict& conflict1, const Conflict& conflict2) // return
 		{
 			return false;
 		}
+		
 		/*if (conflict2.type == conflict_type::RECTANGLE &&  conflict1.type != conflict_type::RECTANGLE)
 		{
 			return true;
 		}*/
 	}
+
+
+
 	if (conflict2.t < conflict1.t)
 	{
 		return true;
@@ -585,11 +597,14 @@ bool addFlippedVerticalLongBarrierConstraint(const std::vector<PathEntry>& path,
 						std::stringstream con;
 						con << loc << t;
 						if (!added.count(con.str())) {
+							//constraints.emplace_back(loc, -1, t, constraint_type::VERTEX); // add constraints [t1, t2]
+
 							if(t==tMax)
 								constraints.emplace_back(loc, -1, t, constraint_type::VERTEX); // add constraints [t1, t2]
 							else
-								constraints.emplace_back(loc, t, tMax+1, constraint_type::RANGE); // add constraints [t1, t2]
-							//std::cout << "self mdd loc: " << loc / num_col << "," << loc % num_col << " t: " << t << "|";
+								constraints.emplace_back(loc, t, tMax, constraint_type::RANGE); // add constraints [t1, t2]
+							
+																								  //std::cout << "self mdd loc: " << loc / num_col << "," << loc % num_col << " t: " << t << "|";
 							added.insert(con.str());
 							break;
 						}
@@ -606,11 +621,13 @@ bool addFlippedVerticalLongBarrierConstraint(const std::vector<PathEntry>& path,
 					std::stringstream con;
 					con << loc << t;
 					if (!added.count(con.str())) {
+						//constraints.emplace_back(loc, -1, t, constraint_type::VERTEX); // add constraints [t1, t2]
+
 						if (t == tMax)
 							constraints.emplace_back(loc, -1, t, constraint_type::VERTEX); // add constraints [t1, t2]
 						else
-							constraints.emplace_back(loc, t, tMax+1, constraint_type::RANGE); // add constraints [t1, t2]
-						//std::cout << "kmdd loc: " << loc / num_col << "," << loc % num_col << " t: " << t2 + i + consk << "|";
+							constraints.emplace_back(loc, t, tMax, constraint_type::RANGE); // add constraints [t1, t2]
+						////std::cout << "kmdd loc: " << loc / num_col << "," << loc % num_col << " t: " << t2 + i + consk << "|";
 						added.insert(con.str());
 						break;
 					}
@@ -653,10 +670,12 @@ bool addFlippedHorizontalLongBarrierConstraint(const std::vector<PathEntry>& pat
 						std::stringstream con;
 						con << loc << t;
 						if (!added.count(con.str())) {
+							//constraints.emplace_back(loc, -1, t, constraint_type::VERTEX); // add constraints [t1, t2]
+
 							if (t == tMax)
 								constraints.emplace_back(loc, -1, t, constraint_type::VERTEX); // add constraints [t1, t2]
 							else
-								constraints.emplace_back(loc, t, tMax+1, constraint_type::RANGE); // add constraints [t1, t2]
+								constraints.emplace_back(loc, t, tMax, constraint_type::RANGE); // add constraints [t1, t2]
 							//std::cout << "self mdd loc: " << loc / num_col << "," << loc % num_col << " t: " << t << "|";
 							added.insert(con.str());
 							break;
@@ -675,11 +694,13 @@ bool addFlippedHorizontalLongBarrierConstraint(const std::vector<PathEntry>& pat
 					std::stringstream con;
 					con << loc << t;
 					if (!added.count(con.str())) {
+						//constraints.emplace_back(loc, -1, t, constraint_type::VERTEX); // add constraints [t1, t2]
+
 						if (t == tMax)
 							constraints.emplace_back(loc, -1, t, constraint_type::VERTEX); // add constraints [t1, t2]
 						else
-							constraints.emplace_back(loc, t, tMax+1, constraint_type::RANGE); // add constraints [t1, t2]
-						//std::cout << "kmdd loc: " << loc / num_col << "," << loc % num_col << " t: " << t2 + i + consk << "|";
+							constraints.emplace_back(loc, t, tMax, constraint_type::RANGE); // add constraints [t1, t2]
+						////std::cout << "kmdd loc: " << loc / num_col << "," << loc % num_col << " t: " << t2 + i + consk << "|";
 						added.insert(con.str());
 						break;
 					}

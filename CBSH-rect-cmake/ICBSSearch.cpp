@@ -1196,7 +1196,7 @@ bool MultiMapICBSSearch<Map>::runICBSSearch()
 			<< curr->conflict->originalConf1 % num_col << ")" << ",("
 			<< curr->conflict->originalConf2 / num_col << ","
 			<< curr->conflict->originalConf2 % num_col << "),"
-			<< curr->conflict->t<<"," << curr->conflict->k ;
+			<< curr->conflict->t<<"," << curr->conflict->k<<","<<curr->conflict->type ;
 
 
 			curr->resolvedConflicts.insert(con.str());
@@ -1895,6 +1895,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 
 
 		}
+
 		//Rectangle reasoning for semi and non cardinal vertex conflicts
 		if (cons_strategy == constraint_strategy::CBSH_CR)//Identify cardinal rectangle by start and goals
 		{
@@ -2004,7 +2005,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 					int s1 = paths[a1]->at(t1_start).location;
 					int g1 = paths[a1]->at(t1_end).location;
 					if (!isManhattanOptimal(s1, g1, t1_end - t1_start, num_col)) {
-						if (screen >= 4)
+						if (screen >= 5)
 						cout << "s1 g1 not optimal" << endl;
 						continue;
 					}
@@ -2017,7 +2018,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 							int s2 = paths[a2]->at(t2_start).location;
 							int g2 = paths[a2]->at(t2_end).location;
 							if (!isManhattanOptimal(s2, g2, t2_end - t2_start, num_col)) {
-								if (screen >= 4)
+								if (screen >= 5)
 								cout << "s2 g2 not optimal" << endl;
 
 								continue;
@@ -2028,7 +2029,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 								if (flipped <= -1 || (flipped>=1 && kDelay==0)) //flipped <= -1 means not a rectangle. 
 																				//0 means rectangle with no flip. 1 is 1 flip. 2 is 2 flip.
 								{
-									if (screen >= 4) {
+									if (screen >=5) {
 										cout << "s1: " << s1 / num_col << " " << s1 % num_col << endl;
 										cout << "g1: " << g1 / num_col << " " << g1 % num_col << endl;
 										cout << "s1_t: " << t1_start << endl;
@@ -2061,7 +2062,25 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 								new_area = (abs(Rs.first - Rg.first) + 1) * (abs(Rs.second - Rg.second) + 1);
 								bool kFullyBlocked = isKFullyBlocked(std::make_pair(s1 / num_col, s1 % num_col), std::make_pair(s2 / num_col, s2 % num_col),
 									Rs, Rg, kDelay,t1_start,t2_start);
+								/*if (!kFullyBlocked) {
+									if (screen >= 5) {
+										cout << "not fully blocked" << endl;
+									}
+									continue;
+								}*/
 								new_type = classifyFlippedRectangleConflict(s1, s2, g1, g2, Rg, Rs, num_col, flipType, kFullyBlocked);
+								if (flipType == 1 && new_type == 0) {
+									if (screen >= 5) {
+										cout << "fliptype 1 and non-cardinal" << endl;
+									}
+									continue;
+								}
+								/*if (flipType == 2 && new_type <= -1) {
+									if (screen >= 5) {
+										cout << "fliptype 2 and non-cardinal" << endl;
+									}
+									continue;
+								}*/
 							}
 							else {
 								Rg = getRg(std::make_pair(s1 / num_col, s1 % num_col), std::make_pair(g1 / num_col, g1 % num_col),
@@ -2071,10 +2090,11 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 								new_area = (abs(Rs.first - Rg.first) + 1) * (abs(Rs.second - Rg.second) + 1);
 								new_type = classifyRectangleConflict(s1, s2, g1, g2, Rg, num_col);
 								
+								
 							}
-							int new_distance = abs(t2_end / num_col - t2_start / num_col) + abs(t2_end %num_col - t2_start % num_col) +
-								abs(t1_end / num_col - t1_start / num_col) + abs(t1_end %num_col - t1_start % num_col);
-
+							int new_distance = abs(s2 / num_col - s2 / num_col) + abs(s2 %num_col - s2 % num_col) +
+								abs(s1 / num_col - s1 / num_col) + abs(s1 %num_col - s1 % num_col);
+							
 							
 							if (new_type > type || (new_type == type && new_area > area) || (new_type == type && new_area == area && new_distance > distance))
 							{
@@ -2198,7 +2218,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 
 					}
 					//a1kMDD.push_back(a1MDDPath);
-					if (screen>=4) {
+					if (screen>=5) {
 						cout << "a1 mdd k: " << endl;
 						a1MDDPath.print(num_col);
 					}
@@ -2215,7 +2235,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 
 					}
 					//a2kMDD.push_back(a2MDDPath);
-					if (screen>=4) {
+					if (screen>=5) {
 						cout << "a2 mdd k: " << endl;
 						a2MDDPath.print(num_col);
 					}
