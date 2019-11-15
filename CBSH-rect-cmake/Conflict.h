@@ -732,14 +732,14 @@ public:
 				for (int y = G1_y; y != R1_y-sign; y = y - sign * 1) {
 					horizontal.push_back(y);
 					horizontalMin.push_back(getMahattanDistance(s1_x, s1_y, Rg_x, y) + S1_t);
-					horizontalMax.push_back(getMahattanDistance(s1_x, s1_y, Rg_x, y) + k + S1_t);
+					horizontalMax.push_back(getMahattanDistance(s2_x, s2_y, Rg_x, y) + k + S2_t);
 				}
 
 
 				sign = R2_x < G2_x ? 1 : -1;
 				for (int x = G2_x; x != R2_x-sign; x = x - sign * 1) {
 					vertical.push_back(x);
-					verticalMin.push_back(getMahattanDistance(s1_x, s1_y, x, Rg_y) + S1_t);
+					verticalMin.push_back(getMahattanDistance(s2_x, s2_y, x, Rg_y) + S2_t);
 					verticalMax.push_back(getMahattanDistance(s1_x, s1_y, x, Rg_y) + k + S1_t);
 				}
 
@@ -772,7 +772,7 @@ public:
 
 				for (int y = G2_y; y != R2_y-sign; y = y - sign * 1) {
 					horizontal.push_back(y);
-					horizontalMin.push_back(getMahattanDistance(s1_x, s1_y, Rg_x, y) + S1_t);
+					horizontalMin.push_back(getMahattanDistance(s2_x, s2_y, Rg_x, y) + S2_t);
 					horizontalMax.push_back(getMahattanDistance(s1_x, s1_y, Rg_x, y) + k + S1_t);
 				}
 
@@ -780,7 +780,7 @@ public:
 				for (int x = G1_x; x != R1_x-sign; x = x - sign * 1) {
 					vertical.push_back(x);
 					verticalMin.push_back(getMahattanDistance(s1_x, s1_y, x, Rg_y)+S1_t);
-					verticalMax.push_back(getMahattanDistance(s1_x, s1_y, x, Rg_y) + k + S1_t);
+					verticalMax.push_back(getMahattanDistance(s2_x, s2_y, x, Rg_y) + k + S2_t);
 				}
 
 

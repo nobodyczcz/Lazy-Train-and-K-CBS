@@ -182,7 +182,7 @@ int isFlippedRectangleConflict(int s1, int s2, int g1, int g2, int num_col)
 		}
 		return 2;
 	}
-	else if ((s1_x - g1_x) * (s2_x - g2_x) < 0 || (s1_y - g1_y) * (s2_y - g2_y) < 0) { // 1 flipped
+	else if (((s1_x - g1_x) * (s2_x - g2_x) < 0 || (s1_y - g1_y) * (s2_y - g2_y) < 0) && ((s1_x - g1_x) * (s2_x - g2_x) != 0 && (s1_y - g1_y) * (s2_y - g2_y) != 0)) { // 1 flipped
 
 		if ((s1_y - g1_y) * (s2_y - g2_y) < 0) {
 			if ((s1_y - s2_y)*(s2_y - g2_y) > 0 || (s2_x - g2_x)*(g2_x - s1_x) > 0)
@@ -513,13 +513,13 @@ std::pair<int, int> getFlippedRg(const std::pair<int, int>& s1, const std::pair<
 bool isKFullyBlocked(const std::pair<int, int>& s1, const std::pair<int, int>& s2, 
 	const std::pair<int, int>& Rs, const std::pair<int, int>& Rg, int k,int s1_t, int s2_t) {
 	int c1 = getMahattanDistance(s1.first, s1.second, Rs.first, Rs.second)+s1_t
-		- getMahattanDistance(s2.first, s2.second, Rs.first, Rs.second)+s2_t;
+		- getMahattanDistance(s2.first, s2.second, Rs.first, Rs.second)-s2_t;
 	int c2 = getMahattanDistance(s1.first, s1.second, Rs.first, Rg.second) + s1_t
-		- getMahattanDistance(s2.first, s2.second, Rs.first, Rg.second) + s2_t;
+		- getMahattanDistance(s2.first, s2.second, Rs.first, Rg.second) - s2_t;
 	int c3 = getMahattanDistance(s1.first, s1.second, Rg.first, Rs.second) + s1_t
-		- getMahattanDistance(s2.first, s2.second, Rg.first, Rs.second) + s2_t;
+		- getMahattanDistance(s2.first, s2.second, Rg.first, Rs.second) - s2_t;
 	int c4 = getMahattanDistance(s1.first, s1.second, Rg.first, Rg.second) + s1_t
-		- getMahattanDistance(s2.first, s2.second, Rg.first, Rg.second) + s2_t;
+		- getMahattanDistance(s2.first, s2.second, Rg.first, Rg.second) - s2_t;
 	int maxC = max({ abs(c1),abs(c2),abs(c3),abs(c4) });
 	if (maxC <= k)
 		return true;
