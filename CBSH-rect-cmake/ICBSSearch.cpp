@@ -2069,13 +2069,13 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 									continue;
 								}*/
 								new_type = classifyFlippedRectangleConflict(s1, s2, g1, g2, Rg, Rs, num_col, flipType, kFullyBlocked);
-								if (flipType == 1 && new_type <= 2) {
+								if (flipType == 1 && new_type <= -1) {
 									if (screen >= 5) {
 										cout << "fliptype 1 and non-cardinal" << endl;
 									}
 									continue;
 								}
-								if (flipType == 2 && new_type <= 2) {
+								if (flipType == 2 && new_type <= -1) {
 									if (screen >= 5) {
 										cout << "fliptype 2 and non-cardinal" << endl;
 									}

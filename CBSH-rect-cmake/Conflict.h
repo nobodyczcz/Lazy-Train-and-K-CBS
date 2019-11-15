@@ -404,7 +404,9 @@ public:
 		vector<int> verticalMax;
 
 		if (flipType == 2) {
-			if (Rg.first != g1_x ) {
+			if ((g2_x == s1_x && (g1_y - s1_y) * (s1_y - Rg_y) >= 0) ||
+				(g2_x != s1_x && (g2_x - s1_x) * (s1_x - Rg_x) < 0)) {
+
 				G1_x = Rg.first;
 				G1_y = g2_y;
 				R1_y = s2_y;
@@ -421,9 +423,27 @@ public:
 
 				if (!addFlippedHorizontalLongBarrierConstraint(*paths[a1], G1_x, horizontal, horizontalMin, horizontalMax, num_col, S1_t, constraint1, k, a1kMDD))
 					return false;
-			}
 
-			if (Rg.second != g1_y ) {
+				G2_y = Rs.second;
+				G2_x = g1_x;
+				R2_x = s1_x;
+
+				sign = R2_x < G2_x ? 1 : -1;
+				vertical.clear();
+				verticalMin.clear();
+				verticalMax.clear();
+				for (int x = G2_x; x != R2_x - sign; x = x - sign * 1) {
+					vertical.push_back(x);
+					verticalMin.push_back(getMahattanDistance(s2_x, s2_y, x, G2_y) + S2_t);
+					verticalMax.push_back(getMahattanDistance(s1_x, s1_y, x, G2_y) + k + S1_t);
+				}
+
+				if (!addFlippedVerticalLongBarrierConstraint(*paths[a2], G2_y, vertical, verticalMin, verticalMax, num_col, S2_t, constraint2, k, a2kMDD))
+					return false;
+
+			
+			}
+			else {
 				G1_y = Rg.second;
 				G1_x = g2_x;
 				R1_x = s2_x;
@@ -441,30 +461,11 @@ public:
 				if (!addFlippedVerticalLongBarrierConstraint(*paths[a1], G1_y, vertical, verticalMin, verticalMax, num_col, S1_t, constraint1, k, a1kMDD))
 					return false;
 
-			}
-
-			if ((Rg.second == g1_y && Rg.first == g1_x)) {
-				int loc = g1_x * num_col + g1_y;
-				int tMin = getMahattanDistance(s1_x, s1_y, g1_x, g1_y) + S1_t;
-				int tMax = getMahattanDistance(s2_x, s2_y, g1_x, g1_y) + S2_t;
-
-				if (tMin < tMax) {
-					constraint1.emplace_back(loc, t, tMax + 1, constraint_type::RANGE);
-				}
-				else if (tMin == tMax) {
-					constraint1.emplace_back(loc, -1, t, constraint_type::VERTEX);
-				}
-
-			}
-
-			
-
-			if (Rs.first != g2_x ) {
 				G2_x = Rs.first;
 				G2_y = g1_y;
 				R2_y = s1_y;
 
-				int sign = R2_y < G2_y ? 1 : -1;
+				sign = R2_y < G2_y ? 1 : -1;
 				horizontal.clear();
 				horizontalMin.clear();
 				horizontalMin.clear();
@@ -476,41 +477,9 @@ public:
 
 				if (!addFlippedHorizontalLongBarrierConstraint(*paths[a2], G2_x, horizontal, horizontalMin, horizontalMax, num_col, S2_t, constraint2, k, a2kMDD))
 					return false;
-			}
-
-			if (Rs.second != g2_y) {
-				G2_y = Rs.second;
-				G2_x = g1_x;
-				R2_x = s1_x;
-
-				int sign = R2_x < G2_x ? 1 : -1;
-				vertical.clear();
-				verticalMin.clear();
-				verticalMax.clear();
-				for (int x = G2_x; x != R2_x - sign; x = x - sign * 1) {
-					vertical.push_back(x);
-					verticalMin.push_back(getMahattanDistance(s2_x, s2_y, x, G2_y) + S2_t);
-					verticalMax.push_back(getMahattanDistance(s1_x, s1_y, x, G2_y) + k + S1_t);
-				}
-
-				if (!addFlippedVerticalLongBarrierConstraint(*paths[a2], G2_y, vertical, verticalMin, verticalMax, num_col, S2_t, constraint2, k, a2kMDD))
-					return false;
 
 			}
-
-			if ((Rs.second == g2_y && Rs.first == g2_x)) {
-				int loc = g2_x * num_col + g2_y;
-				int tMin = getMahattanDistance(s2_x, s2_y, g2_x, g2_y) + S2_t;
-				int tMax = getMahattanDistance(s1_x, s1_y, g2_x, g2_y) + S1_t;
-
-				if (tMin < tMax) {
-					constraint1.emplace_back(loc, t, tMax + 1, constraint_type::RANGE);
-				}
-				else if (tMin == tMax) {
-					constraint1.emplace_back(loc, -1, t, constraint_type::VERTEX);
-				}
-
-			}
+			
 
 
 
