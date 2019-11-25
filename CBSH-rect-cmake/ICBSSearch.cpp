@@ -1083,7 +1083,7 @@ bool MultiMapICBSSearch<Map>::runICBSSearch()
 				num_1FlipRectangle << "," << num_2FlipRectangle << endl;
 			if(debug_mode)
 			printHLTree();
-			if (screen >= 3)
+			if (screen >= 1)
 				printPaths();
 			timeout = true;
 			break;
@@ -1150,7 +1150,7 @@ bool MultiMapICBSSearch<Map>::runICBSSearch()
 			solution_cost = curr->g_val;
 			if (debug_mode)
 				printHLTree();
-			if (screen >= 2)
+			if (screen >= 1)
 				printPaths();
 			cout << solution_cost << " ; " << solution_cost - dummy_start->g_val << " ; " <<
 				HL_num_expanded << " ; " << HL_num_generated << " ; " <<
