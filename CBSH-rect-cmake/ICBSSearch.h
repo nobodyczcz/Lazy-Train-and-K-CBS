@@ -18,6 +18,7 @@ struct options {
 	bool ignore_t0;
 	bool shortBarrier;
 	bool flippedRec;
+	bool always4wayRM;
 };
 
 

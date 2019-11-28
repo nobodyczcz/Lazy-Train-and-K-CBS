@@ -31,6 +31,9 @@ std::ostream& operator<<(std::ostream& os, const Conflict& conflict)
 		case conflict_type::RECTANGLE:
 			os <<conflict.flipType << " flip rectangle";
 			break;
+		case conflict_type::RECTANGLE4:
+			os << conflict.flipType << " flip rectangle";
+			break;
 		case conflict_type::CORRIDOR2:
 			os << "corrdior2";
 			break;
@@ -40,12 +43,26 @@ std::ostream& operator<<(std::ostream& os, const Conflict& conflict)
 		case conflict_type::TARGET:
 			os << "target";
 	}
+
 	os << " conflict:  " << conflict.a1 << " with ";
 	for (auto con : conflict.constraint1)
-		os << con << ",";		
+		os << con << ",";	
+	for (auto cons : conflict.multiConstraint1) {
+		os << " node: ";
+		for (auto con1 : cons)
+			os << con1 << ",";
+	}
+
+
 	os << " and " << conflict.a2 << " with ";
 	for (auto con : conflict.constraint2)
-		os << con << ",";		
+		os << con << ",";	
+
+	for (auto cons : conflict.multiConstraint2) {
+		os << " node: ";
+		for (auto con1 : cons)
+			os << con1 << ",";
+	}
 	os << std::endl;
 	return os;
 }

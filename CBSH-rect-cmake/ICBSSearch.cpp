@@ -1172,7 +1172,7 @@ bool MultiMapICBSSearch<Map>::runICBSSearch()
 				<< curr->conflict->originalConf2 / num_col << ","
 				<< curr->conflict->originalConf2 % num_col << ")"
 				<< curr->conflict->t << "," << curr->conflict->k << "," << curr->conflict->type << ">" << std::endl;
-			
+			cout << "always 4 way split " << option.always4wayRM << endl;
 			if (screen>=3)
 				printPaths();
 
@@ -1273,6 +1273,32 @@ bool MultiMapICBSSearch<Map>::runICBSSearch()
 		//	children[0]->constraints = curr->conflict->constraint2;
 		//	num_standard++;
 		//}
+		else if (curr->conflict->type == conflict_type::RECTANGLE4) // 4-way branching
+		{
+			children.resize(curr->conflict->multiConstraint1.size()+ curr->conflict->multiConstraint2.size());
+			int constraint1Size = curr->conflict->multiConstraint1.size();
+			int constraint2Size = curr->conflict->multiConstraint2.size();
+
+			if (screen >= 2) {
+				cout << "Generate " << children.size() << " child nodes" << endl;
+
+			}
+
+			for (int i = 0; i < constraint1Size; i++) {
+				children[i]= new ICBSNode(curr->conflict->a1);
+				children[i]->constraints = curr->conflict->multiConstraint1.front();
+				curr->conflict->multiConstraint1.pop_front();
+			}
+
+			for (int i = 0; i < constraint2Size; i++) {
+				children[i+ constraint1Size] = new ICBSNode(curr->conflict->a2);
+				children[i+ constraint1Size]->constraints = curr->conflict->multiConstraint2.front();
+				curr->conflict->multiConstraint2.pop_front();
+			}
+
+			num_rectangle++;
+
+		}
 		else // 2-way branching
 		{
 			
@@ -1323,6 +1349,10 @@ bool MultiMapICBSSearch<Map>::runICBSSearch()
 			}
 			else
 			{
+				if (screen >= 2)
+					std::cout << "Delete #" << children[i]->time_generated
+					<< " with cost " << children[i]->g_val
+					<< " and " << children[i]->num_of_collisions << " conflicts " << std::endl;
 				delete children[i];
 			}
 			if (i < children.size() - 1)
@@ -1333,26 +1363,8 @@ bool MultiMapICBSSearch<Map>::runICBSSearch()
 			{
 
 				cout <<"Child "<<i<< " conflicts:"<< curr->children[i]->unknownConf.size();
-	//			for (auto &conit : curr->children[i]->unknownConf) {
-	///*				cout << "<" << get<0>(*conit) << "," << get<1>(*conit) << ","
-	//					<< "(" << get<2>(*conit) / num_col << "," << get<2>(*conit) % num_col << ")" << ","
-	//					<< "(" << get<3>(*conit) / num_col << "," << get<3>(*conit) % num_col << ")" << ","
-	//					<< get<4>(*conit) << ">; ";*/
 
-
-	//			}
 				cout << endl;
-
-				//cout << "n2 conflicts:";
-				//for (auto &conit : n2->unknownConf) {
-				//	cout << "<" << get<0>(*conit) << "," << get<1>(*conit) << ","
-				//		<< "(" << get<2>(*conit) / num_col << "," << get<2>(*conit) % num_col << "),"
-				//		<< "(" << get<3>(*conit) / num_col << "," << get<3>(*conit) % num_col << ")" << ","
-				//		<< get<4>(*conit) << ">; ";
-
-				//}
-				//cout << endl;
-				////exit(0);
 			}
 		}
 
@@ -2135,13 +2147,13 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 										Rg_t, paths, t1_start, t2_start,
 										make_pair(g1 / num_col, g1 % num_col),
 										make_pair(g2 / num_col, g2 % num_col),
-										num_col, kDelay);
+										num_col, kDelay, option.always4wayRM);
 								}
 								if (screen >= 4) {
 									cout << *new_rectangle << endl;
 								}
 
-								if (blocked(*paths[new_rectangle->a1], new_rectangle->constraint1) && blocked(*paths[new_rectangle->a2], new_rectangle->constraint2))
+								if (blocked(*paths[new_rectangle->a1], new_rectangle->multiConstraint1.front()) && blocked(*paths[new_rectangle->a2], new_rectangle->multiConstraint2.front()))
 								{
 									previousRetangle[0] = a1;
 									previousRetangle[1] = a2;
@@ -2259,7 +2271,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 							Rg_tf, paths, t1_startf, t2_startf,
 							make_pair(g1f / num_col, g1f % num_col),
 							make_pair(g2f / num_col, g2f % num_col),
-							num_col, kDelay, &a1MDDPath, &a2MDDPath);
+							num_col, kDelay, option.always4wayRM, &a1MDDPath, &a2MDDPath);
 					}
 					
 					rectangle = new_rectangle;
