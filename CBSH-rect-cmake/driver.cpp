@@ -44,7 +44,7 @@ int main(int argc, char** argv)
 		("short", "do not use long barrier constraint to resolve k delay rectangle conflict")
 		("only_generate_instance", po::value<std::string>()->default_value(""),"no searching")
 		("debug", "debug mode")
-		("RM-always-4way", "Always do 4 way splitting for RM, other wise only 4 way when necessary")
+		("RM-4way", po::value<int>()->default_value(1), "0, do not do 4 way split. 1, do 4 way only necessary.2 Always do 4 way splitting for RM, other wise only 4 way when necessary")
 
 		("flipped_rectangle", "resolving flipped rectangle symmetry conflict for RM")
 
@@ -89,12 +89,8 @@ int main(int argc, char** argv)
 		options1.debug = false;
 	}
 
-	if (vm.count("RM-always-4way")) {
-		options1.always4wayRM = true;
-	}
-	else {
-		options1.always4wayRM = false;
-	}
+
+	options1.RM4way = vm["RM-4way"].as<int>();
 
 	if (vm.count("flipped_rectangle")) {
 		options1.flippedRec = true;

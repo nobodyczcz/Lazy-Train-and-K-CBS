@@ -294,7 +294,7 @@ public:
 	bool kRectangleConflict(int a1, int a2, const std::pair<int, int>& Rs, const std::pair<int, int>& Rg,
 		const std::pair<int, int>& s1, const std::pair<int, int>& s2, int Rg_t,
 		const std::vector<Path*>& paths, int S1_t,int S2_t, const std::pair<int, int>& G1, const std::pair<int, int>& G2,
-		int num_col, int k, bool always4way = false, MDDPath* a1kMDD=NULL, MDDPath* a2kMDD=NULL) // For K-RM
+		int num_col, int k, int RM4way, MDDPath* a1kMDD=NULL, MDDPath* a2kMDD=NULL) // For K-RM
 	{
 		this->a1 = a1;
 		this->a2 = a2;
@@ -347,7 +347,7 @@ public:
 				return false;
 			multiConstraint1.push_back(constraint11);
 
-			if (always4way || a1RgBypass <= a1Rg + k) {
+			if (RM4way==2 || a1RgBypass <= a1Rg + k) {
 				std::list<Constraint> constraint12;
 				if (!addModifiedHorizontalLongBarrierConstraint(*paths[a1], Rs.first, R1_y, G1_y, G1_t - (abs(Rg_x - Rs.first)), num_col, S1_t, constraint12, k, a1kMDD))
 					return false;
@@ -361,8 +361,11 @@ public:
 				return false;
 			multiConstraint2.push_back(constraint21);
 
-			
-			if (always4way || a2RgBypass <= a1Rg + k) {// the lower bound is always a1Rg, the agent arrive rectangle early
+			if (RM4way == 0 && a2RgBypass <= a1Rg + k) {
+				return false;
+			}
+
+			if (RM4way==2 || a2RgBypass <= a1Rg + k) {// the lower bound is always a1Rg, the agent arrive rectangle early
 				std::list<Constraint> constraint22;
 				if (!addModifiedVerticalLongBarrierConstraint(*paths[a2], Rs.second, R2_x, G2_x, G2_t - (abs(Rg_y - Rs.second)), num_col, S2_t, constraint22, k, a2kMDD))
 					return false;
@@ -398,7 +401,7 @@ public:
 			multiConstraint1.push_back(constraint11);
 
 			
-			if (always4way || a1RgBypass <= a1Rg + k) {
+			if (RM4way==2 || a1RgBypass <= a1Rg + k) {
 				std::list<Constraint> constraint12;
 				if (!addModifiedVerticalLongBarrierConstraint(*paths[a1], Rs.second, R1_x, G1_x, G1_t - (abs(Rg_y - Rs.second)), num_col, S1_t, constraint12, k, a1kMDD))
 					return false;
@@ -410,7 +413,11 @@ public:
 				return false;
 			multiConstraint2.push_back(constraint21);
 
-			if (always4way || a2RgBypass <= a1Rg + k) {
+			if (RM4way == 0 && a2RgBypass <= a1Rg + k) {
+				return false;
+			}
+
+			if (RM4way==2 || a2RgBypass <= a1Rg + k) {
 				std::list<Constraint> constraint22;
 				if (!addModifiedHorizontalLongBarrierConstraint(*paths[a2], Rs.first, R2_y, G2_y, G2_t - (abs(Rg_x - Rs.first)), num_col, S2_t, constraint22, k, a2kMDD))
 					return false;

@@ -1172,7 +1172,7 @@ bool MultiMapICBSSearch<Map>::runICBSSearch()
 				<< curr->conflict->originalConf2 / num_col << ","
 				<< curr->conflict->originalConf2 % num_col << ")"
 				<< curr->conflict->t << "," << curr->conflict->k << "," << curr->conflict->type << ">" << std::endl;
-			cout << "always 4 way split " << option.always4wayRM << endl;
+			cout << "always 4 way split " << option.RM4way << endl;
 			if (screen>=3)
 				printPaths();
 
@@ -2129,9 +2129,9 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 								int Rg_t = con->t + abs(Rg.first - loc1 / num_col) + abs(Rg.second - loc1 % num_col);
 								/*cout << "loc:" << loc1 << " t:" << timestep << endl;
 								cout << "s1 " << s1 << " s2 " << s2 << " g1 " << g1 << " g2 " << g2 << " rg " << Rg.first << " " << Rg.second <<" Rg_t "<< Rg_t<< endl;
-*/								
+*/								bool success;
 								if (option.flippedRec) {
-									new_rectangle->flippedRectangleConflict(a1, a2, Rs, Rg,
+									success=new_rectangle->flippedRectangleConflict(a1, a2, Rs, Rg,
 										make_pair(s1 / num_col, s1 % num_col),
 										make_pair(s2 / num_col, s2 % num_col),
 										Rg_t, paths, t1_start, t2_start,
@@ -2141,14 +2141,21 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 
 								}
 								else{
-									new_rectangle->kRectangleConflict(a1, a2, Rs, Rg,
+									success=new_rectangle->kRectangleConflict(a1, a2, Rs, Rg,
 										make_pair(s1 / num_col, s1 % num_col),
 										make_pair(s2 / num_col, s2 % num_col),
 										Rg_t, paths, t1_start, t2_start,
 										make_pair(g1 / num_col, g1 % num_col),
 										make_pair(g2 / num_col, g2 % num_col),
-										num_col, kDelay, option.always4wayRM);
+										num_col, kDelay, option.RM4way);
 								}
+
+								if (!success) {
+									if (screen >= 4)
+										cout << "Create rectangle conflict failed" << endl;
+									continue;
+								}
+
 								if (screen >= 4) {
 									cout << *new_rectangle << endl;
 								}
@@ -2271,7 +2278,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 							Rg_tf, paths, t1_startf, t2_startf,
 							make_pair(g1f / num_col, g1f % num_col),
 							make_pair(g2f / num_col, g2f % num_col),
-							num_col, kDelay, option.always4wayRM, &a1MDDPath, &a2MDDPath);
+							num_col, kDelay, option.RM4way, &a1MDDPath, &a2MDDPath);
 					}
 					
 					rectangle = new_rectangle;
