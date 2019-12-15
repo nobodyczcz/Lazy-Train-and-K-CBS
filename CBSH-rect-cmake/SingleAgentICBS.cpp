@@ -102,9 +102,9 @@ template<class Map>
 bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weight, ConstraintTable& constraint_table,
 	ReservationTable* res_table, size_t max_plan_len, double lowerbound, std::clock_t start_clock ,int time_limit)
 {
-	if (constraint_table.is_constrained(start_location, 0))
+	if (constraint_table.is_constrained(start_location, 0)) {
 		return false;
-
+	}
 	num_expanded = 0;
 	num_generated = 0;
 

@@ -45,7 +45,6 @@ int main(int argc, char** argv)
 		("only_generate_instance", po::value<std::string>()->default_value(""),"no searching")
 		("debug", "debug mode")
 		("RM-4way", po::value<int>()->default_value(1), "0, do not do 4 way split. 1, do 4 way only necessary.2 Always do 4 way splitting for RM, other wise only 4 way when necessary")
-
 		("flipped_rectangle", "resolving flipped rectangle symmetry conflict for RM")
 
 	;

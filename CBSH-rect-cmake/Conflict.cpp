@@ -589,6 +589,48 @@ bool addModifiedHorizontalLongBarrierConstraint(const std::vector<PathEntry>& pa
 }
 
 	// add a vertival modified barrier constraint
+	bool add4WayModifiedVerticalLongBarrierConstraint(const std::vector<PathEntry>& path, int y,
+		int Ri_x, int Rg_x, int Rg_t, int num_col, int St,
+		std::list<Constraint>& constraints, int k)
+	{
+		for (int i = 0; i <= k; i++) {
+			constraints.emplace_back(Ri_x * num_col + y, Rg_x * num_col + y, Rg_t+i, constraint_type::BARRIER);
+		}
+
+		
+		if (constraints.empty())
+		{
+			// std::cout << "Fail to add modified barrier constraints!" << std::endl;
+			return false;
+		}
+		else
+			return true;
+	}
+
+
+	// add a horizontal modified barrier constraint
+	bool add4WayModifiedHorizontalLongBarrierConstraint(const std::vector<PathEntry>& path, int x,
+		int Ri_y, int Rg_y, int Rg_t, int num_col, int St,
+		std::list<Constraint>& constraints, int k)
+	{
+		
+
+		for (int i = 0; i <= k; i++) {
+			constraints.emplace_back(x * num_col + Ri_y, x * num_col + Rg_y, Rg_t + i, constraint_type::BARRIER);
+		}
+
+		if (constraints.empty())
+		{
+			// std::cout << "Fail to add modified barrier constraints!" << std::endl;
+			return false;
+		}
+		else
+			return true;
+
+
+	}
+
+	// add a vertival modified barrier constraint
 bool addFlippedVerticalLongBarrierConstraint(const std::vector<PathEntry>& path, int y,
 	vector<int> vertical,vector<int> verticalMin,vector<int> verticalMax, int num_col, int St,
 	std::list<Constraint>& constraints, int k, MDDPath* kMDD)
