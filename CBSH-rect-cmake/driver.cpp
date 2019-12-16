@@ -166,7 +166,7 @@ int main(int argc, char** argv)
 	bool res;
 	res = icbs.runICBSSearch();
 	ofstream stats;
-	stats.open(vm["output"].as<string>(), ios::app);
+	stats.open(vm["output"].as<string>(), ios::trunc);
 	stats << icbs.runtime/ CLOCKS_PER_SEC << "," <<
 		icbs.HL_num_expanded << "," << icbs.HL_num_generated << "," <<
 		icbs.LL_num_expanded << "," << icbs.LL_num_generated << "," <<

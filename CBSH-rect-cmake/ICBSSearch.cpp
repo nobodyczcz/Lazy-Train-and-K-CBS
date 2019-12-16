@@ -1923,7 +1923,8 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 
 				auto new_rectangle = std::shared_ptr<Conflict>(new Conflict(loc1,con->k,timestep));
 
-				new_rectangle->kRectangleConflict(a1, a2,
+				bool success;
+				success = new_rectangle->kRectangleConflict(a1, a2,
 					al.initial_locations[a1].first*num_col + al.initial_locations[a1].second,
 					al.initial_locations[a2].first*num_col+ al.initial_locations[a2].second, 
 					0, 0, Rs, Rg, Rg_t, 
@@ -1931,11 +1932,24 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 					al.goal_locations[a2].first*num_col + al.goal_locations[a2].second,
 					num_col, kDelay, asymmetry_constraint);
 
-				if (blocked(*paths[new_rectangle->a1], new_rectangle->constraint1) && blocked(*paths[new_rectangle->a2], new_rectangle->constraint2))
-				{
+				bool isBlocked = true;
+
+				for (auto constraint : new_rectangle->multiConstraint1) {
+					isBlocked = isBlocked && blocked(*paths[new_rectangle->a1], constraint);
+				}
+				for (auto constraint : new_rectangle->multiConstraint2) {
+					isBlocked = isBlocked && blocked(*paths[new_rectangle->a2], constraint);
+				}
+
+				if (success && isBlocked) {
 					new_rectangle->p = conflict_priority::CARDINAL;
 					parent.conflicts.push_back(new_rectangle);
 					continue;
+				}
+				else if (screen >= 4) {
+					cout << "Not success or not blocked" << endl;
+					cout << "succcess " << success << endl;
+					cout << "isBlocked " << isBlocked << endl;
 				}
 			}
 		}
@@ -1953,14 +1967,25 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 
 				auto new_rectangle = std::shared_ptr<Conflict>(new Conflict(loc1,con->k,timestep));
 
-				new_rectangle->kRectangleConflict(a1, a2,
+				bool success;
+				success = new_rectangle->kRectangleConflict(a1, a2,
 					al.initial_locations[a1].first*num_col + al.initial_locations[a1].second, 
 					al.initial_locations[a2].first*num_col + al.initial_locations[a2].second,
 					 0, 0, Rs, Rg, Rg_t, 
 					al.goal_locations[a1].first*num_col + al.goal_locations[a1].second,
 					al.goal_locations[a2].first*num_col + al.goal_locations[a2].second,
-					num_col, kDelay, asymmetry_constraint);
-				if (blocked(*paths[new_rectangle->a1], new_rectangle->constraint1) && blocked(*paths[new_rectangle->a2], new_rectangle->constraint2))
+					num_col, kDelay, option.RM4way);
+
+				bool isBlocked = true;
+
+				for (auto constraint : new_rectangle->multiConstraint1) {
+					isBlocked = isBlocked && blocked(*paths[new_rectangle->a1], constraint);
+				}
+				for (auto constraint : new_rectangle->multiConstraint2) {
+					isBlocked = isBlocked && blocked(*paths[new_rectangle->a2], constraint);
+				}
+
+				if (success && isBlocked)
 				{
 
 					if (type == 2)
@@ -1971,6 +1996,12 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 						new_rectangle->p = conflict_priority::NON;
 					parent.conflicts.push_back(new_rectangle);
 					continue;
+				}
+				else if(screen>=4) {
+					cout << "Not success or not blocked" << endl;
+					cout << "succcess " << success << endl;
+					cout << "isBlocked " << isBlocked << endl;
+
 				}
 			}
 		}
@@ -2202,7 +2233,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 									isBlocked = isBlocked && blocked(*paths[new_rectangle->a2], constraint);
 								}
 
-								if (option.RM4way==3) {
+								if (option.RM4way>=3) {
 									
 
 									if (isBlocked) {

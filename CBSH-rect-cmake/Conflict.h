@@ -41,9 +41,9 @@ bool addModifiedVerticalBarrierConstraint(const std::vector<PathEntry>& path, in
 	int Ri_x, int Rg_x, int Rg_t, int num_col,
 	std::list<Constraint>& constraints);
 
-void addKDelayBarrierConstraints(int S1, int S2, int S1_t, int S2_t, int Rg, int G1, int G2, int num_col,
-	std::list<Constraint>& constraints1, std::list<Constraint>& constraints2,
-	int k, bool asymmetry_constraint);
+bool addKDelayBarrierConstraints(int S1, int S2, int S1_t, int S2_t, pair<int, int> Rs, pair<int, int> Rg, int G1, int G2, int num_col,
+	std::vector<std::list<Constraint>>& multiConstraint1, std::vector<std::list<Constraint>>& multiConstraint2,
+	int k, int RM4way);
 
 // add a vertival modified barrier constraint
 bool addModifiedVerticalLongBarrierConstraint(const std::vector<PathEntry>& path, int y,
@@ -287,18 +287,23 @@ public:
 
 
 	bool kRectangleConflict(int a1, int a2, int S1, int S2, int S1_t, int S2_t, pair<int, int> Rs, pair<int, int> Rg,
-		int Rg_t, int G1, int G2, int num_col,int k,bool asymmetry_constraint) // For CR and R
+		int Rg_t, int G1, int G2, int num_col,int k, int RM4way) // For CR and R
 	{
 		this->a1 = a1;
 		this->a2 = a2;
 		this->t_sg = Rg_t - abs(Rg.first - Rs.first) - abs(Rg.second - Rs.second);
 		this->rs = Rs.first*num_col + Rs.second;
 		this->rg = Rg.first*num_col + Rg.second;
-		addKDelayBarrierConstraints(S1, S2, S1_t, S2_t, Rg.first*num_col+Rg.second, G1, G2, num_col,
-			constraint1, constraint2,k, asymmetry_constraint);
+		if (addKDelayBarrierConstraints(S1, S2, S1_t, S2_t, Rs, Rg, G1, G2, num_col,
+			multiConstraint1, multiConstraint2, k, RM4way)) {
+			type = conflict_type::RECTANGLE4;
+			return true;
 
-		type = conflict_type::RECTANGLE;
-		return true;
+		}
+		else
+			return false;
+
+		
 	}
 
 	bool kRectangleConflict(int a1, int a2, const std::pair<int, int>& Rs, const std::pair<int, int>& Rg,
@@ -328,38 +333,47 @@ public:
 
 		int a2Rg = getMahattanDistance(s2_x, s2_y, Rg_x, Rg_y);
 		int a2RgBypass = a2Rg + 2 * (getMahattanDistance(s1_x, s1_y, Rs.first, Rs.second) + 1);
+
+		if (RM4way == 0 && (a2RgBypass <= a1Rg + k || a1RgBypass <= a1Rg + k)) {
+			return false;
+		}
+
 		int extended = k / 2;
 		int R1_x, R1_y, R2_x, R2_y, G1_x, G1_y, G2_x, G2_y, G1_t, G2_t;
 		if ((s1_x == s2_x && (s1_y - s2_y) * (s2_y - Rg_y) < 0) ||
 			(s1_x != s2_x && (s1_x - s2_x)*(s2_x - Rg_x) >= 0))
 		{
+
+			
 			int sign1 = s2_y < g2_y ? 1 : -1;
 			int sign2 = s1_x < g1_x ? 1 : -1;
 
-			//R1_x = Rg_x;
-			//G1_x = Rg_x;
-
-			//R2_x = sign2 > 0 ? max(Rs.first-sign2*extended, s1_x) : min(Rs.first - sign2 * extended, s1_x);
-			////G2_x = Rg_x + sign2 * extended;
-			//G2_x = sign2 > 0 ? min(Rg_x + sign2 * extended, g1_x) : max(Rg_x + sign2 * extended, g1_x);
-
-			//R1_y = sign1 > 0 ? max(Rs.second-sign1*extended,s2_y) : min(Rs.second - sign1 * extended, s2_y);
-			////G1_y = Rg_y + sign1 * extended;
-			///*cout << "sign1 " << sign1 << endl;
-			//cout << "R1_y 1 " << R1_y << endl;
-			//cout <<"G1y 1 "<< G1_y << endl;*/
-			//G1_y = sign1 > 0 ? min(Rg_y + sign1 * extended, g2_y) : max(Rg_y + sign1 * extended, g2_y);
-			///*cout << "G1y 2 " << G1_y << endl;
-			//cout << "g2_y " << g2_y << endl;*/
-
-
-			//R2_y = Rg_y;
-			//G2_y = Rg_y;
-
-			//G1_t = Rg_t + abs(G1_y - Rg_y);
-			//G2_t = Rg_t + abs(G2_x - Rg_x);
-
 			R1_x = Rg_x;
+			G1_x = Rg_x;
+
+			if (RM4way >= 4) {
+				R2_x = sign2 > 0 ? max(Rs.first - sign2 * extended, s1_x) : min(Rs.first - sign2 * extended, s1_x);
+				//G2_x = Rg_x + sign2 * extended;
+				G2_x = sign2 > 0 ? min(Rg_x + sign2 * extended, g1_x) : max(Rg_x + sign2 * extended, g1_x);
+
+				R1_y = sign1 > 0 ? max(Rs.second - sign1 * extended, s2_y) : min(Rs.second - sign1 * extended, s2_y);
+				//G1_y = Rg_y + sign1 * extended;
+				G1_y = sign1 > 0 ? min(Rg_y + sign1 * extended, g2_y) : max(Rg_y + sign1 * extended, g2_y);
+			}
+			else {
+				R2_x = s1_x;
+				G2_x = g1_x;
+
+				R1_y = s1_y;
+				G1_y = g2_y;
+			}
+
+
+			R2_y = Rg_y;
+			G2_y = Rg_y;
+
+
+			/*R1_x = Rg_x;
 			G1_x = Rg_x;
 
 			R2_x = s1_x;
@@ -370,19 +384,16 @@ public:
 
 			R2_y = Rg_y;
 			G2_y = Rg_y;
-
+*/
 			G1_t = Rg_t + abs(G1_y - Rg_y);
 			G2_t = Rg_t + abs(G2_x - Rg_x);
 			//cout << "s1t" << S1_t << "G1_t" << G1_t << "G1_y " << G1_y << endl;
 			//cout << "s2t" << S2_t << "G2_t" << G2_t << "G2_x " << G2_x << endl;
 			
-			if (RM4way == 0 && (a2RgBypass <= a1Rg + k || a1RgBypass <= a1Rg + k)) {
-				return false;
-			}
 			
 			std::list<Constraint> constraint11;
 			
-			if (RM4way == 3)
+			if (RM4way >= 3)
 				add4WayModifiedHorizontalLongBarrierConstraint(*paths[a1], Rg_x, R1_y, G1_y, G1_t, num_col, S1_t, constraint11, k);
 			else
 				addModifiedHorizontalLongBarrierConstraint(*paths[a1], Rg_x, R1_y, G1_y, G1_t, num_col, S1_t, constraint11, k, a1kMDD);
@@ -390,7 +401,7 @@ public:
 
 			if (RM4way>=2 || a1RgBypass <= a1Rg + k) {
 				std::list<Constraint> constraint12;
-				if (RM4way == 3)
+				if (RM4way >= 3)
 					add4WayModifiedHorizontalLongBarrierConstraint(*paths[a1], Rs.first, R1_y, G1_y, G1_t - (abs(Rg_x - Rs.first)), num_col, S1_t, constraint12, k);
 				else
 					addModifiedHorizontalLongBarrierConstraint(*paths[a1], Rs.first, R1_y, G1_y, G1_t - (abs(Rg_x - Rs.first)), num_col, S1_t, constraint12, k, a1kMDD);
@@ -400,7 +411,7 @@ public:
 			
 
 			std::list<Constraint> constraint21;
-			if (RM4way == 3)
+			if (RM4way >= 3)
 				add4WayModifiedVerticalLongBarrierConstraint(*paths[a2], Rg_y, R2_x, G2_x, G2_t, num_col, S2_t, constraint21, k);
 			else
 				addModifiedVerticalLongBarrierConstraint(*paths[a2], Rg_y, R2_x, G2_x, G2_t, num_col, S2_t, constraint21, k, a2kMDD);
@@ -408,7 +419,7 @@ public:
 
 			if (RM4way>=2 || a2RgBypass <= a1Rg + k) {// the lower bound is always a1Rg, the agent arrive rectangle early
 				std::list<Constraint> constraint22;
-				if (RM4way == 3)
+				if (RM4way >= 3)
 					add4WayModifiedVerticalLongBarrierConstraint(*paths[a2], Rs.second, R2_x, G2_x, G2_t - (abs(Rg_y - Rs.second)), num_col, S2_t, constraint22, k);
 				else
 					addModifiedVerticalLongBarrierConstraint(*paths[a2], Rs.second, R2_x, G2_x, G2_t - (abs(Rg_y - Rs.second)), num_col, S2_t, constraint22, k, a2kMDD);
@@ -425,22 +436,34 @@ public:
 			int sign1 = s2_x < g2_x ? 1 : -1;
 			int sign2 = s1_y < g1_y ? 1 : -1;
 
+			if (RM4way >= 4) {
+				R1_x = sign1 > 0 ? max(Rs.first - sign1 * extended, s2_x) : min(Rs.first - sign1 * extended, s2_x);
+				//G1_x = Rg_x + sign1 * extended;
+				G1_x = sign1 > 0 ? min(Rg_x + sign1 * extended, g2_x) : max(Rg_x + sign1 * extended, g2_x);
 
-			//R1_x = sign1 > 0 ? max(Rs.first-sign1*extended,s2_x) : min(Rs.first - sign1 * extended, s2_x);
-			////G1_x = Rg_x + sign1 * extended;
-			//G1_x = sign1 > 0 ? min(Rg_x + sign1 * extended, g2_x) : max(Rg_x + sign1 * extended, g2_x);
+				R2_y = sign2 > 0 ? max(Rs.second - sign2 * extended, s1_y) : min(Rs.second - sign2 * extended, s1_y);
+				//G2_y = Rg_y + sign2 * extended;
+				G2_y = sign2 > 0 ? min(Rg_y + sign2 * extended, g1_y) : max(Rg_y + sign2 * extended, g1_y);
+			}
+			else {
+				R1_x = s2_x;
+				G1_x = g2_x;
 
-			//R2_x = Rg_x;
-			//G2_y = Rg_x;
+				R2_y = s1_y;
+				G2_y = g1_y;
 
-			//R1_y = Rg_y;
-			//G1_y = Rg_y;
+			}
+			
 
-			//R2_y = sign2 > 0 ? max(Rs.second - sign2*extended, s1_y) : min(Rs.second - sign2 * extended, s1_y);
-			////G2_y = Rg_y + sign2 * extended;
-			//G2_y = sign2 > 0 ? min(Rg_y+sign2*extended, g1_y) : max (Rg_y + sign2 * extended, g1_y);
+			R2_x = Rg_x;
+			G2_y = Rg_x;
 
-			R1_x = s2_x;
+			R1_y = Rg_y;
+			G1_y = Rg_y;
+
+		
+
+			/*R1_x = s2_x;
 			G1_x = g2_x;
 
 			R2_x = Rg_x;
@@ -450,7 +473,7 @@ public:
 			G1_y = Rg_y;
 
 			R2_y = s1_y;
-			G2_y = g1_y;
+			G2_y = g1_y;*/
 
 
 			G1_t = Rg_t + abs(G1_x - Rg_x);
@@ -459,12 +482,8 @@ public:
 			//cout << "s2t" << S2_t << "G2_t" << G2_t << "G2_x " << G2_x << endl;
 			
 
-			if (RM4way == 0 && (a2RgBypass <= a1Rg + k || a1RgBypass <= a1Rg + k)) {
-				return false;
-			}
-
 			std::list<Constraint> constraint11;
-			if (RM4way == 3)
+			if (RM4way >=3)
 				add4WayModifiedVerticalLongBarrierConstraint(*paths[a1], Rg_y, R1_x, G1_x, G1_t, num_col, S1_t, constraint11, k);
 			else
 				addModifiedVerticalLongBarrierConstraint(*paths[a1], Rg_y, R1_x, G1_x, G1_t, num_col, S1_t, constraint11, k, a1kMDD);
@@ -472,7 +491,7 @@ public:
 			
 			if (RM4way>=2 || a1RgBypass <= a1Rg + k) {
 				std::list<Constraint> constraint12;
-				if (RM4way == 3)
+				if (RM4way >= 3)
 					add4WayModifiedVerticalLongBarrierConstraint(*paths[a1], Rs.second, R1_x, G1_x, G1_t - (abs(Rg_y - Rs.second)), num_col, S1_t, constraint12, k);
 				else
 					addModifiedVerticalLongBarrierConstraint(*paths[a1], Rs.second, R1_x, G1_x, G1_t - (abs(Rg_y - Rs.second)), num_col, S1_t, constraint12, k, a1kMDD);
@@ -480,7 +499,7 @@ public:
 			}
 
 			std::list<Constraint> constraint21;
-			if (RM4way == 3)
+			if (RM4way >= 3)
 				add4WayModifiedHorizontalLongBarrierConstraint(*paths[a2], Rg_x, R2_y, G2_y, G2_t, num_col, S2_t, constraint21, k);
 			else
 				addModifiedHorizontalLongBarrierConstraint(*paths[a2], Rg_x, R2_y, G2_y, G2_t, num_col, S2_t, constraint21, k, a2kMDD);
@@ -489,7 +508,7 @@ public:
 
 			if (RM4way>=2 || a2RgBypass <= a1Rg + k) {
 				std::list<Constraint> constraint22;
-				if (RM4way == 3)
+				if (RM4way >= 3)
 					add4WayModifiedHorizontalLongBarrierConstraint(*paths[a2], Rs.first, R2_y, G2_y, G2_t - (abs(Rg_x - Rs.first)), num_col, S2_t, constraint22, k);
 				else
 					addModifiedHorizontalLongBarrierConstraint(*paths[a2], Rs.first, R2_y, G2_y, G2_t - (abs(Rg_x - Rs.first)), num_col, S2_t, constraint22, k, a2kMDD);

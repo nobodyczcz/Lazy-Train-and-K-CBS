@@ -271,8 +271,8 @@ bool addModifiedHorizontalBarrierConstraint(const std::vector<PathEntry>& path, 
 }
 
 // add a pair of long k-delay barrier constraints
-void addKDelayBarrierConstraints(int S1, int S2, int S1_t, int S2_t, int Rg, int G1, int G2, int num_col,
-	std::list<Constraint>& constraints1, std::list<Constraint>& constraints2, int k, bool asymmetry_constraint)
+bool addKDelayBarrierConstraints(int S1, int S2, int S1_t, int S2_t, pair<int, int> Rs, pair<int, int> Rg, int G1, int G2, int num_col,
+	std::vector<std::list<Constraint>>& multiConstraint1, std::vector<std::list<Constraint>>& multiConstraint2 , int k, int RM4way)
 {
 	// 
 	int s1_x = S1 / num_col;
@@ -283,13 +283,24 @@ void addKDelayBarrierConstraints(int S1, int S2, int S1_t, int S2_t, int Rg, int
 	int g1_y = G1 % num_col;
 	int g2_x = G2 / num_col;
 	int g2_y = G2 % num_col;
-	int Rg_x = Rg / num_col;
-	int Rg_y = Rg % num_col;
+	int Rg_x = Rg.first;
+	int Rg_y = Rg.second;
 	int Rg_t = S1_t + abs(Rg_x - s1_x) + abs(Rg_y - s1_y);
 
+	int a1Rg = getMahattanDistance(s1_x, s1_y, Rg_x, Rg_y);
+	int a1RgBypass = a1Rg + 2 * (getMahattanDistance(s2_x, s2_y, Rs.first, Rs.second) + 1);
+
+	int a2Rg = getMahattanDistance(s2_x, s2_y, Rg_x, Rg_y);
+	int a2RgBypass = a2Rg + 2 * (getMahattanDistance(s1_x, s1_y, Rs.first, Rs.second) + 1);
+
+	if (RM4way == 0 && (a2RgBypass <= a1Rg + k || a1RgBypass <= a1Rg + k)) {
+		return false;
+	}
 
 	int R1_x, R1_y, R2_x, R2_y;
 	int Rg1_x, Rg1_y, Rg2_x, Rg2_y;
+	int R1e_x, R1e_y, R2e_x, R2e_y;
+	int Rg1e_x, Rg1e_y, Rg2e_x, Rg2e_y;
 	if (s1_x == s2_x)
 	{
 		if ((s1_y - s2_y) * (s2_y - Rg_y) >= 0)
@@ -302,6 +313,15 @@ void addKDelayBarrierConstraints(int S1, int S2, int S1_t, int S2_t, int Rg, int
 			Rg1_y = Rg_y;
 			R2_y = s1_y;//different
 			Rg2_y = g1_y;
+
+			R1e_x = s2_x;//different
+			Rg1e_x = g2_x;
+			R2e_x = Rs.first;
+			Rg2e_x = Rs.first;
+			R1e_y = Rs.second;
+			Rg1e_y = Rs.second;
+			R2e_y = s1_y;//different
+			Rg2e_y = g1_y;
 		}
 		else
 		{
@@ -313,6 +333,15 @@ void addKDelayBarrierConstraints(int S1, int S2, int S1_t, int S2_t, int Rg, int
 			Rg1_y = g2_y;
 			R2_y = Rg_y;
 			Rg2_y = Rg_y;
+
+			R1e_x = Rs.first;
+			Rg1e_x = Rs.first;
+			R2e_x = s1_x;//different
+			Rg2e_x = g1_x;
+			R1e_y = s2_y;//different
+			Rg1e_y = g2_y;
+			R2e_y = Rs.second;
+			Rg2e_y = Rs.second;
 		}
 	}
 	else if ((s1_x - s2_x)*(s2_x - Rg_x) >= 0)
@@ -325,6 +354,15 @@ void addKDelayBarrierConstraints(int S1, int S2, int S1_t, int S2_t, int Rg, int
 		Rg1_y = g2_y;
 		R2_y = Rg_y;
 		Rg2_y = Rg_y;
+
+		R1e_x = Rs.first;
+		Rg1e_x = Rs.first;
+		R2e_x = s1_x;//different
+		Rg2e_x = g1_x;
+		R1e_y = s2_y;//different
+		Rg1e_y = g2_y;
+		R2e_y = Rg.second;
+		Rg2e_y = Rg.second;
 	}
 	else
 	{
@@ -336,27 +374,62 @@ void addKDelayBarrierConstraints(int S1, int S2, int S1_t, int S2_t, int Rg, int
 		Rg1_y = Rg_y;
 		R2_y = s1_y;//different
 		Rg2_y = g1_y;
+
+		R1e_x = s2_x;//different
+		Rg1e_x = g2_x;
+		R2e_x = Rs.first;
+		Rg2e_x = Rs.first;
+		R1e_y = Rg.second;
+		Rg1e_y = Rg.second;
+		R2e_y = s1_y;//different
+		Rg2e_y = g1_y;
 	}
 
 	int Rg1_t = S1_t + abs(Rg1_x - s1_x) + abs(Rg1_y - s1_y);
 	int Rg2_t = S1_t + abs(Rg2_x - s1_x) + abs(Rg2_y - s1_y);
 
-	if (asymmetry_constraint) {
-		constraints1.emplace_back(R1_x * num_col + R1_y, Rg1_x * num_col + Rg1_y, Rg1_t, constraint_type::BARRIER);
-		for (int i = -k; i <= k; i++) {
-			if ((Rg_t + i) < 0)
-				continue;
-			constraints2.emplace_back(R2_x * num_col + R2_y, Rg2_x * num_col + Rg2_y, Rg2_t + i, constraint_type::BARRIER);
 
-		}
+
+
+	std::list<Constraint> constraint11;
+
+	for (int i = 0; i <= k; i++) {
+		constraint11.emplace_back(R1_x * num_col + R1_y, Rg1_x * num_col + Rg1_y, Rg1_t + i, constraint_type::BARRIER);
 	}
-	else {
+	
+	multiConstraint1.push_back(constraint11);
+
+	if (RM4way >= 2 || a1RgBypass <= a1Rg + k) {
+		std::list<Constraint> constraint12;
+		int Rg1e_t = getMahattanDistance(Rg1e_x, Rg1e_y, s1_x, s1_y);
+
 		for (int i = 0; i <= k; i++) {
-			constraints1.emplace_back(R1_x * num_col + R1_y, Rg1_x * num_col + Rg1_y, Rg1_t + i, constraint_type::BARRIER);
 
-			constraints2.emplace_back(R2_x * num_col + R2_y, Rg2_x * num_col + Rg2_y, Rg2_t + i, constraint_type::BARRIER);
+			constraint12.emplace_back(R1e_x * num_col + R1e_y, Rg1e_x * num_col + Rg1e_y, Rg1e_t + i, constraint_type::BARRIER);
 		}
+		multiConstraint1.push_back(constraint12);
 	}
+
+
+
+	std::list<Constraint> constraint21;
+	for (int i = 0; i <= k; i++) {
+		constraint21.emplace_back(R2_x * num_col + R2_y, Rg2_x * num_col + Rg2_y, Rg2_t + i, constraint_type::BARRIER);
+	}
+
+	multiConstraint2.push_back(constraint21);
+
+	if (RM4way >= 2 || a2RgBypass <= a1Rg + k) {// the lower bound is always a1Rg, the agent arrive rectangle early
+		std::list<Constraint> constraint22;
+		int Rg2e_t = getMahattanDistance(Rg2e_x, Rg2e_y, s2_x, s2_y);
+		for (int i = 0; i <= k; i++) {
+			constraint22.emplace_back(R2e_x * num_col + R2e_y, Rg2e_x * num_col + Rg2e_y, Rg2e_t + i, constraint_type::BARRIER);
+		}
+		multiConstraint2.push_back(constraint22);
+	}
+
+	return true;
+
 
 	//exit(0);
 }
