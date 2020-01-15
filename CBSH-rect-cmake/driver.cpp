@@ -176,7 +176,7 @@ int main(int argc, char** argv)
 		icbs.num_standard << "," << icbs.num_rectangle << "," <<
 		icbs.num_corridor2 << "," << icbs.num_corridor4 << "," << 
 		icbs.num_target<<","<< icbs.num_0FlipRectangle<<","<<
-		icbs.num_1FlipRectangle << ","<< icbs.num_2FlipRectangle << endl;
+		icbs.num_1FlipRectangle << ","<< icbs.num_2FlipRectangle << "," << icbs.num_chasingRectangle << endl;
 	stats.close();
 	if (vm["screen"].as<int>() == 2)
 		cout << "Done!!" << endl;

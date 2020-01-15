@@ -1080,7 +1080,7 @@ bool MultiMapICBSSearch<Map>::runICBSSearch()
 				<< RMTime/CLOCKS_PER_SEC<<";"<<
 				num_standard << ";" << num_rectangle << "," <<
 				num_corridor2 << ";" << num_corridor4 << "," << num_target << "," << num_0FlipRectangle << "," <<
-				num_1FlipRectangle << "," << num_2FlipRectangle << endl;
+				num_1FlipRectangle << "," << num_2FlipRectangle <<","<<num_chasingRectangle<< endl;
 			if(debug_mode)
 			printHLTree();
 			if (screen >= 1)
@@ -1158,7 +1158,7 @@ bool MultiMapICBSSearch<Map>::runICBSSearch()
 				<< RMTime / CLOCKS_PER_SEC << ";"<<
 				num_standard << ";" << num_rectangle << "," <<
 				num_corridor2 << ";" << num_corridor4 << "," << num_target << "," << num_0FlipRectangle << "," <<
-				num_1FlipRectangle << "," << num_2FlipRectangle << endl;
+				num_1FlipRectangle << "," << num_2FlipRectangle << "," << num_chasingRectangle << endl;
 			
 			break;
 		}
@@ -1306,6 +1306,9 @@ bool MultiMapICBSSearch<Map>::runICBSSearch()
 			}
 
 			num_rectangle++;
+			if (curr->conflict->isChasing) {
+				num_chasingRectangle++;
+			}
 
 		}
 		else // 2-way branching
@@ -1399,7 +1402,7 @@ bool MultiMapICBSSearch<Map>::runICBSSearch()
 			<< RMTime / CLOCKS_PER_SEC << ";" <<
 			num_standard << ";" << num_rectangle << ";" <<
 			num_corridor2 << ";" << num_corridor4 << ";" << num_target << "," << num_0FlipRectangle << "," <<
-			num_1FlipRectangle << "," << num_2FlipRectangle << 
+			num_1FlipRectangle << "," << num_2FlipRectangle << "," << num_chasingRectangle <<
 			"|Open|=" << open_list.size() << endl;
 		timeout = true;
 		solution_found = false;
@@ -2067,6 +2070,8 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 			int g1f;
 			int g2f;
 			int flipTypef;
+			int isChasing =0;
+			bool isChasingf = false;
 
 			int flipType=-1;
 			if (screen >= 4) {
@@ -2122,8 +2127,35 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 								}
 								flipType = flipped;
 							}
-							else if (!isRectangleConflict(s1, s2, g1, g2, num_col))
+							else if (!isRectangleConflict(s1, s2, g1, g2, num_col,isChasing,kDelay,abs(t1_start-t2_start)))
 								continue;
+
+							//if (isChasing>0) {
+								//int chasingAgent;
+								//int targetLoc;
+								//int t_s;
+								//if (isChasing == 1) {
+								//	chasingAgent = a2;
+								//	t_s = t1_start;
+								//	targetLoc = s1;
+								//	
+								//}
+								//else {
+								//	chasingAgent = a1;
+								//	t_s = t2_start;
+								//	targetLoc = s2;
+								//}
+								//bool traverseTargetLoc = false;
+								//for (int i = 0; i <= kDelay; i++) {
+								//	if (paths[chasingAgent]->at(t_s + i).location == targetLocc) {
+								//		traverseTargetLoc = true;
+								//	}
+								//}
+								//if (traverseTargetLoc) {
+								//	continue;
+								//}
+
+							//}
 
 
 							int new_type, new_area;
@@ -2261,6 +2293,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 								}
 								else if (isBlocked)
 								{
+									
 									previousRetangle[0] = a1;
 									previousRetangle[1] = a2;
 									previousRetangle[2] = Rs.first*num_col+Rs.second;
@@ -2289,6 +2322,8 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 									Rsf = Rs;
 									Rgf = Rg;
 									flipTypef = flipType;
+									if (isChasing > 0)
+										isChasingf = true;
 								}
 								else {
 									if (screen >= 4)
@@ -2382,6 +2417,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 						}
 
 						rectangle = new_rectangle;
+						rectangle->isChasing = isChasingf;
 					}
 
 

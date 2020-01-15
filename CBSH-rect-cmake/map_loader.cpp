@@ -53,6 +53,23 @@ int MapLoader::getDegree(int loc)
 	return degree;
 }
 
+bool MapLoader::isFullyBlocked(int start, int end) {
+	int start_x = start / cols;
+	int start_y = start % cols;
+	int end_x = end / cols;
+	int end_y = end % cols;
+
+	int sign_x = start_x < end_x ? 1 : -1;
+	int sign_y = start_y < end_y ? 1 : -1;
+	for (int x = start_x; x - sign_x != end_x; x = x + sign_x) {
+		for (int y = start_y; y - sign_y != end_y; y = y + sign_y) {
+			if (my_map[linearize_coordinate(x, y)])
+				return false;
+		}
+	}
+	return true;
+}
+
 
 bool MapLoader::validMove(int curr, int next) const
 {

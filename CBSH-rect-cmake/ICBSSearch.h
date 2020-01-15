@@ -52,6 +52,8 @@ public:
 	uint64_t num_2FlipRectangle = 0;
 	uint64_t num_target = 0;
 	uint64_t num_standard = 0;
+	uint64_t num_chasingRectangle = 0;
+
 
 	bool solution_found;
 	int solution_cost;

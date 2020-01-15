@@ -18,7 +18,7 @@ bool isRectangleConflict(const std::pair<int, int>& s1, const std::pair<int, int
 }
 
 //Identify rectangle conflicts for RM
-bool isRectangleConflict(int s1, int s2, int g1, int g2, int num_col)
+bool isRectangleConflict(int s1, int s2, int g1, int g2, int num_col,int& isChasing,int kRobust,int tDifference)
 {
 	if (s1 == s2) // A standard cardinal conflict
 		return false;
@@ -30,16 +30,31 @@ bool isRectangleConflict(int s1, int s2, int g1, int g2, int num_col)
 	int g2_x = g2 / num_col, g2_y = g2 % num_col;
 	//cout << "(" << s1_x << "," << s1_y << ")" << "(" << g1_x << "," << g1_y << ")" << endl;
 	//cout << "(" << s2_x << "," << s2_y << ")" << "(" << g2_x << "," << g2_y << ")" << endl;
-
+	isChasing = 0;
 	if ((s1_x - g1_x) * (s2_x - g2_x) < 0 || (s1_y - g1_y) * (s2_y - g2_y) < 0) { // Not move in the same direction
 		return false;
 	}
-	else if ((s2_x - s1_x) * (s1_x - g1_x) < 0 && (s2_y - s1_y) * (s1_y - g1_y) < 0) { // s1 always in the middle
+	else if ((s2_x - s1_x) * (s1_x - g1_x) < 0 && (s2_y - s1_y) * (s1_y - g1_y) < 0) { // s1 always in the middle, s2 always between s1 and g1
+		if (getMahattanDistance(s1_x, s1_y, s2_x, s2_y) > tDifference + kRobust) {
+			return false;
+		}
+		if (((s2_x - g1_x) * (g1_x - g2_x) < 0 && (s2_y - g1_y) * (g1_y - g2_y) < 0)
+			|| ((s2_x - g2_x) * (g2_x - g1_x) < 0 && (s2_y - g2_y) * (g2_y - g1_y) < 0)) {
+			return false;
+		}
+		isChasing = 1;
 
-		return false;
 	}
-	else if ((s1_x - s2_x) * (s2_x - g2_x) < 0 && (s1_y - s2_y) * (s2_y - g2_y) < 0) { // s2 always in the middle
-		return false;
+	else if ((s1_x - s2_x) * (s2_x - g2_x) < 0 && (s1_y - s2_y) * (s2_y - g2_y) < 0) { // s2 always in the middle, s1 always between s2 and g2
+		if (getMahattanDistance(s1_x, s1_y, s2_x, s2_y) > tDifference + kRobust) {
+			return false;
+		}
+		if (((s1_x - g1_x) * (g1_x - g2_x) < 0 && (s1_y - g1_y) * (g1_y - g2_y) < 0)
+			|| ((s1_x - g2_x) * (g2_x - g1_x) < 0 && (s1_y - g2_y) * (g2_y - g1_y) < 0)) {
+			return false;
+		}
+		isChasing = 2;
+
 	}
 	else if ((s1_x == g1_x && s2_y == g2_y) || (s1_y == g1_y && s2_x == g2_x)) { // area = 1
 
@@ -80,7 +95,15 @@ int classifyRectangleConflict(int s1, int s2, int g1, int g2, const std::pair<in
 	int g1_x = g1 / num_col, g1_y = g1 % num_col;
 	int g2_x = g2 / num_col, g2_y = g2 % num_col;
 
-	if ((s1_x == s2_x && (s1_y - s2_y) * (s2_y - Rg.second) >= 0) ||
+	if ((s2_x - s1_x) * (s1_x - g1_x) < 0 && (s2_y - s1_y) * (s1_y - g1_y) < 0) { // s1 always in the middle
+		cardinal1 = 1;
+		cardinal2 = 0;
+	}
+	else if ((s1_x - s2_x) * (s2_x - g2_x) < 0 && (s1_y - s2_y) * (s2_y - g2_y) < 0) { // s2 always in the middle
+		cardinal1 = 1;
+		cardinal2 = 0;
+	}
+	else if ((s1_x == s2_x && (s1_y - s2_y) * (s2_y - Rg.second) >= 0) ||
 		(s1_x != s2_x && (s1_x - s2_x)*(s2_x - Rg.first) < 0))
 	{
 		if (Rg.first == g1_x)
