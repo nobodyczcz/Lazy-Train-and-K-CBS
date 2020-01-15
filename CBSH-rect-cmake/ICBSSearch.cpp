@@ -2129,7 +2129,9 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 							}
 							else if (!isRectangleConflict(s1, s2, g1, g2, num_col,isChasing,kDelay,abs(t1_start-t2_start)))
 								continue;
-
+							if (screen >= 5) {
+								cout << "is rectangle" << endl;
+							}
 							//if (isChasing>0) {
 								//int chasingAgent;
 								//int targetLoc;
