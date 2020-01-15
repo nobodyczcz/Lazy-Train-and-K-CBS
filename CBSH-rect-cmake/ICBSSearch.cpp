@@ -2342,6 +2342,9 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 										isChasingf = false;
 								}
 								else {
+									if (new_rectangle.unique()) {
+										new_rectangle.reset();
+									}
 									if (screen >= 4)
 										cout << "not blocked" << endl;
 								}
