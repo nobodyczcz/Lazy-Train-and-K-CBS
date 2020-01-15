@@ -2189,7 +2189,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 									}
 									continue;
 								}*/
-								new_type = classifyFlippedRectangleConflict(s1, s2, g1, g2, Rg, Rs, num_col, flipType, kFullyBlocked,I_RM);
+								new_type = classifyFlippedRectangleConflict(s1, s2, g1, g2, Rg, Rs, num_col, flipType, kFullyBlocked);
 								if (flipType == 1 && new_type <= -1) {
 									if (screen >= 5) {
 										cout << "fliptype 1 and non-cardinal" << endl;
@@ -2209,7 +2209,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 								Rs = getRs(std::make_pair(s1 / num_col, s1 % num_col), std::make_pair(s2 / num_col, s2 % num_col),
 									std::make_pair(g1 / num_col, g1 % num_col));
 								new_area = (abs(Rs.first - Rg.first) + 1) * (abs(Rs.second - Rg.second) + 1);
-								new_type = classifyRectangleConflict(s1, s2, g1, g2, Rg, num_col);
+								new_type = classifyRectangleConflict(s1, s2, g1, g2, Rg, num_col,I_RM);
 								
 								
 							}
