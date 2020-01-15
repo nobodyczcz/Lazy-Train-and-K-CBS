@@ -44,7 +44,7 @@ bool isRectangleConflict(int s1, int s2, int g1, int g2, int num_col,int kRobust
 			|| ((s2_x - g2_x) * (g2_x - g1_x) < 0 && (s2_y - g2_y) * (g2_y - g1_y) < 0)) {
 			return false;
 		}
-
+		return true;
 
 
 
@@ -60,6 +60,7 @@ bool isRectangleConflict(int s1, int s2, int g1, int g2, int num_col,int kRobust
 			|| ((s1_x - g2_x) * (g2_x - g1_x) < 0 && (s1_y - g2_y) * (g2_y - g1_y) < 0)) {
 			return false;
 		}
+		return true;
 
 
 	}
