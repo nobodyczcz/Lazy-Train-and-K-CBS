@@ -165,7 +165,7 @@ int main(int argc, char** argv)
 	}
 	if (vm.count("I_RM"))
 	{
-		icbs.I_RM = vm["I_RM"].as<bool>();
+		icbs.I_RM = true;
 
 	}
 	
