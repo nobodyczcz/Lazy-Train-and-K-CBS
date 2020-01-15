@@ -2076,6 +2076,10 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 			int flipType=-1;
 			if (screen >= 4) {
 				cout << "try find rectangle" << endl;
+				cout << "Agents: " << *con << endl;
+				cout << "s1s length" << s1s.size() << endl;
+				cout << "s2s length" << s2s.size() << endl;
+
 			}
 
 			for (int t1_start : s1s)
@@ -2086,8 +2090,11 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 					int s1 = paths[a1]->at(t1_start).location;
 					int g1 = paths[a1]->at(t1_end).location;
 					if (!isManhattanOptimal(s1, g1, t1_end - t1_start, num_col)) {
-						if (screen >= 5)
-						cout << "s1 g1 not optimal" << endl;
+						if (screen >= 5) {
+							cout << "s1: " << s1/num_col<<","<< s1%num_col << endl;
+							cout << "g1: " << g1 / num_col << "," << g1 % num_col << endl;
+							cout << "s1 g1 not optimal" << endl;
+						}
 						continue;
 					}
 					
@@ -2099,8 +2106,11 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 							int s2 = paths[a2]->at(t2_start).location;
 							int g2 = paths[a2]->at(t2_end).location;
 							if (!isManhattanOptimal(s2, g2, t2_end - t2_start, num_col)) {
-								if (screen >= 5)
-								cout << "s2 g2 not optimal" << endl;
+								if (screen >= 5) {
+									cout << "s2: " << s2 / num_col << "," << s2 % num_col << endl;
+									cout << "g2: " << g2 / num_col << "," << g2 % num_col << endl;
+									cout << "s2 g2 not optimal" << endl;
+								}
 
 								continue;
 							}

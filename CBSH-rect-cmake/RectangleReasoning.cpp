@@ -581,6 +581,7 @@ std::list<int>  getGoalCandidates(const std::vector<PathEntry>& path, int timest
 // whether the path between loc1 and loc2 is Manhattan-optimal
 bool isManhattanOptimal(int loc1, int loc2, int dist, int num_col)
 {
+
 	return abs(loc1 / num_col - loc2 / num_col) + abs(loc1 % num_col - loc2 % num_col) == dist;
 }
 
