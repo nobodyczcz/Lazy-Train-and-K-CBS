@@ -2070,7 +2070,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 			int g1f;
 			int g2f;
 			int flipTypef;
-			int isChasing = 0;
+			bool isChasing = false;
 			bool isChasingf = false;
 
 			int flipType=-1;
@@ -2139,7 +2139,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 								}
 								flipType = flipped;
 							}
-							else if (!isRectangleConflict(s1, s2, g1, g2, num_col,isChasing,kDelay,abs(t1_start-t2_start),I_RM))
+							else if (!isRectangleConflict(s1, s2, g1, g2, num_col,&isChasing,kDelay,abs(t1_start-t2_start),I_RM))
 								continue;
 							if (screen >= 5) {
 								cout << "is rectangle" << endl;
@@ -2336,10 +2336,8 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 									Rsf = Rs;
 									Rgf = Rg;
 									flipTypef = flipType;
-									if (I_RM && isChasing > 0)
-										isChasingf = true;
-									else
-										isChasingf = false;
+									if (I_RM)
+										isChasingf = isChasing;
 								}
 								else {
 									if (new_rectangle.unique()) {
