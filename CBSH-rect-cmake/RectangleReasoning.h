@@ -31,13 +31,13 @@ struct PathEntry;
 //Identify rectangle conflicts
 bool isRectangleConflict(const std::pair<int,int>& s1, const std::pair<int, int>& s2, 
 	const std::pair<int, int>& g1, const std::pair<int, int>& g2, int g1_t, int g2_t);// for CR and R
-bool isRectangleConflict(int s1, int s2, int g1, int g2, int num_col,int& isChasing,int kRobust = 0, int tDifference=0);// for RM
+bool isRectangleConflict(int s1, int s2, int g1, int g2, int num_col,int& isChasing,int kRobust = 0, int tDifference=0,bool I_RM=false);// for RM
 int isFlippedRectangleConflict(int s1, int s2, int g1, int g2, int num_col);//for RM with flipped rectangles
 
 //Classify rectangle conflicts
 int classifyRectangleConflict(const std::pair<int, int>& s1, const std::pair<int, int>& s2,
 	const std::pair<int, int>& g1, const std::pair<int, int>& g2);// for CR and R
-int classifyRectangleConflict(int s1, int s2, int g1, int g2, const std::pair<int, int>& Rg, int num_col);// for RM
+int classifyRectangleConflict(int s1, int s2, int g1, int g2, const std::pair<int, int>& Rg, int num_col,bool I_RM=false);// for RM
 int classifyFlippedRectangleConflict(int s1, int s2, int g1, int g2, const std::pair<int, int>& Rg, const std::pair<int, int>& Rs, int num_col, int flipType, bool kFullyBlocked);
 
 //Compute rectangle corners

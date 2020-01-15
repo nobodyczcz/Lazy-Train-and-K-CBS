@@ -46,6 +46,7 @@ int main(int argc, char** argv)
 		("debug", "debug mode")
 		("RM-4way", po::value<int>()->default_value(1), "0, do not do 4 way split. 1, do 4 way only necessary.2 Always do 4 way splitting for RM, other wise only 4 way when necessary")
 		("flipped_rectangle", "resolving flipped rectangle symmetry conflict for RM")
+		("I_RM","using improved rm")
 
 	;
 
@@ -160,6 +161,11 @@ int main(int argc, char** argv)
 	if (vm.count("target"))
 	{
 		icbs.targetReasoning = vm["target"].as<bool>();
+
+	}
+	if (vm.count("I_RM"))
+	{
+		icbs.I_RM = vm["I_RM"].as<bool>();
 
 	}
 	

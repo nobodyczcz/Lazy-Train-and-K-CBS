@@ -2139,7 +2139,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 								}
 								flipType = flipped;
 							}
-							else if (!isRectangleConflict(s1, s2, g1, g2, num_col,isChasing,kDelay,abs(t1_start-t2_start)))
+							else if (!isRectangleConflict(s1, s2, g1, g2, num_col,isChasing,kDelay,abs(t1_start-t2_start),I_RM))
 								continue;
 							if (screen >= 5) {
 								cout << "is rectangle" << endl;
@@ -2189,7 +2189,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 									}
 									continue;
 								}*/
-								new_type = classifyFlippedRectangleConflict(s1, s2, g1, g2, Rg, Rs, num_col, flipType, kFullyBlocked);
+								new_type = classifyFlippedRectangleConflict(s1, s2, g1, g2, Rg, Rs, num_col, flipType, kFullyBlocked,I_RM);
 								if (flipType == 1 && new_type <= -1) {
 									if (screen >= 5) {
 										cout << "fliptype 1 and non-cardinal" << endl;
@@ -2336,7 +2336,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 									Rsf = Rs;
 									Rgf = Rg;
 									flipTypef = flipType;
-									if (isChasing > 0)
+									if (I_RM && isChasing > 0)
 										isChasingf = true;
 									else
 										isChasingf = false;

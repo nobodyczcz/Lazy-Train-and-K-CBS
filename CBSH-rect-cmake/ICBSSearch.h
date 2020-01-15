@@ -71,6 +71,7 @@ public:
 	bool debug_mode=false;
 	bool ignore_t0=false;
 	bool shortBarrier = false;
+	bool I_RM = false;
 	std::clock_t start;
 
 

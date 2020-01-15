@@ -18,7 +18,7 @@ bool isRectangleConflict(const std::pair<int, int>& s1, const std::pair<int, int
 }
 
 //Identify rectangle conflicts for RM
-bool isRectangleConflict(int s1, int s2, int g1, int g2, int num_col,int& isChasing,int kRobust,int tDifference)
+bool isRectangleConflict(int s1, int s2, int g1, int g2, int num_col,int& isChasing,int kRobust,int tDifference,bool I_RM)
 {
 	if (s1 == s2) // A standard cardinal conflict
 		return false;
@@ -35,8 +35,8 @@ bool isRectangleConflict(int s1, int s2, int g1, int g2, int num_col,int& isChas
 		return false;
 	}
 	else if ((s2_x - s1_x) * (s1_x - g1_x) < 0 && (s2_y - s1_y) * (s1_y - g1_y) < 0) { // s1 always in the middle, s2 always between s1 and g1
-		isChasing = 1;
-
+		if (!I_RM)
+			return false;
 		if (getMahattanDistance(s1_x, s1_y, s2_x, s2_y) > tDifference + kRobust) {
 			return false;
 		}
@@ -44,11 +44,13 @@ bool isRectangleConflict(int s1, int s2, int g1, int g2, int num_col,int& isChas
 			|| ((s2_x - g2_x) * (g2_x - g1_x) < 0 && (s2_y - g2_y) * (g2_y - g1_y) < 0)) {
 			return false;
 		}
+		isChasing = 1;
+
 
 	}
 	else if ((s1_x - s2_x) * (s2_x - g2_x) < 0 && (s1_y - s2_y) * (s2_y - g2_y) < 0) { // s2 always in the middle, s1 always between s2 and g2
-		isChasing = 2;
-
+		if (!I_RM)
+			return false;
 		if (getMahattanDistance(s1_x, s1_y, s2_x, s2_y) > tDifference + kRobust) {
 			return false;
 		}
@@ -56,14 +58,17 @@ bool isRectangleConflict(int s1, int s2, int g1, int g2, int num_col,int& isChas
 			|| ((s1_x - g2_x) * (g2_x - g1_x) < 0 && (s1_y - g2_y) * (g2_y - g1_y) < 0)) {
 			return false;
 		}
+		isChasing = 2;
 
 	}
 	else if ((s1_x == g1_x && s2_y == g2_y) || (s1_y == g1_y && s2_x == g2_x)) { // area = 1
 
 		return false;
 	}
-	else
+	else {
+		isChasing = 0;
 		return true;
+	}
 }
 
 
@@ -88,7 +93,7 @@ int classifyRectangleConflict(const std::pair<int, int>& s1, const std::pair<int
 // Return 2 if it is a cardinal rectangle conflict
 // Return 1 if it is a semi-cardinal rectangle conflict
 // Return 0 if it is a non-cardinal rectangle conflict
-int classifyRectangleConflict(int s1, int s2, int g1, int g2, const std::pair<int, int>& Rg, int num_col)
+int classifyRectangleConflict(int s1, int s2, int g1, int g2, const std::pair<int, int>& Rg, int num_col,bool I_RM)
 {
 	int cardinal1 = 0, cardinal2 = 0;
 
@@ -97,11 +102,11 @@ int classifyRectangleConflict(int s1, int s2, int g1, int g2, const std::pair<in
 	int g1_x = g1 / num_col, g1_y = g1 % num_col;
 	int g2_x = g2 / num_col, g2_y = g2 % num_col;
 
-	if ((s2_x - s1_x) * (s1_x - g1_x) < 0 && (s2_y - s1_y) * (s1_y - g1_y) < 0) { // s1 always in the middle
+	if (I_RM && (s2_x - s1_x) * (s1_x - g1_x) < 0 && (s2_y - s1_y) * (s1_y - g1_y) < 0) { // s1 always in the middle
 		cardinal1 = 1;
 		cardinal2 = 0;
 	}
-	else if ((s1_x - s2_x) * (s2_x - g2_x) < 0 && (s1_y - s2_y) * (s2_y - g2_y) < 0) { // s2 always in the middle
+	else if (I_RM && (s1_x - s2_x) * (s2_x - g2_x) < 0 && (s1_y - s2_y) * (s2_y - g2_y) < 0) { // s2 always in the middle
 		cardinal1 = 1;
 		cardinal2 = 0;
 	}
