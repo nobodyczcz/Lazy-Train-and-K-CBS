@@ -44,7 +44,9 @@ bool isRectangleConflict(int s1, int s2, int g1, int g2, int num_col,int& isChas
 			|| ((s2_x - g2_x) * (g2_x - g1_x) < 0 && (s2_y - g2_y) * (g2_y - g1_y) < 0)) {
 			return false;
 		}
-		isChasing = 1;
+		else{
+			isChasing = 1;
+		}
 
 
 	}
@@ -58,7 +60,9 @@ bool isRectangleConflict(int s1, int s2, int g1, int g2, int num_col,int& isChas
 			|| ((s1_x - g2_x) * (g2_x - g1_x) < 0 && (s1_y - g2_y) * (g2_y - g1_y) < 0)) {
 			return false;
 		}
-		isChasing = 2;
+		else {
+			isChasing = 2;
+		}
 
 	}
 	else if ((s1_x == g1_x && s2_y == g2_y) || (s1_y == g1_y && s2_x == g2_x)) { // area = 1
