@@ -2139,10 +2139,15 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 								}
 								flipType = flipped;
 							}
-							else if (!isRectangleConflict(s1, s2, g1, g2, num_col,&isChasing,kDelay,abs(t1_start-t2_start),I_RM))
+							else if (!isRectangleConflict(s1, s2, g1, g2, num_col,kDelay,abs(t1_start-t2_start),I_RM))
 								continue;
 							if (screen >= 5) {
 								cout << "is rectangle" << endl;
+							}
+
+							if (((s2/num_col - s1/num_col) * (s1 / num_col - g1 / num_col) < 0 && (s2 % num_col - s1 % num_col) * (s1% num_col - g1 % num_col) < 0) 
+								|| ((s1 / num_col - s2 / num_col) * (s2 / num_col - g2 / num_col) < 0 && (s1% num_col - s2 % num_col) * (s2% num_col - g2 % num_col) < 0)) {
+								isChasing = true;
 							}
 							//if (isChasing>0) {
 								//int chasingAgent;

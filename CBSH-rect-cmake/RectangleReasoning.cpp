@@ -18,7 +18,7 @@ bool isRectangleConflict(const std::pair<int, int>& s1, const std::pair<int, int
 }
 
 //Identify rectangle conflicts for RM
-bool isRectangleConflict(int s1, int s2, int g1, int g2, int num_col,bool* isChasing,int kRobust,int tDifference,bool I_RM)
+bool isRectangleConflict(int s1, int s2, int g1, int g2, int num_col,int kRobust,int tDifference,bool I_RM)
 {
 	if (s1 == s2) // A standard cardinal conflict
 		return false;
@@ -30,7 +30,6 @@ bool isRectangleConflict(int s1, int s2, int g1, int g2, int num_col,bool* isCha
 	int g2_x = g2 / num_col, g2_y = g2 % num_col;
 	//cout << "(" << s1_x << "," << s1_y << ")" << "(" << g1_x << "," << g1_y << ")" << endl;
 	//cout << "(" << s2_x << "," << s2_y << ")" << "(" << g2_x << "," << g2_y << ")" << endl;
-	*isChasing = false;
 	if ((s1_x - g1_x) * (s2_x - g2_x) < 0 || (s1_y - g1_y) * (s2_y - g2_y) < 0) { // Not move in the same direction
 		return false;
 	}
@@ -45,7 +44,6 @@ bool isRectangleConflict(int s1, int s2, int g1, int g2, int num_col,bool* isCha
 			|| ((s2_x - g2_x) * (g2_x - g1_x) < 0 && (s2_y - g2_y) * (g2_y - g1_y) < 0)) {
 			return false;
 		}
-		*isChasing = true;
 
 
 
@@ -63,9 +61,6 @@ bool isRectangleConflict(int s1, int s2, int g1, int g2, int num_col,bool* isCha
 			return false;
 		}
 
-		*isChasing = true;
-
-
 
 	}
 	else if ((s1_x == g1_x && s2_y == g2_y) || (s1_y == g1_y && s2_x == g2_x)) { // area = 1
@@ -73,7 +68,6 @@ bool isRectangleConflict(int s1, int s2, int g1, int g2, int num_col,bool* isCha
 		return false;
 	}
 	else {
-		isChasing = 0;
 		return true;
 	}
 }
