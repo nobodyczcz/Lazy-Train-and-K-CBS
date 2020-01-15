@@ -2256,7 +2256,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 										Rg_t, paths, t1_start, t2_start,
 										make_pair(g1 / num_col, g1 % num_col),
 										make_pair(g2 / num_col, g2 % num_col),
-										num_col, kDelay, option.RM4way);
+										num_col, kDelay, option.RM4way,I_RM);
 								}
 
 								if (!success) {
@@ -2432,7 +2432,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 								Rg_tf, paths, t1_startf, t2_startf,
 								make_pair(g1f / num_col, g1f % num_col),
 								make_pair(g2f / num_col, g2f % num_col),
-								num_col, kDelay, option.RM4way, &a1MDDPath, &a2MDDPath);
+								num_col, kDelay, option.RM4way,I_RM, &a1MDDPath, &a2MDDPath);
 						}
 
 						rectangle = new_rectangle;

@@ -310,7 +310,7 @@ public:
 	bool kRectangleConflict(int a1, int a2, const std::pair<int, int>& Rs, const std::pair<int, int>& Rg,
 		const std::pair<int, int>& s1, const std::pair<int, int>& s2, int Rg_t,
 		const std::vector<Path*>& paths, int S1_t,int S2_t, const std::pair<int, int>& G1, const std::pair<int, int>& G2,
-		int num_col, int k, int RM4way, MDDPath* a1kMDD=NULL, MDDPath* a2kMDD=NULL) // For K-RM
+		int num_col, int k, int RM4way,bool I_RM=false, MDDPath* a1kMDD=NULL, MDDPath* a2kMDD=NULL) // For K-RM
 	{
 		this->a1 = a1;
 		this->a2 = a2;
@@ -342,11 +342,11 @@ public:
 		int extended = k / 2;
 		int R1_x, R1_y, R2_x, R2_y, G1_x, G1_y, G2_x, G2_y, G1_t, G2_t;
 		
-		if (
+		if (I_RM &&(
 			(((s2_x - s1_x) * (s1_x - g1_x) < 0 && (s2_y - s1_y) * (s1_y - g1_y) < 0) && ((s1_x - g1_x) * (g1_x - g2_x) > 0 || (s1_y - g1_y) * (g1_y - g2_y) < 0))
 			|| 
 			(((s1_x - s2_x) * (s2_x - g2_x) < 0 && (s1_y - s2_y) * (s2_y - g2_y) < 0) && ((s2_x - g2_x) * (g2_x - g1_x) < 0 || (s2_y - g2_y) * (g2_y - g1_y) > 0))
-			) { // s1 always in the middle,s2 always between s1 and g1 && g1 lies right side of s1 s2 g2 line
+			)) { // s1 always in the middle,s2 always between s1 and g1 && g1 lies right side of s1 s2 g2 line
 			// or s2 always in the middle, s1 always between s2 and g2 && g2 lies left side of s2 s1 g1 line
 
 				R2_x = Rg_x;
@@ -399,11 +399,11 @@ public:
 				}
 
 		}
-		else if (
+		else if (I_RM && (
 			(((s1_x - s2_x) * (s2_x - g2_x) < 0 && (s1_y - s2_y) * (s2_y - g2_y) < 0) && ((s2_x - g2_x) * (g2_x - g1_x) > 0 || (s2_y - g2_y) * (g2_y - g1_y) < 0))
 			||
 			(((s2_x - s1_x) * (s1_x - g1_x) < 0 && (s2_y - s1_y) * (s1_y - g1_y) < 0) && ((s1_x - g1_x) * (g1_x - g2_x) < 0 || (s1_y - g1_y) * (g1_y - g2_y) > 0))
-			){ // s2 always in the middle, s1 always between s2 and g2 && g2 lies right side of s2 s1 g1 line
+			)){ // s2 always in the middle, s1 always between s2 and g2 && g2 lies right side of s2 s1 g1 line
 			//or s1 always in the middle,s2 always between s1 and g1 && g1 lies left side of s1 s2 g2 line
 			R1_x = Rg_x;
 			G1_x = Rg_x;
