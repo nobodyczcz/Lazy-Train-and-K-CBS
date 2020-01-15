@@ -2102,7 +2102,8 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 					{
 						for (int t2_end : g2s)
 						{
-
+							isChasing = 0;
+							
 							int s2 = paths[a2]->at(t2_start).location;
 							int g2 = paths[a2]->at(t2_end).location;
 							if (!isManhattanOptimal(s2, g2, t2_end - t2_start, num_col)) {
@@ -2337,6 +2338,8 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 									flipTypef = flipType;
 									if (isChasing > 0)
 										isChasingf = true;
+									else
+										isChasingf = false;
 								}
 								else {
 									if (screen >= 4)
