@@ -37,9 +37,6 @@ bool isRectangleConflict(int s1, int s2, int g1, int g2, int num_col,int kRobust
 		if (!I_RM)
 			return false;
 
-		if (getMahattanDistance(s1_x, s1_y, s2_x, s2_y) > tDifference + kRobust) {
-			return false;
-		}
 		if (((s2_x - g1_x) * (g1_x - g2_x) < 0 && (s2_y - g1_y) * (g1_y - g2_y) < 0)
 			|| ((s2_x - g2_x) * (g2_x - g1_x) < 0 && (s2_y - g2_y) * (g2_y - g1_y) < 0)) {
 			return false;
@@ -53,9 +50,6 @@ bool isRectangleConflict(int s1, int s2, int g1, int g2, int num_col,int kRobust
 		if (!I_RM)
 			return false;
 
-		if (getMahattanDistance(s1_x, s1_y, s2_x, s2_y) > tDifference + kRobust) {
-			return false;
-		}
 		if (((s1_x - g1_x) * (g1_x - g2_x) < 0 && (s1_y - g1_y) * (g1_y - g2_y) < 0)
 			|| ((s1_x - g2_x) * (g2_x - g1_x) < 0 && (s1_y - g2_y) * (g2_y - g1_y) < 0)) {
 			return false;
