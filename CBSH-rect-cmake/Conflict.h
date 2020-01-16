@@ -352,11 +352,11 @@ public:
 				R2_x = Rg_x;
 				G2_x = Rg_x;
 
-				R1_x = s2_x;
-				G1_x = g2_x;
+				R1_x = Rs.first;
+				G1_x = Rg_x;
 
-				R2_y = s1_y;
-				G2_y = g1_y;
+				R2_y = Rs.second;
+				G2_y = Rg_y;
 
 				R1_y = Rg_y;
 				G1_y = Rg_y;
@@ -408,11 +408,11 @@ public:
 			R1_x = Rg_x;
 			G1_x = Rg_x;
 
-			R2_x = s1_x;
-			G2_x = g1_x;
+			R2_x = Rs.first;
+			G2_x = Rg_x;
 
-			R1_y = s2_y;
-			G1_y = g2_y;
+			R1_y = Rs.second;
+			G1_y = Rg.second;
 
 			R2_y = Rg_y;
 			G2_y = Rg_y;
@@ -478,11 +478,11 @@ public:
 				G1_y = sign1 > 0 ? min(Rg_y + sign1 * extended, g2_y) : max(Rg_y + sign1 * extended, g2_y);
 			}
 			else {
-				R2_x = s1_x;
-				G2_x = g1_x;
+				R2_x = Rs.first;
+				G2_x = Rg_x;
 
-				R1_y = s2_y;
-				G1_y = g2_y;
+				R1_y = Rs.second;
+				G1_y = Rg.second;
 			}
 
 
@@ -563,11 +563,11 @@ public:
 				G2_y = sign2 > 0 ? min(Rg_y + sign2 * extended, g1_y) : max(Rg_y + sign2 * extended, g1_y);
 			}
 			else {
-				R1_x = s2_x;
-				G1_x = g2_x;
+				R1_x = Rs.first;
+				G1_x = Rg_x;
 
-				R2_y = s1_y;
-				G2_y = g1_y;
+				R2_y = Rs.second;
+				G2_y = Rg_y;
 
 			}
 			
