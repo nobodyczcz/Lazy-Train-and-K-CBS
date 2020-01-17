@@ -2374,12 +2374,12 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 						MDD<Map> a2MDD;
 						updateConstraintTable(&parent, a1);
 
-						a1MDD.buildMDD(constraintTable, t1_endf - t1_startf + 1 + kDelay,
+						a1MDD.buildMDD(constraintTable, t1_endf - t1_startf + 1 + kDelay > 1 ? 1 : kDelay,
 							*(search_engines[a1]), s1f, t1_startf, g1f,
 							paths[a1]->at(t1_startf).actionToHere);
 
 						updateConstraintTable(&parent, a2);
-						a2MDD.buildMDD(constraintTable, t2_endf - t2_startf + 1 + kDelay,
+						a2MDD.buildMDD(constraintTable, t2_endf - t2_startf + 1 + kDelay > 1 ? 1 : kDelay,
 							*(search_engines[a2]), s2f, t2_startf, g2f,
 							paths[a2]->at(t2_startf).actionToHere);
 

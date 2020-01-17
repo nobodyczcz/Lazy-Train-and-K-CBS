@@ -312,6 +312,7 @@ public:
 		const std::vector<Path*>& paths, int S1_t, int S2_t, const std::pair<int, int>& G1, const std::pair<int, int>& G2,
 		int num_col, int k, int RM4way, bool I_RM = false, MDDPath* a1kMDD = NULL, MDDPath* a2kMDD = NULL) // For K-RM
 	{
+		k = k > 1 ? 1 : k;
 		this->a1 = a1;
 		this->a2 = a2;
 		this->t_sg = Rg_t - abs(Rg.first - Rs.first) - abs(Rg.second - Rs.second);
