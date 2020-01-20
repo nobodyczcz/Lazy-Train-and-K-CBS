@@ -2011,36 +2011,36 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 		else if (rectangleMDD && option.RM4way>=5) {
 
 
-			stringstream conString;
-			//con << *(con);
-			if (con->k == 0) {
-				conString << min(con->a1, con->a2) << ",";
-				conString << max(con->a1, con->a2);
-			}
-			else {
-				conString << con->a1 << ",";
-				conString << con->a2;
-			}
-			conString << ",("
-				<< con->originalConf1 / num_col << ","
-				<< con->originalConf1 % num_col << ")" << ",("
-				<< con->originalConf2 / num_col << ","
-				<< con->originalConf2 % num_col << "),"
-				<< con->t << "," << con->k << "," << conflict_type::RECTANGLE4;
-			ICBSNode* temp = &parent;
+			//stringstream conString;
+			////con << *(con);
+			//if (con->k == 0) {
+			//	conString << min(con->a1, con->a2) << ",";
+			//	conString << max(con->a1, con->a2);
+			//}
+			//else {
+			//	conString << con->a1 << ",";
+			//	conString << con->a2;
+			//}
+			//conString << ",("
+			//	<< con->originalConf1 / num_col << ","
+			//	<< con->originalConf1 % num_col << ")" << ",("
+			//	<< con->originalConf2 / num_col << ","
+			//	<< con->originalConf2 % num_col << "),"
+			//	<< con->t << "," << con->k << "," << conflict_type::RECTANGLE4;
+			//ICBSNode* temp = &parent;
 
-			bool repeat = false;
-			while (temp != NULL) {
-				if (temp->resolvedConflicts.count(conString.str())) {
-					repeat = true;
-					break;
-				}
-				temp = temp->parent;
-			}
-			if (repeat) {
-				parent.conflicts.push_back(con);
-				continue;
-			}
+			//bool repeat = false;
+			//while (temp != NULL) {
+			//	if (temp->resolvedConflicts.count(conString.str())) {
+			//		repeat = true;
+			//		break;
+			//	}
+			//	temp = temp->parent;
+			//}
+			//if (repeat) {
+			//	parent.conflicts.push_back(con);
+			//	continue;
+			//}
 
 			if (screen >= 4) {
 				cout << "new rm rectangle detecting" << endl;
