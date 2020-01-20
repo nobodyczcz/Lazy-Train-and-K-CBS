@@ -16,6 +16,8 @@ typedef std::tuple<int, int, int, constraint_type> Constraint;
 typedef std::list<std::shared_ptr<std::tuple<int, int, int, int, int,int>>> OldConfList;
 
 enum constraint_strategy { CBS, ICBS, CBSH, CBSH_CR, CBSH_R, CBSH_RM, CBSH_GR, STRATEGY_COUNT };
+enum action { UP, RIGHT, DOWN, LEFT, WAIT };
+
 
 using std::pair;
 using std::make_pair;
@@ -91,3 +93,5 @@ struct three_tuple_hash {
 int getLocation(const std::vector<PathEntry>& path, int timestep);
 
 int getMahattanDistance(int loc1_x, int loc1_y, int loc2_x, int loc2_y);
+
+int getAction(int loc, int pre_loc, int num_col);

@@ -40,6 +40,14 @@ int classifyRectangleConflict(const std::pair<int, int>& s1, const std::pair<int
 int classifyRectangleConflict(int s1, int s2, int g1, int g2, const std::pair<int, int>& Rg, int num_col,bool I_RM=false);// for RM
 int classifyFlippedRectangleConflict(int s1, int s2, int g1, int g2, const std::pair<int, int>& Rg, const std::pair<int, int>& Rs, int num_col, int flipType, bool kFullyBlocked);
 
+//Retrieve st and gt for new rm
+int get_st(const std::vector<PathEntry>& path, int timestep,int num_col, int action1,int action2);
+int get_gt(const std::vector<PathEntry>& path, int timestep, int num_col, int action1, int action2);
+int get_earlyCrosst(const std::vector<PathEntry>& path1, const std::vector<PathEntry>& path2, int timestep, int earlyBound, int delta);
+int get_lateCrosst(const std::vector<PathEntry>& path1, const std::vector<PathEntry>& path2, int timestep, int lateBound, int delta);
+
+
+
 //Compute rectangle corners
 std::pair<int, int> getRg(const std::pair<int, int>& s1, const std::pair<int, int>& g1, const std::pair<int, int>& g2);
 std::pair<int, int> getRs(const std::pair<int, int>& s1, const std::pair<int, int>& s2, const std::pair<int, int>& g1);

@@ -2008,6 +2008,176 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 				}
 			}
 		}
+		else if (rectangleMDD && option.RM4way>=5) {
+
+
+			stringstream conString;
+			//con << *(con);
+			if (con->k == 0) {
+				conString << min(con->a1, con->a2) << ",";
+				conString << max(con->a1, con->a2);
+			}
+			else {
+				conString << con->a1 << ",";
+				conString << con->a2;
+			}
+			conString << ",("
+				<< con->originalConf1 / num_col << ","
+				<< con->originalConf1 % num_col << ")" << ",("
+				<< con->originalConf2 / num_col << ","
+				<< con->originalConf2 % num_col << "),"
+				<< con->t << "," << con->k << "," << conflict_type::RECTANGLE4;
+			ICBSNode* temp = &parent;
+
+			bool repeat = false;
+			while (temp != NULL) {
+				if (temp->resolvedConflicts.count(conString.str())) {
+					repeat = true;
+					break;
+				}
+				temp = temp->parent;
+			}
+			if (repeat) {
+				parent.conflicts.push_back(con);
+				continue;
+			}
+
+			if (screen >= 4) {
+				cout << "new rm rectangle detecting" << endl;
+			}
+			bool action_correct = true;
+			int action1, action2, action_diff;
+			if (timestep == 0) {
+				action1 = getAction(paths.at(a1)->at(timestep).location, paths.at(a1)->at(timestep + 1).location, num_col);
+			}
+			if (timestep != 0 || action1 == action::WAIT) {
+				action1 = getAction(paths.at(a1)->at(timestep).location, paths.at(a1)->at(timestep - 1).location, num_col);
+			}
+
+			if (timestep2 == 0) {
+				action2 = getAction(paths.at(a2)->at(timestep2).location, paths.at(a2)->at(timestep2 + 1).location, num_col);
+			}
+			if (timestep2!= 0 || action2 == action::WAIT) {
+				action2 = getAction(paths.at(a2)->at(timestep2).location, paths.at(a2)->at(timestep2 - 1).location, num_col);
+			}
+
+			if (screen >= 4) {
+				cout << "action1: " << action1 << endl;
+				cout << "action2: " << action2 << endl;
+			}
+
+			action_diff = abs(action1 - action2);
+			if ((action1!=action::WAIT && action2!=action::WAIT) &&(action_diff == 1 || action_diff == 3)) {
+				int t1_start, t1_end, t2_start, t2_end;
+				t1_start = get_st(*paths[a1], timestep, num_col, action1, action2);
+				t1_end = get_gt(*paths[a1], timestep, num_col, action1, action2);
+				t2_start = get_st(*paths[a2], timestep2, num_col, action1, action2);
+				t2_end = get_gt(*paths[a2], timestep2, num_col, action1, action2);
+
+				int s1 = paths[a1]->at(t1_start).location;
+				int g1 = paths[a1]->at(t1_end).location;
+				int s2 = paths[a2]->at(t2_start).location;
+				int g2 = paths[a2]->at(t2_end).location;
+
+				int new_type, new_area,a1_Rs_t,a1_Rg_t;
+				std::pair<int, int> Rg, Rs;
+				Rg = getRg(std::make_pair(s1 / num_col, s1 % num_col), std::make_pair(g1 / num_col, g1 % num_col),
+					std::make_pair(g2 / num_col, g2 % num_col));
+				Rs = getRs(std::make_pair(s1 / num_col, s1 % num_col), std::make_pair(s2 / num_col, s2 % num_col),
+					std::make_pair(g1 / num_col, g1 % num_col));
+				if (screen >= 4) {
+					cout << "initial_Rs: " << Rs.first << " " << Rs.second << endl;
+					cout << "initial_Rg: " << Rg.first << " " << Rg.second << endl;
+				}
+				a1_Rs_t = getMahattanDistance(s1 / num_col, s1%num_col, Rs.first, Rs.second) + t1_start;
+				a1_Rg_t = getMahattanDistance(s1 / num_col, s1%num_col, Rg.first, Rg.second) + t1_start;
+
+				int earlyCrosst, lateCrosst;
+				earlyCrosst = get_earlyCrosst(*paths[a1], *paths[a2], timestep, a1_Rs_t, con->k);
+				lateCrosst = get_lateCrosst(*paths[a1], *paths[a2], timestep, a1_Rg_t, con->k);
+				if (screen >= 4) {
+					cout << "earlyCrosst: " << earlyCrosst << endl;
+					cout << "lateCrosst: " << lateCrosst << endl;
+				}
+				if (earlyCrosst != -1) {
+					Rs = std::make_pair(paths[a1]->at(earlyCrosst).location / num_col, paths[a1]->at(earlyCrosst).location % num_col);
+					a1_Rs_t = getMahattanDistance(s1 / num_col, s1%num_col, Rs.first, Rs.second) + t1_start;
+				}
+
+				if (lateCrosst != -1) {
+					Rg = std::make_pair(paths[a1]->at(lateCrosst).location / num_col, paths[a1]->at(lateCrosst).location % num_col);
+					a1_Rg_t = getMahattanDistance(s1 / num_col, s1%num_col, Rg.first, Rg.second) + t1_start;
+				}
+
+				new_area = (abs(Rs.first - Rg.first) + 1) * (abs(Rs.second - Rg.second) + 1);
+				new_type = classifyRectangleConflict(s1, s2, g1, g2, Rg, num_col, I_RM);
+				auto rectangle = std::shared_ptr<Conflict>(new Conflict(loc1, con->k, timestep));
+
+
+				if (screen >= 5) {
+					cout << "s1: " << s1 / num_col << " " << s1 % num_col << endl;
+					cout << "g1: " << g1 / num_col << " " << g1 % num_col << endl;
+					cout << "s1_t: " << t1_start << endl;
+
+					cout << "s2: " << s2 / num_col << " " << s2 % num_col << endl;
+					cout << "g2: " << g2 / num_col << " " << g2 % num_col << endl;
+					cout << "s2_t: " << t2_start << endl;
+
+					cout << "Rs: " << Rs.first << " " << Rs.second << endl;
+					cout << "Rg: " << Rg.first << " " << Rg.second << endl;
+
+
+				}
+
+				bool success = rectangle->kRectangleConflict(a1, a2, Rs, Rg,
+					make_pair(s1 / num_col, s1 % num_col),
+					make_pair(s2 / num_col, s2 % num_col),
+					a1_Rg_t, paths, t1_start, t2_start,
+					make_pair(g1 / num_col, g1 % num_col),
+					make_pair(g2 / num_col, g2 % num_col),
+					num_col, kDelay, option.RM4way, I_RM);
+
+				bool isBlocked = true;
+
+				for (auto constraint : rectangle->multiConstraint1) {
+					isBlocked = isBlocked && blocked(*paths[rectangle->a1], constraint);
+				}
+				for (auto constraint : rectangle->multiConstraint2) {
+					isBlocked = isBlocked && blocked(*paths[rectangle->a2], constraint);
+				}
+
+				if (isBlocked) {
+					if (new_type == 2)
+						rectangle->p = conflict_priority::CARDINAL;
+					else if (new_type == 1) // && !findRectangleConflict(parent.parent, *conflict))
+						rectangle->p = conflict_priority::SEMI;
+					else //if (type == 0 && !findRectangleConflict(parent.parent, *conflict))
+						rectangle->p = conflict_priority::NON;
+
+					parent.conflicts.push_back(rectangle);
+					if (screen >= 4)
+						cout << "add " << *rectangle << endl;
+
+
+					continue;
+				}
+				else {
+					if (screen >= 4) {
+						cout<<"rectangle: "<< *rectangle << endl;
+						cout << "not blocked" << endl;
+					}
+				}
+
+
+
+
+
+
+
+
+
+			}
+		}
 		else if (rectangleMDD && !inRectangle)
 		{
 

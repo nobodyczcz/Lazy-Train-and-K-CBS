@@ -36,3 +36,25 @@ int getMahattanDistance(int loc1_x, int loc1_y, int loc2_x, int loc2_y)
 {
 	return std::abs(loc1_x - loc2_x) + std::abs(loc1_y - loc2_y);
 }
+
+int getAction(int loc, int pre_loc,int num_col) {
+	int difference = loc - pre_loc;
+	if (difference == 0) {
+		return action::WAIT;
+	}
+	else if (difference == 1) {
+		return action::RIGHT;
+	}
+	else if (difference == -1) {
+		return action::LEFT;
+	}
+	else if (difference == num_col) {
+		return action::DOWN;
+	}
+	else if (difference == - num_col) {
+		return action::UP;
+	}
+	else {
+		return -1;
+	}
+}

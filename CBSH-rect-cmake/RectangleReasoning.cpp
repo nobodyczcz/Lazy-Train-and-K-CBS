@@ -67,6 +67,45 @@ bool isRectangleConflict(int s1, int s2, int g1, int g2, int num_col,int kRobust
 	}
 }
 
+//Retrieve st and gt for new rm
+int get_st(const std::vector<PathEntry>& path, int timestep, int num_col, int action1, int action2) {
+	for (int t = timestep; t > 0; t--) {
+		int action = getAction(path[t].location, path[t - 1].location, num_col);
+		if (action != action1 && action != action2) {
+			return t;
+		}
+	}
+	
+	return 0;
+	
+};
+int get_gt(const std::vector<PathEntry>& path, int timestep, int num_col, int action1, int action2) {
+	for (int t = timestep; t < path.size()-1; t++) {
+		int action = getAction(path[t + 1].location, path[t].location, num_col);
+		if (action != action1 && action != action2) {
+			return t;
+		}
+	}
+
+	return path.size() - 1;
+
+};
+int get_earlyCrosst(const std::vector<PathEntry>& path1, const std::vector<PathEntry>& path2, int timestep, int earlyBound, int delta) {
+	for (int t = timestep-1; t > earlyBound; t--) {
+		if (path1[t].location == path2[t+delta].location) {
+			return t;
+		}
+	}
+	return -1;
+};
+int get_lateCrosst(const std::vector<PathEntry>& path1, const std::vector<PathEntry>& path2, int timestep, int lateBound, int delta) {
+	for (int t = timestep+1; t < lateBound; t++) {
+		if (path1[t].location == path2[t + delta].location) {
+			return t;
+		}
+	}
+	return -1;
+};
 
 
 
