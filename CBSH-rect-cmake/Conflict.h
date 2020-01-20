@@ -329,7 +329,7 @@ public:
 		int g2_x = G2.first;
 		int g2_y = G2.second;
 
-		if (RM4way >= 4 && RM4way < 6) {
+		if (RM4way == 4 && RM4way == 5) {
 			if (k > 1) {
 				k = 1;
 			}
@@ -348,7 +348,7 @@ public:
 		int extended = k / 2;
 		int R1_x, R1_y, R2_x, R2_y, G1_x, G1_y, G2_x, G2_y, G1_t, G2_t,E1_t,E2_t;
 
-		if ((RM4way == 5 || I_RM) && (
+		if ((RM4way >=5 || I_RM) && (
 			(((s2_x - s1_x) * (s1_x - g1_x) < 0 && (s2_y - s1_y) * (s1_y - g1_y) < 0) && ((s1_x - g1_x) * (g1_x - g2_x) > 0 || (s1_y - g1_y) * (g1_y - g2_y) < 0))
 			||
 			(((s1_x - s2_x) * (s2_x - g2_x) < 0 && (s1_y - s2_y) * (s2_y - g2_y) < 0) && ((s2_x - g2_x) * (g2_x - g1_x) < 0 || (s2_y - g2_y) * (g2_y - g1_y) > 0))
@@ -413,10 +413,11 @@ public:
 			else
 				addModifiedHorizontalLongBarrierConstraint(*paths[a2], a2_entrance, R2_y, G2_y, E2_t, num_col, S2_t, constraint22, k, a2kMDD);
 			multiConstraint2.push_back(constraint22);
+			this->isChasing = true;
 
 
 		}
-		else if ((RM4way == 5 || I_RM) && (
+		else if ((RM4way >=5 || I_RM) && (
 			(((s1_x - s2_x) * (s2_x - g2_x) < 0 && (s1_y - s2_y) * (s2_y - g2_y) < 0) && ((s2_x - g2_x) * (g2_x - g1_x) > 0 || (s2_y - g2_y) * (g2_y - g1_y) < 0))
 			||
 			(((s2_x - s1_x) * (s1_x - g1_x) < 0 && (s2_y - s1_y) * (s1_y - g1_y) < 0) && ((s1_x - g1_x) * (g1_x - g2_x) < 0 || (s1_y - g1_y) * (g1_y - g2_y) > 0))
@@ -486,6 +487,7 @@ public:
 				addModifiedVerticalLongBarrierConstraint(*paths[a2], a2_entrance, R2_x, G2_x, E2_t, num_col, S2_t, constraint22, k, a2kMDD);
 			multiConstraint2.push_back(constraint22);
 
+			this->isChasing = true;
 
 
 		}
