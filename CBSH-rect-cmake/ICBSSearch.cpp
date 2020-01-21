@@ -2122,16 +2122,29 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 				new_area = (abs(Rs.first - Rg.first) + 1) * (abs(Rs.second - Rg.second) + 1);
 				new_type = classifyRectangleConflict(s1, s2, g1, g2, Rg, num_col, I_RM);
 				auto rectangle = std::shared_ptr<Conflict>(new Conflict(loc1, con->k, timestep));
+				
+				int rt1, rt2; //root time
+				if (con->k == 0) {
+					rt1 = a1_Rs_t;
+					rt2 = a1_Rs_t;
+				}
+				else {
+					rt1 = timestep - getMahattanDistance(Rs.first, Rs.second, loc1 / num_col, loc1%num_col);
+					rt2 = timestep2 - getMahattanDistance(Rs.first, Rs.second, loc1 / num_col, loc1%num_col) - 1;
+				}
 
 
 				if (screen >= 5) {
 					cout << "s1: " << s1 / num_col << " " << s1 % num_col << endl;
 					cout << "g1: " << g1 / num_col << " " << g1 % num_col << endl;
 					cout << "s1_t: " << t1_start << endl;
+					cout << "rt1: " << rt1 << endl;
+
 
 					cout << "s2: " << s2 / num_col << " " << s2 % num_col << endl;
 					cout << "g2: " << g2 / num_col << " " << g2 % num_col << endl;
 					cout << "s2_t: " << t2_start << endl;
+					cout << "rt2: " << rt2 << endl;
 
 					cout << "Rs: " << Rs.first << " " << Rs.second << endl;
 					cout << "Rg: " << Rg.first << " " << Rg.second << endl;
@@ -2142,7 +2155,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 				bool success = rectangle->kRectangleConflict(a1, a2, Rs, Rg,
 					make_pair(s1 / num_col, s1 % num_col),
 					make_pair(s2 / num_col, s2 % num_col),
-					a1_Rg_t, paths, t1_start, t2_start,
+					rt1,rt2, paths, t1_start, t2_start,
 					make_pair(g1 / num_col, g1 % num_col),
 					make_pair(g2 / num_col, g2 % num_col),
 					num_col, kDelay, option.RM4way, I_RM);
@@ -2156,7 +2169,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 					isBlocked = isBlocked && blocked(*paths[rectangle->a2], constraint);
 				}
 
-				if (isBlocked) {
+				if ( isBlocked) {
 					if (new_type == 2)
 						rectangle->p = conflict_priority::CARDINAL;
 					else if (new_type == 1) // && !findRectangleConflict(parent.parent, *conflict))
@@ -2420,7 +2433,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 								}
 
 								auto new_rectangle = std::shared_ptr<Conflict>(new Conflict(loc1,con->k,timestep));
-								int Rg_t = con->t + abs(Rg.first - loc1 / num_col) + abs(Rg.second - loc1 % num_col);
+								int Rs_t = con->t - abs(Rs.first - loc1 / num_col) + abs(Rs.second - loc1 % num_col);
 								/*cout << "loc:" << loc1 << " t:" << timestep << endl;
 								cout << "s1 " << s1 << " s2 " << s2 << " g1 " << g1 << " g2 " << g2 << " rg " << Rg.first << " " << Rg.second <<" Rg_t "<< Rg_t<< endl;
 */								bool success;
@@ -2428,7 +2441,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 									success=new_rectangle->flippedRectangleConflict(a1, a2, Rs, Rg,
 										make_pair(s1 / num_col, s1 % num_col),
 										make_pair(s2 / num_col, s2 % num_col),
-										Rg_t, paths, t1_start, t2_start,
+										Rs_t, paths, t1_start, t2_start,
 										make_pair(g1 / num_col, g1 % num_col),
 										make_pair(g2 / num_col, g2 % num_col),
 										num_col, kDelay, flipType);
@@ -2438,7 +2451,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 									success=new_rectangle->kRectangleConflict(a1, a2, Rs, Rg,
 										make_pair(s1 / num_col, s1 % num_col),
 										make_pair(s2 / num_col, s2 % num_col),
-										Rg_t, paths, t1_start, t2_start,
+										Rs_t, Rs_t, paths, t1_start, t2_start,
 										make_pair(g1 / num_col, g1 % num_col),
 										make_pair(g2 / num_col, g2 % num_col),
 										num_col, kDelay, option.RM4way,I_RM);
@@ -2513,7 +2526,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 									t1_endf= t1_end;
 									t2_startf= t2_start;
 									t2_endf= t2_end;
-									Rg_tf= Rg_t;
+									Rg_tf= Rs_t;
 									s1f= s1;
 									s2f= s2;
 									g1f= g1;
@@ -2612,7 +2625,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 							new_rectangle->kRectangleConflict(a1, a2, Rsf, Rgf,
 								make_pair(s1f / num_col, s1f % num_col),
 								make_pair(s2f / num_col, s2f % num_col),
-								Rg_tf, paths, t1_startf, t2_startf,
+								Rg_tf, Rg_tf, paths, t1_startf, t2_startf,
 								make_pair(g1f / num_col, g1f % num_col),
 								make_pair(g2f / num_col, g2f % num_col),
 								num_col, kDelay, option.RM4way,I_RM, &a1MDDPath, &a2MDDPath);

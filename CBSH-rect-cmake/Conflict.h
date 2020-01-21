@@ -308,13 +308,13 @@ public:
 	}
 
 	bool kRectangleConflict(int a1, int a2, const std::pair<int, int>& Rs, const std::pair<int, int>& Rg,
-		const std::pair<int, int>& s1, const std::pair<int, int>& s2, int Rg_t,
+		const std::pair<int, int>& s1, const std::pair<int, int>& s2, int rt1,int rt2,
 		const std::vector<Path*>& paths, int S1_t, int S2_t, const std::pair<int, int>& G1, const std::pair<int, int>& G2,
 		int num_col, int k, int RM4way, bool I_RM = false, MDDPath* a1kMDD = NULL, MDDPath* a2kMDD = NULL) // For K-RM
 	{
 		this->a1 = a1;
 		this->a2 = a2;
-		this->t_sg = Rg_t - abs(Rg.first - Rs.first) - abs(Rg.second - Rs.second);
+		this->t_sg = rt1;
 		this->rs = Rs.first*num_col + Rs.second;
 		this->rg = Rg.first*num_col + Rg.second;
 
@@ -329,7 +329,7 @@ public:
 		int g2_x = G2.first;
 		int g2_y = G2.second;
 
-		if (RM4way == 4 && RM4way == 5) {
+		if (RM4way == 4 || RM4way == 5) {
 			if (k > 1) {
 				k = 1;
 			}
@@ -376,10 +376,10 @@ public:
 			R2_y = Rs.second;
 			G2_y = Rg_y;
 
-			G1_t = Rg_t + getMahattanDistance(Rg_x, Rg_y, G1_x, a1_exit);
-			E1_t = Rg_t - getMahattanDistance(Rg_x, Rg_y, G1_x, a1_entrance);
-			G2_t = Rg_t + getMahattanDistance(Rg_x, Rg_y, a2_exit,G2_y);
-			E2_t = Rg_t - getMahattanDistance(Rg_x, Rg_y, a2_entrance, G2_y);
+			G1_t = rt1 + getMahattanDistance(Rs.first, Rs.second, G1_x, a1_exit);
+			E1_t = rt1 - extended + getMahattanDistance(Rs.first, a1_entrance, G1_x, a1_entrance);
+			G2_t = rt2 + getMahattanDistance(Rs.first, Rs.second, a2_exit,G2_y);
+			E2_t = rt2 - extended + getMahattanDistance(a2_entrance, Rs.second, a2_entrance, G2_y);
 
 
 			std::list<Constraint> constraint11;
@@ -447,10 +447,10 @@ public:
 			G1_y = Rg.second;
 
 
-			G1_t = Rg_t + getMahattanDistance(Rg_x, Rg_y, a1_exit, G1_y);
-			E1_t = Rg_t - getMahattanDistance(Rg_x, Rg_y, a1_entrance, G1_y);
-			G2_t = Rg_t + getMahattanDistance(Rg_x, Rg_y, G2_x, a2_exit);
-			E2_t = Rg_t - getMahattanDistance(Rg_x, Rg_y, G2_x, a2_entrance);
+			G1_t = rt1 + getMahattanDistance(Rs.first, Rs.second, a1_exit, G1_y);
+			E1_t = rt1 - extended + getMahattanDistance(a1_entrance, Rs.second, a1_entrance, G1_y);
+			G2_t = rt2 + getMahattanDistance(Rs.first, Rs.second, G2_x, a2_exit);
+			E2_t = rt2 - extended + getMahattanDistance(Rs.first, a2_entrance, G2_x, a2_entrance);
 
 
 			std::list<Constraint> constraint11;
@@ -518,10 +518,10 @@ public:
 			G1_y = Rg.second;
 
 
-			G1_t = Rg_t + getMahattanDistance(Rg_x, Rg_y, a1_exit, G1_y);
-			E1_t = Rg_t - getMahattanDistance(Rg_x, Rg_y, a1_entrance, G1_y);
-			G2_t = Rg_t + getMahattanDistance(Rg_x, Rg_y, G2_x, a2_exit);
-			E2_t = Rg_t - getMahattanDistance(Rg_x, Rg_y, G2_x, a2_entrance);
+			G1_t = rt1 + getMahattanDistance(Rs.first, Rs.second, a1_exit, G1_y);
+			E1_t = rt1 - extended + getMahattanDistance(a1_entrance, Rs.second, a1_entrance, G1_y);
+			G2_t = rt2 + getMahattanDistance(Rs.first, Rs.second, G2_x, a2_exit);
+			E2_t = rt2 - extended + getMahattanDistance(Rs.first, a2_entrance, G2_x, a2_entrance);
 
 
 			std::list<Constraint> constraint11;
@@ -588,10 +588,10 @@ public:
 			R2_y = Rs.second;
 			G2_y = Rg_y;
 
-			G1_t = Rg_t + getMahattanDistance(Rg_x, Rg_y, G1_x, a1_exit);
-			E1_t = Rg_t - getMahattanDistance(Rg_x, Rg_y, G1_x, a1_entrance);
-			G2_t = Rg_t + getMahattanDistance(Rg_x, Rg_y, a2_exit, G2_y);
-			E2_t = Rg_t - getMahattanDistance(Rg_x, Rg_y, a2_entrance, G2_y);
+			G1_t = rt1 + getMahattanDistance(Rs.first, Rs.second, G1_x, a1_exit);
+			E1_t = rt1 - extended + getMahattanDistance(Rs.first, a1_entrance, G1_x, a1_entrance);
+			G2_t = rt2 + getMahattanDistance(Rs.first, Rs.second, a2_exit, G2_y);
+			E2_t = rt2 - extended + getMahattanDistance(a2_entrance, Rs.second, a2_entrance, G2_y);
 
 
 			std::list<Constraint> constraint11;
