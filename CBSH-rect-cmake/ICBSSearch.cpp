@@ -1178,7 +1178,7 @@ bool MultiMapICBSSearch<Map>::runICBSSearch()
 
 		}
 
-		if (screen >= 1) {
+		if (screen == 1 || screen==6 ) {
 			if(debug_mode)
 			cout << "check conflict repeatance" << endl;
 			stringstream con;
@@ -2044,22 +2044,32 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 
 			if (screen >= 4) {
 				cout << "new rm rectangle detecting" << endl;
+				cout << "timestep: " << timestep << endl;
+				cout << "timestep2: " << timestep2 << endl;
+
 			}
 			bool action_correct = true;
 			int action1, action2, action_diff;
-			if (timestep == 0) {
-				action1 = getAction(paths.at(a1)->at(timestep).location, paths.at(a1)->at(timestep + 1).location, num_col);
-			}
-			if (timestep != 0 || action1 == action::WAIT) {
+			if (timestep != 0 ) {
+
 				action1 = getAction(paths.at(a1)->at(timestep).location, paths.at(a1)->at(timestep - 1).location, num_col);
 			}
 
-			if (timestep2 == 0) {
-				action2 = getAction(paths.at(a2)->at(timestep2).location, paths.at(a2)->at(timestep2 + 1).location, num_col);
+			if (timestep == 0 || action1 == action::WAIT) {
+
+				action1 = getAction(paths.at(a1)->at(timestep + 1).location, paths.at(a1)->at(timestep).location, num_col);
 			}
-			if (timestep2!= 0 || action2 == action::WAIT) {
+
+			if (timestep2 != 0 ) {
 				action2 = getAction(paths.at(a2)->at(timestep2).location, paths.at(a2)->at(timestep2 - 1).location, num_col);
 			}
+
+			if (timestep2 == 0 || action2 == action::WAIT) {
+
+				action2 = getAction(paths.at(a2)->at(timestep2 + 1).location, paths.at(a2)->at(timestep2).location, num_col);
+			}
+
+			
 
 			if (screen >= 4) {
 				cout << "action1: " << action1 << endl;
