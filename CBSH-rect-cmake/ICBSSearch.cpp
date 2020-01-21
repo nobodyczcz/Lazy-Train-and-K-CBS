@@ -1926,15 +1926,24 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 
 				auto new_rectangle = std::shared_ptr<Conflict>(new Conflict(loc1,con->k,timestep));
 
-				bool success;
-				success = new_rectangle->kRectangleConflict(a1, a2,
-					al.initial_locations[a1].first*num_col + al.initial_locations[a1].second,
-					al.initial_locations[a2].first*num_col+ al.initial_locations[a2].second, 
-					0, 0, Rs, Rg, Rg_t, 
-					al.goal_locations[a1].first*num_col + al.goal_locations[a1].second,
-					al.goal_locations[a2].first*num_col + al.goal_locations[a2].second,
-					num_col, kDelay, asymmetry_constraint);
+				int rt1, rt2;
+				if (con->k == 0) {
+					rt1 = timestep - getMahattanDistance(Rs.first, Rs.second, loc1 / num_col, loc1%num_col);
+					rt2 = rt1;
+				}
+				else {
+					rt1 = timestep - getMahattanDistance(Rs.first, Rs.second, loc1 / num_col, loc1%num_col);
+					rt2 = timestep2 - getMahattanDistance(Rs.first, Rs.second, loc1 / num_col, loc1%num_col) - 1;
+				}
 
+				bool success;
+				success = new_rectangle->kRectangleConflict(a1, a2, Rs, Rg,
+					al.initial_locations[a1],
+					al.initial_locations[a2],
+					rt1, rt2, paths, 0, 0,
+					al.goal_locations[a1],
+					al.goal_locations[a1],
+					num_col, kDelay, 5, true);
 				bool isBlocked = true;
 
 				for (auto constraint : new_rectangle->multiConstraint1) {
@@ -1969,15 +1978,24 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 				int Rg_t = con->t + abs(Rg.first - loc1 / num_col) + abs(Rg.second - loc1 % num_col);
 
 				auto new_rectangle = std::shared_ptr<Conflict>(new Conflict(loc1,con->k,timestep));
+				int rt1, rt2;
+				if (con->k == 0) {
+					rt1 = timestep - getMahattanDistance(Rs.first, Rs.second, loc1 / num_col, loc1%num_col);
+					rt2 = rt1;
+				}
+				else {
+					rt1 = timestep - getMahattanDistance(Rs.first, Rs.second, loc1 / num_col, loc1%num_col);
+					rt2 = timestep2 - getMahattanDistance(Rs.first, Rs.second, loc1 / num_col, loc1%num_col) - 1;
+				}
 
 				bool success;
-				success = new_rectangle->kRectangleConflict(a1, a2,
-					al.initial_locations[a1].first*num_col + al.initial_locations[a1].second, 
-					al.initial_locations[a2].first*num_col + al.initial_locations[a2].second,
-					 0, 0, Rs, Rg, Rg_t, 
-					al.goal_locations[a1].first*num_col + al.goal_locations[a1].second,
-					al.goal_locations[a2].first*num_col + al.goal_locations[a2].second,
-					num_col, kDelay, option.RM4way);
+				success = new_rectangle->kRectangleConflict(a1, a2, Rs, Rg,
+					al.initial_locations[a1],
+					al.initial_locations[a2],
+					rt1, rt2, paths, 0, 0,
+					al.goal_locations[a1],
+					al.goal_locations[a1],
+					num_col, kDelay, 5, false);
 
 				bool isBlocked = true;
 
@@ -2048,7 +2066,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 				cout << "timestep2: " << timestep2 << endl;
 
 			}
-			bool action_correct = true;
+			bool not_rectangle = false;
 			int action1, action2, action_diff;
 			if (timestep != 0 ) {
 
@@ -2118,11 +2136,12 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 					Rg = std::make_pair(paths[a1]->at(lateCrosst).location / num_col, paths[a1]->at(lateCrosst).location % num_col);
 					a1_Rg_t = getMahattanDistance(s1 / num_col, s1%num_col, Rg.first, Rg.second) + t1_start;
 				}
-
-				new_area = (abs(Rs.first - Rg.first) + 1) * (abs(Rs.second - Rg.second) + 1);
+				
+				new_area = (abs(Rs.first - Rg.first)+1) * (abs(Rs.second - Rg.second)+1);
 				new_type = classifyRectangleConflict(s1, s2, g1, g2, Rg, num_col, I_RM);
 				auto rectangle = std::shared_ptr<Conflict>(new Conflict(loc1, con->k, timestep));
 				
+
 				int rt1, rt2; //root time
 				if (con->k == 0) {
 					rt1 = a1_Rs_t;
@@ -2149,6 +2168,8 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 					cout << "Rs: " << Rs.first << " " << Rs.second << endl;
 					cout << "Rg: " << Rg.first << " " << Rg.second << endl;
 
+					cout << "area:" << new_area << endl;
+
 
 				}
 
@@ -2169,7 +2190,16 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 					isBlocked = isBlocked && blocked(*paths[rectangle->a2], constraint);
 				}
 
-				if ( isBlocked) {
+				if (s1 == s2) // A standard cardinal conflict
+					not_rectangle=true;
+				else if (s1 == g1 || s2 == g2) // s1 = g1 or  s2 = g2
+					not_rectangle=true;
+
+				if (new_area <= 2)
+					not_rectangle = true;
+
+
+				if (!not_rectangle && isBlocked) {
 					if (new_type == 2)
 						rectangle->p = conflict_priority::CARDINAL;
 					else if (new_type == 1) // && !findRectangleConflict(parent.parent, *conflict))
