@@ -423,7 +423,8 @@ public:
 			||
 			(((s2_x - s1_x) * (s1_x - g1_x) < 0 && (s2_y - s1_y) * (s1_y - g1_y) < 0) && ((s1_x - g1_x) * (g1_x - g2_x) < 0 || (s1_y - g1_y) * (g1_y - g2_y) > 0))
 			)) 
-		{ // s2 always in the middle, s1 always between s2 and g2 && g2 lies right side of s2 s1 g1 line
+		{ 
+			// s2 always in the middle, s1 always between s2 and g2 && g2 lies right side of s2 s1 g1 line
 			//or s1 always in the middle,s2 always between s1 and g1 && g1 lies left side of s1 s2 g2 line
 
 			int sign_a1 = g1_x - s1_x >= 0 ? 1 : -1;

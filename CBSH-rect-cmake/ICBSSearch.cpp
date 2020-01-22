@@ -2167,7 +2167,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 				
 
 				int rt1, rt2; //root time
-				if (con->k == 0) {
+				if (con->k == 0 || option.RM4way==6) {
 					rt1 = a1_Rs_t;
 					rt2 = a1_Rs_t;
 				}
