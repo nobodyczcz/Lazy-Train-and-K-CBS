@@ -78,7 +78,7 @@ template <class Map>
 bool PythonCBS<Map>::search() {
 	int screen;
 	if (options1.debug) {
-		screen = 2;
+		screen = 5;
 	}
 	else {
 		screen = 0;

@@ -167,6 +167,7 @@ public:
 		this->t = std::min(t3, t4);
 		this->originalConf1 = v1;
 		this->originalConf2 = v2;
+		//k is corridor length
 		this->constraint1.emplace_back(v1, t3, std::min(t3_ - 1 , t4 + k) + kRobust, constraint_type::RANGE);
 		this->constraint2.emplace_back(v2, t4, std::min(t4_ - 1 , t3 + k) + kRobust, constraint_type::RANGE);
 		type = conflict_type::CORRIDOR2;

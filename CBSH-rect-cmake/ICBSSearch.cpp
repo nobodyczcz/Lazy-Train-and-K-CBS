@@ -482,7 +482,10 @@ void ICBSSearch::findTargetConflicts(int a1, int a2, ICBSNode& curr) {
 template<class Map>
 bool MultiMapICBSSearch<Map>::isCorridorConflict(std::shared_ptr<Conflict>& corridor, const std::shared_ptr<Conflict>& con, bool cardinal, ICBSNode* node)
 {
-	//cout << "iscorridor1" << endl;
+	if (screen >= 4) {
+		cout << "Check is corridor conflict" << endl;
+		cout << *con << endl;
+	}
 	CorridorReasoning<Map> cp;
 	int a[2] = {con->a1, con->a2};
 	int  loc1, loc2, timestep;
@@ -587,21 +590,29 @@ bool MultiMapICBSSearch<Map>::isCorridorConflict(std::shared_ptr<Conflict>& corr
 	}
 	if (corridor2)
 	{
+		if (screen >= 4) {
+			cout << "Compute corridor2 B E" << endl;
+		}
 
 		std::pair<int, int> edge_empty = make_pair(-1, -1);
 		updateConstraintTable(node, a[0]);
-		//cout << "start: " << paths[a[0]]->front().location << " end:" << u[1] << " heading:" << paths[a[0]]->front().actionToHere << endl;
+		if (screen>=4)
+			cout << "start: " << paths[a[0]]->front().location/num_col<<","<< paths[a[0]]->front().location % num_col << " end:" << u[1]/num_col<<"," << u[1]%num_col << " heading:" << paths[a[0]]->front().actionToHere << endl;
 		int t3 = cp.getBypassLength(paths[a[0]]->front().location, u[1], edge_empty, ml, num_col, map_size, constraintTable, INT_MAX, paths[a[0]]->front().actionToHere);
 		int t3_ = cp.getBypassLength(paths[a[0]]->front().location, u[1], edge, ml, num_col, map_size, constraintTable, t3 + 2 * k  + 1, paths[a[0]]->front().actionToHere);
 		
 
 		updateConstraintTable(node, a[1]);
-		//cout << "start: " << paths[a[1]]->front().location << " end:" << u[0] << " heading:" << paths[a[1]]->front().actionToHere << endl;
+		if (screen >= 4)
+			cout << "start: " << paths[a[1]]->front().location / num_col << "," << paths[a[1]]->front().location % num_col << " end:" << u[0] / num_col << "," << u[0] % num_col << " heading:" << paths[a[1]]->front().actionToHere << endl;
 		int t4 = cp.getBypassLength(paths[a[1]]->front().location, u[0], edge_empty, ml, num_col, map_size, constraintTable, INT_MAX, paths[a[1]]->front().actionToHere);
-		int t4_ = cp.getBypassLength(paths[a[1]]->front().location, u[0], edge, ml, num_col, map_size, constraintTable, t3 + k + 1, paths[a[1]]->front().actionToHere);
-		//cout << t3 << "," << t3_ << "," << t4 << "," << t4_ << endl;
+		int t4_ = cp.getBypassLength(paths[a[1]]->front().location, u[0], edge, ml, num_col, map_size, constraintTable, t4 + 2*k + 1, paths[a[1]]->front().actionToHere);
+		if (screen >= 4) {
+			cout << "t3: " << t3 << "," << "t3_: " << t3_ << "," << "t4: " << t4 << "," << "t4_: " << t4_ << endl;
+			cout << "corridor length: " << k << endl;
+		}
 		//cout << k << endl;
-		if (abs(t3 - t4) <= k && t3_ > t3 && t4_ > t4)
+		if (abs(t3 - t4) <= k+kDelay && t3_ > t3 && t4_ > t4)
 		{
 			//cout << "iscorridor5.5" << endl;
 
@@ -609,6 +620,14 @@ bool MultiMapICBSSearch<Map>::isCorridorConflict(std::shared_ptr<Conflict>& corr
 			corridor->corridorConflict(a[0], a[1], u[1], u[0], t3, t4, t3_, t4_, k,kDelay);
 			if (blocked(*(paths[corridor->a1]), corridor->constraint1) && blocked(*(paths[corridor->a2]), corridor->constraint2))
 				return true;
+			else {
+				if(screen>=4)
+					cout << "not blocked" << endl;
+			}
+		}
+		else {
+			if (screen>=4)
+			cout << "t check not pass" << endl;
 		}
 		//cout << "iscorridor6" << endl;
 
@@ -1889,6 +1908,11 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 			parent.conflicts.push_back(corridor);
 			continue;
 		}
+		else if (corridor2 || corridor4) {
+			if (screen >= 4) {
+				cout << "not corridor conflict" << endl;
+			}
+		}
 		if (con->type == conflict_type::STANDARD &&
 			paths[con->a1]->size() <= con->t || paths[con->a2]->size() <= con->t) //conflict happens after agent reaches its goal
 		{
@@ -2173,6 +2197,10 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 
 				}
 
+				if (!isRectangleConflict(s1, s2, g1, g2, num_col, kDelay, abs(t1_start - t2_start), I_RM)) {
+					not_rectangle = true;
+				}
+
 				bool success = rectangle->kRectangleConflict(a1, a2, Rs, Rg,
 					make_pair(s1 / num_col, s1 % num_col),
 					make_pair(s2 / num_col, s2 % num_col),
@@ -2217,7 +2245,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 				else {
 					if (screen >= 4) {
 						cout<<"rectangle: "<< *rectangle << endl;
-						cout << "not blocked" << endl;
+						cout << "not blocked or not rectangle" << endl;
 					}
 				}
 
