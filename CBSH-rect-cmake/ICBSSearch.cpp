@@ -2491,7 +2491,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 								}
 
 								auto new_rectangle = std::shared_ptr<Conflict>(new Conflict(loc1,con->k,timestep));
-								int Rs_t = con->t - abs(Rs.first - loc1 / num_col) + abs(Rs.second - loc1 % num_col);
+								int Rs_t = con->t - abs(Rs.first - loc1 / num_col) - abs(Rs.second - loc1 % num_col);
 								/*cout << "loc:" << loc1 << " t:" << timestep << endl;
 								cout << "s1 " << s1 << " s2 " << s2 << " g1 " << g1 << " g2 " << g2 << " rg " << Rg.first << " " << Rg.second <<" Rg_t "<< Rg_t<< endl;
 */								bool success;
