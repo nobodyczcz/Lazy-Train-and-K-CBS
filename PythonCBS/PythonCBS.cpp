@@ -8,12 +8,13 @@ namespace p = boost::python;
 
 
 template <class Map>
-PythonCBS<Map>::PythonCBS(p::object railEnv1, std::string algo, int kRobust, int t, bool debug, float f_w,string corridor) :railEnv(railEnv1) {
+PythonCBS<Map>::PythonCBS(p::object railEnv1, std::string algo, int kRobust, int t, bool debug, float f_w,string corridor,int RM_4Way) :railEnv(railEnv1) {
 	std::cout << "algo: " << algo << std::endl;
 	options1.debug = debug;
 	options1.ignore_t0 = false;
 	options1.shortBarrier = false;
 	options1.asymmetry_constraint = false;
+	options1.RM4way = RM_4Way;
 	timeLimit = t;
 	this->f_w = f_w;
 	this->algo = algo;
@@ -124,7 +125,7 @@ p::dict PythonCBS<Map>::getResultDetail() {
 BOOST_PYTHON_MODULE(libPythonCBS)  // Name here must match the name of the final shared library, i.e. mantid.dll or mantid.so
 {
 	using namespace boost::python;
-	class_<PythonCBS<FlatlandLoader>>("PythonCBS", init<object, string, int, int, bool,float,string>())
+	class_<PythonCBS<FlatlandLoader>>("PythonCBS", init<object, string, int, int, bool,float,string,int>())
 		.def("getResult", &PythonCBS<FlatlandLoader>::getResult)
 		.def("search", &PythonCBS<FlatlandLoader>::search)
 		.def("getResultDetail", &PythonCBS<FlatlandLoader>::getResultDetail);

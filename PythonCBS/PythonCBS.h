@@ -13,7 +13,7 @@ namespace p = boost::python;
 template <class Map>
 class PythonCBS {
 public:
-	PythonCBS(p::object railEnv1, std::string algo, int kRobust, int t, bool debug, float f_w, string corridor);
+	PythonCBS(p::object railEnv1, std::string algo, int kRobust, int t, bool debug, float f_w, string corridor,int RM_4Way);
 
 	p::list getResult();
 
