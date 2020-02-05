@@ -330,10 +330,22 @@ public:
 		int g2_x = G2.first;
 		int g2_y = G2.second;
 
-		if (RM4way == 4 || RM4way == 5) {
+		if (RM4way >=2  || RM4way <= 5) {
 			if (k > 1) {
 				k = 1;
 			}
+		}
+
+		bool split4way = false;
+		bool a1_4way=false;
+		bool a2_4way=false;
+		bool no_mdd_check = false;
+
+		if (RM4way >= 4) {
+			split4way = true;
+		}
+		if (RM4way >= 3) {
+			no_mdd_check = true;
 		}
 
 		int a1Rg = getMahattanDistance(s1_x, s1_y, Rg_x, Rg_y);
@@ -342,7 +354,12 @@ public:
 		int a2Rg = getMahattanDistance(s2_x, s2_y, Rg_x, Rg_y);
 		int a2RgBypass = a2Rg + 2 * (getMahattanDistance(s1_x, s1_y, Rs.first, Rs.second) + 1);
 
-		if (RM4way == 0 && (a2RgBypass <= a2Rg + k || a1RgBypass <= a1Rg + k)) {
+		if (RM4way == 1 || RM4way ==0) {
+			a2_4way = a2RgBypass <= a2Rg + k;
+			a1_4way = a1RgBypass <= a1Rg + k;
+		}
+
+		if (RM4way == 0 && (a1_4way || a2_4way)) {
 			return false;
 		}
 
@@ -370,7 +387,6 @@ public:
 			a2_entrance = sign_a2 * a2_entrance > sign_a2 * s2_x ? a2_entrance : s2_x;
 
 
-
 			R1_x = Rs.first;
 			G1_x = Rg_x;
 
@@ -384,7 +400,7 @@ public:
 
 
 			std::list<Constraint> constraint11;
-			if (RM4way >= 3)
+			if (no_mdd_check)
 				add4WayModifiedVerticalLongBarrierConstraint(*paths[a1], a1_exit, R1_x, G1_x, G1_t, num_col, S1_t, constraint11, k);
 			else
 				addModifiedVerticalLongBarrierConstraint(*paths[a1], a1_exit, R1_x, G1_x, G1_t, num_col, S1_t, constraint11, k, a1kMDD);
@@ -393,7 +409,7 @@ public:
 
 			//chasing case always 4 way split
 			std::list<Constraint> constraint12;
-			if (RM4way >= 3)
+			if (no_mdd_check)
 				add4WayModifiedVerticalLongBarrierConstraint(*paths[a1], a1_entrance, R1_x, G1_x, E1_t, num_col, S1_t, constraint12, k);
 			else
 				addModifiedVerticalLongBarrierConstraint(*paths[a1], a1_entrance, R1_x, G1_x, E1_t, num_col, S1_t, constraint12, k, a1kMDD);
@@ -401,7 +417,7 @@ public:
 
 
 			std::list<Constraint> constraint21;
-			if (RM4way >= 3)
+			if (no_mdd_check)
 				add4WayModifiedHorizontalLongBarrierConstraint(*paths[a2], a2_exit, R2_y, G2_y, G2_t, num_col, S2_t, constraint21, k);
 			else
 				addModifiedHorizontalLongBarrierConstraint(*paths[a2], a2_exit, R2_y, G2_y, G2_t, num_col, S2_t, constraint21, k, a2kMDD);
@@ -409,7 +425,7 @@ public:
 
 			//chasing case always 4 way split
 			std::list<Constraint> constraint22;
-			if (RM4way >= 3)
+			if (no_mdd_check)
 				add4WayModifiedHorizontalLongBarrierConstraint(*paths[a2], a2_entrance, R2_y, G2_y, E2_t, num_col, S2_t, constraint22, k);
 			else
 				addModifiedHorizontalLongBarrierConstraint(*paths[a2], a2_entrance, R2_y, G2_y, E2_t, num_col, S2_t, constraint22, k, a2kMDD);
@@ -457,7 +473,7 @@ public:
 
 			std::list<Constraint> constraint11;
 
-			if (RM4way >= 3)
+			if (no_mdd_check)
 				add4WayModifiedHorizontalLongBarrierConstraint(*paths[a1], a1_exit, R1_y, G1_y, G1_t, num_col, S1_t, constraint11, k);
 			else
 				addModifiedHorizontalLongBarrierConstraint(*paths[a1], a1_exit, R1_y, G1_y, G1_t, num_col, S1_t, constraint11, k, a1kMDD);
@@ -465,7 +481,7 @@ public:
 
 			//chasing case always 4 way split
 			std::list<Constraint> constraint12;
-			if (RM4way >= 3)
+			if (no_mdd_check)
 				add4WayModifiedHorizontalLongBarrierConstraint(*paths[a1], a1_entrance, R1_y, G1_y, E1_t, num_col, S1_t, constraint12, k);
 			else
 				addModifiedHorizontalLongBarrierConstraint(*paths[a1], a1_entrance, R1_y, G1_y, E1_t, num_col, S1_t, constraint12, k, a1kMDD);
@@ -475,7 +491,7 @@ public:
 
 
 			std::list<Constraint> constraint21;
-			if (RM4way >= 3)
+			if (no_mdd_check)
 				add4WayModifiedVerticalLongBarrierConstraint(*paths[a2], a2_exit, R2_x, G2_x, G2_t, num_col, S2_t, constraint21, k);
 			else
 				addModifiedVerticalLongBarrierConstraint(*paths[a2], a2_exit, R2_x, G2_x, G2_t, num_col, S2_t, constraint21, k, a2kMDD);
@@ -483,7 +499,7 @@ public:
 
 			//chasing case always 4 way split
 			std::list<Constraint> constraint22;
-			if (RM4way >= 3)
+			if (no_mdd_check)
 				add4WayModifiedVerticalLongBarrierConstraint(*paths[a2], a2_entrance, R2_x, G2_x, E2_t, num_col, S2_t, constraint22, k);
 			else
 				addModifiedVerticalLongBarrierConstraint(*paths[a2], a2_entrance, R2_x, G2_x, E2_t, num_col, S2_t, constraint22, k, a2kMDD);
@@ -528,15 +544,15 @@ public:
 
 			std::list<Constraint> constraint11;
 
-			if (RM4way >= 3)
+			if (no_mdd_check)
 				add4WayModifiedHorizontalLongBarrierConstraint(*paths[a1], a1_exit, R1_y, G1_y, G1_t, num_col, S1_t, constraint11, k);
 			else
 				addModifiedHorizontalLongBarrierConstraint(*paths[a1], a1_exit, R1_y, G1_y, G1_t, num_col, S1_t, constraint11, k, a1kMDD);
 			multiConstraint1.push_back(constraint11);
 
-			if (RM4way >= 2 || a1RgBypass <= a1Rg + k) {
+			if (split4way || a1_4way) {
 				std::list<Constraint> constraint12;
-				if (RM4way >= 3)
+				if (no_mdd_check)
 					add4WayModifiedHorizontalLongBarrierConstraint(*paths[a1], a1_entrance, R1_y, G1_y, E1_t, num_col, S1_t, constraint12, k);
 				else
 					addModifiedHorizontalLongBarrierConstraint(*paths[a1], a1_entrance, R1_y, G1_y, E1_t, num_col, S1_t, constraint12, k, a1kMDD);
@@ -546,15 +562,15 @@ public:
 
 
 			std::list<Constraint> constraint21;
-			if (RM4way >= 3)
+			if (no_mdd_check)
 				add4WayModifiedVerticalLongBarrierConstraint(*paths[a2], a2_exit, R2_x, G2_x, G2_t, num_col, S2_t, constraint21, k);
 			else
 				addModifiedVerticalLongBarrierConstraint(*paths[a2], a2_exit, R2_x, G2_x, G2_t, num_col, S2_t, constraint21, k, a2kMDD);
 			multiConstraint2.push_back(constraint21);
 
-			if (RM4way >= 2 || a2RgBypass <= a2Rg + k) {
+			if (split4way || a2_4way) {
 				std::list<Constraint> constraint22;
-				if (RM4way >= 3)
+				if (no_mdd_check)
 					add4WayModifiedVerticalLongBarrierConstraint(*paths[a2], a2_entrance, R2_x, G2_x, E2_t, num_col, S2_t, constraint22, k);
 				else
 					addModifiedVerticalLongBarrierConstraint(*paths[a2], a2_entrance, R2_x, G2_x, E2_t, num_col, S2_t, constraint22, k, a2kMDD);
@@ -597,16 +613,16 @@ public:
 
 
 			std::list<Constraint> constraint11;
-			if (RM4way >= 3)
+			if (no_mdd_check)
 				add4WayModifiedVerticalLongBarrierConstraint(*paths[a1], a1_exit, R1_x, G1_x, G1_t, num_col, S1_t, constraint11, k);
 			else
 				addModifiedVerticalLongBarrierConstraint(*paths[a1], a1_exit, R1_x, G1_x, G1_t, num_col, S1_t, constraint11, k, a1kMDD);
 			multiConstraint1.push_back(constraint11);
 
 
-			if (RM4way >= 2 || a1RgBypass <= a1Rg + k) {
+			if (split4way || a1_4way) {
 				std::list<Constraint> constraint12;
-				if (RM4way >= 3)
+				if (no_mdd_check)
 					add4WayModifiedVerticalLongBarrierConstraint(*paths[a1], a1_entrance, R1_x, G1_x, E1_t, num_col, S1_t, constraint12, k);
 				else
 					addModifiedVerticalLongBarrierConstraint(*paths[a1], a1_entrance, R1_x, G1_x, E1_t, num_col, S1_t, constraint12, k, a1kMDD);
@@ -615,15 +631,15 @@ public:
 
 
 			std::list<Constraint> constraint21;
-			if (RM4way >= 3)
+			if (no_mdd_check)
 				add4WayModifiedHorizontalLongBarrierConstraint(*paths[a2], a2_exit, R2_y, G2_y, G2_t, num_col, S2_t, constraint21, k);
 			else
 				addModifiedHorizontalLongBarrierConstraint(*paths[a2], a2_exit, R2_y, G2_y, G2_t, num_col, S2_t, constraint21, k, a2kMDD);
 			multiConstraint2.push_back(constraint21);
 
-			if (RM4way >= 2 || a2RgBypass <= a2Rg + k) {
+			if (split4way || a2_4way) {
 				std::list<Constraint> constraint22;
-				if (RM4way >= 3)
+				if (no_mdd_check)
 					add4WayModifiedHorizontalLongBarrierConstraint(*paths[a2], a2_entrance, R2_y, G2_y, E2_t, num_col, S2_t, constraint22, k);
 				else
 					addModifiedHorizontalLongBarrierConstraint(*paths[a2], a2_entrance, R2_y, G2_y, E2_t, num_col, S2_t, constraint22, k, a2kMDD);
@@ -644,6 +660,7 @@ public:
 		const std::vector<Path*>& paths, int S1_t, int S2_t, const std::pair<int, int>& G1, const std::pair<int, int>& G2,
 		int num_col, int k,int flipType, MDDPath* a1kMDD = NULL, MDDPath* a2kMDD = NULL) // For K-RM
 	{
+
 		this->a1 = a1;
 		this->a2 = a2;
 		this->t_sg = Rg_t - abs(Rg.first - Rs.first) - abs(Rg.second - Rs.second);

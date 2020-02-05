@@ -1967,7 +1967,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 					rt1, rt2, paths, 0, 0,
 					al.goal_locations[a1],
 					al.goal_locations[a1],
-					num_col, kDelay, 5, true);
+					num_col, kDelay, 3, true);
 				bool isBlocked = true;
 
 				for (auto constraint : new_rectangle->multiConstraint1) {
@@ -2019,7 +2019,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 					rt1, rt2, paths, 0, 0,
 					al.goal_locations[a1],
 					al.goal_locations[a1],
-					num_col, kDelay, 5, false);
+					num_col, kDelay, 3, false);
 
 				bool isBlocked = true;
 
@@ -2050,7 +2050,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 				}
 			}
 		}
-		else if (rectangleMDD && option.RM4way>=5) {
+		else if (rectangleMDD && option.RM4way==2) {
 
 
 			//stringstream conString;
@@ -2234,6 +2234,63 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 						rectangle->p = conflict_priority::SEMI;
 					else //if (type == 0 && !findRectangleConflict(parent.parent, *conflict))
 						rectangle->p = conflict_priority::NON;
+
+					//MDD check
+					MDD<Map> a1MDD;
+					MDD<Map> a2MDD;
+					updateConstraintTable(&parent, a1);
+
+					a1MDD.buildMDD(constraintTable, t1_end - t1_start + 1 + 1,
+						*(search_engines[a1]), s1, 0, g1,
+						paths[a1]->at(0).actionToHere);
+
+					updateConstraintTable(&parent, a2);
+					a2MDD.buildMDD(constraintTable, t2_end - t2_start + 1 + 1,
+						*(search_engines[a2]), s2, 0, g2,
+						paths[a2]->at(0).actionToHere);
+
+					MDDPath a1MDDPath;
+					for (int i = 0; i < a1MDD.levels.size(); i++) {
+						std::unordered_set<int> level;
+						std::list<MDDNode*>::iterator it;
+						for (it = a1MDD.levels[i].begin(); it != a1MDD.levels[i].end(); ++it) {
+							level.insert((*it)->location);
+						}
+						a1MDDPath.levels.push_back(level);
+
+					}
+					//a1kMDD.push_back(a1MDDPath);
+					if (screen >= 5) {
+						cout << "a1 mdd k: " << endl;
+						a1MDDPath.print(num_col);
+					}
+
+
+					MDDPath a2MDDPath;
+					for (int i = 0; i < a2MDD.levels.size(); i++) {
+						std::unordered_set<int> level;
+						std::list<MDDNode*>::iterator it;
+						for (it = a2MDD.levels[i].begin(); it != a2MDD.levels[i].end(); ++it) {
+							level.insert((*it)->location);
+						}
+						a2MDDPath.levels.push_back(level);
+
+					}
+					//a2kMDD.push_back(a2MDDPath);
+					if (screen >= 5) {
+						cout << "a2 mdd k: " << endl;
+						a2MDDPath.print(num_col);
+					}
+
+					rectangle->kRectangleConflict(a1, a2, Rs, Rg,
+						make_pair(s1 / num_col, s1 % num_col),
+						make_pair(s2 / num_col, s2 % num_col),
+						rt1, rt2, paths, t1_start, t2_start,
+						make_pair(g1 / num_col, g1 % num_col),
+						make_pair(g2 / num_col, g2 % num_col),
+						num_col, kDelay, option.RM4way, I_RM, &a1MDDPath, &a2MDDPath);
+
+
 
 					parent.conflicts.push_back(rectangle);
 					if (screen >= 4)
