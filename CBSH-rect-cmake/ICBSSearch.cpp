@@ -1156,6 +1156,9 @@ bool MultiMapICBSSearch<Map>::runICBSSearch()
 					double new_focal_list_threshold = min_f_val * focal_w;
 					updateFocalList(focal_list_threshold, new_focal_list_threshold, focal_w);
 					focal_list_threshold = new_focal_list_threshold;
+					if (screen > 3) {
+						cout << "new focal threadhold: " << focal_list_threshold << endl;
+					}
 				}
 				runtime_listoperation += std::clock() - t1;
 				continue;
@@ -1368,6 +1371,7 @@ bool MultiMapICBSSearch<Map>::runICBSSearch()
 				if (screen >= 2)
 					std::cout << "Generate child "<<i<<" #" << children[i]->time_generated
 						<< " with cost " << children[i]->g_val
+						<< " and h "<< children[i]->h_val
 						<< " and " << children[i]->num_of_collisions << " conflicts " << std::endl;
 
 			}
@@ -1400,12 +1404,15 @@ bool MultiMapICBSSearch<Map>::runICBSSearch()
 			break;
 		}
 		ICBSNode* open_head = open_list.top();
-		if (open_head->f_val > min_f_val) 
+		if ( open_head->f_val > min_f_val) 
 		{
 			min_f_val = open_head->f_val;
 			double new_focal_list_threshold = min_f_val * focal_w;
 			updateFocalList(focal_list_threshold, new_focal_list_threshold, focal_w);
 			focal_list_threshold = new_focal_list_threshold;
+			if (screen > 3) {
+				cout << "new focal threadhold: " << focal_list_threshold << endl;
+			}
 		}
 		runtime_listoperation += std::clock() - t1;
 
@@ -2067,7 +2074,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 				}
 			}
 		}
-		else if (rectangleMDD && option.RM4way==5) {
+		else if (rectangleMDD && option.RM4way==2) {
 
 
 			//stringstream conString;
@@ -2172,14 +2179,20 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 					Rs = std::make_pair(paths[a1]->at(earlyCrosst).location / num_col, paths[a1]->at(earlyCrosst).location % num_col);
 					a1_Rs_t = getMahattanDistance(s1 / num_col, s1%num_col, Rs.first, Rs.second) + t1_start;
 				}
-
+				
 				if (lateCrosst != -1) {
 					Rg = std::make_pair(paths[a1]->at(lateCrosst).location / num_col, paths[a1]->at(lateCrosst).location % num_col);
 					a1_Rg_t = getMahattanDistance(s1 / num_col, s1%num_col, Rg.first, Rg.second) + t1_start;
 				}
 				
 				new_area = (abs(Rs.first - Rg.first)+1) * (abs(Rs.second - Rg.second)+1);
+
 				new_type = classifyRectangleConflict(s1, s2, g1, g2, Rg, num_col, I_RM);
+				if (!paths[a1]->at(t1_start).single and new_type > 0)
+					new_type--;
+				if (!paths[a2]->at(t2_start).single and new_type > 0)
+					new_type--;
+
 				auto rectangle = std::shared_ptr<Conflict>(new Conflict(loc1, con->k, timestep));
 				
 
