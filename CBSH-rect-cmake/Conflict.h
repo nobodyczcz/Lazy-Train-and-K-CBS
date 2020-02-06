@@ -341,10 +341,10 @@ public:
 		bool a2_4way=false;
 		bool no_mdd_check = false;
 
-		if (RM4way >= 4) {
+		if (RM4way >= 5) {
 			split4way = true;
 		}
-		if (RM4way >= 3) {
+		if (RM4way >= 4) {
 			no_mdd_check = true;
 		}
 

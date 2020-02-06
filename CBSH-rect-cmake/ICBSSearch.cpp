@@ -1120,6 +1120,14 @@ bool MultiMapICBSSearch<Map>::runICBSSearch()
 		updatePaths(curr);
 		runtime_updatepaths += std::clock() - t1;
 
+		if (screen > 2) {
+			cout << "#############" << endl;
+			cout << "Choose node with cost " << curr->g_val
+				<< " , h " << curr->h_val
+				<< " , f " << curr->f_val
+				<< endl;
+		}
+
 		if (cons_strategy == constraint_strategy::CBS)
 		{
 			t1 = std::clock();
@@ -1150,7 +1158,7 @@ bool MultiMapICBSSearch<Map>::runICBSSearch()
 				t1 = std::clock();
 				curr->open_handle = open_list.push(curr);
 				ICBSNode* open_head = open_list.top();
-				if (open_head->f_val > min_f_val) 
+				if ( open_head->f_val > min_f_val)
 				{
 					min_f_val = open_head->f_val;
 					double new_focal_list_threshold = min_f_val * focal_w;
@@ -1991,7 +1999,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 					rt1, rt2, paths, 0, 0,
 					al.goal_locations[a1],
 					al.goal_locations[a2],
-					num_col, kDelay, 3, true);
+					num_col, kDelay, 4, true);
 				bool isBlocked = true;
 
 				for (auto constraint : new_rectangle->multiConstraint1) {
@@ -2043,7 +2051,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 					rt1, rt2, paths, 0, 0,
 					al.goal_locations[a1],
 					al.goal_locations[a2],
-					num_col, kDelay, 3, false);
+					num_col, kDelay, 4, false);
 
 				bool isBlocked = true;
 
@@ -2074,7 +2082,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 				}
 			}
 		}
-		else if (rectangleMDD && option.RM4way==2) {
+		else if (rectangleMDD && option.RM4way==3) {
 
 
 			//stringstream conString;
@@ -2188,9 +2196,9 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 				new_area = (abs(Rs.first - Rg.first)+1) * (abs(Rs.second - Rg.second)+1);
 
 				new_type = classifyRectangleConflict(s1, s2, g1, g2, Rg, num_col, I_RM);
-				if (!paths[a1]->at(t1_start).single and new_type > 0)
+				if ((!paths[a1]->at(t1_start).single||!paths[a1]->at(t1_end).single) && new_type > 0)
 					new_type--;
-				if (!paths[a2]->at(t2_start).single and new_type > 0)
+				if ((!paths[a2]->at(t2_start).single || !paths[a2]->at(t2_end).single) && new_type > 0)
 					new_type--;
 
 				auto rectangle = std::shared_ptr<Conflict>(new Conflict(loc1, con->k, timestep));
@@ -2270,12 +2278,12 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 					MDD<Map> a2MDD;
 					updateConstraintTable(&parent, a1);
 
-					a1MDD.buildMDD(constraintTable, t1_end - t1_start + 1 + 1,
+					a1MDD.buildMDD(constraintTable, t1_end - t1_start + 1+1,
 						*(search_engines[a1]), s1, 0, g1,
 						paths[a1]->at(0).actionToHere);
 
 					updateConstraintTable(&parent, a2);
-					a2MDD.buildMDD(constraintTable, t2_end - t2_start + 1 + 1,
+					a2MDD.buildMDD(constraintTable, t2_end - t2_start + 1+1,
 						*(search_engines[a2]), s2, 0, g2,
 						paths[a2]->at(0).actionToHere);
 
@@ -2732,13 +2740,14 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 						MDD<Map> a1MDD;
 						MDD<Map> a2MDD;
 						updateConstraintTable(&parent, a1);
+						int tempk = kDelay > 1 ? 1 : kDelay;
 
-						a1MDD.buildMDD(constraintTable, t1_endf - t1_startf + 1 + kDelay,
+						a1MDD.buildMDD(constraintTable, t1_endf - t1_startf + 1 + tempk,
 							*(search_engines[a1]), s1f, t1_startf, g1f,
 							paths[a1]->at(t1_startf).actionToHere);
 
 						updateConstraintTable(&parent, a2);
-						a2MDD.buildMDD(constraintTable, t2_endf - t2_startf + 1 + kDelay,
+						a2MDD.buildMDD(constraintTable, t2_endf - t2_startf + 1 + tempk,
 							*(search_engines[a2]), s2f, t2_startf, g2f,
 							paths[a2]->at(t2_startf).actionToHere);
 
