@@ -2740,7 +2740,8 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 						MDD<Map> a1MDD;
 						MDD<Map> a2MDD;
 						updateConstraintTable(&parent, a1);
-						int tempk = kDelay > 1 ? 1 : kDelay;
+						//int tempk = kDelay > 1 ? 1 : kDelay;
+						int tempk = kDelay;
 
 						a1MDD.buildMDD(constraintTable, t1_endf - t1_startf + 1 + tempk,
 							*(search_engines[a1]), s1f, t1_startf, g1f,
