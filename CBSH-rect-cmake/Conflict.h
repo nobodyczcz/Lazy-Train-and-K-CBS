@@ -330,7 +330,7 @@ public:
 		int g2_x = G2.first;
 		int g2_y = G2.second;
 
-		if (RM4way >=2  || RM4way <= 5) {
+		if (RM4way >=2  && RM4way <= 5) {
 			if (k > 1) {
 				k = 1;
 			}
@@ -354,12 +354,12 @@ public:
 		int a2Rg = getMahattanDistance(s2_x, s2_y, Rg_x, Rg_y);
 		int a2RgBypass = a2Rg + 2 * (getMahattanDistance(s1_x, s1_y, Rs.first, Rs.second) + 1);
 
-		if (RM4way == 1 || RM4way ==0) {
+		if (RM4way ==0) {
 			a2_4way = a2RgBypass <= a2Rg + k;
 			a1_4way = a1RgBypass <= a1Rg + k;
 		}
 
-		if (RM4way == 0 && (a1_4way || a2_4way)) {
+		if (RM4way == -1 && (a1_4way || a2_4way)) {
 			return false;
 		}
 

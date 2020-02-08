@@ -1935,22 +1935,22 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 			continue;
 		}
 
-		//Check is this conflict in previous detected rectangle.
-		bool inRectangle = false;
-		if (a1 == previousRetangle[0] && a2 == previousRetangle[1]) {
+		////Check is this conflict in previous detected rectangle.
+		//bool inRectangle = false;
+		//if (a1 == previousRetangle[0] && a2 == previousRetangle[1]) {
 
-			int x = loc1 / num_col;
-			int y = loc1 % num_col;
-			int Rsx = previousRetangle[2] / num_col;
-			int Rsy = previousRetangle[2] % num_col;
-			int Rgx = previousRetangle[3] / num_col;
-			int Rgy = previousRetangle[3] % num_col;
-			if (((Rgx - x)*(x - Rsx) >= 0) && ((Rgy - y)*(y - Rsy) >= 0)) {
-				inRectangle = true;
-			}
+		//	int x = loc1 / num_col;
+		//	int y = loc1 % num_col;
+		//	int Rsx = previousRetangle[2] / num_col;
+		//	int Rsy = previousRetangle[2] % num_col;
+		//	int Rgx = previousRetangle[3] / num_col;
+		//	int Rgy = previousRetangle[3] % num_col;
+		//	if (((Rgx - x)*(x - Rsx) >= 0) && ((Rgy - y)*(y - Rsy) >= 0)) {
+		//		inRectangle = true;
+		//	}
 
 
-		}
+		//}
 
 		//Rectangle reasoning for semi and non cardinal vertex conflicts
 		if (cons_strategy == constraint_strategy::CBSH_CR)//Identify cardinal rectangle by start and goals
@@ -2153,10 +2153,18 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 			action_diff = abs(action1 - action2);
 			if ((action1!=action::WAIT && action2!=action::WAIT) &&(action_diff == 1 || action_diff == 3)) {
 				int t1_start, t1_end, t2_start, t2_end;
-				t1_start = get_st(*paths[a1], timestep, num_col, action1, action2);
-				t1_end = get_gt(*paths[a1], timestep, num_col, action1, action2);
-				t2_start = get_st(*paths[a2], timestep2, num_col, action1, action2);
-				t2_end = get_gt(*paths[a2], timestep2, num_col, action1, action2);
+				pair<int, int> t1s_result = get_st(*paths[a1], timestep, num_col, action1, action2);
+				pair<int, int> t1e_result = get_gt(*paths[a1], timestep, num_col, action1, action2);
+				pair<int, int> t2s_result = get_st(*paths[a2], timestep2, num_col, action1, action2);
+				pair<int, int> t2e_result = get_gt(*paths[a2], timestep2, num_col, action1, action2);
+				t1_start = t1s_result.first;
+				t1_end = t1e_result.first;
+				t2_start = t2s_result.first;
+				t2_end = t2e_result.first;
+				
+				if ((t1s_result.second + t1e_result.second == 0 && !paths[a1]->at(t1_start).single && !paths[a1]->at(t1_end).single) || (t2s_result.second + t2e_result.second == 0 && !paths[a2]->at(t2_start).single && !paths[a2]->at(t2_end).single)) {
+					not_rectangle = true;
+				}
 
 				int s1 = paths[a1]->at(t1_start).location;
 				int g1 = paths[a1]->at(t1_end).location;
@@ -2277,15 +2285,19 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 					MDD<Map> a1MDD;
 					MDD<Map> a2MDD;
 					updateConstraintTable(&parent, a1);
+					int tempk = kDelay > 1 ? 1 : kDelay;
 
-					a1MDD.buildMDD(constraintTable, t1_end - t1_start + 1+1,
+
+					a1MDD.buildMDD(constraintTable, t1_end - t1_start + 1+ tempk,
 						*(search_engines[a1]), s1, 0, g1,
 						paths[a1]->at(0).actionToHere);
 
 					updateConstraintTable(&parent, a2);
-					a2MDD.buildMDD(constraintTable, t2_end - t2_start + 1+1,
+					a2MDD.buildMDD(constraintTable, t2_end - t2_start + 1+ tempk,
 						*(search_engines[a2]), s2, 0, g2,
 						paths[a2]->at(0).actionToHere);
+
+					
 
 					MDDPath a1MDDPath;
 					for (int i = 0; i < a1MDD.levels.size(); i++) {
@@ -2356,39 +2368,39 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 
 			}
 		}
-		else if (rectangleMDD && !inRectangle)
+		else if (rectangleMDD )
 		{
 
-			stringstream conString;
-			//con << *(con);
-			if (con->k == 0) {
-				conString << min(con->a1, con->a2) << ",";
-				conString << max(con->a1, con->a2);
-			}
-			else {
-				conString << con->a1 << ",";
-				conString << con->a2;
-			}
-			conString << ",("
-				<< con->originalConf1 / num_col << ","
-				<< con->originalConf1 % num_col << ")" << ",("
-				<< con->originalConf2 / num_col << ","
-				<< con->originalConf2 % num_col << "),"
-				<< con->t << "," << con->k << "," << conflict_type::RECTANGLE4;
-			ICBSNode* temp = &parent;
+			//stringstream conString;
+			////con << *(con);
+			//if (con->k == 0) {
+			//	conString << min(con->a1, con->a2) << ",";
+			//	conString << max(con->a1, con->a2);
+			//}
+			//else {
+			//	conString << con->a1 << ",";
+			//	conString << con->a2;
+			//}
+			//conString << ",("
+			//	<< con->originalConf1 / num_col << ","
+			//	<< con->originalConf1 % num_col << ")" << ",("
+			//	<< con->originalConf2 / num_col << ","
+			//	<< con->originalConf2 % num_col << "),"
+			//	<< con->t << "," << con->k << "," << conflict_type::RECTANGLE4;
+			//ICBSNode* temp = &parent;
 
-			bool repeat = false;
-			while (temp != NULL) {
-				if (temp->resolvedConflicts.count(conString.str())) {
-					repeat = true;
-					break;
-				}
-				temp = temp->parent;
-			}
-			if (repeat) {
-				parent.conflicts.push_back(con);
-				continue;
-			}
+			//bool repeat = false;
+			//while (temp != NULL) {
+			//	if (temp->resolvedConflicts.count(conString.str())) {
+			//		repeat = true;
+			//		break;
+			//	}
+			//	temp = temp->parent;
+			//}
+			//if (repeat) {
+			//	parent.conflicts.push_back(con);
+			//	continue;
+			//}
 
 
 
@@ -2500,32 +2512,6 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 								|| ((s1 / num_col - s2 / num_col) * (s2 / num_col - g2 / num_col) < 0 && (s1% num_col - s2 % num_col) * (s2% num_col - g2 % num_col) < 0)) {
 								isChasing = true;
 							}
-							//if (isChasing>0) {
-								//int chasingAgent;
-								//int targetLoc;
-								//int t_s;
-								//if (isChasing == 1) {
-								//	chasingAgent = a2;
-								//	t_s = t1_start;
-								//	targetLoc = s1;
-								//	
-								//}
-								//else {
-								//	chasingAgent = a1;
-								//	t_s = t2_start;
-								//	targetLoc = s2;
-								//}
-								//bool traverseTargetLoc = false;
-								//for (int i = 0; i <= kDelay; i++) {
-								//	if (paths[chasingAgent]->at(t_s + i).location == targetLocc) {
-								//		traverseTargetLoc = true;
-								//	}
-								//}
-								//if (traverseTargetLoc) {
-								//	continue;
-								//}
-
-							//}
 
 
 							int new_type, new_area;
@@ -2740,8 +2726,10 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 						MDD<Map> a1MDD;
 						MDD<Map> a2MDD;
 						updateConstraintTable(&parent, a1);
-						//int tempk = kDelay > 1 ? 1 : kDelay;
 						int tempk = kDelay;
+						//if (option.RM4way == 2) {
+						//	int tempk = kDelay > 1 ? 1 : kDelay;
+						//}
 
 						a1MDD.buildMDD(constraintTable, t1_endf - t1_startf + 1 + tempk,
 							*(search_engines[a1]), s1f, t1_startf, g1f,

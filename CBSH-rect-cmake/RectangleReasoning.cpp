@@ -68,26 +68,46 @@ bool isRectangleConflict(int s1, int s2, int g1, int g2, int num_col,int kRobust
 }
 
 //Retrieve st and gt for new rm
-int get_st(const std::vector<PathEntry>& path, int timestep, int num_col, int action1, int action2) {
+pair<int,int> get_st(const std::vector<PathEntry>& path, int timestep, int num_col, int action1, int action2) {
+	pair<int, int> result;
+	result.second == 0;
+	int preAction = -1;
 	for (int t = timestep; t > 0; t--) {
 		int action = getAction(path[t].location, path[t - 1].location, num_col);
 		if (action != action1 && action != action2) {
-			return t;
+			result.first = t;
+			return result;
 		}
+		if (preAction != -1 && action != preAction) {
+			result.second++;
+		}
+		preAction = action;
 	}
-	
-	return 0;
+
+	//st is start location
+	result.first = 0;
+	//result.second++;
+	return result;
 	
 };
-int get_gt(const std::vector<PathEntry>& path, int timestep, int num_col, int action1, int action2) {
+pair<int, int> get_gt(const std::vector<PathEntry>& path, int timestep, int num_col, int action1, int action2) {
+	pair<int, int> result;
+	result.second == 0;
+	int preAction = -1;
 	for (int t = timestep; t < path.size()-1; t++) {
 		int action = getAction(path[t + 1].location, path[t].location, num_col);
 		if (action != action1 && action != action2) {
-			return t;
+			result.first = t;
+			return result;
 		}
+		if (preAction != -1 && action != preAction) {
+			result.second++;
+		}
+		preAction = action;
 	}
-
-	return path.size() - 1;
+	result.first = path.size() - 1;
+	//result.second++;
+	return result;
 
 };
 int get_earlyCrosst(const std::vector<PathEntry>& path1, const std::vector<PathEntry>& path2, int timestep, int earlyBound, int delta) {
