@@ -155,7 +155,7 @@ else()
 		set(boostPython python-py36)
 	elseif(DIST STREQUAL "Manjaro")
 		message(STATUS ">>>> Found Manjaro <<<<")
-		set(boostPython python37)
+		set(boostPython python38)
 	else()
 		message(STATUS ">>>> Found unknown distribution <<<<")
 		set(boostPython python37)
@@ -167,10 +167,10 @@ else()
 	endif ()
 	include_directories(SYSTEM ${SPARSEHASH_INCLUDE_DIRS} )
 
-	find_package(PythonInterp 3.6 REQUIRED)
+	find_package(PythonInterp 3.8 REQUIRED)
 
 	# This goes after, since it uses PythonInterp as hint
-	find_package(PythonLibs 3.6 REQUIRED)
+	find_package(PythonLibs 3.8 REQUIRED)
 	include_directories(${PYTHON_INCLUDE_DIRS})
 	MESSAGE(${PYTHON_LIBRARIES} ${PYTHON_INCLUDE_DIRS})
 
