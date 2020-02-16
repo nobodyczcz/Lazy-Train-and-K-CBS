@@ -1993,13 +1993,14 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 
 				}
 				bool success;
+				int way = option.RM4way==1?6:4;
 				success = new_rectangle->kRectangleConflict(a1, a2, Rs, Rg,
 					al.initial_locations[a1],
 					al.initial_locations[a2],
 					rt1, rt2, paths, 0, 0,
 					al.goal_locations[a1],
 					al.goal_locations[a2],
-					num_col, kDelay, 4, true);
+					num_col, kDelay, way, true);
 				bool isBlocked = true;
 
 				for (auto constraint : new_rectangle->multiConstraint1) {
