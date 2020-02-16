@@ -116,6 +116,46 @@ if (WIN32)
 	ELSEIF(NOT Boost_FOUND)
 	  MESSAGE(FATAL_ERROR "Unable to find all boost libs")
 	ENDIF()
+elseif(APPLE)
+	add_definitions('-std=c++14')
+
+	message(STATUS ">>>> Found APPLE <<<<")
+	set(CMAKE_SHARED_LIBRARY_SUFFIX ".so")
+	add_definitions('-DBoost_NO_BOOST_CMAKE=ON')
+	set(boostPython python37)
+	find_package(PythonInterp 3.7 REQUIRED)
+	find_package(PythonLibs 3.7 REQUIRED)
+	find_path(SPARSEHASH_INCLUDE_DIRS sparsehash/dense_hash_map)
+	if (NOT SPARSEHASH_INCLUDE_DIRS)
+		message(FATAL_ERROR "Could not find <sparsehash/dense_hash_map>.")
+	endif ()
+	include_directories(SYSTEM ${SPARSEHASH_INCLUDE_DIRS})
+
+
+	# This goes after, since it uses PythonInterp as hint
+	include_directories(${PYTHON_INCLUDE_DIRS})
+
+	set(Boost_USE_STATIC_LIBS OFF)
+	set(Boost_USE_MULTITHREADED ON)
+	set(Boost_USE_STATIC_RUNTIME OFF)
+	FIND_PACKAGE(Boost REQUIRED COMPONENTS system program_options ${boostPython})
+
+	# Detect and add SFML
+	# list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+	#Find any version 2.X of SFML
+	#See the FindSFML.cmake file for additional details and instructions
+	# find_package(SFML 2 REQUIRED  graphics window system)
+	# if(SFML_FOUND)
+	# include_directories(${SFML_INCLUDE_DIR})
+	# target_link_libraries(CBS-K ${SFML_LIBRARIES} ${SFML_DEPENDENCIES})
+	# endif()
+
+	if(Boost_FOUND)
+		include_directories(${Boost_INCLUDE_DIRS})
+		target_link_libraries(CBS-K ${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
+	else()
+		message(FATAL_ERROR "Could not find boost.")
+	endif()
 else()
 	file(READ "/etc/issue" ETC_ISSUE)
 	string(REGEX MATCH "Ubuntu|Manjaro" DIST ${ETC_ISSUE})

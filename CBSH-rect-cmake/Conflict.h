@@ -354,7 +354,7 @@ public:
 		int a2Rg = getMahattanDistance(s2_x, s2_y, Rg_x, Rg_y);
 		int a2RgBypass = a2Rg + 2 * (getMahattanDistance(s1_x, s1_y, Rs.first, Rs.second) + 1);
 
-		if (RM4way ==0) {
+		if (RM4way ==1) {
 			a2_4way = a2RgBypass <= a2Rg + k;
 			a1_4way = a1RgBypass <= a1Rg + k;
 		}
