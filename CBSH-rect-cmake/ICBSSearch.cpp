@@ -1966,13 +1966,20 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 				auto new_rectangle = std::shared_ptr<Conflict>(new Conflict(loc1,con->k,timestep));
 
 				int rt1, rt2;
-				if (con->k == 0) {
-					rt1 = timestep - getMahattanDistance(Rs.first, Rs.second, loc1 / num_col, loc1%num_col);
-					rt2 = rt1;
+
+				if(kDelay>=2 && kDelay <=5 ){
+                    if (con->k == 0) {
+                        rt1 = timestep - getMahattanDistance(Rs.first, Rs.second, loc1 / num_col, loc1%num_col);
+                        rt2 = rt1;
+                    }
+                    else {
+                        rt1 = timestep - getMahattanDistance(Rs.first, Rs.second, loc1 / num_col, loc1%num_col);
+                        rt2 = timestep2 - getMahattanDistance(Rs.first, Rs.second, loc1 / num_col, loc1%num_col) - 1;
+                    }
 				}
-				else {
-					rt1 = timestep - getMahattanDistance(Rs.first, Rs.second, loc1 / num_col, loc1%num_col);
-					rt2 = timestep2 - getMahattanDistance(Rs.first, Rs.second, loc1 / num_col, loc1%num_col) - 1;
+				else{
+                    rt1 = timestep - getMahattanDistance(Rs.first, Rs.second, loc1 / num_col, loc1%num_col);
+                    rt2 = rt1;
 				}
 				if (screen >= 5) {
 					cout << "s1: " << al.initial_locations[a1].first << " " << al.initial_locations[a1].second << endl;
@@ -2584,13 +2591,22 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 								int Rs_t = con->t - abs(Rs.first - loc1 / num_col) - abs(Rs.second - loc1 % num_col);
 
 								int rt1, rt2;
-								if (con->k == 0) {
-									rt1 = timestep - getMahattanDistance(Rs.first, Rs.second, loc1 / num_col, loc1%num_col);
-									rt2 = rt1;
-								}
-								else {
-									rt1 = timestep - getMahattanDistance(Rs.first, Rs.second, loc1 / num_col, loc1%num_col);
-									rt2 = timestep2 - getMahattanDistance(Rs.first, Rs.second, loc1 / num_col, loc1%num_col) - 1;
+								if(kDelay>=2 && kDelay<=5) {
+                                    if (con->k == 0) {
+                                        rt1 = timestep -
+                                              getMahattanDistance(Rs.first, Rs.second, loc1 / num_col, loc1 % num_col);
+                                        rt2 = rt1;
+                                    } else {
+                                        rt1 = timestep -
+                                              getMahattanDistance(Rs.first, Rs.second, loc1 / num_col, loc1 % num_col);
+                                        rt2 = timestep2 -
+                                              getMahattanDistance(Rs.first, Rs.second, loc1 / num_col, loc1 % num_col) -
+                                              1;
+                                    }
+                                }
+								else{
+								    rt1=Rs_t;
+								    rt2=Rs_t;
 								}
 								/*cout << "loc:" << loc1 << " t:" << timestep << endl;
 								cout << "s1 " << s1 << " s2 " << s2 << " g1 " << g1 << " g2 " << g2 << " rg " << Rg.first << " " << Rg.second <<" Rg_t "<< Rg_t<< endl;
