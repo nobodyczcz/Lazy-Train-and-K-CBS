@@ -1967,7 +1967,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 
 				int rt1, rt2;
 
-				if(kDelay>=2 && kDelay <=5 ){
+				if(option.RM4way>=2 && option.RM4way<=5){
                     if (con->k == 0) {
                         rt1 = timestep - getMahattanDistance(Rs.first, Rs.second, loc1 / num_col, loc1%num_col);
                         rt2 = rt1;
@@ -2591,7 +2591,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 								int Rs_t = con->t - abs(Rs.first - loc1 / num_col) - abs(Rs.second - loc1 % num_col);
 
 								int rt1, rt2;
-								if(kDelay>=2 && kDelay<=5) {
+								if(option.RM4way>=2 && option.RM4way<=5) {
                                     if (con->k == 0) {
                                         rt1 = timestep -
                                               getMahattanDistance(Rs.first, Rs.second, loc1 / num_col, loc1 % num_col);
