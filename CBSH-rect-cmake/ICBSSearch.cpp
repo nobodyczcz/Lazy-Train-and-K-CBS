@@ -2177,10 +2177,6 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
                     continue;
 				}
 
-				if ((t1s_result.second + t1e_result.second == 0 && !paths[a1]->at(t1_start).single && !paths[a1]->at(t1_end).single) || (t2s_result.second + t2e_result.second == 0 && !paths[a2]->at(t2_start).single && !paths[a2]->at(t2_end).single)) {
-                    parent.conflicts.push_back(con);
-                    continue;
-				}
 
 				int s1 = paths[a1]->at(t1_start).location;
 				int g1 = paths[a1]->at(t1_end).location;
