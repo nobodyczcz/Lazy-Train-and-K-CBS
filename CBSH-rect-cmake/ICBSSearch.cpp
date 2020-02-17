@@ -2172,9 +2172,14 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 				t1_end = t1e_result.first;
 				t2_start = t2s_result.first;
 				t2_end = t2e_result.first;
-				
+				if(t1_start==-1 || t2_start==-1 ||t1_end==-1||t2_end==-1){
+                    parent.conflicts.push_back(con);
+                    continue;
+				}
+
 				if ((t1s_result.second + t1e_result.second == 0 && !paths[a1]->at(t1_start).single && !paths[a1]->at(t1_end).single) || (t2s_result.second + t2e_result.second == 0 && !paths[a2]->at(t2_start).single && !paths[a2]->at(t2_end).single)) {
-					not_rectangle = true;
+                    parent.conflicts.push_back(con);
+                    continue;
 				}
 
 				int s1 = paths[a1]->at(t1_start).location;
@@ -2255,7 +2260,8 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 				}
 
 				if (!isRectangleConflict(s1, s2, g1, g2, num_col, kDelay, abs(t1_start - t2_start), I_RM)) {
-					not_rectangle = true;
+                    parent.conflicts.push_back(con);
+                    continue;
 				}
 
 				bool success = rectangle->kRectangleConflict(a1, a2, Rs, Rg,

@@ -70,7 +70,7 @@ bool isRectangleConflict(int s1, int s2, int g1, int g2, int num_col,int kRobust
 //Retrieve st and gt for new rm
 pair<int,int> get_st(const std::vector<PathEntry>& path, int timestep, int num_col, int action1, int action2) {
 	pair<int, int> result;
-	int candidate=timestep;
+	int candidate=-1;
 	result.second == 0;
 	int preAction = -1;
 	for (int t = timestep; t > 0; t--) {
@@ -96,7 +96,7 @@ pair<int,int> get_st(const std::vector<PathEntry>& path, int timestep, int num_c
 };
 pair<int, int> get_gt(const std::vector<PathEntry>& path, int timestep, int num_col, int action1, int action2) {
 	pair<int, int> result;
-    int candidate=timestep;
+    int candidate=-1;
     result.second == 0;
 	int preAction = -1;
 	for (int t = timestep; t < path.size()-1; t++) {
