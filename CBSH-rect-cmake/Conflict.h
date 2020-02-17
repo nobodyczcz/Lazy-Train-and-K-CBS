@@ -341,7 +341,7 @@ public:
 		bool a2_4way=false;
 		bool no_mdd_check = false;
 
-		if (RM4way == 5 && RM4way ==7) {
+		if (RM4way==-2 || RM4way == 5 || RM4way ==7) {
 			split4way = true;
 		}
 		if (RM4way >= 4) {
