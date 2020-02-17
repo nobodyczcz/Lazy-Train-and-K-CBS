@@ -1994,6 +1994,9 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 				}
 				bool success;
 				int way = option.RM4way==1?6:4;
+				if(option.RM4way==7){
+				    way = 7;
+				}
 				success = new_rectangle->kRectangleConflict(a1, a2, Rs, Rg,
 					al.initial_locations[a1],
 					al.initial_locations[a2],
