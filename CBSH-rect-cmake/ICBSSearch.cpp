@@ -1984,8 +1984,8 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 
 				bool success;
 				int way = option.RM4way==1?6:4;
-				if(option.RM4way==7){
-				    way = 7;
+				if(option.RM4way>=6){
+				    way = option.RM4way;
 				}
 
                 if (screen >= 5) {
@@ -2098,7 +2098,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 				}
 			}
 		}
-		else if (rectangleMDD && (option.RM4way==3 || option.RM4way==7)) {
+		else if (rectangleMDD && (option.RM4way==3 || option.RM4way>=6)) {
 
 
 			//stringstream conString;
@@ -2232,7 +2232,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 				int rt1, rt2; //root time
 
 				if(option.RM4way>=2 && option.RM4way<=5){
-                    if (con->k == 0 || option.RM4way==6) {
+                    if (con->k == 0 ) {
                         rt1 = a1_Rs_t;
                         rt2 = a1_Rs_t;
                     }

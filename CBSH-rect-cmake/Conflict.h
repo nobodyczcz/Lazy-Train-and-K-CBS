@@ -348,14 +348,14 @@ public:
 			no_mdd_check = true;
 		}
 
-		int a1Rg = getMahattanDistance(s1_x, s1_y, Rg_x, Rg_y);
+		int a1Rg = S1_t + getMahattanDistance(s1_x, s1_y, Rg_x, Rg_y);
 		int a1RgBypass = a1Rg + 2 * (getMahattanDistance(s2_x, s2_y, Rs.first, Rs.second) + 1);
 
-		int a2Rg = getMahattanDistance(s2_x, s2_y, Rg_x, Rg_y);
+		int a2Rg = S2_t + getMahattanDistance(s2_x, s2_y, Rg_x, Rg_y);
 		int a2RgBypass = a2Rg + 2 * (getMahattanDistance(s1_x, s1_y, Rs.first, Rs.second) + 1);
 
 		if (RM4way ==1||RM4way ==6) {
-			a2_4way = a2RgBypass <= a2Rg + k;
+			a2_4way = a2RgBypass <= a1Rg + k;//only need to compare with a1rg, because time range on Rg is based on the root time of a1
 			a1_4way = a1RgBypass <= a1Rg + k;
 		}
 
