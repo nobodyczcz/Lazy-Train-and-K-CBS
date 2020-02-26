@@ -366,7 +366,7 @@ public:
 		int extended = k / 2;
 		int R1_x, R1_y, R2_x, R2_y, G1_x, G1_y, G2_x, G2_y, G1_t, G2_t,E1_t,E2_t;
 
-		if ((RM4way >=5 || I_RM) && (
+		if ((RM4way ==5 || I_RM) && (
 			(((s2_x - s1_x) * (s1_x - g1_x) < 0 && (s2_y - s1_y) * (s1_y - g1_y) < 0) && ((s1_x - g1_x) * (g1_x - g2_x) > 0 || (s1_y - g1_y) * (g1_y - g2_y) < 0))
 			||
 			(((s1_x - s2_x) * (s2_x - g2_x) < 0 && (s1_y - s2_y) * (s2_y - g2_y) < 0) && ((s2_x - g2_x) * (g2_x - g1_x) < 0 || (s2_y - g2_y) * (g2_y - g1_y) > 0))
@@ -377,14 +377,17 @@ public:
 
 			int a1_exit = Rg_y + sign_a1 * extended;
 			a1_exit = sign_a1 * a1_exit < sign_a1*g1_y ? a1_exit : g1_y;
-			int a1_entrance = Rs.second - sign_a1 * extended;
-			a1_entrance = sign_a1 * a1_entrance > sign_a1*s1_y ? a1_entrance : s1_y;
+//			int a1_entrance = Rs.second - sign_a1 * extended;
+//			a1_entrance = sign_a1 * a1_entrance > sign_a1*s1_y ? a1_entrance : s1_y;
 
 
 			int a2_exit = Rg_x + sign_a2 * extended;
 			a2_exit = sign_a2 * a2_exit < sign_a2*g2_x ? a2_exit : g2_x;
-			int a2_entrance = Rs.first - +sign_a2 * extended;
-			a2_entrance = sign_a2 * a2_entrance > sign_a2 * s2_x ? a2_entrance : s2_x;
+//			int a2_entrance = Rs.first - +sign_a2 * extended;
+//			a2_entrance = sign_a2 * a2_entrance > sign_a2 * s2_x ? a2_entrance : s2_x;
+
+            int a1_entrance = Rs.second;
+            int a2_entrance = Rs.first;
 
 
 			R1_x = Rs.first;
@@ -394,9 +397,9 @@ public:
 			G2_y = Rg_y;
 
 			G1_t = rt1 + getMahattanDistance(Rs.first, Rs.second, G1_x, a1_exit);
-			E1_t = rt1 - extended + getMahattanDistance(Rs.first, a1_entrance, G1_x, a1_entrance);
+			E1_t = rt1 + getMahattanDistance(Rs.first, a1_entrance, G1_x, a1_entrance);
 			G2_t = rt2 + getMahattanDistance(Rs.first, Rs.second, a2_exit,G2_y);
-			E2_t = rt2 - extended + getMahattanDistance(a2_entrance, Rs.second, a2_entrance, G2_y);
+			E2_t = rt2 + getMahattanDistance(a2_entrance, Rs.second, a2_entrance, G2_y);
 
 
 			std::list<Constraint> constraint11;
@@ -434,7 +437,7 @@ public:
 
 
 		}
-		else if ((RM4way >=5 || I_RM) && (
+		else if ((RM4way ==5 || I_RM) && (
 			(((s1_x - s2_x) * (s2_x - g2_x) < 0 && (s1_y - s2_y) * (s2_y - g2_y) < 0) && ((s2_x - g2_x) * (g2_x - g1_x) > 0 || (s2_y - g2_y) * (g2_y - g1_y) < 0))
 			||
 			(((s2_x - s1_x) * (s1_x - g1_x) < 0 && (s2_y - s1_y) * (s1_y - g1_y) < 0) && ((s1_x - g1_x) * (g1_x - g2_x) < 0 || (s1_y - g1_y) * (g1_y - g2_y) > 0))
@@ -448,15 +451,17 @@ public:
 
 			int a1_exit = Rg_x + sign_a1 * extended;
 			a1_exit = sign_a1 * a1_exit < sign_a1*g1_x ? a1_exit : g1_x;
-			int a1_entrance = Rs.first - sign_a1 * extended;
-			a1_entrance = sign_a1 * a1_entrance > sign_a1*s1_x ? a1_entrance : s1_x;
+//			int a1_entrance = Rs.first - sign_a1 * extended;
+//			a1_entrance = sign_a1 * a1_entrance > sign_a1*s1_x ? a1_entrance : s1_x;
 
 
 			int a2_exit = Rg_y + sign_a2 * extended;
 			a2_exit = sign_a2 * a2_exit < sign_a2*g2_y ? a2_exit : g2_y;
-			int a2_entrance = Rs.second - +sign_a2 * extended;
-			a2_entrance = sign_a2 * a2_entrance > sign_a2 * s2_y ? a2_entrance : s2_y;
+//			int a2_entrance = Rs.second - +sign_a2 * extended;
+//			a2_entrance = sign_a2 * a2_entrance > sign_a2 * s2_y ? a2_entrance : s2_y;
 
+            int a1_entrance = Rs.first;
+            int a2_entrance = Rs.second;
 
 			R2_x = Rs.first;
 			G2_x = Rg_x;
@@ -466,9 +471,9 @@ public:
 
 
 			G1_t = rt1 + getMahattanDistance(Rs.first, Rs.second, a1_exit, G1_y);
-			E1_t = rt1 - extended + getMahattanDistance(a1_entrance, Rs.second, a1_entrance, G1_y);
+			E1_t = rt1 + getMahattanDistance(a1_entrance, Rs.second, a1_entrance, G1_y);
 			G2_t = rt2 + getMahattanDistance(Rs.first, Rs.second, G2_x, a2_exit);
-			E2_t = rt2 - extended + getMahattanDistance(Rs.first, a2_entrance, G2_x, a2_entrance);
+			E2_t = rt2 + getMahattanDistance(Rs.first, a2_entrance, G2_x, a2_entrance);
 
 
 			std::list<Constraint> constraint11;
@@ -519,14 +524,17 @@ public:
 
 			int a1_exit = Rg_x + sign_a1 * extended;
 			a1_exit = sign_a1 * a1_exit < sign_a1*g1_x ? a1_exit : g1_x;
-			int a1_entrance = Rs.first - sign_a1 * extended;
-			a1_entrance = sign_a1 * a1_entrance > sign_a1*s1_x ? a1_entrance : s1_x;
+//			int a1_entrance = Rs.first - sign_a1 * extended;
+//			a1_entrance = sign_a1 * a1_entrance > sign_a1*s1_x ? a1_entrance : s1_x;
 
 
 			int a2_exit = Rg_y + sign_a2 * extended;
 			a2_exit = sign_a2 * a2_exit < sign_a2*g2_y ? a2_exit : g2_y;
-			int a2_entrance = Rs.second - +sign_a2 * extended;
-			a2_entrance = sign_a2 * a2_entrance > sign_a2 * s2_y ? a2_entrance : s2_y;
+//			int a2_entrance = Rs.second - +sign_a2 * extended;
+//			a2_entrance = sign_a2 * a2_entrance > sign_a2 * s2_y ? a2_entrance : s2_y;
+
+            int a1_entrance = Rs.first;
+            int a2_entrance = Rs.second;
 
 
 			R2_x = Rs.first;
@@ -537,9 +545,9 @@ public:
 
 
 			G1_t = rt1 + getMahattanDistance(Rs.first, Rs.second, a1_exit, G1_y);
-			E1_t = rt1 - extended + getMahattanDistance(a1_entrance, Rs.second, a1_entrance, G1_y);
+			E1_t = rt1 + getMahattanDistance(a1_entrance, Rs.second, a1_entrance, G1_y);
 			G2_t = rt2 + getMahattanDistance(Rs.first, Rs.second, G2_x, a2_exit);
-			E2_t = rt2 - extended + getMahattanDistance(Rs.first, a2_entrance, G2_x, a2_entrance);
+			E2_t = rt2 + getMahattanDistance(Rs.first, a2_entrance, G2_x, a2_entrance);
 
 
 			std::list<Constraint> constraint11;
@@ -589,15 +597,17 @@ public:
 
 			int a1_exit = Rg_y + sign_a1 * extended;
 			a1_exit = sign_a1 * a1_exit < sign_a1*g1_y ? a1_exit : g1_y;
-			int a1_entrance = Rs.second - sign_a1 * extended;
-			a1_entrance = sign_a1 * a1_entrance > sign_a1*s1_y ? a1_entrance : s1_y;
+//			int a1_entrance = Rs.second - sign_a1 * extended;
+//			a1_entrance = sign_a1 * a1_entrance > sign_a1*s1_y ? a1_entrance : s1_y;
 
 
 			int a2_exit = Rg_x + sign_a2 * extended;
 			a2_exit = sign_a2 * a2_exit < sign_a2*g2_x ? a2_exit : g2_x;
-			int a2_entrance = Rs.first - +sign_a2 * extended;
-			a2_entrance = sign_a2 * a2_entrance > sign_a2 * s2_x ? a2_entrance : s2_x;
+//			int a2_entrance = Rs.first - +sign_a2 * extended;
+//			a2_entrance = sign_a2 * a2_entrance > sign_a2 * s2_x ? a2_entrance : s2_x;
 
+            int a1_entrance = Rs.second;
+            int a2_entrance = Rs.first;
 
 
 			R1_x = Rs.first;
@@ -607,9 +617,9 @@ public:
 			G2_y = Rg_y;
 
 			G1_t = rt1 + getMahattanDistance(Rs.first, Rs.second, G1_x, a1_exit);
-			E1_t = rt1 - extended + getMahattanDistance(Rs.first, a1_entrance, G1_x, a1_entrance);
+			E1_t = rt1 + getMahattanDistance(Rs.first, a1_entrance, G1_x, a1_entrance);
 			G2_t = rt2 + getMahattanDistance(Rs.first, Rs.second, a2_exit, G2_y);
-			E2_t = rt2 - extended + getMahattanDistance(a2_entrance, Rs.second, a2_entrance, G2_y);
+			E2_t = rt2 + getMahattanDistance(a2_entrance, Rs.second, a2_entrance, G2_y);
 
 
 			std::list<Constraint> constraint11;
