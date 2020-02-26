@@ -2230,14 +2230,21 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 				
 
 				int rt1, rt2; //root time
-				if (con->k == 0 || option.RM4way==6) {
-					rt1 = a1_Rs_t;
-					rt2 = a1_Rs_t;
-				}
-				else {
-					rt1 = timestep - getMahattanDistance(Rs.first, Rs.second, loc1 / num_col, loc1%num_col);
-					rt2 = timestep2 - getMahattanDistance(Rs.first, Rs.second, loc1 / num_col, loc1%num_col) - 1;
-				}
+
+				if(option.RM4way>=2 && option.RM4way<=5){
+                    if (con->k == 0 || option.RM4way==6) {
+                        rt1 = a1_Rs_t;
+                        rt2 = a1_Rs_t;
+                    }
+                    else {
+                        rt1 = timestep - getMahattanDistance(Rs.first, Rs.second, loc1 / num_col, loc1%num_col);
+                        rt2 = timestep2 - getMahattanDistance(Rs.first, Rs.second, loc1 / num_col, loc1%num_col) - 1;
+                    }
+                }
+                else{
+                    rt1 = timestep - getMahattanDistance(Rs.first, Rs.second, loc1 / num_col, loc1%num_col);
+                    rt2 = rt1;
+                }
 
 
 				if (screen >= 5) {
