@@ -18,6 +18,7 @@ public:
 		CT_Single.clear();
 	}
 	void insert(int loc, int t_min, int t_max);
+	void insert(std::list<Constraint>& constraints, int agent_id, int num_col, int map_size);
 	bool is_constrained(int loc, int t);
 	void printSize() {
 		std::cout << CT.size() << std::endl;;

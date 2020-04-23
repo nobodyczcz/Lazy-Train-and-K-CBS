@@ -6,6 +6,7 @@
 #include "common.h"
 #include <string>
 #include <sstream>
+#include "MDDNode.h"
 using namespace std;
 
 
@@ -48,12 +49,12 @@ bool addKDelayBarrierConstraints(int S1, int S2, int S1_t, int S2_t, pair<int, i
 // add a vertival modified barrier constraint
 bool addModifiedVerticalLongBarrierConstraint(const std::vector<PathEntry>& path, int y,
 	int Ri_x, int Rg_x, int Rg_t, int num_col, int St,
-	std::list<Constraint>& constraints, int k, MDDPath* kMDD);
+	std::list<Constraint>& constraints, int k, MDDLevels* kMDD);
 
 // add a horizontal modified barrier constraint
 bool addModifiedHorizontalLongBarrierConstraint(const std::vector<PathEntry>& path, int x,
 	int Ri_y, int Rg_y, int Rg_t, int num_col, int St,
-	std::list<Constraint>& constraints, int k, MDDPath* kMDD);
+	std::list<Constraint>& constraints, int k, MDDLevels* kMDD);
 
 // add a vertival modified barrier constraint for 4 way split
 bool add4WayModifiedVerticalLongBarrierConstraint(const std::vector<PathEntry>& path, int y,
@@ -311,7 +312,7 @@ public:
 	bool kRectangleConflict(int a1, int a2, const std::pair<int, int>& Rs, const std::pair<int, int>& Rg,
 		const std::pair<int, int>& s1, const std::pair<int, int>& s2, int rt1,int rt2,
 		const std::vector<Path*>& paths, int S1_t, int S2_t, const std::pair<int, int>& G1, const std::pair<int, int>& G2,
-		int num_col, int k, int RM4way, bool I_RM = false, MDDPath* a1kMDD = NULL, MDDPath* a2kMDD = NULL) // For K-RM
+		int num_col, int k, int RM4way, bool I_RM = false, MDDLevels* a1kMDD = NULL, MDDLevels* a2kMDD = NULL) // For K-RM
 	{
 		this->a1 = a1;
 		this->a2 = a2;
@@ -330,18 +331,18 @@ public:
 		int g2_x = G2.first;
 		int g2_y = G2.second;
 
-		if (RM4way >=2  && RM4way <= 5) {
-			if (k > 1) {
-				k = 1;
-			}
-		}
+//		if (RM4way >=2  && RM4way <= 5) {
+//			if (k > 1) {
+//				k = 1;
+//			}
+//		}
 
 		bool split4way = false;
 		bool a1_4way=false;
 		bool a2_4way=false;
 		bool no_mdd_check = false;
 
-		if (RM4way==-2 || RM4way == 5 || RM4way ==7) {
+		if (RM4way==-2 || RM4way == 3 || RM4way == 5 || RM4way ==7) {
 			split4way = true;
 		}
 		if (RM4way >= 4) {
@@ -665,401 +666,401 @@ public:
 		return true;
 	}
 
-	bool flippedRectangleConflict(int a1, int a2, const std::pair<int, int>& Rs, const std::pair<int, int>& Rg,
-		const std::pair<int, int>& s1, const std::pair<int, int>& s2, int Rg_t,
-		const std::vector<Path*>& paths, int S1_t, int S2_t, const std::pair<int, int>& G1, const std::pair<int, int>& G2,
-		int num_col, int k,int flipType, MDDPath* a1kMDD = NULL, MDDPath* a2kMDD = NULL) // For K-RM
-	{
-
-		this->a1 = a1;
-		this->a2 = a2;
-		this->t_sg = Rg_t - abs(Rg.first - Rs.first) - abs(Rg.second - Rs.second);
-		this->rs = Rs.first*num_col + Rs.second;
-		this->rg = Rg.first*num_col + Rg.second;
-		this->flipType = flipType;
-
-		int s1_x = s1.first;
-		int s1_y = s1.second;
-		int s2_x = s2.first;
-		int s2_y = s2.second;
-		int Rg_x = Rg.first;
-		int Rg_y = Rg.second;
-		int g1_x = G1.first;
-		int g1_y = G1.second;
-		int g2_x = G2.first;
-		int g2_y = G2.second;
-
-
-		int R1_x, R1_y, R2_x, R2_y, G1_x, G1_y, G2_x, G2_y;
-		vector<int> horizontal;
-		vector<int> horizontalMin;
-		vector<int> horizontalMax;
-
-		vector<int> vertical;
-		vector<int> verticalMin;
-		vector<int> verticalMax;
-
-		if (flipType == 2) {
-			if ((g2_x == s1_x && (g1_y - s1_y) * (s1_y - Rg_y) >= 0) ||
-				(g2_x != s1_x && (g2_x - s1_x) * (s1_x - Rg_x) < 0)) {
-
-				G1_x = Rg.first;
-				G1_y = g2_y;
-				R1_y = s2_y;
-
-				int sign = R1_y < G1_y ? 1 : -1;
-				horizontal.clear();
-				horizontalMin.clear();
-				horizontalMin.clear();
-				for (int y = G1_y; y != R1_y - sign; y = y - sign * 1) {
-					horizontal.push_back(y);
-					horizontalMin.push_back(getMahattanDistance(s1_x, s1_y, G1_x, y) + S1_t);
-					horizontalMax.push_back(getMahattanDistance(s2_x, s2_y, G1_x, y) + k + S2_t);
-				}
-
-				if (!addFlippedHorizontalLongBarrierConstraint(*paths[a1], G1_x, horizontal, horizontalMin, horizontalMax, num_col, S1_t, constraint1, k, a1kMDD))
-					return false;
-
-				G2_y = Rs.second;
-				G2_x = g1_x;
-				R2_x = s1_x;
-
-				sign = R2_x < G2_x ? 1 : -1;
-				vertical.clear();
-				verticalMin.clear();
-				verticalMax.clear();
-				for (int x = G2_x; x != R2_x - sign; x = x - sign * 1) {
-					vertical.push_back(x);
-					verticalMin.push_back(getMahattanDistance(s2_x, s2_y, x, G2_y) + S2_t);
-					verticalMax.push_back(getMahattanDistance(s1_x, s1_y, x, G2_y) + k + S1_t);
-				}
-
-				if (!addFlippedVerticalLongBarrierConstraint(*paths[a2], G2_y, vertical, verticalMin, verticalMax, num_col, S2_t, constraint2, k, a2kMDD))
-					return false;
-
-			
-			}
-			else {
-				G1_y = Rg.second;
-				G1_x = g2_x;
-				R1_x = s2_x;
-
-				int sign = R1_x < G1_x ? 1 : -1;
-				vertical.clear();
-				verticalMin.clear();
-				verticalMax.clear();
-				for (int x = G1_x; x != R1_x - sign; x = x - sign * 1) {
-					vertical.push_back(x);
-					verticalMin.push_back(getMahattanDistance(s1_x, s1_y, x, G1_y) + S1_t);
-					verticalMax.push_back(getMahattanDistance(s2_x, s2_y, x, G1_y) + k + S2_t);
-				}
-
-				if (!addFlippedVerticalLongBarrierConstraint(*paths[a1], G1_y, vertical, verticalMin, verticalMax, num_col, S1_t, constraint1, k, a1kMDD))
-					return false;
-
-				G2_x = Rs.first;
-				G2_y = g1_y;
-				R2_y = s1_y;
-
-				sign = R2_y < G2_y ? 1 : -1;
-				horizontal.clear();
-				horizontalMin.clear();
-				horizontalMin.clear();
-				for (int y = G2_y; y != R2_y - sign; y = y - sign * 1) {
-					horizontal.push_back(y);
-					horizontalMin.push_back(getMahattanDistance(s2_x, s2_y, G2_x, y) + S2_t);
-					horizontalMax.push_back(getMahattanDistance(s1_x, s1_y, G2_x, y) + k + S1_t);
-				}
-
-				if (!addFlippedHorizontalLongBarrierConstraint(*paths[a2], G2_x, horizontal, horizontalMin, horizontalMax, num_col, S2_t, constraint2, k, a2kMDD))
-					return false;
-
-			}
-			
-
-
-
-
-		}
-		else if (flipType == 1) {//1 flipped case
-			if ((s1_y - g1_y) * (s2_y - g2_y) < 0) {// y dimension flipped
-				if (Rs.second != g1_y) {//s1 vertical border need constraint
-					G1_y = Rs.second;
-					G1_x = g2_x;
-					R1_x = s2_x;
-
-					int sign = R1_x < G1_x ? 1 : -1;
-					vertical.clear();
-					verticalMin.clear();
-					verticalMax.clear();
-					for (int x = G1_x; x != R1_x-sign; x = x - sign * 1) {
-						vertical.push_back(x);
-						//int tMin = min(getMahattanDistance(s1_x, s1_y, x, G1_y) + S1_t, getMahattanDistance(s2_x, s2_y, x, G1_y) + S2_t);
-						//verticalMin.push_back(tMin);
-						//verticalMax.push_back(tMin+k);
-						verticalMin.push_back(getMahattanDistance(s1_x, s1_y, x, G1_y) + S1_t);
-						verticalMax.push_back(getMahattanDistance(s2_x, s2_y, x, G1_y) + k + S2_t);
-					}
-
-					if (!addFlippedVerticalLongBarrierConstraint(*paths[a1], G1_y, vertical, verticalMin, verticalMax, num_col, S1_t, constraint1, k, a1kMDD))
-						return false;
-
-				}
-
-				if (Rg.first != g1_x || (Rs.second == g1_y && Rg.first == g1_x)) {//s1 horizontoal border need constraint
-					G1_x = Rg.first;
-					G1_y = g2_y;
-					R1_y = s2_y;
-
-					int sign = R1_y < G1_y ? 1 : -1;
-					horizontal.clear();
-					horizontalMin.clear();
-					horizontalMin.clear();
-					for (int y = G1_y; y != R1_y-sign; y = y - sign * 1) {
-						horizontal.push_back(y);
-						//int tMin = min(getMahattanDistance(s1_x, s1_y, G1_x, y) + S1_t, getMahattanDistance(s2_x, s2_y, G1_x, y) + S2_t);
-						//horizontalMin.push_back(tMin);
-						//horizontalMax.push_back(tMin + k);
-						horizontalMin.push_back(getMahattanDistance(s1_x, s1_y, G1_x, y) + S1_t);
-						horizontalMax.push_back(getMahattanDistance(s2_x, s2_y, G1_x, y) + k + S2_t);
-					}
-
-					if (!addFlippedHorizontalLongBarrierConstraint(*paths[a1], G1_x, horizontal, horizontalMin, horizontalMax, num_col, S1_t, constraint1, k, a1kMDD))
-						return false;
-
-				}
-
-				if (Rg.second != g2_y ) {//s2 vertical border need constraint
-					G2_y = Rg.second;
-					G2_x = g1_x;
-					R2_x = s1_x;
-
-					int sign = R2_x < G2_x ? 1 : -1;
-					vertical.clear();
-					verticalMin.clear();
-					verticalMax.clear();
-					for (int x = G2_x; x != R2_x - sign; x = x - sign * 1) {
-						vertical.push_back(x);
-						/*int tMin = min(getMahattanDistance(s1_x, s1_y, x, G2_y) + S1_t, getMahattanDistance(s2_x, s2_y, x, G2_y) + S2_t);
-						verticalMin.push_back(tMin);
-						verticalMax.push_back(tMin + k);*/
-						verticalMin.push_back(getMahattanDistance(s2_x, s2_y, x, G2_y) + S2_t);
-						verticalMax.push_back(getMahattanDistance(s1_x, s1_y, x, G2_y) + k + S1_t);
-					}
-
-					if (!addFlippedVerticalLongBarrierConstraint(*paths[a2], G2_y, vertical, verticalMin, verticalMax, num_col, S2_t, constraint2, k, a2kMDD))
-						return false;
-
-				}
-
-				if (Rg.first != g2_x || (Rg.second == g2_y && Rg.first == g2_x)) {//s2 horizontoal border need constraint
-					G2_x = Rg.first;
-					G2_y = g1_y;
-					R2_y = s1_y;
-
-					int sign = R2_y < G2_y ? 1 : -1;
-					horizontal.clear();
-					horizontalMin.clear();
-					horizontalMin.clear();
-					for (int y = G2_y; y != R2_y - sign; y = y - sign * 1) {
-						horizontal.push_back(y);
-						/*int tMin = min(getMahattanDistance(s1_x, s1_y, G2_x, y) + S1_t, getMahattanDistance(s2_x, s2_y, G2_x, y) + S2_t);
-						horizontalMin.push_back(tMin);
-						horizontalMax.push_back(tMin + k);*/
-						horizontalMin.push_back(getMahattanDistance(s2_x, s2_y, G2_x, y) + S2_t);
-						horizontalMax.push_back(getMahattanDistance(s1_x, s1_y, G2_x, y) + k + S1_t);
-					}
-
-					if (!addFlippedHorizontalLongBarrierConstraint(*paths[a2], G2_x, horizontal, horizontalMin, horizontalMax, num_col, S2_t, constraint2, k, a2kMDD))
-						return false;
-
-				}
-
-
-			}
-			else {// x dimension flipped
-				if (Rg.second != g1_y || (Rg.second == g1_y && Rs.first == g1_x)) {//s1 vertical border need constraint
-					G1_y = Rg.second;
-					G1_x = g2_x;
-					R1_x = s2_x;
-
-					int sign = R1_x < G1_x ? 1 : -1;
-					vertical.clear();
-					verticalMin.clear();
-					verticalMax.clear();
-					for (int x = G1_x; x != R1_x-sign; x = x - sign * 1) {
-						vertical.push_back(x);
-						/*int tMin = min(getMahattanDistance(s1_x, s1_y, x, G1_y) + S1_t, getMahattanDistance(s2_x, s2_y, x, G1_y) + S2_t);
-						verticalMin.push_back(tMin);
-						verticalMax.push_back(tMin + k);*/
-						verticalMin.push_back(getMahattanDistance(s1_x, s1_y, x, G1_y) + S1_t);
-						verticalMax.push_back(getMahattanDistance(s2_x, s2_y, x, G1_y) + k + S2_t);
-					}
-
-					if (!addFlippedVerticalLongBarrierConstraint(*paths[a1], G1_y, vertical, verticalMin, verticalMax, num_col, S1_t, constraint1, k, a1kMDD))
-						return false;
-
-				}
-
-				if (Rs.first != g1_x) {//s1 horizontoal border need constraint
-					G1_x = Rs.first;
-					G1_y = g2_y;
-					R1_y = s2_y;
-
-					int sign = R1_y < G1_y ? 1 : -1;
-					horizontal.clear();
-					horizontalMin.clear();
-					horizontalMin.clear();
-					for (int y = G1_y; y != R1_y-sign; y = y - sign * 1) {
-						horizontal.push_back(y);
-						/*int tMin = min(getMahattanDistance(s1_x, s1_y, G1_x, y) + S1_t, getMahattanDistance(s2_x, s2_y, G1_x, y) + S2_t);
-						horizontalMin.push_back(tMin);
-						horizontalMax.push_back(tMin + k);*/
-						horizontalMin.push_back(getMahattanDistance(s1_x, s1_y, G1_x, y) + S1_t);
-						horizontalMax.push_back(getMahattanDistance(s2_x, s2_y, G1_x, y) + k + S2_t);
-					}
-
-					if (!addFlippedHorizontalLongBarrierConstraint(*paths[a1], G1_x, horizontal, horizontalMin, horizontalMax, num_col, S1_t, constraint1, k, a1kMDD))
-						return false;
-
-				}
-
-				if (Rg.second != g2_y || (Rg.second == g2_y && Rg.first == g2_x)) {//s2 vertical border need constraint
-					G2_y = Rg.second;
-					G2_x = g1_x;
-					R2_x = s1_x;
-
-					int sign = R2_x < G2_x ? 1 : -1;
-					vertical.clear();
-					verticalMin.clear();
-					verticalMax.clear();
-					for (int x = G2_x; x != R2_x - sign; x = x - sign * 1) {
-						vertical.push_back(x);
-						/*int tMin = min(getMahattanDistance(s1_x, s1_y, x, G2_y) + S1_t, getMahattanDistance(s2_x, s2_y, x, G2_y) + S2_t);
-						verticalMin.push_back(tMin);
-						verticalMax.push_back(tMin + k);*/
-						verticalMin.push_back(getMahattanDistance(s2_x, s2_y, x, G2_y) + S2_t);
-						verticalMax.push_back(getMahattanDistance(s1_x, s1_y, x, G2_y) + k + S1_t);
-					}
-
-					if (!addFlippedVerticalLongBarrierConstraint(*paths[a2], G2_y, vertical, verticalMin, verticalMax, num_col, S2_t, constraint2, k, a2kMDD))
-						return false;
-
-				}
-
-				if (Rg.first != g2_x) {//s2 horizontoal border need constraint
-					G2_x = Rg.first;
-					G2_y = g1_y;
-					R2_y = s1_y;
-
-					int sign = R2_y < G2_y ? 1 : -1;
-					horizontal.clear();
-					horizontalMin.clear();
-					horizontalMin.clear();
-					for (int y = G2_y; y != R2_y - sign; y = y - sign * 1) {
-						horizontal.push_back(y);
-						/*int tMin = min(getMahattanDistance(s1_x, s1_y, G2_x, y) + S1_t, getMahattanDistance(s2_x, s2_y, G2_x, y) + S2_t);
-						horizontalMin.push_back(tMin);
-						horizontalMax.push_back(tMin + k);*/
-						horizontalMin.push_back(getMahattanDistance(s2_x, s2_y, G2_x, y) + S2_t);
-						horizontalMax.push_back(getMahattanDistance(s1_x, s1_y, G2_x, y) + k + S1_t);
-					}
-
-					if (!addFlippedHorizontalLongBarrierConstraint(*paths[a2], G2_x, horizontal, horizontalMin, horizontalMax, num_col, S2_t, constraint2, k, a2kMDD))
-						return false;
-
-				}
-			}
-
-			
-
-		}
-		else {//standard non flip
-		
-			if ((s1_x == s2_x && (s1_y - s2_y) * (s2_y - Rg_y) < 0) ||
-				(s1_x != s2_x && (s1_x - s2_x)*(s2_x - Rg_x) >= 0))
-			{
-				R1_x = Rg_x;
-				G1_x = Rg_x;
-				R1_y = s2_y;
-				G1_y = g2_y;
-
-				R2_y = Rg_y;
-				G2_y = Rg_y;
-				R2_x = s1_x;
-				G2_x = g1_x;
-				
-
-				//cout << "s1t" << S1_t << "G1_t" << G1_t << "G1_y " << G1_y << endl;
-				//cout << "s2t" << S2_t << "G2_t" << G2_t << "G2_x " << G2_x << endl;
-				
-				int sign = R1_y < G1_y ? 1 : -1;
-				for (int y = G1_y; y != R1_y-sign; y = y - sign * 1) {
-					horizontal.push_back(y);
-					horizontalMin.push_back(getMahattanDistance(s1_x, s1_y, Rg_x, y) + S1_t);
-					horizontalMax.push_back(getMahattanDistance(s2_x, s2_y, Rg_x, y) + k + S2_t);
-				}
-
-
-				sign = R2_x < G2_x ? 1 : -1;
-				for (int x = G2_x; x != R2_x-sign; x = x - sign * 1) {
-					vertical.push_back(x);
-					verticalMin.push_back(getMahattanDistance(s2_x, s2_y, x, Rg_y) + S2_t);
-					verticalMax.push_back(getMahattanDistance(s1_x, s1_y, x, Rg_y) + k + S1_t);
-				}
-
-				//cout << "Horizontal length: " << horizontal.size() << " Vertical length: " << vertical.size() << endl;
-
-
-				if (!addFlippedHorizontalLongBarrierConstraint(*paths[a1], Rg_x, horizontal, horizontalMin, horizontalMax, num_col, S1_t, constraint1, k, a1kMDD))
-					return false;
-				if (!addFlippedVerticalLongBarrierConstraint(*paths[a2], Rg_y, vertical, verticalMin, verticalMax, num_col, S2_t, constraint2, k, a2kMDD))
-					return false;
-			}
-			else
-			{
-				R1_y = Rg_y;
-				G1_y = Rg_y;
-				R1_x = s2_x;
-				G1_x = g2_x;
-				
-
-				R2_x = Rg_x;
-				G2_x = Rg_x;
-				R2_y = s1_y;
-				G2_y = g1_y;
-				
-
-				
-
-
-				int sign = R2_y < G2_y ? 1 : -1;
-
-				for (int y = G2_y; y != R2_y-sign; y = y - sign * 1) {
-					horizontal.push_back(y);
-					horizontalMin.push_back(getMahattanDistance(s2_x, s2_y, Rg_x, y) + S2_t);
-					horizontalMax.push_back(getMahattanDistance(s1_x, s1_y, Rg_x, y) + k + S1_t);
-				}
-
-				sign = R1_x < G1_x ? 1 : -1;
-				for (int x = G1_x; x != R1_x-sign; x = x - sign * 1) {
-					vertical.push_back(x);
-					verticalMin.push_back(getMahattanDistance(s1_x, s1_y, x, Rg_y)+S1_t);
-					verticalMax.push_back(getMahattanDistance(s2_x, s2_y, x, Rg_y) + k + S2_t);
-				}
-
-
-				if (!addFlippedVerticalLongBarrierConstraint(*paths[a1], Rg_y, vertical, verticalMin, verticalMax, num_col, S1_t, constraint1, k, a1kMDD))
-					return false;
-				if (!addFlippedHorizontalLongBarrierConstraint(*paths[a2], Rg_x, horizontal, horizontalMin, horizontalMax, num_col, S2_t, constraint2, k, a2kMDD))
-					return false;
-				//exit(0);
-			}
-		}
-		
-		type = conflict_type::RECTANGLE;
-		return true;
-	}
+//	bool flippedRectangleConflict(int a1, int a2, const std::pair<int, int>& Rs, const std::pair<int, int>& Rg,
+//		const std::pair<int, int>& s1, const std::pair<int, int>& s2, int Rg_t,
+//		const std::vector<Path*>& paths, int S1_t, int S2_t, const std::pair<int, int>& G1, const std::pair<int, int>& G2,
+//		int num_col, int k,int flipType, MDDLevels* a1kMDD = NULL, MDDLevels* a2kMDD = NULL) // For K-RM
+//	{
+//
+//		this->a1 = a1;
+//		this->a2 = a2;
+//		this->t_sg = Rg_t - abs(Rg.first - Rs.first) - abs(Rg.second - Rs.second);
+//		this->rs = Rs.first*num_col + Rs.second;
+//		this->rg = Rg.first*num_col + Rg.second;
+//		this->flipType = flipType;
+//
+//		int s1_x = s1.first;
+//		int s1_y = s1.second;
+//		int s2_x = s2.first;
+//		int s2_y = s2.second;
+//		int Rg_x = Rg.first;
+//		int Rg_y = Rg.second;
+//		int g1_x = G1.first;
+//		int g1_y = G1.second;
+//		int g2_x = G2.first;
+//		int g2_y = G2.second;
+//
+//
+//		int R1_x, R1_y, R2_x, R2_y, G1_x, G1_y, G2_x, G2_y;
+//		vector<int> horizontal;
+//		vector<int> horizontalMin;
+//		vector<int> horizontalMax;
+//
+//		vector<int> vertical;
+//		vector<int> verticalMin;
+//		vector<int> verticalMax;
+//
+//		if (flipType == 2) {
+//			if ((g2_x == s1_x && (g1_y - s1_y) * (s1_y - Rg_y) >= 0) ||
+//				(g2_x != s1_x && (g2_x - s1_x) * (s1_x - Rg_x) < 0)) {
+//
+//				G1_x = Rg.first;
+//				G1_y = g2_y;
+//				R1_y = s2_y;
+//
+//				int sign = R1_y < G1_y ? 1 : -1;
+//				horizontal.clear();
+//				horizontalMin.clear();
+//				horizontalMin.clear();
+//				for (int y = G1_y; y != R1_y - sign; y = y - sign * 1) {
+//					horizontal.push_back(y);
+//					horizontalMin.push_back(getMahattanDistance(s1_x, s1_y, G1_x, y) + S1_t);
+//					horizontalMax.push_back(getMahattanDistance(s2_x, s2_y, G1_x, y) + k + S2_t);
+//				}
+//
+//				if (!addFlippedHorizontalLongBarrierConstraint(*paths[a1], G1_x, horizontal, horizontalMin, horizontalMax, num_col, S1_t, constraint1, k, a1kMDD))
+//					return false;
+//
+//				G2_y = Rs.second;
+//				G2_x = g1_x;
+//				R2_x = s1_x;
+//
+//				sign = R2_x < G2_x ? 1 : -1;
+//				vertical.clear();
+//				verticalMin.clear();
+//				verticalMax.clear();
+//				for (int x = G2_x; x != R2_x - sign; x = x - sign * 1) {
+//					vertical.push_back(x);
+//					verticalMin.push_back(getMahattanDistance(s2_x, s2_y, x, G2_y) + S2_t);
+//					verticalMax.push_back(getMahattanDistance(s1_x, s1_y, x, G2_y) + k + S1_t);
+//				}
+//
+//				if (!addFlippedVerticalLongBarrierConstraint(*paths[a2], G2_y, vertical, verticalMin, verticalMax, num_col, S2_t, constraint2, k, a2kMDD))
+//					return false;
+//
+//
+//			}
+//			else {
+//				G1_y = Rg.second;
+//				G1_x = g2_x;
+//				R1_x = s2_x;
+//
+//				int sign = R1_x < G1_x ? 1 : -1;
+//				vertical.clear();
+//				verticalMin.clear();
+//				verticalMax.clear();
+//				for (int x = G1_x; x != R1_x - sign; x = x - sign * 1) {
+//					vertical.push_back(x);
+//					verticalMin.push_back(getMahattanDistance(s1_x, s1_y, x, G1_y) + S1_t);
+//					verticalMax.push_back(getMahattanDistance(s2_x, s2_y, x, G1_y) + k + S2_t);
+//				}
+//
+//				if (!addFlippedVerticalLongBarrierConstraint(*paths[a1], G1_y, vertical, verticalMin, verticalMax, num_col, S1_t, constraint1, k, a1kMDD))
+//					return false;
+//
+//				G2_x = Rs.first;
+//				G2_y = g1_y;
+//				R2_y = s1_y;
+//
+//				sign = R2_y < G2_y ? 1 : -1;
+//				horizontal.clear();
+//				horizontalMin.clear();
+//				horizontalMin.clear();
+//				for (int y = G2_y; y != R2_y - sign; y = y - sign * 1) {
+//					horizontal.push_back(y);
+//					horizontalMin.push_back(getMahattanDistance(s2_x, s2_y, G2_x, y) + S2_t);
+//					horizontalMax.push_back(getMahattanDistance(s1_x, s1_y, G2_x, y) + k + S1_t);
+//				}
+//
+//				if (!addFlippedHorizontalLongBarrierConstraint(*paths[a2], G2_x, horizontal, horizontalMin, horizontalMax, num_col, S2_t, constraint2, k, a2kMDD))
+//					return false;
+//
+//			}
+//
+//
+//
+//
+//
+//		}
+//		else if (flipType == 1) {//1 flipped case
+//			if ((s1_y - g1_y) * (s2_y - g2_y) < 0) {// y dimension flipped
+//				if (Rs.second != g1_y) {//s1 vertical border need constraint
+//					G1_y = Rs.second;
+//					G1_x = g2_x;
+//					R1_x = s2_x;
+//
+//					int sign = R1_x < G1_x ? 1 : -1;
+//					vertical.clear();
+//					verticalMin.clear();
+//					verticalMax.clear();
+//					for (int x = G1_x; x != R1_x-sign; x = x - sign * 1) {
+//						vertical.push_back(x);
+//						//int tMin = min(getMahattanDistance(s1_x, s1_y, x, G1_y) + S1_t, getMahattanDistance(s2_x, s2_y, x, G1_y) + S2_t);
+//						//verticalMin.push_back(tMin);
+//						//verticalMax.push_back(tMin+k);
+//						verticalMin.push_back(getMahattanDistance(s1_x, s1_y, x, G1_y) + S1_t);
+//						verticalMax.push_back(getMahattanDistance(s2_x, s2_y, x, G1_y) + k + S2_t);
+//					}
+//
+//					if (!addFlippedVerticalLongBarrierConstraint(*paths[a1], G1_y, vertical, verticalMin, verticalMax, num_col, S1_t, constraint1, k, a1kMDD))
+//						return false;
+//
+//				}
+//
+//				if (Rg.first != g1_x || (Rs.second == g1_y && Rg.first == g1_x)) {//s1 horizontoal border need constraint
+//					G1_x = Rg.first;
+//					G1_y = g2_y;
+//					R1_y = s2_y;
+//
+//					int sign = R1_y < G1_y ? 1 : -1;
+//					horizontal.clear();
+//					horizontalMin.clear();
+//					horizontalMin.clear();
+//					for (int y = G1_y; y != R1_y-sign; y = y - sign * 1) {
+//						horizontal.push_back(y);
+//						//int tMin = min(getMahattanDistance(s1_x, s1_y, G1_x, y) + S1_t, getMahattanDistance(s2_x, s2_y, G1_x, y) + S2_t);
+//						//horizontalMin.push_back(tMin);
+//						//horizontalMax.push_back(tMin + k);
+//						horizontalMin.push_back(getMahattanDistance(s1_x, s1_y, G1_x, y) + S1_t);
+//						horizontalMax.push_back(getMahattanDistance(s2_x, s2_y, G1_x, y) + k + S2_t);
+//					}
+//
+//					if (!addFlippedHorizontalLongBarrierConstraint(*paths[a1], G1_x, horizontal, horizontalMin, horizontalMax, num_col, S1_t, constraint1, k, a1kMDD))
+//						return false;
+//
+//				}
+//
+//				if (Rg.second != g2_y ) {//s2 vertical border need constraint
+//					G2_y = Rg.second;
+//					G2_x = g1_x;
+//					R2_x = s1_x;
+//
+//					int sign = R2_x < G2_x ? 1 : -1;
+//					vertical.clear();
+//					verticalMin.clear();
+//					verticalMax.clear();
+//					for (int x = G2_x; x != R2_x - sign; x = x - sign * 1) {
+//						vertical.push_back(x);
+//						/*int tMin = min(getMahattanDistance(s1_x, s1_y, x, G2_y) + S1_t, getMahattanDistance(s2_x, s2_y, x, G2_y) + S2_t);
+//						verticalMin.push_back(tMin);
+//						verticalMax.push_back(tMin + k);*/
+//						verticalMin.push_back(getMahattanDistance(s2_x, s2_y, x, G2_y) + S2_t);
+//						verticalMax.push_back(getMahattanDistance(s1_x, s1_y, x, G2_y) + k + S1_t);
+//					}
+//
+//					if (!addFlippedVerticalLongBarrierConstraint(*paths[a2], G2_y, vertical, verticalMin, verticalMax, num_col, S2_t, constraint2, k, a2kMDD))
+//						return false;
+//
+//				}
+//
+//				if (Rg.first != g2_x || (Rg.second == g2_y && Rg.first == g2_x)) {//s2 horizontoal border need constraint
+//					G2_x = Rg.first;
+//					G2_y = g1_y;
+//					R2_y = s1_y;
+//
+//					int sign = R2_y < G2_y ? 1 : -1;
+//					horizontal.clear();
+//					horizontalMin.clear();
+//					horizontalMin.clear();
+//					for (int y = G2_y; y != R2_y - sign; y = y - sign * 1) {
+//						horizontal.push_back(y);
+//						/*int tMin = min(getMahattanDistance(s1_x, s1_y, G2_x, y) + S1_t, getMahattanDistance(s2_x, s2_y, G2_x, y) + S2_t);
+//						horizontalMin.push_back(tMin);
+//						horizontalMax.push_back(tMin + k);*/
+//						horizontalMin.push_back(getMahattanDistance(s2_x, s2_y, G2_x, y) + S2_t);
+//						horizontalMax.push_back(getMahattanDistance(s1_x, s1_y, G2_x, y) + k + S1_t);
+//					}
+//
+//					if (!addFlippedHorizontalLongBarrierConstraint(*paths[a2], G2_x, horizontal, horizontalMin, horizontalMax, num_col, S2_t, constraint2, k, a2kMDD))
+//						return false;
+//
+//				}
+//
+//
+//			}
+//			else {// x dimension flipped
+//				if (Rg.second != g1_y || (Rg.second == g1_y && Rs.first == g1_x)) {//s1 vertical border need constraint
+//					G1_y = Rg.second;
+//					G1_x = g2_x;
+//					R1_x = s2_x;
+//
+//					int sign = R1_x < G1_x ? 1 : -1;
+//					vertical.clear();
+//					verticalMin.clear();
+//					verticalMax.clear();
+//					for (int x = G1_x; x != R1_x-sign; x = x - sign * 1) {
+//						vertical.push_back(x);
+//						/*int tMin = min(getMahattanDistance(s1_x, s1_y, x, G1_y) + S1_t, getMahattanDistance(s2_x, s2_y, x, G1_y) + S2_t);
+//						verticalMin.push_back(tMin);
+//						verticalMax.push_back(tMin + k);*/
+//						verticalMin.push_back(getMahattanDistance(s1_x, s1_y, x, G1_y) + S1_t);
+//						verticalMax.push_back(getMahattanDistance(s2_x, s2_y, x, G1_y) + k + S2_t);
+//					}
+//
+//					if (!addFlippedVerticalLongBarrierConstraint(*paths[a1], G1_y, vertical, verticalMin, verticalMax, num_col, S1_t, constraint1, k, a1kMDD))
+//						return false;
+//
+//				}
+//
+//				if (Rs.first != g1_x) {//s1 horizontoal border need constraint
+//					G1_x = Rs.first;
+//					G1_y = g2_y;
+//					R1_y = s2_y;
+//
+//					int sign = R1_y < G1_y ? 1 : -1;
+//					horizontal.clear();
+//					horizontalMin.clear();
+//					horizontalMin.clear();
+//					for (int y = G1_y; y != R1_y-sign; y = y - sign * 1) {
+//						horizontal.push_back(y);
+//						/*int tMin = min(getMahattanDistance(s1_x, s1_y, G1_x, y) + S1_t, getMahattanDistance(s2_x, s2_y, G1_x, y) + S2_t);
+//						horizontalMin.push_back(tMin);
+//						horizontalMax.push_back(tMin + k);*/
+//						horizontalMin.push_back(getMahattanDistance(s1_x, s1_y, G1_x, y) + S1_t);
+//						horizontalMax.push_back(getMahattanDistance(s2_x, s2_y, G1_x, y) + k + S2_t);
+//					}
+//
+//					if (!addFlippedHorizontalLongBarrierConstraint(*paths[a1], G1_x, horizontal, horizontalMin, horizontalMax, num_col, S1_t, constraint1, k, a1kMDD))
+//						return false;
+//
+//				}
+//
+//				if (Rg.second != g2_y || (Rg.second == g2_y && Rg.first == g2_x)) {//s2 vertical border need constraint
+//					G2_y = Rg.second;
+//					G2_x = g1_x;
+//					R2_x = s1_x;
+//
+//					int sign = R2_x < G2_x ? 1 : -1;
+//					vertical.clear();
+//					verticalMin.clear();
+//					verticalMax.clear();
+//					for (int x = G2_x; x != R2_x - sign; x = x - sign * 1) {
+//						vertical.push_back(x);
+//						/*int tMin = min(getMahattanDistance(s1_x, s1_y, x, G2_y) + S1_t, getMahattanDistance(s2_x, s2_y, x, G2_y) + S2_t);
+//						verticalMin.push_back(tMin);
+//						verticalMax.push_back(tMin + k);*/
+//						verticalMin.push_back(getMahattanDistance(s2_x, s2_y, x, G2_y) + S2_t);
+//						verticalMax.push_back(getMahattanDistance(s1_x, s1_y, x, G2_y) + k + S1_t);
+//					}
+//
+//					if (!addFlippedVerticalLongBarrierConstraint(*paths[a2], G2_y, vertical, verticalMin, verticalMax, num_col, S2_t, constraint2, k, a2kMDD))
+//						return false;
+//
+//				}
+//
+//				if (Rg.first != g2_x) {//s2 horizontoal border need constraint
+//					G2_x = Rg.first;
+//					G2_y = g1_y;
+//					R2_y = s1_y;
+//
+//					int sign = R2_y < G2_y ? 1 : -1;
+//					horizontal.clear();
+//					horizontalMin.clear();
+//					horizontalMin.clear();
+//					for (int y = G2_y; y != R2_y - sign; y = y - sign * 1) {
+//						horizontal.push_back(y);
+//						/*int tMin = min(getMahattanDistance(s1_x, s1_y, G2_x, y) + S1_t, getMahattanDistance(s2_x, s2_y, G2_x, y) + S2_t);
+//						horizontalMin.push_back(tMin);
+//						horizontalMax.push_back(tMin + k);*/
+//						horizontalMin.push_back(getMahattanDistance(s2_x, s2_y, G2_x, y) + S2_t);
+//						horizontalMax.push_back(getMahattanDistance(s1_x, s1_y, G2_x, y) + k + S1_t);
+//					}
+//
+//					if (!addFlippedHorizontalLongBarrierConstraint(*paths[a2], G2_x, horizontal, horizontalMin, horizontalMax, num_col, S2_t, constraint2, k, a2kMDD))
+//						return false;
+//
+//				}
+//			}
+//
+//
+//
+//		}
+//		else {//standard non flip
+//
+//			if ((s1_x == s2_x && (s1_y - s2_y) * (s2_y - Rg_y) < 0) ||
+//				(s1_x != s2_x && (s1_x - s2_x)*(s2_x - Rg_x) >= 0))
+//			{
+//				R1_x = Rg_x;
+//				G1_x = Rg_x;
+//				R1_y = s2_y;
+//				G1_y = g2_y;
+//
+//				R2_y = Rg_y;
+//				G2_y = Rg_y;
+//				R2_x = s1_x;
+//				G2_x = g1_x;
+//
+//
+//				//cout << "s1t" << S1_t << "G1_t" << G1_t << "G1_y " << G1_y << endl;
+//				//cout << "s2t" << S2_t << "G2_t" << G2_t << "G2_x " << G2_x << endl;
+//
+//				int sign = R1_y < G1_y ? 1 : -1;
+//				for (int y = G1_y; y != R1_y-sign; y = y - sign * 1) {
+//					horizontal.push_back(y);
+//					horizontalMin.push_back(getMahattanDistance(s1_x, s1_y, Rg_x, y) + S1_t);
+//					horizontalMax.push_back(getMahattanDistance(s2_x, s2_y, Rg_x, y) + k + S2_t);
+//				}
+//
+//
+//				sign = R2_x < G2_x ? 1 : -1;
+//				for (int x = G2_x; x != R2_x-sign; x = x - sign * 1) {
+//					vertical.push_back(x);
+//					verticalMin.push_back(getMahattanDistance(s2_x, s2_y, x, Rg_y) + S2_t);
+//					verticalMax.push_back(getMahattanDistance(s1_x, s1_y, x, Rg_y) + k + S1_t);
+//				}
+//
+//				//cout << "Horizontal length: " << horizontal.size() << " Vertical length: " << vertical.size() << endl;
+//
+//
+//				if (!addFlippedHorizontalLongBarrierConstraint(*paths[a1], Rg_x, horizontal, horizontalMin, horizontalMax, num_col, S1_t, constraint1, k, a1kMDD))
+//					return false;
+//				if (!addFlippedVerticalLongBarrierConstraint(*paths[a2], Rg_y, vertical, verticalMin, verticalMax, num_col, S2_t, constraint2, k, a2kMDD))
+//					return false;
+//			}
+//			else
+//			{
+//				R1_y = Rg_y;
+//				G1_y = Rg_y;
+//				R1_x = s2_x;
+//				G1_x = g2_x;
+//
+//
+//				R2_x = Rg_x;
+//				G2_x = Rg_x;
+//				R2_y = s1_y;
+//				G2_y = g1_y;
+//
+//
+//
+//
+//
+//				int sign = R2_y < G2_y ? 1 : -1;
+//
+//				for (int y = G2_y; y != R2_y-sign; y = y - sign * 1) {
+//					horizontal.push_back(y);
+//					horizontalMin.push_back(getMahattanDistance(s2_x, s2_y, Rg_x, y) + S2_t);
+//					horizontalMax.push_back(getMahattanDistance(s1_x, s1_y, Rg_x, y) + k + S1_t);
+//				}
+//
+//				sign = R1_x < G1_x ? 1 : -1;
+//				for (int x = G1_x; x != R1_x-sign; x = x - sign * 1) {
+//					vertical.push_back(x);
+//					verticalMin.push_back(getMahattanDistance(s1_x, s1_y, x, Rg_y)+S1_t);
+//					verticalMax.push_back(getMahattanDistance(s2_x, s2_y, x, Rg_y) + k + S2_t);
+//				}
+//
+//
+//				if (!addFlippedVerticalLongBarrierConstraint(*paths[a1], Rg_y, vertical, verticalMin, verticalMax, num_col, S1_t, constraint1, k, a1kMDD))
+//					return false;
+//				if (!addFlippedHorizontalLongBarrierConstraint(*paths[a2], Rg_x, horizontal, horizontalMin, horizontalMax, num_col, S2_t, constraint2, k, a2kMDD))
+//					return false;
+//				//exit(0);
+//			}
+//		}
+//
+//		type = conflict_type::RECTANGLE;
+//		return true;
+//	}
 
 	void targetConflict(int a1, int a2, int v, int t,int kDelay)
 	{

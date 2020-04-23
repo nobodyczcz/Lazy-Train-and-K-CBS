@@ -7,42 +7,11 @@
 #include "flat_map_loader.h"
 #include "ConstraintTable.h"
 #include <iostream>
-
-class MDDNode
-{
-public:
-	MDDNode(int currloc, MDDNode* parent)
-	{
-		location = currloc; 
-		if(parent == NULL)
-			level = 0;
-		else
-		{
-			level = parent->level + 1;
-			parents.push_back(parent);
-		}
-		parent = NULL;
-	}
-	int location;
-	int row;
-	int col;
-	int level;
-	int heading;
-
-	bool operator == (const MDDNode & node) const
-	{
-		return (this->location == node.location) && (this->level == node.level) && (this->heading == node.heading);
-	}
-
-
-	std::list<MDDNode*> children;
-	std::list<MDDNode*> parents;
-	MDDNode* parent;
-};
+#include "MDDNode.h"
 
 class MDDEmpty {
 public:
-	std::vector<std::list<MDDNode*>> levels;
+	MDDLevels levels;
 	int getMahattanDistance(int loc1, int loc2, int map_cols)
 	{
 		int loc1_x = loc1 / map_cols;

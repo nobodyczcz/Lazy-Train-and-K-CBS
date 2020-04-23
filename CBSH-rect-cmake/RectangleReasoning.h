@@ -9,6 +9,7 @@
 #include "flat_map_loader.h"
 #include "LLNode.h"
 #include "Conflict.h"
+#include "ConstraintTable.h"
 
 class Conflict;
 template<class Map>
@@ -27,6 +28,22 @@ struct PathEntry;
 //bool addModifiedHorizontalBarrierConstraint(const std::vector<PathEntry>& path, int x,
 //	int Ri_y, int Rg_y, int Rg_t, int num_col,
 //	std::list<std::tuple<int, int, int>>& constraints);
+
+//Check Does Barrier fully cut MDD
+bool isCut(MDDLevels& mdd, std::list<Constraint>& constraints,int num_col, int map_size);
+bool haveSolutionCondition1(MDDLevels& mdd,
+                            std::list<Constraint>& entrance,
+                            ConstraintTable& entranceTable,
+                            std::list<Constraint>& exit,
+                            ConstraintTable& exitTable);
+bool haveSolutionCondition2(MDDLevels& mdd,
+                            std::list<Constraint>& entrance,
+                            ConstraintTable& entranceTable,
+                            std::list<Constraint>& exit,
+                            ConstraintTable& exitTable);
+int classifyBarrierAndRectangle(MDDLevels& mdd, std::list<Constraint>& entrance, std::list<Constraint>& exit, int num_col, int map_size);
+
+
 
 //Identify rectangle conflicts
 bool isRectangleConflict(const std::pair<int,int>& s1, const std::pair<int, int>& s2, 

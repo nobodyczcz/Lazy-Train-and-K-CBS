@@ -51,7 +51,7 @@ add_executable (CBS-K
 		common.cpp
 		# ../mapVisualiser/Visualiser.h
 		# ../mapVisualiser/Visualiser.cpp
-		)
+        MDDNode.h MDDNode.cpp)
 
 
 

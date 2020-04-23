@@ -44,8 +44,8 @@ ADD_LIBRARY(PythonCBS SHARED
 	../CBSH-rect-cmake/egraph_reader.h
 	../CBSH-rect-cmake/common.h
 	../CBSH-rect-cmake/common.cpp
-    
-)
+
+		../CBSH-rect-cmake/MDDNode.h ../CBSH-rect-cmake/MDDNode.cpp)
 
 
 

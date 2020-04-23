@@ -1,8 +1,163 @@
 #include "RectangleReasoning.h"
-
 #include <algorithm>    // std::find
 #include <iostream>
 #include <ctime> //std::time
+#include <boost/heap/fibonacci_heap.hpp>
+#include <boost/unordered_set.hpp>
+
+
+
+//Check Does Barrier fully cut MDD and classify barrier
+
+bool isCut(MDDLevels& mdd, std::list<Constraint>& constraints,int num_col, int map_size){
+    ConstraintTable consTable;
+    consTable.insert(constraints, 0, num_col, map_size);
+    list<MDDNode*> queue;
+    boost::unordered_set<MDDNode*> explored;
+
+    queue.push_front(mdd[0].front());
+    MDDNode* goal = mdd.back().back();
+
+    while(!queue.empty()){
+        MDDNode* current = queue.front();
+        explored.insert(queue.front());
+        queue.pop_front();
+
+        for (auto child : current->children){
+            if (child == goal){
+                    return false;
+            }
+            if (explored.count(child)==0 && !consTable.is_constrained(child->location,child->level)){
+                queue.push_front(child);
+            }
+        }
+
+    }
+    return true;
+
+}
+//Return true if find solution with entrance constrained and must traverse exit;
+bool haveSolutionCondition1(MDDLevels& mdd,
+        std::list<Constraint>& entrance,
+        ConstraintTable& entranceTable,
+        std::list<Constraint>& exit,
+        ConstraintTable& exitTable)
+{
+
+
+    list<MDDNode*> queue;
+    boost::unordered_set<MDDNode*> explored;
+    boost::unordered_set<MDDNode*> traverse_exit;
+
+    MDDNode* goal = mdd.back().back();
+
+    int max_exit_time = 0;
+    for (auto constraint : exit){
+        if (get<2>(constraint) > max_exit_time)
+            max_exit_time = get<2>(constraint);
+    }
+
+    queue.push_front(mdd[0].front());
+    if(entranceTable.is_constrained(queue.front()->location,queue.front()->level)){
+        return false;
+    }
+    while(!queue.empty()){
+        MDDNode* current = queue.front();
+        explored.insert(queue.front());
+        queue.pop_front();
+
+        for (auto child : current->children){
+            if (child == goal){
+                if(exitTable.is_constrained(child->location,child->level) || traverse_exit.count(current) > 0)
+                    return true;
+            }
+            if (explored.count(child)==0 && !entranceTable.is_constrained(child->location,child->level)){
+
+                if(exitTable.is_constrained(child->location,child->level) || traverse_exit.count(current) > 0){
+                    traverse_exit.insert(child);
+                    queue.push_front(child);
+                }
+                else if(child->level < max_exit_time){
+                    queue.push_front(child);
+                }
+            }
+        }
+
+    }
+    return false;
+};
+
+//Return true if find solution with exit constrained and must traverse entrance;
+bool haveSolutionCondition2(MDDLevels& mdd,
+                              std::list<Constraint>& entrance,
+                              ConstraintTable& entranceTable,
+                              std::list<Constraint>& exit,
+                              ConstraintTable& exitTable
+                              )
+{
+
+    list<MDDNode*> queue;
+    boost::unordered_set<MDDNode*> explored;
+    boost::unordered_set<MDDNode*> traverse_entrance;
+
+    MDDNode* goal = mdd.back().back();
+
+    int max_entrance_time = 0;
+    for (auto constraint : entrance){
+        if (get<2>(constraint) > max_entrance_time)
+            max_entrance_time = get<2>(constraint);
+    }
+
+    queue.push_front(mdd[0].front());
+    if(entranceTable.is_constrained(queue.front()->location,queue.front()->level)){
+        traverse_entrance.insert(queue.front());
+    }
+    while(!queue.empty()){
+        MDDNode* current = queue.front();
+        explored.insert(queue.front());
+        queue.pop_front();
+
+        for (auto child : current->children){
+            if (child == goal){
+                if(entranceTable.is_constrained(child->location,child->level) || traverse_entrance.count(current) > 0)
+                    return true;
+            }
+            if (explored.count(child)==0 && !exitTable.is_constrained(child->location,child->level)){
+
+                if(entranceTable.is_constrained(child->location,child->level) || traverse_entrance.count(current) > 0){
+                    traverse_entrance.insert(child);
+                    queue.push_front(child);
+                }
+                else if(child->level < max_entrance_time){
+                    queue.push_front(child);
+                }
+            }
+        }
+
+    }
+    return false;
+};
+
+int classifyBarrierAndRectangle(MDDLevels& mdd, std::list<Constraint>& entrance, std::list<Constraint>& exit, int num_col, int map_size){
+    ConstraintTable entranceTable;
+    entranceTable.insert(entrance, 0, num_col, map_size);
+
+    ConstraintTable exitTable;
+    exitTable.insert(exit, 0, num_col, map_size);
+
+    if (haveSolutionCondition1(mdd, entrance, entranceTable, exit, exitTable)){
+        return -1;
+    }
+    else{
+        if (haveSolutionCondition2(mdd, entrance, entranceTable, exit, exitTable))
+            return 0;
+        else
+            return 1;
+    }
+
+
+}
+
 
 
 
@@ -37,27 +192,20 @@ bool isRectangleConflict(int s1, int s2, int g1, int g2, int num_col,int kRobust
 		if (!I_RM)
 			return false;
 
-		if (((s2_x - g1_x) * (g1_x - g2_x) < 0 && (s2_y - g1_y) * (g1_y - g2_y) < 0)
-			|| ((s2_x - g2_x) * (g2_x - g1_x) < 0 && (s2_y - g2_y) * (g2_y - g1_y) < 0)) {
-			return false;
-		}
-		return true;
+        return !(((s2_x - g1_x) * (g1_x - g2_x) < 0 && (s2_y - g1_y) * (g1_y - g2_y) < 0)
+                 || ((s2_x - g2_x) * (g2_x - g1_x) < 0 && (s2_y - g2_y) * (g2_y - g1_y) < 0));
 
 
-
-	}
+    }
 	else if ((s1_x - s2_x) * (s2_x - g2_x) < 0 && (s1_y - s2_y) * (s2_y - g2_y) < 0) { // s2 always in the middle, s1 always between s2 and g2
 		if (!I_RM)
 			return false;
 
-		if (((s1_x - g1_x) * (g1_x - g2_x) < 0 && (s1_y - g1_y) * (g1_y - g2_y) < 0)
-			|| ((s1_x - g2_x) * (g2_x - g1_x) < 0 && (s1_y - g2_y) * (g2_y - g1_y) < 0)) {
-			return false;
-		}
-		return true;
+        return !(((s1_x - g1_x) * (g1_x - g2_x) < 0 && (s1_y - g1_y) * (g1_y - g2_y) < 0)
+                 || ((s1_x - g2_x) * (g2_x - g1_x) < 0 && (s1_y - g2_y) * (g2_y - g1_y) < 0));
 
 
-	}
+    }
 	else if ((s1_x == g1_x && s2_y == g2_y) || (s1_y == g1_y && s2_x == g2_x)) { // area = 1
 
 		return false;

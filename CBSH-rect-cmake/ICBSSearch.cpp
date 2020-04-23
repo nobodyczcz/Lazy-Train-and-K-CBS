@@ -1750,75 +1750,7 @@ void MultiMapICBSSearch<Map>::updateConstraintTable(ICBSNode* curr, int agent_id
 	{
 		if (curr->agent_id == agent_id)
 		{
-			for (auto constraint : curr->constraints)
-			{
-				int x, y, z;
-				constraint_type type;
-				tie(x, y, z, type) = constraint;
-				if (type == constraint_type::RANGE) // time range constraint
-				{
-					constraintTable.insert(x, y, z + 1);
-				}
-				else if (type == constraint_type::BARRIER) // barrier constraint
-				{
-					int x1 = x / num_col, y1 = x % num_col;
-					int x2 = y / num_col, y2 = y % num_col;
-					if (x1 == x2)
-					{
-						if (y1 < y2)
-							for (int i = 0; i <= std::min(y2 - y1, z); i++)
-							{
-								constraintTable.insert(x1 * num_col + y2 - i, z - i, 0);
-							}
-						else
-							for (int i = 0; i <= std::min(y1 - y2, z); i++)
-							{
-
-								constraintTable.insert(x1 * num_col + y2 + i, z - i, 0);
-							}
-					}
-					else // y1== y2
-					{
-						if (x1 < x2)
-							for (int i = 0; i <= std::min(x2 - x1, z); i++)
-							{
-
-								constraintTable.insert((x2 - i) * num_col + y1, z - i, 0);
-							}
-						else
-							for (int i = 0; i <= std::min(x1 - x2, z); i++)
-							{
-
-								constraintTable.insert((x2 + i) * num_col + y1, z - i, 0);
-							}
-					}
-				}
-				else if (type == constraint_type::LENGTH)
-				{
-					if (x < 0 && y == agent_id)
-					{ // <-1, agent_id, t>: path of agent_id should be of length at least t + 1 
-						constraintTable.length_min = max(constraintTable.length_min, z + 1);
-
-					}
-					else if (x >= 0 && y == agent_id)
-					{ // <loc, agent_id, t>: path of agent_id should be of length at most t !!not possible as y==agent will jump findpath
-						constraintTable.length_max = min(constraintTable.length_max, z);
-
-					}
-					else if (x >= 0 && y != agent_id)
-					{ // <loc, agent_id, t>: any other agent cannot be at loc at or after timestep t
-						constraintTable.insert(x, z, INT_MAX);
-					}
-				}
-				else if (type == constraint_type::VERTEX)
-				{
-					constraintTable.insert(x, z, 0);
-				}
-				else // edge
-				{
-					constraintTable.insert(x * map_size + y, z, 0);
-				}
-			}
+			constraintTable.insert(curr->constraints,agent_id,num_col,map_size);
 		}
 		else if (!curr->constraints.empty())
 		{
@@ -2101,37 +2033,6 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 		else if (rectangleMDD && (option.RM4way==3 || option.RM4way>=6)) {
 
 
-			//stringstream conString;
-			////con << *(con);
-			//if (con->k == 0) {
-			//	conString << min(con->a1, con->a2) << ",";
-			//	conString << max(con->a1, con->a2);
-			//}
-			//else {
-			//	conString << con->a1 << ",";
-			//	conString << con->a2;
-			//}
-			//conString << ",("
-			//	<< con->originalConf1 / num_col << ","
-			//	<< con->originalConf1 % num_col << ")" << ",("
-			//	<< con->originalConf2 / num_col << ","
-			//	<< con->originalConf2 % num_col << "),"
-			//	<< con->t << "," << con->k << "," << conflict_type::RECTANGLE4;
-			//ICBSNode* temp = &parent;
-
-			//bool repeat = false;
-			//while (temp != NULL) {
-			//	if (temp->resolvedConflicts.count(conString.str())) {
-			//		repeat = true;
-			//		break;
-			//	}
-			//	temp = temp->parent;
-			//}
-			//if (repeat) {
-			//	parent.conflicts.push_back(con);
-			//	continue;
-			//}
-
 			if (screen >= 4) {
 				cout << "new rm rectangle detecting" << endl;
 				cout << "timestep: " << timestep << endl;
@@ -2226,9 +2127,6 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 				if ((!paths[a2]->at(t2_start).single || !paths[a2]->at(t2_end).single) && new_type > 0)
 					new_type--;
 
-				auto rectangle = std::shared_ptr<Conflict>(new Conflict(loc1, con->k, timestep));
-				
-
 				int rt1, rt2; //root time
 
 				if(option.RM4way>=2 && option.RM4way<=5){
@@ -2267,18 +2165,105 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 
 				}
 
-				if (!isRectangleConflict(s1, s2, g1, g2, num_col, kDelay, abs(t1_start - t2_start), I_RM)) {
+                if (s1 == s2) // A standard cardinal conflict
+                    not_rectangle=true;
+                else if (s1 == g1 || s2 == g2) // s1 = g1 or  s2 = g2
+                    not_rectangle=true;
+
+                if (new_area <= 2)
+                    not_rectangle = true;
+
+				if (not_rectangle || !isRectangleConflict(s1, s2, g1, g2, num_col, kDelay, abs(t1_start - t2_start), I_RM)) {
                     parent.conflicts.push_back(con);
                     continue;
 				}
 
-				bool success = rectangle->kRectangleConflict(a1, a2, Rs, Rg,
-					make_pair(s1 / num_col, s1 % num_col),
-					make_pair(s2 / num_col, s2 % num_col),
-					rt1,rt2, paths, t1_start, t2_start,
-					make_pair(g1 / num_col, g1 % num_col),
-					make_pair(g2 / num_col, g2 % num_col),
-					num_col, kDelay, option.RM4way, I_RM);
+
+
+
+                std::shared_ptr<Conflict> rectangle = nullptr;
+
+                for (int barrierWidth = 0 ; barrierWidth <=1 ; barrierWidth++){
+                    std::shared_ptr<Conflict> temp = std::shared_ptr<Conflict>(new Conflict(loc1, con->k, timestep));
+                    MDD<Map> a1MDD;
+                    MDD<Map> a2MDD;
+
+                    updateConstraintTable(&parent, a1);
+                    a1MDD.buildMDD(constraintTable, paths[a1]->size() + barrierWidth,
+                                   *(search_engines[a1]));
+
+                    updateConstraintTable(&parent, a2);
+                    a2MDD.buildMDD(constraintTable, paths[a2]->size() + barrierWidth,
+                                   *(search_engines[a2]));
+
+
+                    MDDLevels a1MDDPath;
+                    a1MDDPath = a1MDD.levels;
+
+                    MDDLevels a2MDDPath;
+                    a2MDDPath = a2MDD.levels;
+
+                    temp->kRectangleConflict(a1, a2, Rs, Rg,
+                                                  make_pair(s1 / num_col, s1 % num_col),
+                                                  make_pair(s2 / num_col, s2 % num_col),
+                                                  rt1, rt2, paths, t1_start, t2_start,
+                                                  make_pair(g1 / num_col, g1 % num_col),
+                                                  make_pair(g2 / num_col, g2 % num_col),
+                                                  num_col, barrierWidth, option.RM4way, I_RM, &a1MDDPath, &a2MDDPath);
+
+                    if (screen >=4){
+                        cout <<temp->multiConstraint1.size()<<endl;
+                        cout <<temp->multiConstraint2.size()<<endl;
+                    }
+                    assert(temp->multiConstraint1.size()==2 && "a1 no two constraints");
+                    assert(temp->multiConstraint2.size()==2 && "a2 no two constraints");
+                    ConstraintTable entranceTable;
+                    entranceTable.insert(temp->multiConstraint1.back(), 0, num_col, map_size);
+
+                    ConstraintTable exitTable;
+                    exitTable.insert(temp->multiConstraint1.front(), 0, num_col, map_size);
+
+                    bool a1Cut = !haveSolutionCondition1(a1MDDPath,
+                            temp->multiConstraint1.back(),entranceTable,
+                            temp->multiConstraint1.front(),exitTable
+                            );
+
+                    ConstraintTable entranceTable2;
+                    entranceTable.insert(temp->multiConstraint2.back(), 0, num_col, map_size);
+                    ConstraintTable exitTable2;
+                    exitTable.insert(temp->multiConstraint2.front(), 0, num_col, map_size);
+                    bool a2Cut = !haveSolutionCondition1(a2MDDPath,
+                                                        temp->multiConstraint2.back(),entranceTable,
+                                                        temp->multiConstraint2.front(),exitTable
+                    );
+                    if (a1Cut && a2Cut){
+                        rectangle = temp;
+                        if (screen >=4){
+                            cout <<"both cut barrierWidth "<< barrierWidth << endl;
+                            cout << "conflicts amount " << parent.conflicts.size()<<endl;
+                        }
+                    }
+                    else{
+                        if (screen >=4){
+                            cout <<"not cut barrierWidth "<< barrierWidth<<endl;
+                        }
+                        break;
+                    }
+				}
+
+
+                if (rectangle == nullptr){
+                    not_rectangle = true;
+                    if (screen >= 4) {
+                        cout <<"rectangle == nullptr"<<endl;
+                    }
+                    parent.conflicts.push_back(con);
+                    continue;
+                }
+                else{
+                    rectangle->multiConstraint1.pop_back();
+                    rectangle->multiConstraint2.pop_back();
+                }
 
 				bool isBlocked = true;
 
@@ -2288,14 +2273,6 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 				for (auto constraint : rectangle->multiConstraint2) {
 					isBlocked = isBlocked && blocked(*paths[rectangle->a2], constraint);
 				}
-
-				if (s1 == s2) // A standard cardinal conflict
-					not_rectangle=true;
-				else if (s1 == g1 || s2 == g2) // s1 = g1 or  s2 = g2
-					not_rectangle=true;
-
-				if (new_area <= 2)
-					not_rectangle = true;
 
 
 				if (!not_rectangle && isBlocked) {
@@ -2307,73 +2284,11 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 					else //if (type == 0 && !findRectangleConflict(parent.parent, *conflict))
 						rectangle->p = conflict_priority::NON;
 
-					if(option.RM4way==3) {
-                        //MDD check
-                        MDD<Map> a1MDD;
-                        MDD<Map> a2MDD;
-                        updateConstraintTable(&parent, a1);
-                        int tempk = kDelay > 1 ? 1 : kDelay;
-
-
-                        a1MDD.buildMDD(constraintTable, t1_end - t1_start + 1 + tempk,
-                                       *(search_engines[a1]), s1, 0, g1,
-                                       paths[a1]->at(0).actionToHere);
-
-                        updateConstraintTable(&parent, a2);
-                        a2MDD.buildMDD(constraintTable, t2_end - t2_start + 1 + tempk,
-                                       *(search_engines[a2]), s2, 0, g2,
-                                       paths[a2]->at(0).actionToHere);
-
-
-                        MDDPath a1MDDPath;
-                        for (int i = 0; i < a1MDD.levels.size(); i++) {
-                            std::unordered_set<int> level;
-                            std::list<MDDNode *>::iterator it;
-                            for (it = a1MDD.levels[i].begin(); it != a1MDD.levels[i].end(); ++it) {
-                                level.insert((*it)->location);
-                            }
-                            a1MDDPath.levels.push_back(level);
-
-                        }
-                        //a1kMDD.push_back(a1MDDPath);
-                        if (screen >= 5) {
-                            cout << "a1 mdd k: " << endl;
-                            a1MDDPath.print(num_col);
-                        }
-
-
-                        MDDPath a2MDDPath;
-                        for (int i = 0; i < a2MDD.levels.size(); i++) {
-                            std::unordered_set<int> level;
-                            std::list<MDDNode *>::iterator it;
-                            for (it = a2MDD.levels[i].begin(); it != a2MDD.levels[i].end(); ++it) {
-                                level.insert((*it)->location);
-                            }
-                            a2MDDPath.levels.push_back(level);
-
-                        }
-                        //a2kMDD.push_back(a2MDDPath);
-                        if (screen >= 5) {
-                            cout << "a2 mdd k: " << endl;
-                            a2MDDPath.print(num_col);
-                        }
-
-                        rectangle->multiConstraint1.clear();
-                        rectangle->multiConstraint2.clear();
-                        rectangle->kRectangleConflict(a1, a2, Rs, Rg,
-                                                      make_pair(s1 / num_col, s1 % num_col),
-                                                      make_pair(s2 / num_col, s2 % num_col),
-                                                      rt1, rt2, paths, t1_start, t2_start,
-                                                      make_pair(g1 / num_col, g1 % num_col),
-                                                      make_pair(g2 / num_col, g2 % num_col),
-                                                      num_col, kDelay, option.RM4way, I_RM, &a1MDDPath, &a2MDDPath);
-                    }
-
-
 					parent.conflicts.push_back(rectangle);
-					if (screen >= 4)
-						cout << "add " << *rectangle << endl;
-
+					if (screen >= 4){
+                        cout << "add " << *rectangle << endl;
+                        cout << "conflicts amount " << parent.conflicts.size()<<endl;
+					}
 
 					continue;
 				}
@@ -2382,18 +2297,14 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 						cout<<"rectangle: "<< *rectangle << endl;
 						cout << "not blocked or not rectangle" << endl;
 					}
+                    parent.conflicts.push_back(con);
+                    continue;
 				}
-
-
-
-
-
-
-
 
 
 			}
 		}
+
 		else if (rectangleMDD )
 		{
 
@@ -2626,17 +2537,17 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 								/*cout << "loc:" << loc1 << " t:" << timestep << endl;
 								cout << "s1 " << s1 << " s2 " << s2 << " g1 " << g1 << " g2 " << g2 << " rg " << Rg.first << " " << Rg.second <<" Rg_t "<< Rg_t<< endl;
 */								bool success;
-								if (option.flippedRec) {
-									success=new_rectangle->flippedRectangleConflict(a1, a2, Rs, Rg,
-										make_pair(s1 / num_col, s1 % num_col),
-										make_pair(s2 / num_col, s2 % num_col),
-										Rs_t, paths, t1_start, t2_start,
-										make_pair(g1 / num_col, g1 % num_col),
-										make_pair(g2 / num_col, g2 % num_col),
-										num_col, kDelay, flipType);
-
-								}
-								else{
+//								if (option.flippedRec) {
+//									success=new_rectangle->flippedRectangleConflict(a1, a2, Rs, Rg,
+//										make_pair(s1 / num_col, s1 % num_col),
+//										make_pair(s2 / num_col, s2 % num_col),
+//										Rs_t, paths, t1_start, t2_start,
+//										make_pair(g1 / num_col, g1 % num_col),
+//										make_pair(g2 / num_col, g2 % num_col),
+//										num_col, kDelay, flipType);
+//
+//								}
+//								else{
 									success=new_rectangle->kRectangleConflict(a1, a2, Rs, Rg,
 										make_pair(s1 / num_col, s1 % num_col),
 										make_pair(s2 / num_col, s2 % num_col),
@@ -2644,7 +2555,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 										make_pair(g1 / num_col, g1 % num_col),
 										make_pair(g2 / num_col, g2 % num_col),
 										num_col, kDelay, option.RM4way,I_RM);
-								}
+//								}
 
 								if (!success) {
 									if (screen >= 4)
@@ -2775,52 +2686,27 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 							*(search_engines[a2]), s2f, t2_startf, g2f,
 							paths[a2]->at(t2_startf).actionToHere);
 
-						MDDPath a1MDDPath;
-						for (int i = 0; i < a1MDD.levels.size(); i++) {
-							std::unordered_set<int> level;
-							std::list<MDDNode*>::iterator it;
-							for (it = a1MDD.levels[i].begin(); it != a1MDD.levels[i].end(); ++it) {
-								level.insert((*it)->location);
-							}
-							a1MDDPath.levels.push_back(level);
+                        MDDLevels a1MDDPath;
+                        a1MDDPath = a1MDD.levels;
 
-						}
-						//a1kMDD.push_back(a1MDDPath);
-						if (screen >= 5) {
-							cout << "a1 mdd k: " << endl;
-							a1MDDPath.print(num_col);
-						}
+                        MDDLevels a2MDDPath;
+                        a2MDDPath = a2MDD.levels;
 
 
-						MDDPath a2MDDPath;
-						for (int i = 0; i < a2MDD.levels.size(); i++) {
-							std::unordered_set<int> level;
-							std::list<MDDNode*>::iterator it;
-							for (it = a2MDD.levels[i].begin(); it != a2MDD.levels[i].end(); ++it) {
-								level.insert((*it)->location);
-							}
-							a2MDDPath.levels.push_back(level);
-
-						}
-						//a2kMDD.push_back(a2MDDPath);
-						if (screen >= 5) {
-							cout << "a2 mdd k: " << endl;
-							a2MDDPath.print(num_col);
-						}
 
 
 						//cout << "Create MDD Done" << endl;
 
-						if (option.flippedRec) {
-							new_rectangle->flippedRectangleConflict(a1, a2, Rsf, Rgf,
-								make_pair(s1f / num_col, s1f % num_col),
-								make_pair(s2f / num_col, s2f % num_col),
-								Rg_tf, paths, t1_startf, t2_startf,
-								make_pair(g1f / num_col, g1f % num_col),
-								make_pair(g2f / num_col, g2f % num_col),
-								num_col, kDelay, flipTypef, &a1MDDPath, &a2MDDPath);
-						}
-						else {
+//						if (option.flippedRec) {
+//							new_rectangle->flippedRectangleConflict(a1, a2, Rsf, Rgf,
+//								make_pair(s1f / num_col, s1f % num_col),
+//								make_pair(s2f / num_col, s2f % num_col),
+//								Rg_tf, paths, t1_startf, t2_startf,
+//								make_pair(g1f / num_col, g1f % num_col),
+//								make_pair(g2f / num_col, g2f % num_col),
+//								num_col, kDelay, flipTypef, &a1MDDPath, &a2MDDPath);
+//						}
+//						else {
 							new_rectangle->kRectangleConflict(a1, a2, Rsf, Rgf,
 								make_pair(s1f / num_col, s1f % num_col),
 								make_pair(s2f / num_col, s2f % num_col),
@@ -2828,7 +2714,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 								make_pair(g1f / num_col, g1f % num_col),
 								make_pair(g2f / num_col, g2f % num_col),
 								num_col, kDelay, option.RM4way,I_RM, &a1MDDPath, &a2MDDPath);
-						}
+//						}
 
 						rectangle = new_rectangle;
 						rectangle->isChasing = isChasingf;
