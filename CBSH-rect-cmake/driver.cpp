@@ -47,8 +47,10 @@ int main(int argc, char** argv)
 		("RM-4way", po::value<int>()->default_value(1), "0, do not do 4 way split. 1, do 4 way only necessary.2 Always do 4 way splitting for RM, other wise only 4 way when necessary")
 		("flipped_rectangle", "resolving flipped rectangle symmetry conflict for RM")
 		("I_RM","using improved rm")
+            ("statistic","print statistic data")
 
-	;
+
+            ;
 
 	po::variables_map vm;
 	po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -184,7 +186,30 @@ int main(int argc, char** argv)
 		icbs.num_target<<","<< icbs.num_0FlipRectangle<<","<<
 		icbs.num_1FlipRectangle << ","<< icbs.num_2FlipRectangle << "," << icbs.num_chasingRectangle << endl;
 	stats.close();
-	if (vm["screen"].as<int>() == 2)
+
+    if(vm.count("statistic")){
+        cout<<"Total RM time: "<<icbs.RMTime/CLOCKS_PER_SEC <<endl;
+        cout<<"Total time on extract sg: " <<icbs.runtime_findsg/CLOCKS_PER_SEC <<endl;
+        cout<<"Total time on find rectangle: " <<icbs.runtime_find_rectangle/CLOCKS_PER_SEC <<endl;
+        cout<<"Total time on build mdd in RM: " <<icbs.RMBuildMDDTime/CLOCKS_PER_SEC <<endl;
+
+        cout<<"Total RM detection: "<<icbs.RMDetectionCount <<endl;
+        cout<<"Total RM find: "<<icbs.RMSuccessCount <<endl;
+        cout<<"Total RM rejected before find rectangle: "<<icbs.RMFailBeforeRec <<endl;
+        cout<<"Total MDD: "<<icbs.TotalMDD <<endl;
+        cout<<"Total Exist MDD: "<<icbs.TotalExistMDD <<endl;
+        cout<<"Total K MDD: "<<icbs.TotalKMDD <<endl;
+        cout<<"Total Exist K MDD: "<<icbs.TotalExistKMDD <<endl;
+        for (int i=0; i<icbs.KRectangleCount.size();i++){
+            cout<< "total k: "<< i <<" rectangle: " << icbs.KRectangleCount[i]<<endl;
+        }
+    }
+
+
+
+
+
+    if (vm["screen"].as<int>() == 2)
 		cout << "Done!!" << endl;
 	delete ml;
 	return 0;

@@ -74,6 +74,14 @@ bool addFlippedHorizontalLongBarrierConstraint(const std::vector<PathEntry>& pat
 	vector<int> horizontal, vector<int> horizontalMin, vector<int> horizontalMax, int num_col, int St,
 	std::list<Constraint>& constraints, int k, MDDPath* kMDD);
 
+bool addGeneralKVerticalBarrierConstraint(const std::vector<PathEntry>& path, int y,
+                                          int Ri_x, int Rg_x, int Rg_t, int num_col, int St,
+                                          std::list<Constraint>& constraints, int k, MDDLevels* kMDD);
+
+bool addGeneralKHorizontalBarrierConstraint(const std::vector<PathEntry>& path, int x,
+                                            int Ri_y, int Rg_y, int Rg_t, int num_col, int St,
+                                            std::list<Constraint>& constraints, int k, MDDLevels* kMDD);
+
 
 
 
@@ -666,6 +674,304 @@ public:
 		return true;
 	}
 
+    int generalKRectangleConflict(int a1, int a2, const std::pair<int, int>& Rs, const std::pair<int, int>& Rg,
+                            const std::pair<int, int>& s1, const std::pair<int, int>& s2, int rt1,int rt2,
+                            const std::vector<Path*>& paths, int S1_t, int S2_t, const std::pair<int, int>& G1, const std::pair<int, int>& G2,
+                            int num_col, int a1k, int a2k, int RM4way, MDDLevels* a1kMDD, MDDLevels* a2kMDD) // For K-RM
+    {
+        this->a1 = a1;
+        this->a2 = a2;
+        this->t_sg = rt1;
+        this->rs = Rs.first*num_col + Rs.second;
+        this->rg = Rg.first*num_col + Rg.second;
+
+        int s1_x = s1.first;
+        int s1_y = s1.second;
+        int s2_x = s2.first;
+        int s2_y = s2.second;
+        int Rg_x = Rg.first;
+        int Rg_y = Rg.second;
+        int g1_x = G1.first;
+        int g1_y = G1.second;
+        int g2_x = G2.first;
+        int g2_y = G2.second;
+
+        bool split4way = true;
+        bool a1_4way=false;
+        bool a2_4way=false;
+        bool no_mdd_check = false;
+
+
+        int a1Rg = S1_t + getMahattanDistance(s1_x, s1_y, Rg_x, Rg_y);
+        int a1RgBypass = a1Rg + 2 * (getMahattanDistance(s2_x, s2_y, Rs.first, Rs.second) + 1);
+
+        int a2Rg = S2_t + getMahattanDistance(s2_x, s2_y, Rg_x, Rg_y);
+        int a2RgBypass = a2Rg + 2 * (getMahattanDistance(s1_x, s1_y, Rs.first, Rs.second) + 1);
+
+
+        int a1_extended = a2k/2;
+        int a2_extended = a1k/2;
+
+        int R1_x, R1_y, R2_x, R2_y, G1_x, G1_y, G2_x, G2_y, G1_t, G2_t,E1_t,E2_t;
+
+        if ((
+                (((s2_x - s1_x) * (s1_x - g1_x) < 0 && (s2_y - s1_y) * (s1_y - g1_y) < 0) && ((s1_x - g1_x) * (g1_x - g2_x) > 0 || (s1_y - g1_y) * (g1_y - g2_y) < 0))
+                ||
+                (((s1_x - s2_x) * (s2_x - g2_x) < 0 && (s1_y - s2_y) * (s2_y - g2_y) < 0) && ((s2_x - g2_x) * (g2_x - g1_x) < 0 || (s2_y - g2_y) * (g2_y - g1_y) > 0))
+        )) { // s1 always in the middle,s2 always between s1 and g1 && g1 lies right side of s1 s2 g2 line
+            // or s2 always in the middle, s1 always between s2 and g2 && g2 lies left side of s2 s1 g1 line
+            int sign_a1 = g1_y - s1_y >= 0 ? 1 : -1;
+            int sign_a2 = g2_x - s2_x >= 0 ? 1 : -1;
+
+            int a1_exit = Rg_y + sign_a1 * a1_extended;
+			int a1_entrance = Rs.second - sign_a1 * a1_extended;
+
+//			a1_entrance = sign_a1 * a1_entrance > sign_a1*s1_y ? a1_entrance : s1_y;
+
+
+            int a2_exit = Rg_x + sign_a2 * a2_extended;
+			int a2_entrance = Rs.first - +sign_a2 * a2_extended;
+//			a2_entrance = sign_a2 * a2_entrance > sign_a2 * s2_x ? a2_entrance : s2_x;
+
+            if (sign_a1 * a1_entrance < sign_a1 * s1_y || sign_a1 * a1_exit > sign_a1 * g1_y){
+                return 2;
+            }
+            if (sign_a2 * a2_entrance < sign_a2 * s2_x || sign_a2 * a2_exit > sign_a2 * g2_x){
+                return 1;
+            }
+
+
+            R1_x = Rs.first;
+            G1_x = Rg_x;
+
+            R2_y = Rs.second;
+            G2_y = Rg_y;
+
+            G1_t = rt1 + getMahattanDistance(Rs.first, Rs.second, G1_x, a1_exit);
+            E1_t = rt1 + getMahattanDistance(Rs.first, a1_entrance, G1_x, a1_entrance);
+            G2_t = rt2 + getMahattanDistance(Rs.first, Rs.second, a2_exit,G2_y);
+            E2_t = rt2 + getMahattanDistance(a2_entrance, Rs.second, a2_entrance, G2_y);
+
+
+            std::list<Constraint> constraint11;
+            addGeneralKVerticalBarrierConstraint(*paths[a1], a1_exit, R1_x, G1_x, G1_t, num_col, S1_t, constraint11, a1k, a1kMDD);
+            multiConstraint1.push_back(constraint11);
+
+
+            //chasing case always 4 way split
+            std::list<Constraint> constraint12;
+            addGeneralKVerticalBarrierConstraint(*paths[a1], a1_entrance, R1_x, G1_x, E1_t, num_col, S1_t, constraint12, a1k, a1kMDD);
+            multiConstraint1.push_back(constraint12);
+
+
+            std::list<Constraint> constraint21;
+            addGeneralKHorizontalBarrierConstraint(*paths[a2], a2_exit, R2_y, G2_y, G2_t, num_col, S2_t, constraint21, a2k, a2kMDD);
+            multiConstraint2.push_back(constraint21);
+
+            //chasing case always 4 way split
+            std::list<Constraint> constraint22;
+            addGeneralKHorizontalBarrierConstraint(*paths[a2], a2_entrance, R2_y, G2_y, E2_t, num_col, S2_t, constraint22, a2k, a2kMDD);
+            multiConstraint2.push_back(constraint22);
+            this->isChasing = true;
+
+
+        }
+        else if ((
+                (((s1_x - s2_x) * (s2_x - g2_x) < 0 && (s1_y - s2_y) * (s2_y - g2_y) < 0) && ((s2_x - g2_x) * (g2_x - g1_x) > 0 || (s2_y - g2_y) * (g2_y - g1_y) < 0))
+                ||
+                (((s2_x - s1_x) * (s1_x - g1_x) < 0 && (s2_y - s1_y) * (s1_y - g1_y) < 0) && ((s1_x - g1_x) * (g1_x - g2_x) < 0 || (s1_y - g1_y) * (g1_y - g2_y) > 0))
+        ))
+        {
+            // s2 always in the middle, s1 always between s2 and g2 && g2 lies right side of s2 s1 g1 line
+            //or s1 always in the middle,s2 always between s1 and g1 && g1 lies left side of s1 s2 g2 line
+
+            int sign_a1 = g1_x - s1_x >= 0 ? 1 : -1;
+            int sign_a2 = g2_y - s2_y >= 0 ? 1 : -1;
+
+            int a1_exit = Rg_x + sign_a1 * a1_extended;
+            //a1_exit = sign_a1 * a1_exit < sign_a1*g1_x ? a1_exit : g1_x;
+			int a1_entrance = Rs.first - sign_a1 * a1_extended;
+//			a1_entrance = sign_a1 * a1_entrance > sign_a1*s1_x ? a1_entrance : s1_x;
+
+
+            int a2_exit = Rg_y + sign_a2 * a2_extended;
+//          a2_exit = sign_a2 * a2_exit < sign_a2*g2_y ? a2_exit : g2_y;
+			int a2_entrance = Rs.second - +sign_a2 * a2_extended;
+//			a2_entrance = sign_a2 * a2_entrance > sign_a2 * s2_y ? a2_entrance : s2_y;
+
+            if (sign_a1 * a1_entrance < sign_a1 * s1_x || sign_a1 * a1_exit > sign_a1 * g1_x){
+                return 2;
+            }
+            if (sign_a2 * a2_entrance < sign_a2 * s2_y || sign_a2 * a2_exit > sign_a2 * g2_y){
+                return 1;
+            }
+
+            R2_x = Rs.first;
+            G2_x = Rg_x;
+
+            R1_y = Rs.second;
+            G1_y = Rg.second;
+
+
+            G1_t = rt1 + getMahattanDistance(Rs.first, Rs.second, a1_exit, G1_y);
+            E1_t = rt1 + getMahattanDistance(a1_entrance, Rs.second, a1_entrance, G1_y);
+            G2_t = rt2 + getMahattanDistance(Rs.first, Rs.second, G2_x, a2_exit);
+            E2_t = rt2 + getMahattanDistance(Rs.first, a2_entrance, G2_x, a2_entrance);
+
+
+            std::list<Constraint> constraint11;
+
+            addGeneralKHorizontalBarrierConstraint(*paths[a1], a1_exit, R1_y, G1_y, G1_t, num_col, S1_t, constraint11, a1k, a1kMDD);
+            multiConstraint1.push_back(constraint11);
+
+            //chasing case always 4 way split
+            std::list<Constraint> constraint12;
+            addGeneralKHorizontalBarrierConstraint(*paths[a1], a1_entrance, R1_y, G1_y, E1_t, num_col, S1_t, constraint12, a1k, a1kMDD);
+            multiConstraint1.push_back(constraint12);
+
+
+
+
+            std::list<Constraint> constraint21;
+            addGeneralKVerticalBarrierConstraint(*paths[a2], a2_exit, R2_x, G2_x, G2_t, num_col, S2_t, constraint21, a2k, a2kMDD);
+            multiConstraint2.push_back(constraint21);
+
+            //chasing case always 4 way split
+            std::list<Constraint> constraint22;
+            addGeneralKVerticalBarrierConstraint(*paths[a2], a2_entrance, R2_x, G2_x, E2_t, num_col, S2_t, constraint22, a2k, a2kMDD);
+            multiConstraint2.push_back(constraint22);
+
+            this->isChasing = true;
+
+
+        }
+        else if ((s1_x == s2_x && (s1_y - s2_y) * (s2_y - Rg_y) < 0) ||
+                 (s1_x != s2_x && (s1_x - s2_x)*(s2_x - Rg_x) >= 0))
+        {
+
+
+            int sign_a1 = g1_x - s1_x >= 0 ? 1 : -1;
+            int sign_a2 = g2_y - s2_y >= 0 ? 1 : -1;
+
+            int a1_exit = Rg_x + sign_a1 * a1_extended;
+//            a1_exit = sign_a1 * a1_exit < sign_a1*g1_x ? a1_exit : g1_x;
+			int a1_entrance = Rs.first - sign_a1 * a1_extended;
+//			a1_entrance = sign_a1 * a1_entrance > sign_a1*s1_x ? a1_entrance : s1_x;
+
+
+            int a2_exit = Rg_y + sign_a2 * a2_extended;
+//            a2_exit = sign_a2 * a2_exit < sign_a2*g2_y ? a2_exit : g2_y;
+			int a2_entrance = Rs.second - +sign_a2 * a2_extended;
+//			a2_entrance = sign_a2 * a2_entrance > sign_a2 * s2_y ? a2_entrance : s2_y;
+
+            if (sign_a1 * a1_entrance < sign_a1 * s1_x || sign_a1 * a1_exit > sign_a1 * g1_x){
+                return 2;
+            }
+            if (sign_a2 * a2_entrance < sign_a2 * s2_y || sign_a2 * a2_exit > sign_a2 * g2_y){
+                return 1;
+            }
+
+
+            R2_x = Rs.first;
+            G2_x = Rg_x;
+
+            R1_y = Rs.second;
+            G1_y = Rg.second;
+
+
+            G1_t = rt1 + getMahattanDistance(Rs.first, Rs.second, a1_exit, G1_y);
+            E1_t = rt1 + getMahattanDistance(a1_entrance, Rs.second, a1_entrance, G1_y);
+            G2_t = rt2 + getMahattanDistance(Rs.first, Rs.second, G2_x, a2_exit);
+            E2_t = rt2 + getMahattanDistance(Rs.first, a2_entrance, G2_x, a2_entrance);
+
+
+            std::list<Constraint> constraint11;
+
+            addGeneralKHorizontalBarrierConstraint(*paths[a1], a1_exit, R1_y, G1_y, G1_t, num_col, S1_t, constraint11, a1k, a1kMDD);
+            multiConstraint1.push_back(constraint11);
+
+            if (split4way || a1_4way) {
+                std::list<Constraint> constraint12;
+                addGeneralKHorizontalBarrierConstraint(*paths[a1], a1_entrance, R1_y, G1_y, E1_t, num_col, S1_t, constraint12, a1k, a1kMDD);
+                multiConstraint1.push_back(constraint12);
+            }
+
+
+
+            std::list<Constraint> constraint21;
+            addGeneralKVerticalBarrierConstraint(*paths[a2], a2_exit, R2_x, G2_x, G2_t, num_col, S2_t, constraint21, a2k, a2kMDD);
+            multiConstraint2.push_back(constraint21);
+
+            if (split4way || a2_4way) {
+                std::list<Constraint> constraint22;
+                addGeneralKVerticalBarrierConstraint(*paths[a2], a2_entrance, R2_x, G2_x, E2_t, num_col, S2_t, constraint22, a2k, a2kMDD);
+                multiConstraint2.push_back(constraint22);
+            }
+
+
+        }
+        else
+        {
+
+            int sign_a1 = g1_y - s1_y >= 0 ? 1 : -1;
+            int sign_a2 = g2_x - s2_x >= 0 ? 1 : -1;
+
+            int a1_exit = Rg_y + sign_a1 * a1_extended;
+//            a1_exit = sign_a1 * a1_exit < sign_a1*g1_y ? a1_exit : g1_y;
+			int a1_entrance = Rs.second - sign_a1 * a1_extended;
+//			a1_entrance = sign_a1 * a1_entrance > sign_a1*s1_y ? a1_entrance : s1_y;
+
+
+            int a2_exit = Rg_x + sign_a2 * a2_extended;
+//            a2_exit = sign_a2 * a2_exit < sign_a2*g2_x ? a2_exit : g2_x;
+			int a2_entrance = Rs.first - +sign_a2 * a2_extended;
+//			a2_entrance = sign_a2 * a2_entrance > sign_a2 * s2_x ? a2_entrance : s2_x;
+
+            if (sign_a1 * a1_entrance < sign_a1 * s1_y || sign_a1 * a1_exit > sign_a1 * g1_y){
+                return 2;
+            }
+            if (sign_a2 * a2_entrance < sign_a2 * s2_x || sign_a2 * a2_exit > sign_a2 * g2_x){
+                return 1;
+            }
+
+            R1_x = Rs.first;
+            G1_x = Rg_x;
+
+            R2_y = Rs.second;
+            G2_y = Rg_y;
+
+            G1_t = rt1 + getMahattanDistance(Rs.first, Rs.second, G1_x, a1_exit);
+            E1_t = rt1 + getMahattanDistance(Rs.first, a1_entrance, G1_x, a1_entrance);
+            G2_t = rt2 + getMahattanDistance(Rs.first, Rs.second, a2_exit, G2_y);
+            E2_t = rt2 + getMahattanDistance(a2_entrance, Rs.second, a2_entrance, G2_y);
+
+
+            std::list<Constraint> constraint11;
+            addGeneralKVerticalBarrierConstraint(*paths[a1], a1_exit, R1_x, G1_x, G1_t, num_col, S1_t, constraint11, a1k, a1kMDD);
+            multiConstraint1.push_back(constraint11);
+
+
+            if (split4way || a1_4way) {
+                std::list<Constraint> constraint12;
+                addGeneralKVerticalBarrierConstraint(*paths[a1], a1_entrance, R1_x, G1_x, E1_t, num_col, S1_t, constraint12, a1k, a1kMDD);
+                multiConstraint1.push_back(constraint12);
+            }
+
+
+            std::list<Constraint> constraint21;
+            addGeneralKHorizontalBarrierConstraint(*paths[a2], a2_exit, R2_y, G2_y, G2_t, num_col, S2_t, constraint21, a2k, a2kMDD);
+            multiConstraint2.push_back(constraint21);
+
+            if (split4way || a2_4way) {
+                std::list<Constraint> constraint22;
+                addGeneralKHorizontalBarrierConstraint(*paths[a2], a2_entrance, R2_y, G2_y, E2_t, num_col, S2_t, constraint22, a2k, a2kMDD);
+                multiConstraint2.push_back(constraint22);
+            }
+
+        }
+        type = conflict_type::RECTANGLE4;
+        return 0;
+    }
 //	bool flippedRectangleConflict(int a1, int a2, const std::pair<int, int>& Rs, const std::pair<int, int>& Rg,
 //		const std::pair<int, int>& s1, const std::pair<int, int>& s2, int Rg_t,
 //		const std::vector<Path*>& paths, int S1_t, int S2_t, const std::pair<int, int>& G1, const std::pair<int, int>& G2,

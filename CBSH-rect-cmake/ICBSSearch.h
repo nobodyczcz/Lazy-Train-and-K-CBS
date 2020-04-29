@@ -34,6 +34,18 @@ public:
 	double runtime_updatepaths;
 	double runtime_updatecons;
 	double RMTime = 0;
+	double runtime_findsg;
+	double runtime_find_rectangle;
+	double RMBuildMDDTime;
+
+	int RMDetectionCount=0;
+	int RMSuccessCount=0;
+	int RMFailBeforeRec=0;
+	int TotalMDD=0;
+	int TotalKMDD=0;
+	int TotalExistMDD=0;
+	int TotalExistKMDD=0;
+	vector<int> KRectangleCount;
 
 	
 
@@ -158,7 +170,7 @@ class MultiMapICBSSearch :public ICBSSearch
 public:
 	MultiMapICBSSearch(Map * ml, AgentsLoader & al, double f_w, constraint_strategy c, int time_limit, int screen,int kDlay, options options1);	
 	// build MDD
-	MDD<Map>* buildMDD(ICBSNode& node, int id);
+	MDD<Map>* buildMDD(ICBSNode& node, int id, int k=0);
 	void updateConstraintTable(ICBSNode* cTurr, int agent_id);
 	void classifyConflicts(ICBSNode &parent);
 	void initializeDummyStart();

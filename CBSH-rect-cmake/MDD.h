@@ -69,9 +69,11 @@ struct ConstraintsHasher // Hash a CT node by constraints on one agent
 {
 	int a;
 	ICBSNode* n;
+	int k = 0;
 
 	ConstraintsHasher() {};
-	ConstraintsHasher(int a, ICBSNode* n) : a(a), n(n) {};
+    ConstraintsHasher(int a, ICBSNode* n, int k = 0) : a(a), n(n),k(k) {};
+
 
 	bool operator==(const ConstraintsHasher& other) const
 	{
@@ -92,6 +94,9 @@ struct ConstraintsHasher // Hash a CT node by constraints on one agent
 					cons2.insert(con);
 			curr = curr->parent;
 		}
+
+		if (k != other.k)
+		    return false;
 		if (cons1.size() != cons2.size())
 			return false;
 

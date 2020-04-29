@@ -7,8 +7,11 @@
 
 
 
-//Check Does Barrier fully cut MDD and classify barrier
+/*
+ * This part check the relationship between MDD and barriers.
+ */
 
+//Return true if a barrier fully cut MDD
 bool isCut(MDDLevels& mdd, std::list<Constraint>& constraints,int num_col, int map_size){
     ConstraintTable consTable;
     consTable.insert(constraints, 0, num_col, map_size);
@@ -36,8 +39,15 @@ bool isCut(MDDLevels& mdd, std::list<Constraint>& constraints,int num_col, int m
     return true;
 
 }
-//Return true if find solution with entrance constrained and must traverse exit;
-bool haveSolutionCondition1(MDDLevels& mdd,
+
+/// find solution with entrance constrained and must traverse exit;
+/// \param mdd
+/// \param entrance
+/// \param entranceTable
+/// \param exit
+/// \param exitTable
+/// \return -1 if have solution traverse exit, 0 if solution bypass exit, 1 if no any solution;
+int haveSolutionCondition1(MDDLevels& mdd,
         std::list<Constraint>& entrance,
         ConstraintTable& entranceTable,
         std::list<Constraint>& exit,
@@ -58,33 +68,48 @@ bool haveSolutionCondition1(MDDLevels& mdd,
     }
 
     queue.push_front(mdd[0].front());
+    explored.insert(mdd[0].front());
+
     if(entranceTable.is_constrained(queue.front()->location,queue.front()->level)){
-        return false;
+        return 1;
     }
+
+    bool solutionTraverseExit = false;
+    bool solutionBypassExit = false;
     while(!queue.empty()){
         MDDNode* current = queue.front();
-        explored.insert(queue.front());
         queue.pop_front();
 
         for (auto child : current->children){
             if (child == goal){
                 if(exitTable.is_constrained(child->location,child->level) || traverse_exit.count(current) > 0)
-                    return true;
+                    solutionTraverseExit = true;
+                else
+                    solutionBypassExit = true;
             }
             if (explored.count(child)==0 && !entranceTable.is_constrained(child->location,child->level)){
 
                 if(exitTable.is_constrained(child->location,child->level) || traverse_exit.count(current) > 0){
                     traverse_exit.insert(child);
                     queue.push_front(child);
+                    explored.insert(child);
+
                 }
                 else if(child->level < max_exit_time){
                     queue.push_front(child);
+                    explored.insert(child);
+
                 }
             }
         }
 
     }
-    return false;
+    if (solutionTraverseExit)
+        return -1;
+    else if (solutionBypassExit)
+        return 0;
+    else
+        return 1;
 };
 
 //Return true if find solution with exit constrained and must traverse entrance;
@@ -109,12 +134,13 @@ bool haveSolutionCondition2(MDDLevels& mdd,
     }
 
     queue.push_front(mdd[0].front());
+    explored.insert(mdd[0].front());
+
     if(entranceTable.is_constrained(queue.front()->location,queue.front()->level)){
         traverse_entrance.insert(queue.front());
     }
     while(!queue.empty()){
         MDDNode* current = queue.front();
-        explored.insert(queue.front());
         queue.pop_front();
 
         for (auto child : current->children){
@@ -127,9 +153,12 @@ bool haveSolutionCondition2(MDDLevels& mdd,
                 if(entranceTable.is_constrained(child->location,child->level) || traverse_entrance.count(current) > 0){
                     traverse_entrance.insert(child);
                     queue.push_front(child);
+                    explored.insert(child);
+
                 }
                 else if(child->level < max_entrance_time){
                     queue.push_front(child);
+                    explored.insert(child);
                 }
             }
         }
@@ -144,12 +173,12 @@ int classifyBarrierAndRectangle(MDDLevels& mdd, std::list<Constraint>& entrance,
 
     ConstraintTable exitTable;
     exitTable.insert(exit, 0, num_col, map_size);
-
-    if (haveSolutionCondition1(mdd, entrance, entranceTable, exit, exitTable)){
+    int condition1Result = haveSolutionCondition1(mdd, entrance, entranceTable, exit, exitTable);
+    if (condition1Result == -1){
         return -1;
     }
     else{
-        if (haveSolutionCondition2(mdd, entrance, entranceTable, exit, exitTable))
+        if (haveSolutionCondition2(mdd, entrance, entranceTable, exit, exitTable) || condition1Result == 0)
             return 0;
         else
             return 1;
@@ -215,8 +244,11 @@ bool isRectangleConflict(int s1, int s2, int g1, int g2, int num_col,int kRobust
 	}
 }
 
-//Retrieve st and gt for new rm
-pair<int,int> get_st(const std::vector<PathEntry>& path, int timestep, int num_col, int action1, int action2) {
+/*
+ * Retrieve st and gt for new rm
+ */
+
+pair<int,int> get_st(const std::vector<PathEntry>& path, int timestep, int num_col, int action1, int action2, bool single_only) {
 	pair<int, int> result;
 	int candidate=-1;
 	result.second == 0;
@@ -224,10 +256,10 @@ pair<int,int> get_st(const std::vector<PathEntry>& path, int timestep, int num_c
 	for (int t = timestep; t > 0; t--) {
 		int action = getAction(path[t].location, path[t - 1].location, num_col);
 		if (action != action1 && action != action2) {
-			result.first = candidate;
-			return result;
-		}
-		if (path[t].single){
+            result.first = candidate;
+            return result;
+        }
+		if (!single_only || path[t].single){
 		    candidate = t;
 		}
 		if (preAction != -1 && action != preAction) {
@@ -242,7 +274,7 @@ pair<int,int> get_st(const std::vector<PathEntry>& path, int timestep, int num_c
 	return result;
 	
 };
-pair<int, int> get_gt(const std::vector<PathEntry>& path, int timestep, int num_col, int action1, int action2) {
+pair<int, int> get_gt(const std::vector<PathEntry>& path, int timestep, int num_col, int action1, int action2, bool single_only) {
 	pair<int, int> result;
     int candidate=-1;
     result.second == 0;
@@ -253,7 +285,7 @@ pair<int, int> get_gt(const std::vector<PathEntry>& path, int timestep, int num_
 			result.first = candidate;
 			return result;
 		}
-        if (path[t].single){
+        if (!single_only || path[t].single){
             candidate = t;
         }
 		if (preAction != -1 && action != preAction) {
@@ -266,6 +298,81 @@ pair<int, int> get_gt(const std::vector<PathEntry>& path, int timestep, int num_
 	return result;
 
 };
+
+MDDNode* get_st_mdd(const MDDLevels& mdd, int timestep,int loc, int num_col, int action1, int action2){
+    MDDNode* start;
+    for (auto node : mdd[timestep]){
+        if (node->location == loc)
+            start = node;
+    }
+
+    list<MDDNode*> queue;
+    boost::unordered_set<MDDNode*> explored;
+
+    queue.push_back(start);
+    explored.insert(start);
+    MDDNode* furthest_node = start;
+    int distance = 0;
+
+    while (!queue.empty()){
+        MDDNode* current = queue.front();
+        queue.pop_front();
+        int current_distance = getMahattanDistance(current->row,current->col,loc/num_col,loc%num_col);
+        if(current_distance > distance){
+            furthest_node = current;
+            distance = current_distance;
+        }
+        for (auto node : current->parents){
+            int action = getAction(current->location, node->location, num_col);
+            if ((action == action1 || action == action2) && explored.count(node) == 0) {
+                queue.push_back(node);
+                explored.insert(node);
+
+            }
+        }
+
+    }
+    return furthest_node;
+
+};
+MDDNode* get_gt_mdd(const MDDLevels& mdd, int timestep,int loc, int num_col, int action1, int action2){
+    MDDNode* start;
+    for (auto node : mdd[timestep]){
+        if (node->location == loc)
+            start = node;
+    }
+
+    list<MDDNode*> queue;
+    boost::unordered_set<MDDNode*> explored;
+    queue.push_back(start);
+    explored.insert(start);
+
+    MDDNode* furthest_node = start;
+    int distance = 0;
+
+    while (!queue.empty()){
+        MDDNode* current = queue.front();
+        queue.pop_front();
+
+        int current_distance = getMahattanDistance(current->row,current->col,loc/num_col,loc%num_col);
+        if(current_distance > distance){
+            furthest_node = current;
+            distance = current_distance;
+        }
+        for (auto node : current->children){
+            int action = getAction( node->location,current->location, num_col);
+            if ((action == action1 || action == action2) && explored.count(node) == 0) {
+                queue.push_back(node);
+                explored.insert(node);
+
+            }
+        }
+
+    }
+    return furthest_node;
+};
+
+
 int get_earlyCrosst(const std::vector<PathEntry>& path1, const std::vector<PathEntry>& path2, int timestep, int earlyBound, int delta) {
 	for (int t = timestep-1; t > earlyBound; t--) {
 		if (path1[t].location == path2[t+delta].location) {

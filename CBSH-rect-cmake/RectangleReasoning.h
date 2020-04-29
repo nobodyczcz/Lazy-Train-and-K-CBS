@@ -31,7 +31,7 @@ struct PathEntry;
 
 //Check Does Barrier fully cut MDD
 bool isCut(MDDLevels& mdd, std::list<Constraint>& constraints,int num_col, int map_size);
-bool haveSolutionCondition1(MDDLevels& mdd,
+int haveSolutionCondition1(MDDLevels& mdd,
                             std::list<Constraint>& entrance,
                             ConstraintTable& entranceTable,
                             std::list<Constraint>& exit,
@@ -58,8 +58,10 @@ int classifyRectangleConflict(int s1, int s2, int g1, int g2, const std::pair<in
 int classifyFlippedRectangleConflict(int s1, int s2, int g1, int g2, const std::pair<int, int>& Rg, const std::pair<int, int>& Rs, int num_col, int flipType, bool kFullyBlocked);
 
 //Retrieve st and gt for new rm
-pair<int, int> get_st(const std::vector<PathEntry>& path, int timestep,int num_col, int action1,int action2);
-pair<int, int> get_gt(const std::vector<PathEntry>& path, int timestep, int num_col, int action1, int action2);
+pair<int, int> get_st(const std::vector<PathEntry>& path, int timestep,int num_col, int action1,int action2, bool single_only = true);
+pair<int, int> get_gt(const std::vector<PathEntry>& path, int timestep, int num_col, int action1, int action2,bool single_only = true);
+MDDNode* get_st_mdd(const MDDLevels& mdd, int timestep,int loc, int num_col, int action1, int action2);
+MDDNode* get_gt_mdd(const MDDLevels& mdd, int timestep,int loc, int num_col, int action1, int action2);
 int get_earlyCrosst(const std::vector<PathEntry>& path1, const std::vector<PathEntry>& path2, int timestep, int earlyBound, int delta);
 int get_lateCrosst(const std::vector<PathEntry>& path1, const std::vector<PathEntry>& path2, int timestep, int lateBound, int delta);
 
