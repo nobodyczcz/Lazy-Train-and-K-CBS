@@ -1679,6 +1679,8 @@ MDD<Map>* MultiMapICBSSearch<Map>::buildMDD(ICBSNode& node, int id, int k)
 		// vector < list< pair<int, int> > >* cons_vec = collectConstraints(&node, id);
 		updateConstraintTable(&node, id);
 		mdd->buildMDD(constraintTable, paths[id]->size() + k, *search_engines[id]);
+        if (!mddTable.empty())
+            mddTable[c.a][c] = mdd;
 	}
 	else{
 	    TotalExistMDD+=1;
@@ -1698,9 +1700,6 @@ MDD<Map>* MultiMapICBSSearch<Map>::buildMDD(ICBSNode& node, int id, int k)
             }
         }
     }
-	if(!mddTable.empty()){
-        mddTable[c.a][c] = mdd;
-	}
 	return mdd;
 }
 
