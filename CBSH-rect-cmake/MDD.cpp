@@ -117,8 +117,13 @@ bool MDD<Map>::buildMDD( ConstraintTable& constraints, int numOfLevels, SingleAg
 
 	// Delete useless nodes (nodes who don't have any children)
 	for (std::list<MDDNode*>::iterator it = closed.begin(); it != closed.end(); ++it)
-		if ((*it)->children.empty() && (*it)->level < numOfLevels - 1)
+		if ((*it)->children.empty() && (*it)->level < numOfLevels - 1){
+            auto node = std::find(levels[(*it)->level].begin(),levels[(*it)->level].end(),*it);
+            if(node != levels[(*it)->level].end()){
+                levels[(*it)->level].erase(node);
+            }
 			delete (*it);
+		}
 	return true;
 }
 
@@ -397,7 +402,6 @@ void MDD<Map>::clear()
 
                 if (*it != NULL) {
                     delete (*it);
-                    levels[i].erase(it);
                 }
 
         }
