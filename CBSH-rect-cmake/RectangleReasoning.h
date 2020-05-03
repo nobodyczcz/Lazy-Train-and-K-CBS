@@ -30,18 +30,18 @@ struct PathEntry;
 //	std::list<std::tuple<int, int, int>>& constraints);
 
 //Check Does Barrier fully cut MDD
-bool isCut(MDDLevels& mdd, std::list<Constraint>& constraints,int num_col, int map_size);
-int haveSolutionCondition1(MDDLevels& mdd,
+bool isCut(const MDDLevels& mdd, std::list<Constraint>& constraints,int num_col, int map_size);
+int haveSolutionCondition1(const MDDLevels& mdd,
                             std::list<Constraint>& entrance,
                             ConstraintTable& entranceTable,
                             std::list<Constraint>& exit,
                             ConstraintTable& exitTable);
-bool haveSolutionCondition2(MDDLevels& mdd,
+bool haveSolutionCondition2(const MDDLevels& mdd,
                             std::list<Constraint>& entrance,
                             ConstraintTable& entranceTable,
                             std::list<Constraint>& exit,
                             ConstraintTable& exitTable);
-int classifyBarrierAndRectangle(MDDLevels& mdd, std::list<Constraint>& entrance, std::list<Constraint>& exit, int num_col, int map_size);
+int classifyBarrierAndRectangle(const MDDLevels& mdd, std::list<Constraint>& entrance, std::list<Constraint>& exit, int num_col, int map_size);
 
 
 

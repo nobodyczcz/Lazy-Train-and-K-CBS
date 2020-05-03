@@ -33,7 +33,6 @@ public:
 	virtual void deleteNode(MDDNode* node) {};
 	virtual void clear() {};
 	virtual void print() {};
-	~MDDEmpty() { clear(); };
 
 };
 

@@ -117,7 +117,6 @@ if (WIN32)
 	  MESSAGE(FATAL_ERROR "Unable to find all boost libs")
 	ENDIF()
 elseif(APPLE)
-	add_definitions('-std=c++14')
 
 	message(STATUS ">>>> Found APPLE <<<<")
 	set(CMAKE_SHARED_LIBRARY_SUFFIX ".so")

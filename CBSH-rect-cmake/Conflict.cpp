@@ -478,7 +478,7 @@ bool addModifiedVerticalBarrierConstraint(const std::vector<PathEntry>& path, in
 // add a vertival modified barrier constraint
 bool addModifiedVerticalLongBarrierConstraint(const std::vector<PathEntry>& path, int y,
 	int Ri_x, int Rg_x, int Rg_t, int num_col, int St,
-	std::list<Constraint>& constraints, int k, MDDLevels* kMDD)
+	std::list<Constraint>& constraints, int k, const MDDLevels* kMDD)
 {
 
 
@@ -565,7 +565,7 @@ bool addModifiedVerticalLongBarrierConstraint(const std::vector<PathEntry>& path
 // add a horizontal modified barrier constraint
 bool addModifiedHorizontalLongBarrierConstraint(const std::vector<PathEntry>& path, int x,
 	int Ri_y, int Rg_y, int Rg_t, int num_col, int St,
-	std::list<Constraint>& constraints, int k, MDDLevels* kMDD)
+	std::list<Constraint>& constraints, int k, const MDDLevels* kMDD)
 {
 	/*for (int t = 0; t < path.size(); t++) {
 		std::cout << "(" << path.at(t).location / num_col << "," << path.at(t).location % num_col << ")";
@@ -668,7 +668,7 @@ bool addModifiedHorizontalLongBarrierConstraint(const std::vector<PathEntry>& pa
 // add a vertival modified barrier constraint
 bool addGeneralKVerticalBarrierConstraint(const std::vector<PathEntry>& path, int y,
                                               int Ri_x, int Rg_x, int Rg_t, int num_col, int St,
-                                              std::list<Constraint>& constraints, int k, MDDLevels* kMDD)
+                                              std::list<Constraint>& constraints, int k, const MDDLevels* kMDD)
 {
 
 
@@ -768,7 +768,7 @@ bool addGeneralKVerticalBarrierConstraint(const std::vector<PathEntry>& path, in
 // add a horizontal modified barrier constraint
 bool addGeneralKHorizontalBarrierConstraint(const std::vector<PathEntry>& path, int x,
                                                 int Ri_y, int Rg_y, int Rg_t, int num_col, int St,
-                                                std::list<Constraint>& constraints, int k, MDDLevels* kMDD)
+                                                std::list<Constraint>& constraints, int k, const MDDLevels* kMDD)
 {
     /*for (int t = 0; t < path.size(); t++) {
         std::cout << "(" << path.at(t).location / num_col << "," << path.at(t).location % num_col << ")";

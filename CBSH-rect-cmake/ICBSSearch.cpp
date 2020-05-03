@@ -2108,8 +2108,8 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 //                    g2 = paths[a2]->at(t2_end).location;
 //				}
                 else if(option.RM4way>=5){
-                    MDD<Map>* a1MDD = buildMDD(parent, a1);
-                    MDD<Map>* a2MDD = buildMDD(parent,a2);
+                    const MDD<Map>* a1MDD = buildMDD(parent, a1);
+                    const MDD<Map>* a2MDD = buildMDD(parent,a2);
                     MDDNode* t1s_result = get_st_mdd(a1MDD->levels, timestep,paths.at(a1)->at(timestep).location, num_col, action1, action2);
                     MDDNode* t1e_result = get_gt_mdd(a1MDD->levels, timestep,paths.at(a1)->at(timestep).location, num_col, action1, action2);
                     MDDNode* t2s_result = get_st_mdd(a2MDD->levels, timestep2,paths.at(a2)->at(timestep2).location, num_col, action1, action2);
@@ -2207,8 +2207,8 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
                                 new Conflict(loc1, con->k, timestep));
 //                        std::clock_t buildMDDStart = std::clock();
 
-                        MDD<Map>* a1MDD = buildMDD(parent,a1,barrierWidth);
-                        MDD<Map>* a2MDD = buildMDD(parent,a2,barrierWidth);
+                        const MDD<Map>* a1MDD = buildMDD(parent,a1,barrierWidth);
+                        const MDD<Map>* a2MDD = buildMDD(parent,a2,barrierWidth);
 //                        RMBuildMDDTime+=std::clock() - buildMDDStart;
 
                         temp->kRectangleConflict(a1, a2, Rs, Rg,
@@ -2277,8 +2277,8 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
                     for (int a1k=0; a1k<=a1kMax; a1k++){
                         for (int a2k=0; a2k<=a2kMax; a2k++){
 //                            std::clock_t buildMDDStart = std::clock();
-                            MDD<Map>* a1MDD = buildMDD(parent,a1,a1k);
-                            MDD<Map>* a2MDD = buildMDD(parent,a2,a2k - con->k >=0 ? a2k-con->k:0);
+                            const MDD<Map>* a1MDD = buildMDD(parent,a1,a1k);
+                            const MDD<Map>* a2MDD = buildMDD(parent,a2,a2k - con->k >=0 ? a2k-con->k:0);
 //                            RMBuildMDDTime+=std::clock() - buildMDDStart;
                             if(screen >=4){
                                 cout << "a1k: " << a1k << endl;

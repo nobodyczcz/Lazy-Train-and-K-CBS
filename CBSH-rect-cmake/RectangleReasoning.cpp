@@ -47,7 +47,7 @@ bool isCut(MDDLevels& mdd, std::list<Constraint>& constraints,int num_col, int m
 /// \param exit
 /// \param exitTable
 /// \return -1 if have solution traverse exit, 0 if solution bypass exit, 1 if no any solution;
-int haveSolutionCondition1(MDDLevels& mdd,
+int haveSolutionCondition1(const MDDLevels& mdd,
         std::list<Constraint>& entrance,
         ConstraintTable& entranceTable,
         std::list<Constraint>& exit,
@@ -113,7 +113,7 @@ int haveSolutionCondition1(MDDLevels& mdd,
 };
 
 //Return true if find solution with exit constrained and must traverse entrance;
-bool haveSolutionCondition2(MDDLevels& mdd,
+bool haveSolutionCondition2(const MDDLevels& mdd,
                               std::list<Constraint>& entrance,
                               ConstraintTable& entranceTable,
                               std::list<Constraint>& exit,
@@ -167,7 +167,7 @@ bool haveSolutionCondition2(MDDLevels& mdd,
     return false;
 };
 
-int classifyBarrierAndRectangle(MDDLevels& mdd, std::list<Constraint>& entrance, std::list<Constraint>& exit, int num_col, int map_size){
+int classifyBarrierAndRectangle(const MDDLevels& mdd, std::list<Constraint>& entrance, std::list<Constraint>& exit, int num_col, int map_size){
     ConstraintTable entranceTable;
     entranceTable.insert(entrance, 0, num_col, map_size);
 

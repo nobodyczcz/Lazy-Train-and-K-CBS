@@ -49,12 +49,12 @@ bool addKDelayBarrierConstraints(int S1, int S2, int S1_t, int S2_t, pair<int, i
 // add a vertival modified barrier constraint
 bool addModifiedVerticalLongBarrierConstraint(const std::vector<PathEntry>& path, int y,
 	int Ri_x, int Rg_x, int Rg_t, int num_col, int St,
-	std::list<Constraint>& constraints, int k, MDDLevels* kMDD);
+	std::list<Constraint>& constraints, int k, const MDDLevels* kMDD);
 
 // add a horizontal modified barrier constraint
 bool addModifiedHorizontalLongBarrierConstraint(const std::vector<PathEntry>& path, int x,
 	int Ri_y, int Rg_y, int Rg_t, int num_col, int St,
-	std::list<Constraint>& constraints, int k, MDDLevels* kMDD);
+	std::list<Constraint>& constraints, int k, const MDDLevels* kMDD);
 
 // add a vertival modified barrier constraint for 4 way split
 bool add4WayModifiedVerticalLongBarrierConstraint(const std::vector<PathEntry>& path, int y,
@@ -76,11 +76,11 @@ bool addFlippedHorizontalLongBarrierConstraint(const std::vector<PathEntry>& pat
 
 bool addGeneralKVerticalBarrierConstraint(const std::vector<PathEntry>& path, int y,
                                           int Ri_x, int Rg_x, int Rg_t, int num_col, int St,
-                                          std::list<Constraint>& constraints, int k, MDDLevels* kMDD);
+                                          std::list<Constraint>& constraints, int k, const MDDLevels* kMDD);
 
 bool addGeneralKHorizontalBarrierConstraint(const std::vector<PathEntry>& path, int x,
                                             int Ri_y, int Rg_y, int Rg_t, int num_col, int St,
-                                            std::list<Constraint>& constraints, int k, MDDLevels* kMDD);
+                                            std::list<Constraint>& constraints, int k, const MDDLevels* kMDD);
 
 
 
@@ -320,7 +320,7 @@ public:
 	bool kRectangleConflict(int a1, int a2, const std::pair<int, int>& Rs, const std::pair<int, int>& Rg,
 		const std::pair<int, int>& s1, const std::pair<int, int>& s2, int rt1,int rt2,
 		const std::vector<Path*>& paths, int S1_t, int S2_t, const std::pair<int, int>& G1, const std::pair<int, int>& G2,
-		int num_col, int k, int RM4way, bool I_RM = false, MDDLevels* a1kMDD = NULL, MDDLevels* a2kMDD = NULL) // For K-RM
+		int num_col, int k, int RM4way, bool I_RM = false, const MDDLevels* a1kMDD = NULL, const MDDLevels* a2kMDD = NULL) // For K-RM
 	{
 		this->a1 = a1;
 		this->a2 = a2;
@@ -677,7 +677,7 @@ public:
     int generalKRectangleConflict(int a1, int a2, const std::pair<int, int>& Rs, const std::pair<int, int>& Rg,
                             const std::pair<int, int>& s1, const std::pair<int, int>& s2, int rt1,int rt2,
                             const std::vector<Path*>& paths, int S1_t, int S2_t, const std::pair<int, int>& G1, const std::pair<int, int>& G2,
-                            int num_col, int a1k, int a2k, int RM4way, MDDLevels* a1kMDD, MDDLevels* a2kMDD) // For K-RM
+                            int num_col, int a1k, int a2k, int RM4way, const MDDLevels* a1kMDD, const MDDLevels* a2kMDD) // For K-RM
     {
         this->a1 = a1;
         this->a2 = a2;

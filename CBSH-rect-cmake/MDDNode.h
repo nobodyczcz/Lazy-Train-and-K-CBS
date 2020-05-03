@@ -30,6 +30,10 @@ public:
     std::list<MDDNode*> children;
     std::list<MDDNode*> parents;
     MDDNode* parent;
+    ~MDDNode(){
+        children.clear();
+        parents.clear();
+    }
 };
 
 
