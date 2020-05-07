@@ -267,7 +267,6 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 							preciousConflit[2] = get<2>(*con);
 							preciousConflit[3] = get<4>(*con);
 							//cout << "continues conf, jump" << endl;
-							con.reset();
 							continue;
 						}
 						std::shared_ptr<Conflict> newConf(new Conflict());
@@ -342,7 +341,6 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 						preciousConflit[2] = get<2>(*con);
 						preciousConflit[3] = get<4>(*con);
 						//cout << "continues conf, jump" << endl;
-                        con.reset();
 						continue;
 					}
 
@@ -373,7 +371,6 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 					preciousConflit[1] = get<1>(*con);
 					preciousConflit[2] = get<2>(*con);
 					preciousConflit[3] = get<4>(*con);
-                    con.reset();
 
                 }
 				delete paths[a1]->at(t).conflist;

@@ -367,6 +367,7 @@ bool MDD<Map>::buildMDD(ConstraintTable& constraints,
 		    }
             delete (*it);
 
+
         }
 	return true;
 }
@@ -400,7 +401,7 @@ void MDD<Map>::clear()
 		for (std::list<MDDNode*>::iterator it = levels[i].begin(); it != levels[i].end(); ++it)
         {
 
-                if (*it != NULL) {
+                if (*it != nullptr) {
                     delete (*it);
                 }
 
