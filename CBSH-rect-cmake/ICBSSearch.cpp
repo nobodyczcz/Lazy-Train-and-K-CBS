@@ -1619,7 +1619,6 @@ void MultiMapICBSSearch<Map>::initializeDummyStart() {
 //     if (cons_strategy == constraint_strategy::CBSH_GR )
  	if (cons_strategy == constraint_strategy::CBSH_GR || cons_strategy == constraint_strategy::CBSH_RM)
 		mddTable.resize(num_of_agents);
-    KRectangleCount.resize(kDelay*2+1);
 	if(debug_mode)
 		cout << "Initializing done" << endl;
 
@@ -2451,7 +2450,6 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 						rectangle->p = conflict_priority::NON;
 
 					parent.conflicts.push_back(rectangle);
-					KRectangleCount[total_k]+=1;
 					if (screen >= 4){
                         cout << "add " << *rectangle << endl;
                         cout << "conflicts amount " << parent.conflicts.size()<<endl;
