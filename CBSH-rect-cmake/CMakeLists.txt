@@ -13,6 +13,9 @@ endif()
 set(CMAKE_CXX_FLAGS "-Wall -Wextra")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O1")
+set (CMAKE_CXX_STANDARD 14)
+#SET(BUILD_SHARED_LIBS OFF)
+#SET(CMAKE_EXE_LINKER_FLAGS "-static")
 
 
 include_directories(../mapVisualiser/)
@@ -118,10 +121,11 @@ if (WIN32)
 	  MESSAGE(FATAL_ERROR "Unable to find all boost libs")
 	ENDIF()
 elseif(APPLE)
+	add_definitions('-std=c++14')
 
 	message(STATUS ">>>> Found APPLE <<<<")
-	set(CMAKE_SHARED_LIBRARY_SUFFIX ".so")
-	add_definitions('-DBoost_NO_BOOST_CMAKE=ON')
+#	set(CMAKE_SHARED_LIBRARY_SUFFIX ".dylib")
+#	add_definitions('-DBoost_NO_BOOST_CMAKE=ON')
 	set(boostPython python37)
 	find_package(PythonInterp 3.7 REQUIRED)
 	find_package(PythonLibs 3.7 REQUIRED)
@@ -135,9 +139,9 @@ elseif(APPLE)
 	# This goes after, since it uses PythonInterp as hint
 	include_directories(${PYTHON_INCLUDE_DIRS})
 
-	set(Boost_USE_STATIC_LIBS OFF)
+#	set(Boost_USE_STATIC_LIBS OFF)
 	set(Boost_USE_MULTITHREADED ON)
-	set(Boost_USE_STATIC_RUNTIME OFF)
+#	set(Boost_USE_STATIC_RUNTIME OFF)
 	FIND_PACKAGE(Boost REQUIRED COMPONENTS system program_options ${boostPython})
 
 	# Detect and add SFML
@@ -186,9 +190,9 @@ else()
 	# This goes after, since it uses PythonInterp as hint
 	include_directories(${PYTHON_INCLUDE_DIRS})
 
-	set(Boost_USE_STATIC_LIBS OFF) 
+	set(Boost_USE_STATIC_LIBS OFF)
 	set(Boost_USE_MULTITHREADED ON)  
-	set(Boost_USE_STATIC_RUNTIME OFF) 
+	set(Boost_USE_STATIC_RUNTIME OFF)
 	FIND_PACKAGE(Boost REQUIRED COMPONENTS system program_options ${boostPython})
 
 	# Detect and add SFML

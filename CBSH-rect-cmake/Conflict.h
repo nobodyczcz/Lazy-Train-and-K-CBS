@@ -677,7 +677,7 @@ public:
     int generalKRectangleConflict(int a1, int a2, const std::pair<int, int>& Rs, const std::pair<int, int>& Rg,
                             const std::pair<int, int>& s1, const std::pair<int, int>& s2, int rt1,int rt2,
                             const std::vector<Path*>& paths, int S1_t, int S2_t, const std::pair<int, int>& G1, const std::pair<int, int>& G2,
-                            int num_col, int a1k, int a2k, int RM4way, const MDDLevels* a1kMDD, const MDDLevels* a2kMDD) // For K-RM
+                            int num_col, int a1k, int a2k, int conflict_k, int RM4way, const MDDLevels* a1kMDD, const MDDLevels* a2kMDD) // For K-RM
     {
         this->a1 = a1;
         this->a2 = a2;
@@ -709,7 +709,7 @@ public:
         int a2RgBypass = a2Rg + 2 * (getMahattanDistance(s1_x, s1_y, Rs.first, Rs.second) + 1);
 
 
-        int a1_extended = a2k/2;
+        int a1_extended = (a2k - conflict_k >= 0 ? a2k - conflict_k : 0)/2;
         int a2_extended = a1k/2;
 
         int R1_x, R1_y, R2_x, R2_y, G1_x, G1_y, G2_x, G2_y, G1_t, G2_t,E1_t,E2_t;

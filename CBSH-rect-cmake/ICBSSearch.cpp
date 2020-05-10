@@ -2171,6 +2171,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
                     RMFailBeforeRec+=1;
                     continue;
                 }
+
 				if (option.RM4way == 3) {
 				    if (!isRectangleConflict(s1, s2, g1, g2, num_col, kDelay, abs(t1_start - t2_start), option.RM4way >=4 ? true: false)){
                         parent.conflicts.push_back(con);
@@ -2292,7 +2293,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
                                                                   rt1, rt2, paths, t1_start, t2_start,
                                                                   make_pair(g1 / num_col, g1 % num_col),
                                                                   make_pair(g2 / num_col, g2 % num_col),
-                                                                  num_col, a1k, a2k, option.RM4way,
+                                                                  num_col, a1k, a2k, con->k, option.RM4way,
                                                                   &(a1MDD->levels), &(a2MDD->levels));
                             if(screen >=4){
                                 cout << "result: " << result << endl;
