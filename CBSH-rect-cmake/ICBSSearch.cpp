@@ -2084,27 +2084,27 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
                     s2 = paths[a2]->at(t2_start).location;
                     g2 = paths[a2]->at(t2_end).location;
 				}
-//				else if(option.RM4way==5){
-//                    pair<int, int> t1s_result = get_st(*paths[a1], timestep, num_col, action1, action2,false);
-//                    pair<int, int> t1e_result = get_gt(*paths[a1], timestep, num_col, action1, action2,false);
-//                    pair<int, int> t2s_result = get_st(*paths[a2], timestep2, num_col, action1, action2,false);
-//                    pair<int, int> t2e_result = get_gt(*paths[a2], timestep2, num_col, action1, action2,false);
-//                    t1_start = t1s_result.first;
-//                    t1_end = t1e_result.first;
-//                    t2_start = t2s_result.first;
-//                    t2_end = t2e_result.first;
-//                    if(t1_start==-1 || t2_start==-1 ||t1_end==-1||t2_end==-1){
-//                        parent.conflicts.push_back(con);
-//                        RMTime += std::clock() - RM_Start;
-//                        RMFailBeforeRec+=1;
-//                        continue;
-//                    }
-//                    s1 = paths[a1]->at(t1_start).location;
-//                    g1 = paths[a1]->at(t1_end).location;
-//                    s2 = paths[a2]->at(t2_start).location;
-//                    g2 = paths[a2]->at(t2_end).location;
-//				}
-                else if(option.RM4way>=5){
+				else if(option.RM4way==5){
+                    pair<int, int> t1s_result = get_st(*paths[a1], timestep, num_col, action1, action2,false);
+                    pair<int, int> t1e_result = get_gt(*paths[a1], timestep, num_col, action1, action2,false);
+                    pair<int, int> t2s_result = get_st(*paths[a2], timestep2, num_col, action1, action2,false);
+                    pair<int, int> t2e_result = get_gt(*paths[a2], timestep2, num_col, action1, action2,false);
+                    t1_start = t1s_result.first;
+                    t1_end = t1e_result.first;
+                    t2_start = t2s_result.first;
+                    t2_end = t2e_result.first;
+                    if(t1_start==-1 || t2_start==-1 ||t1_end==-1||t2_end==-1){
+                        parent.conflicts.push_back(con);
+                        RMTime += std::clock() - RM_Start;
+                        RMFailBeforeRec+=1;
+                        continue;
+                    }
+                    s1 = paths[a1]->at(t1_start).location;
+                    g1 = paths[a1]->at(t1_end).location;
+                    s2 = paths[a2]->at(t2_start).location;
+                    g2 = paths[a2]->at(t2_end).location;
+				}
+                else if(option.RM4way==6){
                     const MDD<Map>* a1MDD = buildMDD(parent, a1);
                     const MDD<Map>* a2MDD = buildMDD(parent,a2);
                     MDDNode* t1s_result = get_st_mdd(a1MDD->levels, timestep,paths.at(a1)->at(timestep).location, num_col, action1, action2);
