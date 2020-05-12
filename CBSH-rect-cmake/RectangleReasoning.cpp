@@ -372,6 +372,83 @@ MDDNode* get_gt_mdd(const MDDLevels& mdd, int timestep,int loc, int num_col, int
     return furthest_node;
 };
 
+std::pair<MDDNode*,MDDNode*> get_sg_mdd(const MDDLevels& mdd, int timestep,int loc, int num_col, int action1, int action2) {
+    MDDNode* start;
+    for (auto node : mdd[timestep]){
+        if (node->location == loc)
+            start = node;
+    }
+
+    list<MDDNode*> st_queue;
+    list<MDDNode*> gt_queue;
+
+    boost::unordered_set<MDDNode*> explored;
+    st_queue.push_back(start);
+    gt_queue.push_back(start);
+    explored.insert(start);
+
+    list<MDDNode*> candidate_st;
+    list<MDDNode*> candidate_gt;
+
+    while (!st_queue.empty() or !gt_queue.empty()){
+        if (!st_queue.empty()){
+            MDDNode* current = st_queue.front();
+            st_queue.pop_front();
+
+            bool no_valid = true;
+            for (auto node : current->parents){
+                int action = getAction(current->location, node->location, num_col);
+                if (action == action1 || action == action2){
+                    no_valid = false;
+                    if (explored.count(node) == 0) {
+                        st_queue.push_back(node);
+                        explored.insert(node);
+                    }
+                }
+
+            }
+            if (no_valid)
+                candidate_st.push_back(current);
+        }
+
+        if(!gt_queue.empty()){
+            MDDNode* current = gt_queue.front();
+            gt_queue.pop_front();
+
+            bool no_valid = true;
+            for (auto node : current->children){
+                int action = getAction( node->location,current->location, num_col);
+                if (action == action1 || action == action2){
+                    no_valid = false;
+                    if (explored.count(node) == 0) {
+                        gt_queue.push_back(node);
+                        explored.insert(node);
+                    }
+                }
+
+            }
+            if (no_valid)
+                candidate_gt.push_back(current);
+        }
+    }
+
+    int area = -1;
+    MDDNode* best_st;
+    MDDNode* best_gt;
+    for (MDDNode* st:candidate_st){
+        for(MDDNode* gt:candidate_gt){
+            int new_area = getArea(st->row,st->col,gt->row,gt->col);
+            if (new_area > area){
+                area = new_area;
+                best_st = st;
+                best_gt = gt;
+            }
+        }
+    }
+
+    return std::make_pair(best_st,best_gt);
+}
+
 
 int get_earlyCrosst(const std::vector<PathEntry>& path1, const std::vector<PathEntry>& path2, int timestep, int earlyBound, int delta) {
 	for (int t = timestep-1; t > earlyBound; t--) {

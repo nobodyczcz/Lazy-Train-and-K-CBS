@@ -96,5 +96,6 @@ struct three_tuple_hash {
 int getLocation(const std::vector<PathEntry>& path, int timestep);
 
 int getMahattanDistance(int loc1_x, int loc1_y, int loc2_x, int loc2_y);
+int getArea(int loc1_x, int loc1_y, int loc2_x, int loc2_y);
 
 int getAction(int loc, int pre_loc, int num_col);

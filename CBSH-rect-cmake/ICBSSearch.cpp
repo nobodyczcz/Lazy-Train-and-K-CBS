@@ -2112,18 +2112,16 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
                 else if(option.RM4way==6){
                     const MDD<Map>* a1MDD = buildMDD(parent, a1);
                     const MDD<Map>* a2MDD = buildMDD(parent,a2);
-                    MDDNode* t1s_result = get_st_mdd(a1MDD->levels, timestep,paths.at(a1)->at(timestep).location, num_col, action1, action2);
-                    MDDNode* t1e_result = get_gt_mdd(a1MDD->levels, timestep,paths.at(a1)->at(timestep).location, num_col, action1, action2);
-                    MDDNode* t2s_result = get_st_mdd(a2MDD->levels, timestep2,paths.at(a2)->at(timestep2).location, num_col, action1, action2);
-                    MDDNode* t2e_result = get_gt_mdd(a2MDD->levels, timestep2,paths.at(a2)->at(timestep2).location, num_col, action1, action2);
-                    t1_start = t1s_result->level;
-                    t1_end = t1e_result->level;
-                    t2_start = t2s_result->level;
-                    t2_end = t2e_result->level;
-                    s1 = t1s_result->location;
-                    g1 = t1e_result->location;
-                    s2 = t2s_result->location;
-                    g2 = t2e_result->location;
+                    std::pair<MDDNode*,MDDNode*> t1_result = get_sg_mdd(a1MDD->levels, timestep,paths.at(a1)->at(timestep).location, num_col, action1, action2);
+                    std::pair<MDDNode*,MDDNode*> t2_result = get_sg_mdd(a2MDD->levels, timestep2,paths.at(a2)->at(timestep2).location, num_col, action1, action2);
+                    t1_start = t1_result.first->level;
+                    t1_end = t1_result.second->level;
+                    t2_start = t2_result.first->level;
+                    t2_end = t2_result.second->level;
+                    s1 = t1_result.first->location;
+                    g1 = t1_result.second->location;
+                    s2 = t2_result.first->location;
+                    g2 = t2_result.second->location;
 
                 }
 
@@ -2138,19 +2136,23 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 				a1_Rs_t = getMahattanDistance(s1 / num_col, s1%num_col, Rs.first, Rs.second) + t1_start;
 				a1_Rg_t = getMahattanDistance(s1 / num_col, s1%num_col, Rg.first, Rg.second) + t1_start;
 
-				int earlyCrosst, lateCrosst;
-				earlyCrosst = get_earlyCrosst(*paths[a1], *paths[a2], timestep, a1_Rs_t, con->k);
-				lateCrosst = get_lateCrosst(*paths[a1], *paths[a2], timestep, a1_Rg_t, con->k);
+				int earlyCrosst = -1;
+				int lateCrosst = -1;
 
-				if (earlyCrosst != -1) {
-					Rs = std::make_pair(paths[a1]->at(earlyCrosst).location / num_col, paths[a1]->at(earlyCrosst).location % num_col);
-					a1_Rs_t = getMahattanDistance(s1 / num_col, s1%num_col, Rs.first, Rs.second) + t1_start;
-				}
-				
-				if (lateCrosst != -1) {
-					Rg = std::make_pair(paths[a1]->at(lateCrosst).location / num_col, paths[a1]->at(lateCrosst).location % num_col);
-					a1_Rg_t = getMahattanDistance(s1 / num_col, s1%num_col, Rg.first, Rg.second) + t1_start;
-				}
+                if (!isRectangleConflict(s1, s2, g1, g2, num_col, kDelay, abs(t1_start - t2_start), option.RM4way >=4 ? true: false)){
+                    earlyCrosst = get_earlyCrosst(*paths[a1], *paths[a2], timestep, a1_Rs_t, con->k);
+                    lateCrosst = get_lateCrosst(*paths[a1], *paths[a2], timestep, a1_Rg_t, con->k);
+                    if (earlyCrosst != -1) {
+                        Rs = std::make_pair(paths[a1]->at(earlyCrosst).location / num_col, paths[a1]->at(earlyCrosst).location % num_col);
+                        a1_Rs_t = getMahattanDistance(s1 / num_col, s1%num_col, Rs.first, Rs.second) + t1_start;
+                    }
+
+                    if (lateCrosst != -1) {
+                        Rg = std::make_pair(paths[a1]->at(lateCrosst).location / num_col, paths[a1]->at(lateCrosst).location % num_col);
+                        a1_Rg_t = getMahattanDistance(s1 / num_col, s1%num_col, Rg.first, Rg.second) + t1_start;
+                    }
+                }
+
 				
 				new_area = (abs(Rs.first - Rg.first)+1) * (abs(Rs.second - Rg.second)+1);
 
@@ -2437,6 +2439,18 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
                     cout <<"Check constraint and current path"<<endl;
                     cout << "Constraint 1 size: " << rectangle->multiConstraint1.size()<<endl;
                     cout << "Constraint 2 size: " << rectangle->multiConstraint2.size()<<endl;
+                    cout << "a1: " <<endl;
+                    for (auto i : rectangle->multiConstraint1.front()){
+                        cout << "<(" << std::get<0>(i)/num_col <<","<<std::get<0>(i)%num_col << ")," << std::get<1>(i) << "," <<
+                             std::get<2>(i) << "," << std::get<3>(i) << ">";
+                    }
+                    cout <<endl;
+                    cout << "a2: " <<endl;
+                    for (auto i : rectangle->multiConstraint2.front()){
+                        cout << "<(" << std::get<0>(i)/num_col <<","<<std::get<0>(i)%num_col << ")," << std::get<1>(i) << "," <<
+                             std::get<2>(i) << "," << std::get<3>(i) << ">";
+                    }
+                    cout<<endl;
                 }
 				for (auto constraint : rectangle->multiConstraint1) {
 					isBlocked = isBlocked && blocked(*paths[rectangle->a1], constraint);
@@ -2470,6 +2484,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
                         cout << "not rectangle" << endl;
                         if (!isBlocked)
 						    cout << "not blocked" << endl;
+
 					}
                     parent.conflicts.push_back(con);
                     RMTime += std::clock() - RM_Start;
