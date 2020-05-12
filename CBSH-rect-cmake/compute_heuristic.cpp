@@ -58,6 +58,7 @@ void ComputeHeuristic<Map>::getHVals(vector<hvals>& res,int limit)
 	dense_hash_map<LLNode*, fibonacci_heap<LLNode*, boost::heap::compare<LLNode::compare_node> >::handle_type, LLNode::NodeHasher, LLNode::eqnode> nodes;
 	nodes.set_empty_key(NULL);
 	dense_hash_map<LLNode*, fibonacci_heap<LLNode*, boost::heap::compare<LLNode::compare_node> >::handle_type, LLNode::NodeHasher, LLNode::eqnode>::iterator it; // will be used for find()
+//	cout <<"start heading "<<start_heading<<endl;
 	int findNode = 0;
 	int newNode = 0;
 	if (start_heading == -1) {
@@ -80,7 +81,7 @@ void ComputeHeuristic<Map>::getHVals(vector<hvals>& res,int limit)
 		heap.pop();
 
 		vector<pair<int,int>> transitions = ml->get_transitions(curr->loc,curr->heading,true);
-		for (const pair<int, int> move:transitions)
+		for (const pair<int, int>& move:transitions)
 		{
 			int next_loc = move.first;
 			int next_g_val = curr->g_val + 1;
@@ -120,6 +121,7 @@ void ComputeHeuristic<Map>::getHVals(vector<hvals>& res,int limit)
 			}
 		}
 	}
+//	cout<<"new nodes: " << newNode <<" find nodes: "<<findNode<<endl;
 	// iterate over all nodes and populate the distances
 	for (it = nodes.begin(); it != nodes.end(); it++) 
 	{
@@ -173,7 +175,8 @@ void ComputeHeuristic<Map>::getHVals(vector<hvals>& res,int limit)
 
 		delete (s);
 	}
-	nodes.clear();
+
+    nodes.clear();
 	heap.clear();
 
 }

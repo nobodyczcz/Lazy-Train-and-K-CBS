@@ -14,26 +14,27 @@ MapLoader::MapLoader(){}
 
 
 vector<pair<int, int>> MapLoader::get_transitions(int loc, int heading, int noWait) const {
-	vector<pair<int, int>> transitions;
-	int moveRange = 5;
+    vector<pair<int, int>> transitions;
+    int moveRange = 5;
 
-	for (int direction = 0; direction < moveRange; direction++)
-	{
-		pair<int, int> move;
-		int next_loc = loc + moves_offset[direction];
-		move.first = next_loc;
-		move.second = -1; //-1 means no heading
-		if (validMove(loc, next_loc) && !my_map[next_loc])
-		{
-			transitions.push_back(move);
-			
-		}
+    for (int direction = 0; direction < moveRange; direction++)
+    {
+        pair<int, int> move;
+        int next_loc = loc + moves_offset[direction];
+        move.first = next_loc;
+        move.second = -1; //-1 means no heading
+        if (validMove(loc, next_loc) && !my_map[next_loc])
+        {
+            transitions.push_back(move);
 
-	}
-		
-	return transitions;
-	
+        }
+
+    }
+
+    return transitions;
+
 }
+
 bool MapLoader::getLoc(int loc)  {
 	return my_map[loc];
 }
