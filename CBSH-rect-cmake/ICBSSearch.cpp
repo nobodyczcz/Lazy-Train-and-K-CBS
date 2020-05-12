@@ -1521,19 +1521,24 @@ MultiMapICBSSearch<Map>::MultiMapICBSSearch(Map* ml, AgentsLoader& al, double f_
 			cout << "initializing agent "<< i << endl;
 		int init_loc = ml->linearize_coordinate((al.initial_locations[i]).first, (al.initial_locations[i]).second);
 		int goal_loc = ml->linearize_coordinate((al.goal_locations[i]).first, (al.goal_locations[i]).second);
-		ComputeHeuristic<Map> ch(init_loc, goal_loc, ml, al.headings[i]);
-		search_engines[i] = new SingleAgentICBS<Map>(init_loc, goal_loc, ml,i, al.headings[i],kDelay);
-		ch.getHVals(search_engines[i]->my_heuristic);
-		/*if (debug_mode) {
-			std::cout << "Heuristic table for " << i << ": ";
-			for (int h = 0; h < search_engines[i]->my_heuristic.size(); h++) {
-				for (int heading = 0; heading < 5; heading++)
-					if (search_engines[i]->my_heuristic[h].heading[heading]<INT_MAX)
-					std::cout << "(" << h << ": "<<heading<<": " << search_engines[i]->my_heuristic[h].heading[heading] << ")";
-			}
-			std::cout << std::endl;
 
-		}*/
+        ComputeHeuristic<Map> ch(init_loc, goal_loc, ml, al.headings[i]);
+
+        search_engines[i] = new SingleAgentICBS<Map>(init_loc, goal_loc, ml,i, al.headings[i],kDelay);
+
+        ch.getHVals(search_engines[i]->my_heuristic);
+
+
+//		if (debug_mode) {
+//			std::cout << "Heuristic table for " << i << ": ";
+//			for (int h = 0; h < search_engines[i]->my_heuristic.size(); h++) {
+//				for (int heading = 0; heading < 5; heading++)
+//					if (search_engines[i]->my_heuristic[h].heading[heading]<INT_MAX)
+//					std::cout << "(" << h << ": "<<heading<<": " << search_engines[i]->my_heuristic[h].heading[heading] << ")";
+//			}
+//			std::cout << std::endl;
+//
+//		}
 
 	}
 

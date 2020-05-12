@@ -58,7 +58,8 @@ void ComputeHeuristic<Map>::getHVals(vector<hvals>& res,int limit)
 	dense_hash_map<LLNode*, fibonacci_heap<LLNode*, boost::heap::compare<LLNode::compare_node> >::handle_type, LLNode::NodeHasher, LLNode::eqnode> nodes;
 	nodes.set_empty_key(NULL);
 	dense_hash_map<LLNode*, fibonacci_heap<LLNode*, boost::heap::compare<LLNode::compare_node> >::handle_type, LLNode::NodeHasher, LLNode::eqnode>::iterator it; // will be used for find()
-
+	int findNode = 0;
+	int newNode = 0;
 	if (start_heading == -1) {
 		LLNode* root = new LLNode(root_location, 0, 0, NULL, 0);
 		root->heading = start_heading;
@@ -95,7 +96,6 @@ void ComputeHeuristic<Map>::getHVals(vector<hvals>& res,int limit)
 
 			curr->possible_next_heading.push_back(next->heading);
 
-
 			it = nodes.find(next);
 			if (it == nodes.end())
 			{  // add the newly generated node to heap and hash table
@@ -103,10 +103,12 @@ void ComputeHeuristic<Map>::getHVals(vector<hvals>& res,int limit)
 					delete(next);
 					continue;
 				}
+				newNode+=1;
 				next->open_handle = heap.push(next);
 				nodes[next] = next->open_handle;
 			}
 			else {  // update existing node's g_val if needed (only in the heap)
+			    findNode +=1;
 				delete(next);  // not needed anymore -- we already generated it before
 				LLNode* existing_next = (*it).first;
 				open_handle = (*it).second;
