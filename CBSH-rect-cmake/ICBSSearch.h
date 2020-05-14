@@ -1,4 +1,7 @@
 #pragma once
+//#ifndef CBS_K_ICBSSEARCH_H
+//#define CBS_K_ICBSSEARCH_H
+//#endif
 
 #include "ICBSNode.h"
 #include "SingleAgentICBS.h"
@@ -19,6 +22,7 @@ struct options {
 	bool shortBarrier;
 	bool flippedRec;
 	int RM4way;
+	bool pairAnalysis = false;
 };
 
 
@@ -109,6 +113,7 @@ protected:
 
 	constraint_strategy cons_strategy;
 	int time_limit;
+	int node_limit = 0;
 	double focal_w = 1.0;
 	int screen;
 
@@ -162,12 +167,15 @@ protected:
 	
 	void printStrategy() const;
 	bool timeout=false;
+
+
 };
 
 template<class Map>
 class MultiMapICBSSearch :public ICBSSearch
 {
 public:
+    MultiMapICBSSearch(){};
 	MultiMapICBSSearch(Map * ml, AgentsLoader & al, double f_w, constraint_strategy c, int time_limit, int screen,int kDlay, options options1);	
 	// build MDD
 	MDD<Map>* buildMDD(ICBSNode& node, int id, int k=0);
@@ -179,7 +187,9 @@ public:
 	bool findPathForSingleAgent(ICBSNode*  node, int ag, double lowerbound = 0);
 	// Runs the algorithm until the problem is solved or time is exhausted 
 	bool runICBSSearch();
-	~MultiMapICBSSearch();
+    bool search();
+
+    ~MultiMapICBSSearch();
 	boost::python::list outputPaths()
 	{
 		boost::python::list result;
@@ -200,15 +210,33 @@ public:
 
 	bool trainCorridor1 = false;
 	bool trainCorridor2 = false;
+    vector<SingleAgentICBS<Map> *> search_engines;  // used to find (single) agents' paths and mdd
+
+    MultiMapICBSSearch<Map>* analysisEngine = NULL;
+    void startPairAnalysis(ICBSNode* node,int agent1, int agent2);
+    virtual void clear(){};
+    virtual bool pairedAnalysis(ICBSNode* node,int agent1, int agent2){};
+    void countNodes(int amount);
+
+    int less10 = 0;
+    int less100 = 0;
+    int less1000 = 0;
+    int less10000 = 0;
+    int less100000 = 0;
+    int larger100000 = 0;
+    int num_pairs = 0;
+    int num_failed = 0;
+    int repeated_pairs = 0;
+
+
 
 protected:
 	std::vector<std::unordered_map<ConstraintsHasher, MDD<Map>*>> mddTable;
-	options option;
-	vector<SingleAgentICBS<Map> *> search_engines;  // used to find (single) agents' paths and mdd
+    std::vector<std::unordered_map<ConstraintsHasher, std::unordered_set<ConstraintsHasher>>> pairAnalysisTable;
+
+    options option;
 	Map* ml;
-
-
-
 };
+
 
 

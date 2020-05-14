@@ -1,7 +1,9 @@
+
 #include "ICBSSearch.h"
 #include "CorridorReasoning.h"
 #include <ctime>
 #include <iostream>
+
 
 
 // takes the paths_found_initially and UPDATE all (constrained) paths found for agents from curr to start
@@ -896,12 +898,6 @@ bool ICBSSearch::generateChild(ICBSNode*  node, ICBSNode* curr)
 		if (!findPathForSingleAgent(node, node->agent_id, lowerbound))
 			return false;
 	}
-
-
-
-
-	
-
 	
 	runtime_lowlevel += (std::clock() - t1) * 1000.0 / CLOCKS_PER_SEC;
 	
@@ -935,7 +931,6 @@ bool ICBSSearch::generateChild(ICBSNode*  node, ICBSNode* curr)
 	if (node->f_val <= focal_list_threshold)
 		node->focal_handle = focal_list.push(node);
 	allNodes_table.push_back(node);
-
 
 	return true;
 }
@@ -1065,383 +1060,453 @@ void ICBSSearch::printStrategy() const
 	}
 
 }
+
+template<class Map>
+bool MultiMapICBSSearch<Map>::search(){
+    std::clock_t t1;
+    printStrategy();
+    // set timer
+
+    runtime_computeh = 0;
+    runtime_lowlevel = 0;
+    runtime_listoperation = 0;
+    runtime_conflictdetection = 0;
+    runtime_updatepaths = 0;
+    runtime_updatecons = 0;
+    // start is already in the open_list
+
+    if (debug_mode)
+        cout << "Start searching:" << endl;
+    if (screen >= 3)
+        al.printAgentsInitGoal();
+    while (!focal_list.empty() && !solution_found)
+    {
+        runtime = (std::clock() - start);
+        if (runtime > time_limit || (node_limit!=0 && HL_num_expanded >node_limit))
+        {  // timeout
+            cout << "TIMEOUT  ; " << solution_cost << " ; " << min_f_val - dummy_start->g_val << " ; " <<
+                 HL_num_expanded << " ; " << HL_num_generated << " ; " <<
+                 LL_num_expanded << " ; " << LL_num_generated << " ; " << runtime / CLOCKS_PER_SEC << " ; "
+                 << RMTime/CLOCKS_PER_SEC<<";"<<
+                 num_standard << ";" << num_rectangle << "," <<
+                 num_corridor2 << ";" << num_corridor4 << "," << num_target << "," << num_0FlipRectangle << "," <<
+                 num_1FlipRectangle << "," << num_2FlipRectangle <<","<<num_chasingRectangle<< endl;
+            if(debug_mode)
+                printHLTree();
+            if (screen >= 1)
+                printPaths();
+            timeout = true;
+            break;
+        }
+
+
+
+        t1 = std::clock();
+        ICBSNode* curr = focal_list.top();
+        focal_list.pop();
+        open_list.erase(curr->open_handle);
+        runtime_listoperation += std::clock() - t1;
+        // takes the paths_found_initially and UPDATE all constrained paths found for agents from curr to dummy_start (and lower-bounds)
+        t1 = std::clock();
+        updatePaths(curr);
+        runtime_updatepaths += std::clock() - t1;
+
+        if (screen > 2) {
+            cout << "#############" << endl;
+            cout << "Choose node with cost " << curr->g_val
+                 << " , h " << curr->h_val
+                 << " , f " << curr->f_val
+                 << endl;
+        }
+
+        if (cons_strategy == constraint_strategy::CBS)
+        {
+            t1 = std::clock();
+            curr->conflict = chooseConflict(*curr);
+            runtime_conflictdetection += std::clock() - t1;
+        }
+        else if (cons_strategy == constraint_strategy::ICBS) // No heuristics
+        {
+            t1 = std::clock();
+            classifyConflicts(*curr);
+            curr->conflict = chooseConflict(*curr);
+            runtime_conflictdetection += std::clock() - t1;
+        }
+        else if(curr->conflict == NULL) //CBSH based, and h value has not been computed yet
+        {
+            t1 = std::clock();
+            classifyConflicts(*curr);
+            curr->conflict = chooseConflict(*curr);
+            runtime_conflictdetection += std::clock() - t1;
+
+            t1 = std::clock();
+            curr->h_val = computeHeuristics(*curr);
+            runtime_computeh += std::clock() - t1;
+            curr->f_val = curr->g_val + curr->h_val;
+
+            if (curr->f_val > focal_list_threshold)
+            {
+                t1 = std::clock();
+                curr->open_handle = open_list.push(curr);
+                ICBSNode* open_head = open_list.top();
+                if ( open_head->f_val > min_f_val)
+                {
+                    min_f_val = open_head->f_val;
+                    double new_focal_list_threshold = min_f_val * focal_w;
+                    updateFocalList(focal_list_threshold, new_focal_list_threshold, focal_w);
+                    focal_list_threshold = new_focal_list_threshold;
+                    if (screen > 3) {
+                        cout << "new focal threadhold: " << focal_list_threshold << endl;
+                    }
+                }
+                runtime_listoperation += std::clock() - t1;
+                continue;
+            }
+        }
+
+        if (curr->conflict == NULL) //Fail to find a conflict => no conflicts
+        {  // found a solution (and finish the while look)
+            runtime = (std::clock() - start);
+            solution_found = true;
+            solution_cost = curr->g_val;
+            if (debug_mode)
+                printHLTree();
+            if (screen >= 1)
+                printPaths();
+            cout << solution_cost << " ; " << solution_cost - dummy_start->g_val << " ; " <<
+                 HL_num_expanded << " ; " << HL_num_generated << " ; " <<
+                 LL_num_expanded << " ; " << LL_num_generated << " ; " << runtime / CLOCKS_PER_SEC << " ; "
+                 << RMTime / CLOCKS_PER_SEC << ";"<<
+                 num_standard << ";" << num_rectangle << "," <<
+                 num_corridor2 << ";" << num_corridor4 << "," << num_target << "," << num_0FlipRectangle << "," <<
+                 num_1FlipRectangle << "," << num_2FlipRectangle << "," << num_chasingRectangle << endl;
+
+            break;
+        }
+
+        if (debug_mode) {
+            cout << "****************" << endl;
+            cout << "choose conflict: " << "<" << curr->conflict->a1 << " "
+                 << curr->conflict->a2 << ",("
+                 << curr->conflict->originalConf1 / num_col << ","
+                 << curr->conflict->originalConf1 % num_col << ")" << ",("
+                 << curr->conflict->originalConf2 / num_col << ","
+                 << curr->conflict->originalConf2 % num_col << ")"
+                 << curr->conflict->t << "," << curr->conflict->k << "," << curr->conflict->type << ">" << std::endl;
+            cout << "always 4 way split " << option.RM4way << endl;
+            if (screen>=3)
+                printPaths();
+
+        }
+
+        if (screen == 1 || screen==6 ) {
+            if(debug_mode)
+                cout << "check conflict repeatance" << endl;
+            stringstream con;
+            //con << *(curr->conflict);
+            if (curr->conflict->k == 0) {
+                con << min(curr->conflict->a1, curr->conflict->a2) << ",";
+                con << max(curr->conflict->a1, curr->conflict->a2);
+            }
+            else {
+                con << curr->conflict->a1 << ",";
+                con << curr->conflict->a2;
+            }
+            con << ",("
+                << curr->conflict->originalConf1 / num_col << ","
+                << curr->conflict->originalConf1 % num_col << ")" << ",("
+                << curr->conflict->originalConf2 / num_col << ","
+                << curr->conflict->originalConf2 % num_col << "),"
+                << curr->conflict->t<<"," << curr->conflict->k<<","<<curr->conflict->type ;
+
+
+            curr->resolvedConflicts.insert(con.str());
+
+            bool stop = false;
+            bool noRepeat = true;
+            ICBSNode* parent = curr->parent;
+            if (parent != NULL) {
+                if (debug_mode)
+                    cout << "Try find " << con.str() << " in curr's parent nodes" << endl;
+                while (!stop) {
+                    if (debug_mode)
+                        cout << "1";
+                    if (parent->parent == NULL) {
+                        stop = true;
+                        break;
+                    }
+                    std::unordered_set<std::string>::const_iterator it = parent->resolvedConflicts.find(con.str());
+                    if (it != parent->resolvedConflicts.end()) {
+                        noRepeat = false;
+                        printHLTree();
+                    }
+                    if (!noRepeat) {
+                        cout << "Repeatance detected!!!" << endl;
+                        exit(1);
+                    }
+                    parent = parent->parent;
+
+                }
+            }
+            else {
+                if (debug_mode)
+                    cout << "no parent" << endl;
+
+            }
+            if (noRepeat) {
+                if (debug_mode)
+                    cout << "no repeatance" << endl;
+            }
+            else {
+                if (debug_mode)
+                    cout << "repeatance detected" << endl;
+            }
+
+        }
+
+        //Expand the node
+        HL_num_expanded++;
+        curr->time_expanded = HL_num_expanded;
+        if (curr->conflict->type == conflict_type::RECTANGLE) {
+
+            numOfRectangle += 1;
+        }
+
+        if (screen >= 2)
+        {
+            std::cout << "Node " << curr->time_generated << " with f=" << curr->g_val << "+" << curr->h_val
+                      << " has " << std::endl;
+            for (auto conflict : curr->conflicts)
+                std::cout << *conflict;
+            std::cout << "We choose " << *curr->conflict;
+        }
+
+        vector<ICBSNode*> children;
+
+        if (curr->conflict->type == conflict_type::CORRIDOR4) // 4-way branching
+        {
+            children.resize(4);
+            children[0] = new ICBSNode(curr->conflict->a1);
+            children[0]->constraints.push_back(curr->conflict->constraint1.front());
+            children[1] = new ICBSNode(curr->conflict->a1);
+            children[1]->constraints.push_back(curr->conflict->constraint1.back());
+            children[2] = new ICBSNode(curr->conflict->a2);
+            children[2]->constraints.push_back(curr->conflict->constraint2.front());
+            children[3] = new ICBSNode(curr->conflict->a2);
+            children[3]->constraints.push_back(curr->conflict->constraint2.back());
+            num_corridor4++;
+        }
+            //else if (curr->conflict->type == conflict_type::STANDARD && curr->conflict->t == 0 && !option.ignore_t0) {
+
+            //	children.resize(1);
+            //	children[0] = new ICBSNode(curr->conflict->a2);
+            //	children[0]->constraints = curr->conflict->constraint2;
+            //	num_standard++;
+            //}
+        else if (curr->conflict->type == conflict_type::RECTANGLE4) // 4-way branching
+        {
+            children.resize(curr->conflict->multiConstraint1.size()+ curr->conflict->multiConstraint2.size());
+            int constraint1Size = curr->conflict->multiConstraint1.size();
+            int constraint2Size = curr->conflict->multiConstraint2.size();
+
+
+            if (screen >= 2) {
+                cout << "Generate " << children.size() << " child nodes" << endl;
+                cout << constraint1Size << " nodes"<< " for a1" << endl;
+                cout << constraint2Size << " nodes"<< " for a2" << endl;
+            }
+
+            for (int i = 0; i < constraint1Size; i++) {
+                children[i]= new ICBSNode(curr->conflict->a1);
+                children[i]->constraints = curr->conflict->multiConstraint1[i];
+            }
+
+            for (int i = 0; i < constraint2Size; i++) {
+                children[i+ constraint1Size] = new ICBSNode(curr->conflict->a2);
+                children[i+ constraint1Size]->constraints = curr->conflict->multiConstraint2[i];
+            }
+
+            num_rectangle++;
+            if (curr->conflict->isChasing) {
+                num_chasingRectangle++;
+            }
+
+        }
+        else // 2-way branching
+        {
+
+            children.resize(2);
+            children[0] = new ICBSNode(curr->conflict->a1);
+            children[0]->constraints = curr->conflict->constraint1;
+            children[1] = new ICBSNode(curr->conflict->a2);
+            children[1]->constraints = curr->conflict->constraint2;
+            if (curr->conflict->type == conflict_type::CORRIDOR2)
+                num_corridor2++;
+            else if (curr->conflict->type == conflict_type::STANDARD)
+                num_standard++;
+            else if (curr->conflict->type == conflict_type::RECTANGLE) {
+                if (curr->conflict->flipType == 1) {
+                    num_1FlipRectangle++;
+                }
+                else if (curr->conflict->flipType == 2) {
+                    num_2FlipRectangle++;
+                }
+                else {
+                    num_0FlipRectangle++;
+                }
+                num_rectangle++;
+            }
+            else if (curr->conflict->type == conflict_type::TARGET)
+                num_target++;
+        }
+
+
+        vector<vector<PathEntry>*> copy(paths);
+        for (int i = 0; i < children.size(); i++)
+        {
+            if (generateChild(children[i], curr))
+            {
+                curr->children.push_back(children[i]);
+                if (screen >= 2)
+                    std::cout << "Generate child "<<i<<" #" << children[i]->time_generated
+                              << " with cost " << children[i]->g_val
+                              << " and h "<< children[i]->h_val
+                              << " and " << children[i]->num_of_collisions << " conflicts " << std::endl;
+
+            }
+            else
+            {
+                if (screen >= 2)
+                    std::cout << "Delete child "<< i <<" #" << children[i]->time_generated
+                              << " with cost " << children[i]->g_val
+                              << " and " << children[i]->num_of_collisions << " conflicts " << std::endl;
+                delete children[i];
+            }
+            if (i < children.size() - 1)
+                paths = copy;
+        }
+        if (debug_mode) {
+            for (int i = 0; i < curr->children.size(); i++)
+            {
+
+                cout <<"Child "<<i<< " conflicts:"<< curr->children[i]->unknownConf.size();
+
+                cout << endl;
+            }
+        }
+        if (option.pairAnalysis){
+            for(int i = 0; i < curr->children.size(); i++){
+                for(int a=0; a < num_of_agents;a++){
+                    if (a!=curr->children[i]->agent_id){
+                        startPairAnalysis(curr->children[i], curr->children[i]->agent_id, a);
+                    }
+                }
+            }
+        }
+
+
+        curr->clear();
+        t1 = std::clock();
+        if (open_list.size() == 0) {
+            solution_found = false;
+            break;
+        }
+        ICBSNode* open_head = open_list.top();
+        if ( open_head->f_val > min_f_val)
+        {
+            min_f_val = open_head->f_val;
+            double new_focal_list_threshold = min_f_val * focal_w;
+            updateFocalList(focal_list_threshold, new_focal_list_threshold, focal_w);
+            focal_list_threshold = new_focal_list_threshold;
+            if (screen > 3) {
+                cout << "new focal threadhold: " << focal_list_threshold << endl;
+            }
+        }
+        runtime_listoperation += std::clock() - t1;
+
+    }  // end of while loop
+
+
+    if (focal_list.empty() && solution_cost < 0)
+    {
+        solution_cost = -2;
+        cout << "No solutions  ; " << solution_cost << " ; " << min_f_val - dummy_start->g_val << " ; " <<
+             HL_num_expanded << " ; " << HL_num_generated << " ; " <<
+             LL_num_expanded << " ; " << LL_num_generated << " ; " << runtime / CLOCKS_PER_SEC << " ; "
+             << RMTime / CLOCKS_PER_SEC << ";" <<
+             num_standard << ";" << num_rectangle << ";" <<
+             num_corridor2 << ";" << num_corridor4 << ";" << num_target << "," << num_0FlipRectangle << "," <<
+             num_1FlipRectangle << "," << num_2FlipRectangle << "," << num_chasingRectangle <<
+             "|Open|=" << open_list.size() << endl;
+        timeout = true;
+        solution_found = false;
+        if (debug_mode)
+            printHLTree();
+    }
+    return solution_found;
+
+}
+
+
 template<class Map>
 bool MultiMapICBSSearch<Map>::runICBSSearch() 
 {
-	start = std::clock();
-	std::clock_t t1;
-	printStrategy();
-	initializeDummyStart();
-	// set timer
-	
-	runtime_computeh = 0;
-	runtime_lowlevel = 0;
-	runtime_listoperation = 0;
-	runtime_conflictdetection = 0;
-	runtime_updatepaths = 0;
-	runtime_updatecons = 0;
-	// start is already in the open_list
+    start = std::clock();
+    initializeDummyStart();
+    if (option.pairAnalysis){
+        for (int i = 0 ; i < num_of_agents; i++){
+            for (int j = i +1 ; j<num_of_agents;j++){
+                startPairAnalysis(dummy_start, i, j);
+            }
+        }
+    }
+    return search();
+}
 
-	if (debug_mode)
-		cout << "Start searching:" << endl;
-	if (screen >= 3)
-		al.printAgentsInitGoal();
-	while (!focal_list.empty() && !solution_found) 
-	{
-		runtime = (std::clock() - start);
-		if (runtime > time_limit)
-		{  // timeout
-			cout << "TIMEOUT  ; " << solution_cost << " ; " << min_f_val - dummy_start->g_val << " ; " <<
-				HL_num_expanded << " ; " << HL_num_generated << " ; " <<
-				LL_num_expanded << " ; " << LL_num_generated << " ; " << runtime / CLOCKS_PER_SEC << " ; "
-				<< RMTime/CLOCKS_PER_SEC<<";"<<
-				num_standard << ";" << num_rectangle << "," <<
-				num_corridor2 << ";" << num_corridor4 << "," << num_target << "," << num_0FlipRectangle << "," <<
-				num_1FlipRectangle << "," << num_2FlipRectangle <<","<<num_chasingRectangle<< endl;
-			if(debug_mode)
-			printHLTree();
-			if (screen >= 1)
-				printPaths();
-			timeout = true;
-			break;
-		}
+template<class Map>
+void MultiMapICBSSearch<Map>::startPairAnalysis(ICBSNode* node,int agent1, int agent2)
+{
+    ConstraintsHasher c1(agent1,node,0);
+    ConstraintsHasher c2(agent2,node,0);
 
-		
+    if (pairAnalysisTable[c1.a].count(c1) != 0 && pairAnalysisTable[c1.a][c1].count(c2) != 0) {
+        repeated_pairs += 1;
+        return;
+    }
 
-		t1 = std::clock();
-		ICBSNode* curr = focal_list.top();
-		focal_list.pop();
-		open_list.erase(curr->open_handle);
-		runtime_listoperation += std::clock() - t1;
-		// takes the paths_found_initially and UPDATE all constrained paths found for agents from curr to dummy_start (and lower-bounds)
-		t1 = std::clock();
-		updatePaths(curr);
-		runtime_updatepaths += std::clock() - t1;
+    if (pairAnalysisTable[c1.a].count(c1) == 0){
+        pairAnalysisTable[c1.a][c1] = std::unordered_set<ConstraintsHasher>();
+    }
+    if (pairAnalysisTable[c2.a].count(c2) == 0){
+        pairAnalysisTable[c2.a][c2] = std::unordered_set<ConstraintsHasher>();
+    }
+    pairAnalysisTable[c1.a][c1].insert(c2);
+    pairAnalysisTable[c2.a][c2].insert(c1);
 
-		if (screen > 2) {
-			cout << "#############" << endl;
-			cout << "Choose node with cost " << curr->g_val
-				<< " , h " << curr->h_val
-				<< " , f " << curr->f_val
-				<< endl;
-		}
+    bool result = analysisEngine->pairedAnalysis(node,agent1,agent2);
+    countNodes(analysisEngine->HL_num_expanded);
+    if (!result){
+        num_failed+=1;
+    }
+    num_pairs+=1;
+}
 
-		if (cons_strategy == constraint_strategy::CBS)
-		{
-			t1 = std::clock();
-			curr->conflict = chooseConflict(*curr);
-			runtime_conflictdetection += std::clock() - t1;
-		}
-		else if (cons_strategy == constraint_strategy::ICBS) // No heuristics
-		{
-			t1 = std::clock();
-			classifyConflicts(*curr);
-			curr->conflict = chooseConflict(*curr);
-			runtime_conflictdetection += std::clock() - t1;
-		}
-		else if(curr->conflict == NULL) //CBSH based, and h value has not been computed yet
-		{
-			t1 = std::clock();
-			classifyConflicts(*curr);
-			curr->conflict = chooseConflict(*curr);
-			runtime_conflictdetection += std::clock() - t1;
+template<class Map>
+void MultiMapICBSSearch<Map>::countNodes(int amount)
+{
+    if(amount < 10)
+        less10+=1;
+    else if(amount < 100)
+        less100+=1;
+    else if(amount < 1000)
+        less1000+=1;
+    else if(amount < 10000)
+        less10000+=1;
+    else if(amount < 100000)
+        less100000+=1;
+    else
+        larger100000+=1;
 
-			t1 = std::clock();
-			curr->h_val = computeHeuristics(*curr);
-			runtime_computeh += std::clock() - t1;
-			curr->f_val = curr->g_val + curr->h_val;
-
-			if (curr->f_val > focal_list_threshold)
-			{	
-				t1 = std::clock();
-				curr->open_handle = open_list.push(curr);
-				ICBSNode* open_head = open_list.top();
-				if ( open_head->f_val > min_f_val)
-				{
-					min_f_val = open_head->f_val;
-					double new_focal_list_threshold = min_f_val * focal_w;
-					updateFocalList(focal_list_threshold, new_focal_list_threshold, focal_w);
-					focal_list_threshold = new_focal_list_threshold;
-					if (screen > 3) {
-						cout << "new focal threadhold: " << focal_list_threshold << endl;
-					}
-				}
-				runtime_listoperation += std::clock() - t1;
-				continue;
-			}
-		}
-
-		if (curr->conflict == NULL) //Fail to find a conflict => no conflicts
-		{  // found a solution (and finish the while look)
-			runtime = (std::clock() - start);
-			solution_found = true;
-			solution_cost = curr->g_val;
-			if (debug_mode)
-				printHLTree();
-			if (screen >= 1)
-				printPaths();
-			cout << solution_cost << " ; " << solution_cost - dummy_start->g_val << " ; " <<
-				HL_num_expanded << " ; " << HL_num_generated << " ; " <<
-				LL_num_expanded << " ; " << LL_num_generated << " ; " << runtime / CLOCKS_PER_SEC << " ; " 
-				<< RMTime / CLOCKS_PER_SEC << ";"<<
-				num_standard << ";" << num_rectangle << "," <<
-				num_corridor2 << ";" << num_corridor4 << "," << num_target << "," << num_0FlipRectangle << "," <<
-				num_1FlipRectangle << "," << num_2FlipRectangle << "," << num_chasingRectangle << endl;
-			
-			break;
-		}
-
-		if (debug_mode) {
-			cout << "****************" << endl;
-			cout << "choose conflict: " << "<" << curr->conflict->a1 << " "
-				<< curr->conflict->a2 << ",("
-				<< curr->conflict->originalConf1 / num_col << ","
-				<< curr->conflict->originalConf1 % num_col << ")" << ",("
-				<< curr->conflict->originalConf2 / num_col << ","
-				<< curr->conflict->originalConf2 % num_col << ")"
-				<< curr->conflict->t << "," << curr->conflict->k << "," << curr->conflict->type << ">" << std::endl;
-			cout << "always 4 way split " << option.RM4way << endl;
-			if (screen>=3)
-				printPaths();
-
-		}
-
-		if (screen == 1 || screen==6 ) {
-			if(debug_mode)
-			cout << "check conflict repeatance" << endl;
-			stringstream con;
-			//con << *(curr->conflict);
-			if (curr->conflict->k == 0) {
-				con << min(curr->conflict->a1, curr->conflict->a2) << ",";
-				con << max(curr->conflict->a1, curr->conflict->a2);
-			}
-			else {
-				con << curr->conflict->a1 << ",";
-				con << curr->conflict->a2;
-			}
-			con << ",("
-			<< curr->conflict->originalConf1 / num_col << ","
-			<< curr->conflict->originalConf1 % num_col << ")" << ",("
-			<< curr->conflict->originalConf2 / num_col << ","
-			<< curr->conflict->originalConf2 % num_col << "),"
-			<< curr->conflict->t<<"," << curr->conflict->k<<","<<curr->conflict->type ;
-
-
-			curr->resolvedConflicts.insert(con.str());
-
-			bool stop = false;
-			bool noRepeat = true;
-			ICBSNode* parent = curr->parent;
-			if (parent != NULL) {
-				if (debug_mode)
-				cout << "Try find " << con.str() << " in curr's parent nodes" << endl;
-				while (!stop) {
-					if (debug_mode)
-					cout << "1";
-					if (parent->parent == NULL) {
-						stop = true;
-						break;
-					}
-					std::unordered_set<std::string>::const_iterator it = parent->resolvedConflicts.find(con.str());
-					if (it != parent->resolvedConflicts.end()) {
-						noRepeat = false;
-						printHLTree();
-					}
-					if (!noRepeat) {
-						cout << "Repeatance detected!!!" << endl;
-						exit(1);
-					}
-					parent = parent->parent;
-
-				}
-			}
-			else {
-				if (debug_mode)
-				cout << "no parent" << endl;
-
-			}
-			if (noRepeat) {
-				if (debug_mode)
-				cout << "no repeatance" << endl;
-			}
-			else {
-				if (debug_mode)
-				cout << "repeatance detected" << endl;
-			}
-
-		}
-
-		 //Expand the node
-		HL_num_expanded++;
-		curr->time_expanded = HL_num_expanded;
-		if (curr->conflict->type == conflict_type::RECTANGLE) {
-
-			numOfRectangle += 1;
-		}
-
-		if (screen >= 2)
-		{
-			std::cout << "Node " << curr->time_generated << " with f=" << curr->g_val << "+" << curr->h_val
-				<< " has " << std::endl;
-			for (auto conflict : curr->conflicts)
-				std::cout << *conflict;
-			std::cout << "We choose " << *curr->conflict;
-		}
-
-		vector<ICBSNode*> children;
-
-		if (curr->conflict->type == conflict_type::CORRIDOR4) // 4-way branching
-		{
-			children.resize(4);
-			children[0] = new ICBSNode(curr->conflict->a1);
-			children[0]->constraints.push_back(curr->conflict->constraint1.front());
-			children[1] = new ICBSNode(curr->conflict->a1);
-			children[1]->constraints.push_back(curr->conflict->constraint1.back());
-			children[2] = new ICBSNode(curr->conflict->a2);
-			children[2]->constraints.push_back(curr->conflict->constraint2.front());
-			children[3] = new ICBSNode(curr->conflict->a2);
-			children[3]->constraints.push_back(curr->conflict->constraint2.back());
-			num_corridor4++;
-		}
-		//else if (curr->conflict->type == conflict_type::STANDARD && curr->conflict->t == 0 && !option.ignore_t0) {
-
-		//	children.resize(1);
-		//	children[0] = new ICBSNode(curr->conflict->a2);
-		//	children[0]->constraints = curr->conflict->constraint2;
-		//	num_standard++;
-		//}
-		else if (curr->conflict->type == conflict_type::RECTANGLE4) // 4-way branching
-		{
-			children.resize(curr->conflict->multiConstraint1.size()+ curr->conflict->multiConstraint2.size());
-			int constraint1Size = curr->conflict->multiConstraint1.size();
-			int constraint2Size = curr->conflict->multiConstraint2.size();
-
-
-			if (screen >= 2) {
-				cout << "Generate " << children.size() << " child nodes" << endl;
-				cout << constraint1Size << " nodes"<< " for a1" << endl;
-				cout << constraint2Size << " nodes"<< " for a2" << endl;
-			}
-
-			for (int i = 0; i < constraint1Size; i++) {
-				children[i]= new ICBSNode(curr->conflict->a1);
-				children[i]->constraints = curr->conflict->multiConstraint1[i];
-			}
-
-			for (int i = 0; i < constraint2Size; i++) {
-				children[i+ constraint1Size] = new ICBSNode(curr->conflict->a2);
-				children[i+ constraint1Size]->constraints = curr->conflict->multiConstraint2[i];
-			}
-
-			num_rectangle++;
-			if (curr->conflict->isChasing) {
-				num_chasingRectangle++;
-			}
-
-		}
-		else // 2-way branching
-		{
-			
-			children.resize(2);
-			children[0] = new ICBSNode(curr->conflict->a1);
-			children[0]->constraints = curr->conflict->constraint1;
-			children[1] = new ICBSNode(curr->conflict->a2);
-			children[1]->constraints = curr->conflict->constraint2;
-			if (curr->conflict->type == conflict_type::CORRIDOR2)
-				num_corridor2++;
-			else if (curr->conflict->type == conflict_type::STANDARD)
-				num_standard++;
-			else if (curr->conflict->type == conflict_type::RECTANGLE) {
-				if (curr->conflict->flipType == 1) {
-					num_1FlipRectangle++;
-				}
-				else if (curr->conflict->flipType == 2) {
-					num_2FlipRectangle++;
-				}
-				else {
-					num_0FlipRectangle++;
-				}
-				num_rectangle++;
-			}
-			else if (curr->conflict->type == conflict_type::TARGET)
-				num_target++;
-		}
-
-		
-		vector<vector<PathEntry>*> copy(paths);
-		for (int i = 0; i < children.size(); i++)
-		{
-			if (generateChild(children[i], curr))
-			{
-				curr->children.push_back(children[i]);
-				if (screen >= 2)
-					std::cout << "Generate child "<<i<<" #" << children[i]->time_generated
-						<< " with cost " << children[i]->g_val
-						<< " and h "<< children[i]->h_val
-						<< " and " << children[i]->num_of_collisions << " conflicts " << std::endl;
-
-			}
-			else
-			{
-				if (screen >= 2)
-					std::cout << "Delete child "<< i <<" #" << children[i]->time_generated
-					<< " with cost " << children[i]->g_val
-					<< " and " << children[i]->num_of_collisions << " conflicts " << std::endl;
-				delete children[i];
-			}
-			if (i < children.size() - 1)
-				paths = copy;
-		}
-		if (debug_mode) {
-			for (int i = 0; i < curr->children.size(); i++)
-			{
-
-				cout <<"Child "<<i<< " conflicts:"<< curr->children[i]->unknownConf.size();
-
-				cout << endl;
-			}
-		}
-
-
-		curr->clear();
-		t1 = std::clock();
-		if (open_list.size() == 0) {
-			solution_found = false;
-			break;
-		}
-		ICBSNode* open_head = open_list.top();
-		if ( open_head->f_val > min_f_val) 
-		{
-			min_f_val = open_head->f_val;
-			double new_focal_list_threshold = min_f_val * focal_w;
-			updateFocalList(focal_list_threshold, new_focal_list_threshold, focal_w);
-			focal_list_threshold = new_focal_list_threshold;
-			if (screen > 3) {
-				cout << "new focal threadhold: " << focal_list_threshold << endl;
-			}
-		}
-		runtime_listoperation += std::clock() - t1;
-
-	}  // end of while loop
-
-
-	if (focal_list.empty() && solution_cost < 0)
-	{
-		solution_cost = -2;
-		cout << "No solutions  ; " << solution_cost << " ; " << min_f_val - dummy_start->g_val << " ; " <<
-			HL_num_expanded << " ; " << HL_num_generated << " ; " <<
-			LL_num_expanded << " ; " << LL_num_generated << " ; " << runtime / CLOCKS_PER_SEC << " ; " 
-			<< RMTime / CLOCKS_PER_SEC << ";" <<
-			num_standard << ";" << num_rectangle << ";" <<
-			num_corridor2 << ";" << num_corridor4 << ";" << num_target << "," << num_0FlipRectangle << "," <<
-			num_1FlipRectangle << "," << num_2FlipRectangle << "," << num_chasingRectangle <<
-			"|Open|=" << open_list.size() << endl;
-		timeout = true;
-		solution_found = false;
-		if (debug_mode)
-			printHLTree();
-	}
-	return solution_found;
 }
 
 
@@ -1451,6 +1516,7 @@ inline void ICBSSearch::releaseClosedListNodes()
 {
 	for (list<ICBSNode*>::iterator it = allNodes_table.begin(); it != allNodes_table.end(); it++)
 		delete *it;
+	allNodes_table.clear();
 }
 
 inline void ICBSSearch::releaseOpenListNodes()
@@ -1467,8 +1533,13 @@ inline void ICBSSearch::releaseOpenListNodes()
 template<class Map>
 MultiMapICBSSearch<Map>::~MultiMapICBSSearch()
 {
-	for (size_t i = 0; i < search_engines.size(); i++)
-		delete (search_engines[i]);
+	for (size_t i = 0; i < search_engines.size(); i++){
+	    if(search_engines[i]!=NULL) {
+            delete (search_engines[i]);
+            search_engines[i]=NULL;
+        }
+	}
+
 	releaseClosedListNodes();
 	if (!mddTable.empty())
 	{
@@ -1480,6 +1551,10 @@ MultiMapICBSSearch<Map>::~MultiMapICBSSearch()
 				delete mdd.second;
 			}
 		}
+	}
+	if (analysisEngine!=NULL){
+	    analysisEngine->search_engines.clear();
+	    delete analysisEngine;
 	}
 }
 
@@ -1624,6 +1699,9 @@ void MultiMapICBSSearch<Map>::initializeDummyStart() {
 //     if (cons_strategy == constraint_strategy::CBSH_GR )
  	if (cons_strategy == constraint_strategy::CBSH_GR || cons_strategy == constraint_strategy::CBSH_RM)
 		mddTable.resize(num_of_agents);
+ 	if (option.pairAnalysis){
+ 	    pairAnalysisTable.resize(num_of_agents);
+ 	}
 	if(debug_mode)
 		cout << "Initializing done" << endl;
 
@@ -1757,11 +1835,15 @@ void MultiMapICBSSearch<Map>::updateConstraintTable(ICBSNode* curr, int agent_id
 {
 	constraintTable.clear();
 	constraintTable.goal_location = search_engines[agent_id]->goal_location;
-	while (curr != dummy_start)
+	int constraint_amount = 0;
+	int layer = 0;
+	while (curr != NULL)
 	{
+	    layer+=1;
 		if (curr->agent_id == agent_id)
 		{
 			constraintTable.insert(curr->constraints,agent_id,num_col,map_size);
+			constraint_amount += curr->constraints.size();
 		}
 		else if (!curr->constraints.empty())
 		{
@@ -1774,6 +1856,9 @@ void MultiMapICBSSearch<Map>::updateConstraintTable(ICBSNode* curr, int agent_id
 			}
 		}
 		curr = curr->parent;
+	}
+	if(screen>=2){
+	    cout<<"agent: "<<agent_id<<" constraints amount: "<< constraint_amount<<" layers: "<<layer << endl;
 	}
 }
 
@@ -3020,5 +3105,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 }
 
 
+
 template class MultiMapICBSSearch<MapLoader>;
 template class MultiMapICBSSearch<FlatlandLoader>;
+

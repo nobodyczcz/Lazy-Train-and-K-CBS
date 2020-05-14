@@ -26,7 +26,9 @@ class AgentsLoader {
   AgentsLoader(const std::string fname, const MapLoader &ml, int agentsNum);
   AgentsLoader();
   AgentsLoader(boost::python::object agents);
-  void addAgent ( int start_row, int start_col, int goal_row, int goal_col );
+  AgentsLoader(int number_of_agent);
+
+    void addAgent ( int start_row, int start_col, int goal_row, int goal_col );
   void printAgentsInitGoal ();
   void saveToFile(const std::string fname);
   pair<int, int> agentStartOrGoalAt(int row, int col);

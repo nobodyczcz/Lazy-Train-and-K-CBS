@@ -21,6 +21,9 @@ struct hvals {
 			return INT_MAX;
 		}
 	}
+	~hvals(){
+	    heading.clear();
+	}
 };
 template<class Map>
 class ComputeHeuristic 

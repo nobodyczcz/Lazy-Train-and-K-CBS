@@ -41,6 +41,14 @@ AgentsLoader::AgentsLoader(p::object agents) {
 
 
 }
+AgentsLoader::AgentsLoader(int number_of_agent){
+    this->num_of_agents = number_of_agent;
+    initial_locations.resize(number_of_agent);
+    goal_locations.resize(number_of_agent);
+    headings.resize(number_of_agent);
+
+
+}
 
 AgentsLoader::AgentsLoader(string fname, const MapLoader &ml, int agentsNum = 0){
   string line;

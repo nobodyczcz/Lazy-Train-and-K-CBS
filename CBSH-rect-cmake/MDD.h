@@ -76,6 +76,8 @@ struct ConstraintsHasher // Hash a CT node by constraints on one agent
 
 	bool operator==(const ConstraintsHasher& other) const
 	{
+	    if (a != other.a)
+	        return false;
 		std::set<Constraint> cons1, cons2;
 		const ICBSNode* curr = n;
 		while (curr->parent != NULL)

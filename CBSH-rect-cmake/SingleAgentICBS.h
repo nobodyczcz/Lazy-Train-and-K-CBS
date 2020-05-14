@@ -30,8 +30,8 @@ public:
 	heap_focal_t focal_list;
 	hashtable_t allNodes_table;
 	list<LLNode*> goal_nodes;
-	LLNode* empty_node;
-	LLNode* deleted_node;
+	LLNode* empty_node = NULL;
+	LLNode* deleted_node = NULL;
 
 	int agent_id;
 	int start_location;

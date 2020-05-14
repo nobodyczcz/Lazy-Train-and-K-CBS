@@ -10,7 +10,7 @@
 
 #include "map_loader.h"
 #include "agents_loader.h"
-#include "ICBSSearch.h"
+#include "ICBSHSearchPairAnalysis.h"
 
 #include <iostream>
 #include <fstream>
@@ -47,7 +47,8 @@ int main(int argc, char** argv)
 		("RM-4way", po::value<int>()->default_value(1), "0, do not do 4 way split. 1, do 4 way only necessary.2 Always do 4 way splitting for RM, other wise only 4 way when necessary")
 		("flipped_rectangle", "resolving flipped rectangle symmetry conflict for RM")
 		("I_RM","using improved rm")
-            ("statistic","print statistic data")
+		("statistic","print statistic data")
+		("pairAnalysis",po::value<int>(),"perform 2 agent analysis")
 
 
             ;
@@ -113,6 +114,11 @@ int main(int argc, char** argv)
 	else {
 		options1.shortBarrier = false;
 	}
+    if (vm.count("pairAnalysis")) {
+        options1.pairAnalysis = true;
+    }
+
+
 	if (vm["only_generate_instance"].as<string>()!="") {
 		al.saveToFile(vm["only_generate_instance"].as<string>());
 		return 0;
@@ -139,7 +145,7 @@ int main(int argc, char** argv)
 		return -1;
 	}
 
-	MultiMapICBSSearch<MapLoader> icbs(ml, al, 1.0, s, vm["cutoffTime"].as<float>() * CLOCKS_PER_SEC, vm["screen"].as<int>(), vm["kDelay"].as<int>(), options1);
+    ICBSSearchWithPairedAnalysis<MapLoader> icbs(ml, al, 1.0, s, vm["cutoffTime"].as<float>() * CLOCKS_PER_SEC, vm["screen"].as<int>(), vm["kDelay"].as<int>(), options1);
 	if (vm["solver"].as<string>() == "CBSH-RM")
 	{
 		icbs.rectangleMDD = true;
@@ -170,6 +176,10 @@ int main(int argc, char** argv)
 		icbs.I_RM = true;
 
 	}
+
+    if (vm.count("pairAnalysis")) {
+        icbs.analysisEngine = new ICBSSearchWithPairedAnalysis<MapLoader>(&icbs, vm["pairAnalysis"].as<int>());
+    }
 	
 	bool res;
 	res = icbs.runICBSSearch();
@@ -183,8 +193,9 @@ int main(int argc, char** argv)
 		vm["solver"].as<string>()  << "," <<
 		icbs.num_standard << "," << icbs.num_rectangle << "," <<
 		icbs.num_corridor2 << "," << icbs.num_corridor4 << "," << 
-		icbs.num_target<<","<< icbs.num_0FlipRectangle<<","<<
-		icbs.num_1FlipRectangle << ","<< icbs.num_2FlipRectangle << "," << icbs.num_chasingRectangle << endl;
+		icbs.num_target<<","<< icbs.num_chasingRectangle << "," <<
+		icbs.less10 << ","<<icbs.less100 << ","<<icbs.less1000 << ","<<icbs.less10000 <<"," << icbs.less100000 <<","
+		<<icbs.larger100000 << "," <<icbs.num_pairs <<"," <<icbs.num_failed << ","<< endl;
 	stats.close();
 
     if(vm.count("statistic")){
@@ -200,6 +211,7 @@ int main(int argc, char** argv)
         cout<<"Total Exist MDD: "<<icbs.TotalExistMDD <<endl;
         cout<<"Total K MDD: "<<icbs.TotalKMDD <<endl;
         cout<<"Total Exist K MDD: "<<icbs.TotalExistKMDD <<endl;
+        cout<<"Repeated pairs: "<<icbs.repeated_pairs<<endl;
         for (int i=0; i<icbs.KRectangleCount.size();i++){
             cout<< "total k: "<< i <<" rectangle: " << icbs.KRectangleCount[i]<<endl;
         }

@@ -433,8 +433,14 @@ SingleAgentICBS<Map>::SingleAgentICBS(int start_location, int goal_location,  Ma
 template<class Map>
 SingleAgentICBS<Map>::~SingleAgentICBS()
 {
-	delete (empty_node);
-	delete (deleted_node);
+    if(empty_node!=NULL){
+	    delete (empty_node);
+        empty_node=NULL;
+    }
+    if(deleted_node!=NULL) {
+        delete (deleted_node);
+        deleted_node=NULL;
+    }
 }
 
 template class SingleAgentICBS<MapLoader>;
