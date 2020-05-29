@@ -9,7 +9,7 @@
 #include "flat_map_loader.h"
 
 template <typename Map>
-extern class ICBSSearchWithPairedAnalysis : public MultiMapICBSSearch<Map>{
+class ICBSSearchWithPairedAnalysis : public MultiMapICBSSearch<Map>{
 public:
     void clear();
     bool pairedAnalysis(ICBSNode* node,int agent1, int agent2);
