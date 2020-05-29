@@ -36,8 +36,17 @@ template <class Map>ICBSSearchWithPairedAnalysis<Map>::ICBSSearchWithPairedAnaly
     this->node_limit = node_limit;
     this->time_limit = 1000 * CLOCKS_PER_SEC;
     this->screen = engine->screen;
+    this->debug_mode = engine->debug_mode;
 
     this->cons_strategy = engine->cons_strategy;
+    this->rectangleMDD = engine->rectangleMDD;
+    this->cardinalRect = engine->cardinalRect;
+    this->corridor2 = engine->corridor2;
+    this->corridor4 = engine->corridor4;
+    this->cardinalCorridorReasoning = engine->cardinalCorridorReasoning;
+    this->targetReasoning = engine->targetReasoning;
+    this->I_RM = engine->I_RM;
+
     this->HL_num_expanded = 0;
     this->HL_num_generated = 0;
 
@@ -55,6 +64,7 @@ template <class Map>ICBSSearchWithPairedAnalysis<Map>::ICBSSearchWithPairedAnaly
     this->ignore_t0 = false;
     this->shortBarrier = false;
     this->search_engines = engine->search_engines;
+    this->analysisInstance=true;
 }
 
 template <class Map>
@@ -113,24 +123,27 @@ bool ICBSSearchWithPairedAnalysis<Map>::pairedAnalysis(ICBSNode* node,int agent1
             this->paths[i] = new vector<PathEntry>;
             continue;
         }
-        this->updateConstraintTable(this->dummy_start,i);
-        if (this->search_engines[i]->findPath(this->paths_found_initially[i], this->focal_w, this->constraintTable, res_table, this->dummy_start->makespan + 1, 0) == false)
-            cout << "NO SOLUTION EXISTS";
 
-        this->paths[i] = &(this->paths_found_initially[i]);
-        /*if (paths[i]->at(2).conflist == NULL) {
-            cout << "x" << endl;
+        this->updateConstraintTable(this->dummy_start,i);
+        if(this->screen>=2){
+            cout<<"find initial path for " << i <<" length min "<<this->constraintTable.length_min
+            <<"length_max"<<this->constraintTable.length_max<<"max"<<this->dummy_start->makespan + 1<<  endl;
 
         }
-        else {
-            cout << paths[i]->at(2).conflist->size() << endl;
+        if (this->search_engines[i]->findPath(this->paths_found_initially[i], this->focal_w, this->constraintTable, res_table, this->dummy_start->makespan + 1, 0) == false && this->screen >=2)
+            cout << "NO SOLUTION EXISTS";
+        if(this->screen>=2){
+            cout<<"done " << i << endl;
+        }
 
-        }*/
+        this->paths[i] = &(this->paths_found_initially[i]);
+
         res_table->addPath(i, this->paths[i]);
         this->dummy_start->makespan = max(this->dummy_start->makespan, this->paths_found_initially[i].size() - 1);
 
         this->LL_num_expanded += this->search_engines[i]->num_expanded;
         this->LL_num_generated += this->search_engines[i]->num_generated;
+
 
     }
     delete (res_table);
@@ -153,6 +166,19 @@ bool ICBSSearchWithPairedAnalysis<Map>::pairedAnalysis(ICBSNode* node,int agent1
     this->dummy_start->time_generated = this->HL_num_generated;
     this->allNodes_table.push_back(this->dummy_start);
     this->findConflicts(*(this->dummy_start));
+    if (this->screen>=2)
+    {
+
+        cout << "Pair analysis dummy start conflicts:";
+        for (auto &conit : this->dummy_start->unknownConf) {
+            cout << "<" << conit->a1<< "," << conit->a2 << ","
+                 << "("  << ")" << ","
+                 << "("  << ")" << ","
+                 << conit->t<< ">; ";
+
+        }
+        cout << endl;
+    }
 
     this->min_f_val = this->dummy_start->f_val;
     this->focal_list_threshold =this-> min_f_val * this->focal_w;
@@ -161,6 +187,9 @@ bool ICBSSearchWithPairedAnalysis<Map>::pairedAnalysis(ICBSNode* node,int agent1
         this->mddTable.resize(this->num_of_agents);
 
     this->start = std::clock();
+    if(this->screen>=2){
+        cout<<"pair analysis initialize done, start searching" << endl;
+    }
     bool result = this->search();
     if(this->screen>=2){
         cout<<"pair analysis done, result: " << result << endl;

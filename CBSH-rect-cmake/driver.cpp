@@ -49,6 +49,7 @@ int main(int argc, char** argv)
 		("I_RM","using improved rm")
 		("statistic","print statistic data")
 		("pairAnalysis",po::value<int>(),"perform 2 agent analysis")
+		("printFailedPair","print mdd and constraints for failed pair")
 
 
             ;
@@ -90,6 +91,10 @@ int main(int argc, char** argv)
 	}
 	else {
 		options1.debug = false;
+	}
+
+	if (vm.count("printFailedPair")){
+	    options1.printFailedPair = true;
 	}
 
 

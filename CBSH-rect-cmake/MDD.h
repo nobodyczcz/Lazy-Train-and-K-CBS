@@ -58,6 +58,19 @@ public:
 			std::cout << std::endl;
 		}
 	};
+    void printNodes() const
+    {
+        for (auto level : levels)
+        {
+            cout << "[";
+            for (auto node : level)
+            {
+                cout << node->location << ",";
+            }
+            cout << "]," << endl;
+        }
+    }
+
 
 	MDD(){};
 	MDD(MDD & cpy);
@@ -69,14 +82,17 @@ struct ConstraintsHasher // Hash a CT node by constraints on one agent
 	int a;
 	ICBSNode* n;
 	int k = 0;
+	int num_levels;
 
 	ConstraintsHasher() {};
-    ConstraintsHasher(int a, ICBSNode* n, int k = 0) : a(a), n(n),k(k) {};
+    ConstraintsHasher(int a, ICBSNode* n,int num_levels, int k = 0) : a(a), n(n),num_levels(num_levels),k(k) {};
 
 
 	bool operator==(const ConstraintsHasher& other) const
 	{
 	    if (a != other.a)
+	        return false;
+	    if (num_levels != other.num_levels)
 	        return false;
 		std::set<Constraint> cons1, cons2;
 		const ICBSNode* curr = n;

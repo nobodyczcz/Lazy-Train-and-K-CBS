@@ -159,18 +159,18 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 		// check if the popped node is a goal
 		if (curr->loc == goal_location && curr->timestep >= constraint_table.length_min)
 		{
-			bool parentAtGoal = false;
-			LLNode* temp = curr;
-			for (int x = 0; x <= kRobust; x++) {
-				if (temp->parent == NULL) {
-					break;
-				}
-				if (temp->parent->loc == goal_location) {
-					parentAtGoal = true;
-				}
-				temp = temp->parent;
-			}
-			if (curr->parent == NULL || !parentAtGoal)
+//			bool parentAtGoal = false;
+//			LLNode* temp = curr;
+//			for (int x = 0; x <= kRobust; x++) {
+//				if (temp->parent == NULL) {
+//					break;
+//				}
+//				if (temp->parent->loc == goal_location) {
+//					parentAtGoal = true;
+//				}
+//				temp = temp->parent;
+//			}
+			if (curr->parent == NULL || curr->parent->loc != goal_location)
 			{
 				//cout << num_generated << endl;
 
@@ -218,13 +218,13 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 			int next_id = move.first;
 			time_generated += 1;
 			int next_timestep = curr->timestep + 1;
-			/*if (max_plan_len <= curr->timestep)
-			{
-				if (next_id == curr->loc)
-				{
-					continue;
-				}
-			}*/
+//            if (max_plan_len <= curr->timestep)
+//            {
+//                if (next_id == curr->loc)
+//                {
+//                    continue;
+//                }
+//            }
 			if (!constraint_table.is_constrained(next_id, next_timestep) &&
 				!constraint_table.is_constrained(curr->loc * map_size + next_id, next_timestep))
 			{

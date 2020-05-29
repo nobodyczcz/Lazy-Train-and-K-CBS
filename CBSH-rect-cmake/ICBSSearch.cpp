@@ -229,7 +229,7 @@ void ICBSSearch::copyConflicts(const std::list<std::shared_ptr<Conflict >>& conf
 
 void ICBSSearch::findConflicts(ICBSNode& curr)
 {
-	if (curr.parent != NULL)
+	if (&curr != this->dummy_start)
 	{
 		if (debug_mode)
 			cout << "copy from parent" << endl;
@@ -326,6 +326,8 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 		{
 
 			//collect conflicts from path
+			if(paths[a1]->empty())
+			    continue;
 			for (size_t t = 0; t < paths[a1]->size(); t++) {
 
 				if (paths[a1]->at(t).conflist == NULL || paths[a1]->at(t).conflist->size() == 0)
@@ -1064,7 +1066,8 @@ void ICBSSearch::printStrategy() const
 template<class Map>
 bool MultiMapICBSSearch<Map>::search(){
     std::clock_t t1;
-    printStrategy();
+    if(!analysisInstance)
+        printStrategy();
     // set timer
 
     runtime_computeh = 0;
@@ -1084,13 +1087,16 @@ bool MultiMapICBSSearch<Map>::search(){
         runtime = (std::clock() - start);
         if (runtime > time_limit || (node_limit!=0 && HL_num_expanded >node_limit))
         {  // timeout
+            if(!analysisInstance)
             cout << "TIMEOUT  ; " << solution_cost << " ; " << min_f_val - dummy_start->g_val << " ; " <<
                  HL_num_expanded << " ; " << HL_num_generated << " ; " <<
                  LL_num_expanded << " ; " << LL_num_generated << " ; " << runtime / CLOCKS_PER_SEC << " ; "
                  << RMTime/CLOCKS_PER_SEC<<";"<<
                  num_standard << ";" << num_rectangle << "," <<
                  num_corridor2 << ";" << num_corridor4 << "," << num_target << "," << num_0FlipRectangle << "," <<
-                 num_1FlipRectangle << "," << num_2FlipRectangle <<","<<num_chasingRectangle<< endl;
+                 num_1FlipRectangle << "," << num_2FlipRectangle <<","<<num_chasingRectangle <<"," <<
+                 less10 << ","<<less100 << ","<<less1000 << ","<<less10000 <<"," << less100000 <<","<<
+                 larger100000 << "," <<num_pairs <<"," <<num_failed << endl;
             if(debug_mode)
                 printHLTree();
             if (screen >= 1)
@@ -1173,13 +1179,16 @@ bool MultiMapICBSSearch<Map>::search(){
                 printHLTree();
             if (screen >= 1)
                 printPaths();
-            cout << solution_cost << " ; " << solution_cost - dummy_start->g_val << " ; " <<
+            if(!analysisInstance)
+                cout << solution_cost << " ; " << solution_cost - dummy_start->g_val << " ; " <<
                  HL_num_expanded << " ; " << HL_num_generated << " ; " <<
                  LL_num_expanded << " ; " << LL_num_generated << " ; " << runtime / CLOCKS_PER_SEC << " ; "
                  << RMTime / CLOCKS_PER_SEC << ";"<<
                  num_standard << ";" << num_rectangle << "," <<
                  num_corridor2 << ";" << num_corridor4 << "," << num_target << "," << num_0FlipRectangle << "," <<
-                 num_1FlipRectangle << "," << num_2FlipRectangle << "," << num_chasingRectangle << endl;
+                 num_1FlipRectangle << "," << num_2FlipRectangle << "," << num_chasingRectangle << "," <<
+                 less10 << ","<<less100 << ","<<less1000 << ","<<less10000 <<"," << less100000 <<","<<
+                 larger100000 << "," <<num_pairs <<"," <<num_failed << endl;
 
             break;
         }
@@ -1372,7 +1381,13 @@ bool MultiMapICBSSearch<Map>::search(){
                               << " with cost " << children[i]->g_val
                               << " and h "<< children[i]->h_val
                               << " and " << children[i]->num_of_collisions << " conflicts " << std::endl;
-
+                if (option.pairAnalysis){
+                    for(int a=0; a < num_of_agents;a++){
+                        if (a!=children[i]->agent_id){
+                            startPairAnalysis(children[i], children[i]->agent_id, a);
+                        }
+                    }
+                }
             }
             else
             {
@@ -1394,15 +1409,15 @@ bool MultiMapICBSSearch<Map>::search(){
                 cout << endl;
             }
         }
-        if (option.pairAnalysis){
-            for(int i = 0; i < curr->children.size(); i++){
-                for(int a=0; a < num_of_agents;a++){
-                    if (a!=curr->children[i]->agent_id){
-                        startPairAnalysis(curr->children[i], curr->children[i]->agent_id, a);
-                    }
-                }
-            }
-        }
+//        if (option.pairAnalysis){
+//            for(int i = 0; i < curr->children.size(); i++){
+//                for(int a=0; a < num_of_agents;a++){
+//                    if (a!=curr->children[i]->agent_id){
+//                        startPairAnalysis(curr->children[i], curr->children[i]->agent_id, a);
+//                    }
+//                }
+//            }
+//        }
 
 
         curr->clear();
@@ -1430,13 +1445,16 @@ bool MultiMapICBSSearch<Map>::search(){
     if (focal_list.empty() && solution_cost < 0)
     {
         solution_cost = -2;
-        cout << "No solutions  ; " << solution_cost << " ; " << min_f_val - dummy_start->g_val << " ; " <<
+        if(!analysisInstance)
+            cout << "No solutions  ; " << solution_cost << " ; " << min_f_val - dummy_start->g_val << " ; " <<
              HL_num_expanded << " ; " << HL_num_generated << " ; " <<
              LL_num_expanded << " ; " << LL_num_generated << " ; " << runtime / CLOCKS_PER_SEC << " ; "
              << RMTime / CLOCKS_PER_SEC << ";" <<
              num_standard << ";" << num_rectangle << ";" <<
              num_corridor2 << ";" << num_corridor4 << ";" << num_target << "," << num_0FlipRectangle << "," <<
-             num_1FlipRectangle << "," << num_2FlipRectangle << "," << num_chasingRectangle <<
+             num_1FlipRectangle << "," << num_2FlipRectangle << "," << num_chasingRectangle << "," <<
+             less10 << ","<<less100 << ","<<less1000 << ","<<less10000 <<"," << less100000 <<","<<
+             larger100000 << "," <<num_pairs <<"," <<num_failed <<
              "|Open|=" << open_list.size() << endl;
         timeout = true;
         solution_found = false;
@@ -1464,10 +1482,44 @@ bool MultiMapICBSSearch<Map>::runICBSSearch()
 }
 
 template<class Map>
+void MultiMapICBSSearch<Map>::printConstraints(ICBSNode* node,int agent_id){
+    ICBSNode* curr = node;
+    while (curr != NULL)
+    {
+        if (curr->agent_id == agent_id)
+        {
+            for (auto constraint : curr->constraints){
+                int x, y, z;
+                constraint_type type;
+                tie(x, y, z, type) = constraint;
+                string string_type;
+                if(type == 0)
+                    string_type = "L";
+                else if(type == 1)
+                    string_type = "R";
+                else if(type == 2)
+                    string_type = "B";
+                else if(type == 3)
+                    string_type = "V";
+                else if(type == 4)
+                    string_type = "E";
+
+
+                cout<<"<"<<agent_id <<"," << x << ","<< y << "," << z << "," << string_type  <<">,";
+            }
+        }
+
+        curr = curr->parent;
+    }
+    cout<<endl;
+};
+
+
+template<class Map>
 void MultiMapICBSSearch<Map>::startPairAnalysis(ICBSNode* node,int agent1, int agent2)
 {
-    ConstraintsHasher c1(agent1,node,0);
-    ConstraintsHasher c2(agent2,node,0);
+    ConstraintsHasher c1(agent1,node,0,0);
+    ConstraintsHasher c2(agent2,node,0,0);
 
     if (pairAnalysisTable[c1.a].count(c1) != 0 && pairAnalysisTable[c1.a][c1].count(c2) != 0) {
         repeated_pairs += 1;
@@ -1482,11 +1534,51 @@ void MultiMapICBSSearch<Map>::startPairAnalysis(ICBSNode* node,int agent1, int a
     }
     pairAnalysisTable[c1.a][c1].insert(c2);
     pairAnalysisTable[c2.a][c2].insert(c1);
+    if(screen>=2)
+        cout<<"start pair analysis for "<< agent1 << " " <<agent2<<endl;
 
     bool result = analysisEngine->pairedAnalysis(node,agent1,agent2);
     countNodes(analysisEngine->HL_num_expanded);
     if (!result){
         num_failed+=1;
+        if (option.printFailedPair) {
+            MDD<Map> *a1Mdd = new MDD<Map>();
+            MDD<Map> *a2Mdd = new MDD<Map>();
+            // vector < list< pair<int, int> > >* cons_vec = collectConstraints(&node, id);
+            updateConstraintTable(node, agent1);
+            int a1PathLength;
+            int a2PathLength=0;
+            if(node != dummy_start) {
+                for (auto path : node->paths) {
+                    if (path.first ==agent1){
+                        a1PathLength = path.second.size();
+                    }
+                    else if(path.first ==agent2){
+                        a2PathLength = path.second.size();
+                    }
+                }
+            }
+            else{
+                a1PathLength = paths[agent1]->size();
+            }
+            if(a2PathLength==0){
+                a2PathLength = paths[agent2]->size();
+            }
+            a1Mdd->buildMDD(constraintTable, a1PathLength + kDelay, *search_engines[agent1]);
+            updateConstraintTable(node, agent2);
+            a2Mdd->buildMDD(constraintTable,  a2PathLength + kDelay, *search_engines[agent2]);
+//            MDD<Map> *a1Mdd = buildMDD(*node, agent1, kDelay);
+//            MDD<Map> *a2Mdd = buildMDD(*node, agent2, kDelay);
+            cout << agent1<<" mdd nodes: " << endl;
+            a1Mdd->printNodes();
+            printConstraints(node, agent1);
+            cout << agent2 << " mdd nodes: " << endl;
+            a2Mdd->printNodes();
+            printConstraints(node, agent2);
+            delete a1Mdd;
+            delete a2Mdd;
+        }
+
     }
     num_pairs+=1;
 }
@@ -1512,22 +1604,6 @@ void MultiMapICBSSearch<Map>::countNodes(int amount)
 
 
 
-inline void ICBSSearch::releaseClosedListNodes() 
-{
-	for (list<ICBSNode*>::iterator it = allNodes_table.begin(); it != allNodes_table.end(); it++)
-		delete *it;
-	allNodes_table.clear();
-}
-
-inline void ICBSSearch::releaseOpenListNodes()
-{
-	while(!open_list.empty())
-	{
-		ICBSNode* curr = open_list.top();
-		open_list.pop();
-		delete curr;
-	}
-}
 
 
 template<class Map>
@@ -1636,7 +1712,7 @@ void MultiMapICBSSearch<Map>::initializeDummyStart() {
 	for (int i = 0; i < num_of_agents; i++) {
 		//cout << "******************************" << endl;
 		//cout << "Agent: " << i << endl;
-		if (search_engines[i]->findPath(paths_found_initially[i], focal_w, constraintTable, res_table, dummy_start->makespan + 1, 0) == false)
+		if (search_engines[i]->findPath(paths_found_initially[i], focal_w, constraintTable, res_table, dummy_start->makespan + 1, 0) == false && !analysisInstance)
 			cout << "NO SOLUTION EXISTS";
 		
 		paths[i] = &paths_found_initially[i];
@@ -1742,8 +1818,9 @@ MDD<Map>* MultiMapICBSSearch<Map>::buildMDD(ICBSNode& node, int id, int k)
     if (k>0){
         TotalKMDD+=1;
     }
+    int num_levels = paths[id]->size() + k;
 	MDD<Map>* mdd = NULL;
-    ConstraintsHasher c(id, &node,k);
+    ConstraintsHasher c(id, &node,num_levels,k);
 
     if (!mddTable.empty())
 	{
@@ -1758,11 +1835,13 @@ MDD<Map>* MultiMapICBSSearch<Map>::buildMDD(ICBSNode& node, int id, int k)
 		mdd = new MDD<Map>();
 		// vector < list< pair<int, int> > >* cons_vec = collectConstraints(&node, id);
 		updateConstraintTable(&node, id);
-		mdd->buildMDD(constraintTable, paths[id]->size() + k, *search_engines[id]);
+		mdd->buildMDD(constraintTable, num_levels, *search_engines[id]);
         if (!mddTable.empty())
             mddTable[c.a][c] = mdd;
 	}
 	else{
+	    if(screen>=5)
+	        cout<<"Find existing mdd"<<endl;
 	    TotalExistMDD+=1;
         if (k>0){
             TotalExistKMDD+=1;
@@ -1819,11 +1898,17 @@ bool MultiMapICBSSearch<Map>::findPathForSingleAgent(ICBSNode*  node, int ag, do
 		paths[ag] = &node->paths.back().second;
 
 		node->makespan = std::max(node->makespan, newPath.size() - 1);
+		if (screen>=2){
+		    cout<<"find path"<<endl;
+		}
 
 		return true;
 	}
 	else
 	{
+        if (screen>=2){
+            cout<<"no path"<<endl;
+        }
 
 		return false;
 	}
@@ -3042,7 +3127,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 
 
 			MDD<Map>* mdd1 = NULL, *mdd2 = NULL;
-			ConstraintsHasher c(a1, &parent);
+			ConstraintsHasher c(a1, &parent,paths[a1]->size());
 			typename std::unordered_map<ConstraintsHasher, MDD<Map>*>::const_iterator got = mddTable[c.a].find(c);
 			if (got != mddTable[c.a].end())
 			{

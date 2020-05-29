@@ -23,6 +23,7 @@ struct options {
 	bool flippedRec;
 	int RM4way;
 	bool pairAnalysis = false;
+	bool printFailedPair = false;
 };
 
 
@@ -158,8 +159,19 @@ protected:
 	inline void updatePaths(ICBSNode* curr);
 	void updateFocalList(double old_lower_bound, double new_lower_bound, double f_weight);
 	void updateReservationTable(bool* res_table, int exclude_agent, const ICBSNode &node);
-	inline void releaseClosedListNodes();
-	inline void releaseOpenListNodes();
+	inline void releaseClosedListNodes(){
+        for (list<ICBSNode*>::iterator it = allNodes_table.begin(); it != allNodes_table.end(); it++)
+            delete *it;
+        allNodes_table.clear();
+    };
+	inline void releaseOpenListNodes(){
+        while(!open_list.empty())
+        {
+            ICBSNode* curr = open_list.top();
+            open_list.pop();
+            delete curr;
+        }
+    };
 
 	// print
 	void printPaths() const;
@@ -217,6 +229,7 @@ public:
     virtual void clear(){};
     virtual bool pairedAnalysis(ICBSNode* node,int agent1, int agent2){};
     void countNodes(int amount);
+    void printConstraints(ICBSNode* node,int agent_id);
 
     int less10 = 0;
     int less100 = 0;
@@ -227,6 +240,7 @@ public:
     int num_pairs = 0;
     int num_failed = 0;
     int repeated_pairs = 0;
+    bool analysisInstance = false;
 
 
 
