@@ -40,13 +40,13 @@ bool isCut(MDDLevels& mdd, std::list<Constraint>& constraints,int num_col, int m
 
 }
 
-/// find solution with entrance constrained and must traverse exit;
+/// find solution with entrance constrained;
 /// \param mdd
 /// \param entrance
 /// \param entranceTable
 /// \param exit
 /// \param exitTable
-/// \return -1 if have solution traverse exit, 0 if solution bypass exit, 1 if no any solution;
+/// \return -1 if have solution traverse exit, 0 if only solution bypass exit, 1 if no any solution;
 int haveSolutionCondition1(const MDDLevels& mdd,
         std::list<Constraint>& entrance,
         ConstraintTable& entranceTable,
@@ -61,11 +61,7 @@ int haveSolutionCondition1(const MDDLevels& mdd,
 
     MDDNode* goal = mdd.back().back();
 
-    int max_exit_time = 0;
-    for (auto constraint : exit){
-        if (get<2>(constraint) > max_exit_time)
-            max_exit_time = get<2>(constraint);
-    }
+
 
     queue.push_front(mdd[0].front());
     explored.insert(mdd[0].front());
@@ -95,7 +91,7 @@ int haveSolutionCondition1(const MDDLevels& mdd,
                     explored.insert(child);
 
                 }
-                else if(child->level < max_exit_time){
+                else {
                     queue.push_front(child);
                     explored.insert(child);
 
