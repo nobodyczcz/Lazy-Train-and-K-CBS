@@ -199,6 +199,8 @@ bool ICBSSearchWithPairedAnalysis<Map>::pairedAnalysis(ICBSNode* node,int agent1
 }
 
 
+
+
 template class ICBSSearchWithPairedAnalysis<MapLoader>;
 template class ICBSSearchWithPairedAnalysis<FlatlandLoader>;
 

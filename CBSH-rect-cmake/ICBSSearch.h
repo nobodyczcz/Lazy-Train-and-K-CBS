@@ -14,6 +14,8 @@
 #include "MDD.h"
 #include <unordered_map>
 #include <boost/python.hpp>
+#include <fstream>
+
 
 struct options {
 	bool asymmetry_constraint;
@@ -229,7 +231,9 @@ public:
     virtual void clear(){};
     virtual bool pairedAnalysis(ICBSNode* node,int agent1, int agent2){};
     void countNodes(int amount);
-    void printConstraints(ICBSNode* node,int agent_id);
+    void printConstraints(ICBSNode* node,int agent_id,ofstream& out);
+    ofstream analysisOutput;
+    string analysisOutputPath;
 
     int less10 = 0;
     int less100 = 0;
