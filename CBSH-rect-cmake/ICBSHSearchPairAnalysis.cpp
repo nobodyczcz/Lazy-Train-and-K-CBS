@@ -34,7 +34,7 @@ template <class Map>ICBSSearchWithPairedAnalysis<Map>::ICBSSearchWithPairedAnaly
     this->option.pairAnalysis = false;
     this->focal_w = engine->focal_w;
     this->node_limit = node_limit;
-    this->time_limit = 1000 * CLOCKS_PER_SEC;
+    this->time_limit = engine->time_limit;
     this->screen = engine->screen;
     this->debug_mode = engine->debug_mode;
 
