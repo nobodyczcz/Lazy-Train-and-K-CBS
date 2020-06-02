@@ -7,6 +7,7 @@
 #include "flat_map_loader.h"
 #include "ConstraintTable.h"
 #include <iostream>
+#include <fstream>
 #include "MDDNode.h"
 
 class MDDEmpty {
@@ -58,16 +59,27 @@ public:
 			std::cout << std::endl;
 		}
 	};
-    void printNodes() const
+    void printNodes(ofstream& out) const
     {
+        bool first_list = true;
         for (auto level : levels)
         {
-            cout << "[";
+            if (first_list)
+                first_list = false;
+            else
+                out<<",";
+            out << "[";
+            bool first = true;
             for (auto node : level)
             {
-                cout << node->location << ",";
+                if (first)
+                    first = false;
+                else
+                    out<<",";
+
+                out << node->location;
             }
-            cout << "]," << endl;
+            out << "]" << endl;
         }
     }
 

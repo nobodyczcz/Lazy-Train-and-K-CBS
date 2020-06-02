@@ -184,6 +184,9 @@ int main(int argc, char** argv)
 
     if (vm.count("pairAnalysis")) {
         icbs.analysisEngine = new ICBSSearchWithPairedAnalysis<MapLoader>(&icbs, vm["pairAnalysis"].as<int>());
+        icbs.analysisOutput = ofstream();
+        icbs.analysisOutput.open(vm["output"].as<string>()+".FailedPairs",ios::trunc);
+        icbs.analysisOutput<<"["<<endl;
     }
 	
 	bool res;
@@ -222,9 +225,10 @@ int main(int argc, char** argv)
         }
     }
 
-
-
-
+    if (vm.count("pairAnalysis")) {
+        icbs.analysisOutput<<"]";
+        icbs.analysisOutput.close();
+    }
 
     if (vm["screen"].as<int>() == 2)
 		cout << "Done!!" << endl;
