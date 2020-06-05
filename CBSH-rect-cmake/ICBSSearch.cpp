@@ -2289,6 +2289,8 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
                         parent.conflicts.push_back(con);
                         RMTime += std::clock() - RM_Start;
                         RMFailBeforeRec+=1;
+                        if(screen>=5)
+                            cout<<"failed to extract rectangle starts or goals"<<endl;
                         continue;
                     }
                     s1 = paths[a1]->at(t1_start).location;
@@ -2347,6 +2349,9 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
                     parent.conflicts.push_back(con);
                     RMTime += std::clock() - RM_Start;
                     RMFailBeforeRec+=1;
+                    if(screen>=5)
+                        cout<<"s or g are same or area<=2"<<endl;
+                    continue;
                     continue;
 				}
 
@@ -2359,10 +2364,12 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
                 int total_k = -1;
 
 
-                if (option.RM4way <=5 && !isRectangleConflict(s1, s2, g1, g2, num_col, kDelay, abs(t1_start - t2_start), option.RM4way >=4 ? true: false)){
+                if (option.RM4way <5 && !isRectangleConflict(s1, s2, g1, g2, num_col, kDelay, abs(t1_start - t2_start), option.RM4way >=4 ? true: false)){
                     parent.conflicts.push_back(con);
 //                    RMTime += std::clock() - RM_Start;
                     RMFailBeforeRec+=1;
+                    if(screen>=5)
+                        cout<<"failed pass rectangle check"<<endl;
                     continue;
                 }
 
@@ -2371,6 +2378,8 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
                         parent.conflicts.push_back(con);
 //                        RMTime += std::clock() - RM_Start;
                         RMFailBeforeRec+=1;
+                        if(screen>=5)
+                            cout<<"failed pass rectangle check"<<endl;
                         continue;
 				    }
                     new_type = classifyRectangleConflict(s1, s2, g1, g2, Rg, num_col, I_RM);
