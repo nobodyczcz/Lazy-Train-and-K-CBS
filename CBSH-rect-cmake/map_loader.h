@@ -44,5 +44,6 @@ class MapLoader
   void saveToFile(std::string fname);
   int getDegree(int loc);
   bool isFullyBlocked(int start, int end);//check does map block entire area from start to end;
+  int getDistance(int loc1, int loc2);
   ~MapLoader();
 };

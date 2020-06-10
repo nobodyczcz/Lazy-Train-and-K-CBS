@@ -12,6 +12,9 @@ using namespace std;
 
 MapLoader::MapLoader(){}
 
+int MapLoader::getDistance(int loc1, int loc2) {
+    return getMahattanDistance(loc1/cols, loc1%cols,loc2/cols,loc2%cols);
+}
 
 vector<pair<int, int>> MapLoader::get_transitions(int loc, int heading, int noWait) const {
     vector<pair<int, int>> transitions;
