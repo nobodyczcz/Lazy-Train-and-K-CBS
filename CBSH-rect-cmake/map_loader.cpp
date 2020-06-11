@@ -161,6 +161,48 @@ MapLoader::MapLoader(string fname)
 	}
 }
 
+void MapLoader::loadKiva(string fname)
+{
+    string line;
+    ifstream myfile (fname.c_str());
+    if (myfile.is_open()) {
+        getline (myfile,line);
+        char_separator<char> sep(",");
+        tokenizer< char_separator<char> > tok(line, sep);
+        tokenizer< char_separator<char> >::iterator beg=tok.begin();
+        int rows = atoi ( (*beg).c_str() ); // read number of rows
+        beg++;
+        int cols = atoi ( (*beg).c_str() ); // read number of cols
+        bool* my_map= new bool[rows*cols];
+        for (int i=0; i<rows*cols; i++)
+            my_map[i] = false;
+        // read map (and start/goal locations)
+        for (int i=0; i<rows; i++) {
+            getline (myfile, line);
+            for (int j=0; j<cols; j++) {
+                my_map[cols*i + j] = (line[j] == '@');
+            }
+        }
+
+        myfile.close();
+        this->rows = rows;
+        this->cols = cols;
+        this->my_map = my_map;
+        // initialize moves_offset array
+        moves_offset = new int[MapLoader::MOVE_COUNT];
+        moves_offset[MapLoader::valid_moves_t::WAIT_MOVE] = 0;
+        moves_offset[MapLoader::valid_moves_t::NORTH] = -cols;
+        moves_offset[MapLoader::valid_moves_t::EAST] = 1;
+        moves_offset[MapLoader::valid_moves_t::SOUTH] = cols;
+        moves_offset[MapLoader::valid_moves_t::WEST] = -1;
+    }
+    else
+    {
+        cerr << "Map file " << fname << " not found." << std::endl;
+        exit(10);
+    }
+}
+
 char* MapLoader::mapToChar() 
 {
   char* mapChar = new char[rows*cols];

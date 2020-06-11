@@ -127,7 +127,8 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 	min_f_val = start->getFVal();
 
 	lowerbound = std::max(lowerbound, (double)constraint_table.length_min);
-
+	lowerbound = std::max(lowerbound, (double)min_end_time);
+	lowerbound = std::max(lowerbound, (double)min_end_time);
 	lower_bound = std::max(lowerbound, f_weight * min_f_val);
 
 	int time_generated = 0;
@@ -401,13 +402,14 @@ inline void SingleAgentICBS<Map>::releaseClosedListNodes(hashtable_t* allNodes_t
 }
 
 template<class Map>
-SingleAgentICBS<Map>::SingleAgentICBS(int start_location, int goal_location,  Map* ml1,int agent_id, int start_heading, int kRobust):ml(ml1)
+SingleAgentICBS<Map>::SingleAgentICBS(int start_location, int goal_location,  Map* ml1,int agent_id, int start_heading, int kRobust, int min_end):ml(ml1)
 {
 	this->agent_id = agent_id;
 	this->start_heading = start_heading;
 
 	this->start_location = start_location;
 	this->goal_location = goal_location;
+	this->min_end_time = min_end;
 
 	this->map_size = ml->cols*ml->rows;
 

@@ -272,7 +272,8 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 							continue;
 						}
 						std::shared_ptr<Conflict> newConf(new Conflict());
-
+						if((get<3>(*con) < 0) && (get<4>(*con) >= paths[get<0>(*con)]->size() - 1) && option.ignore_target)
+						    continue;
 						if (targetReasoning && (get<3>(*con) < 0) && (get<4>(*con) >= paths[get<0>(*con)]->size() - 1)) {
 							newConf->targetConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<4>(*con)+ get<5>(*con), kDelay);
 						}
@@ -313,7 +314,8 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 						break;
 					}
 				}
-				findTargetConflicts(a1, a2, curr);
+				if(!option.ignore_target)
+				    findTargetConflicts(a1, a2, curr);
 
 			}
 		}
@@ -349,7 +351,8 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 					}
 
 					std::shared_ptr<Conflict> newConf(new Conflict());
-					
+                    if((get<3>(*con) < 0) && (get<4>(*con) >= paths[get<0>(*con)]->size() - 1) && option.ignore_target)
+                        continue;
 					if (targetReasoning && (get<3>(*con) < 0) && (get<4>(*con) > paths[get<0>(*con)]->size() - 1)) {
 						newConf->targetConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<4>(*con), kDelay);
 					}
@@ -384,7 +387,7 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 			{//low level search can't find target conflict if a1<a2
 				if (a1 == a2)
 					continue;
-
+                if(!option.ignore_target)
 				findTargetConflicts(a1, a2, curr);
 				
 			}
@@ -1778,6 +1781,7 @@ void MultiMapICBSSearch<Map>::initializeDummyStart() {
 	focal_list_threshold = min_f_val * focal_w;
 	if (debug_mode)
 	{
+	    printPaths();
 
 		cout << "Dummy start conflicts:";
 		for (auto &conit : dummy_start->unknownConf) {

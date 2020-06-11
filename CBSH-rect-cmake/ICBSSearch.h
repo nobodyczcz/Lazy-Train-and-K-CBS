@@ -18,14 +18,15 @@
 
 
 struct options {
-	bool asymmetry_constraint;
-	bool debug;
-	bool ignore_t0;
-	bool shortBarrier;
-	bool flippedRec;
+	bool asymmetry_constraint=false;
+	bool debug = false;
+	bool ignore_t0 = false;
+	bool shortBarrier = false;
+	bool flippedRec = false;
 	int RM4way;
 	bool pairAnalysis = false;
 	bool printFailedPair = false;
+	bool ignore_target = false;
 };
 
 
@@ -85,22 +86,28 @@ public:
 	bool cardinalCorridorReasoning = false;
 	bool targetReasoning=false;
 	int kDelay;
-	bool asymmetry_constraint;
+    int screen;
+    bool asymmetry_constraint;
 	int numOfRectangle = 0;
 	bool debug_mode=false;
 	bool ignore_t0=false;
 	bool shortBarrier = false;
 	bool I_RM = false;
 	std::clock_t start;
+    int num_col;
 
 
-	void printBT(const std::string& prefix, const ICBSNode* node, bool isLeft);
+
+    void printBT(const std::string& prefix, const ICBSNode* node, bool isLeft);
 	void printHLTree();
+    vector<vector<PathEntry>*> getPaths(){ return paths;};
 
 
 
 
-	ICBSSearch() {};
+    ICBSSearch() {};
+    AgentsLoader al;
+
 
 protected:
 	
@@ -118,16 +125,13 @@ protected:
 	int time_limit;
 	int node_limit = 0;
 	double focal_w = 1.0;
-	int screen;
 
 	const bool* my_map;
 	int map_size;
 	int num_of_agents;
 	const int* actions_offset;
 	const int* moves_offset;
-	int num_col;
-	AgentsLoader al;
-	
+
 	vector<vector<PathEntry>*> paths;
 	vector<vector<PathEntry>> paths_found_initially;  // contain initial paths found
 	
@@ -181,6 +185,9 @@ protected:
 	
 	void printStrategy() const;
 	bool timeout=false;
+
+    options option;
+
 
 
 };
@@ -252,7 +259,6 @@ protected:
 	std::vector<std::unordered_map<ConstraintsHasher, MDD<Map>*>> mddTable;
     std::vector<std::unordered_map<ConstraintsHasher, std::unordered_set<ConstraintsHasher>>> pairAnalysisTable;
 
-    options option;
 	Map* ml;
 };
 

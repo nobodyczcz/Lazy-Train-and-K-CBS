@@ -37,6 +37,7 @@ public:
 	int start_location;
 	int goal_location;
 	int start_heading;
+	int min_end_time = 0;
 
 
 	Map* ml;
@@ -97,7 +98,7 @@ public:
 
 	inline void releaseClosedListNodes(hashtable_t* allNodes_table);
 
-	SingleAgentICBS(int start_location, int goal_location, Map* ml, int agent_id, int start_heading = -1, int kRobust = 0);
+	SingleAgentICBS(int start_location, int goal_location, Map* ml, int agent_id, int start_heading = -1, int kRobust = 0, int min_end = 0);
 	~SingleAgentICBS();
 
 };

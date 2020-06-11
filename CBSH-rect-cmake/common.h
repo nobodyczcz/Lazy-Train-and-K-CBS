@@ -40,12 +40,10 @@ struct PathEntry
 	int heading;
 	bool single;
 	int actionToHere;
+	int timeStep;
 	PathEntry(int loc = -1) { location = loc; single = false; }
 	std::list<int> locations; // all possible locations at the same time step
 	OldConfList* conflist=NULL;
-	~PathEntry(){
-        locations.clear();
-	}
 };
 
 struct MDDPath {

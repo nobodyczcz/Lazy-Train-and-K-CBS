@@ -2,6 +2,8 @@
 #include "Conflict.h"
 #include <climits>
 #include <unordered_set>
+#include <unordered_map>
+
 class ConstraintTable
 {
 public:
@@ -25,8 +27,8 @@ public:
 	};
 
 private:
-	unordered_map<size_t, std::unordered_set<int> > CT_Single;
-	unordered_map<size_t, list<pair<int, int> > > CT;
+	std::unordered_map<size_t, std::unordered_set<int> > CT_Single;
+	std::unordered_map<size_t, list<pair<int, int> > > CT;
 
 	
 };

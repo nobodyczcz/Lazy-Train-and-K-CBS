@@ -36,8 +36,11 @@ AgentsLoader::AgentsLoader(p::object agents) {
 		this->initial_locations.push_back(initial);
 		this->goal_locations.push_back(goal);
 		this->headings.push_back(heading);
+		this->min_end_time.push_back(0);
+        this->done.push_back(false);
 
-	}
+
+    }
 
 
 }
@@ -81,8 +84,12 @@ AgentsLoader::AgentsLoader(string fname, const MapLoader &ml, int agentsNum = 0)
       //      cout << "GOAL[" << curr_pair.first << "," << curr_pair.second << "]" << endl;
       this->goal_locations.push_back(curr_pair);
 	  this->headings.push_back(-1);
+	  this->min_end_time.push_back(0);
+	  this->done.push_back(false);
 
-      // read max velocity and accelration for agent i
+
+
+        // read max velocity and accelration for agent i
      /* c_beg++;
       this->max_v.push_back(atof((*c_beg).c_str()));
       c_beg++;
@@ -161,8 +168,11 @@ AgentsLoader::AgentsLoader(string fname, const MapLoader &ml, int agentsNum = 0)
 				this->goal_locations.push_back(make_pair(goal / ml.cols, goal % ml.cols));
 				goals[goal] = true;
 				this->headings.push_back(-1);
+                this->done.push_back(false);
+                this->min_end_time.push_back(0);
 
-				// update others
+
+              // update others
 				/*this->max_v.push_back(1);
 				this->max_w.push_back(1);
 				this->max_a.push_back(1);*/
@@ -230,9 +240,12 @@ void AgentsLoader::clearLocationFromAgents(int row, int col) {
 
 
 // add an agent
-void AgentsLoader::addAgent(int start_row, int start_col, int goal_row, int goal_col) {
+void AgentsLoader::addAgent(int start_row, int start_col, int goal_row, int goal_col,int min_time,int finish, int heading) {
   this->initial_locations.push_back(make_pair(start_row, start_col));
   this->goal_locations.push_back(make_pair(goal_row, goal_col));
+  this->headings.push_back(heading);
+  this->min_end_time.push_back(min_time);
+  this->done.push_back(finish);
   num_of_agents++;
 }
 
@@ -245,4 +258,14 @@ void AgentsLoader::saveToFile(std::string fname) {
            << goal_locations[i].first << "," << goal_locations[i].second << ","
 		   /*<< max_v[i] << "," << max_a[i] << "," << max_w[i] << ","*/  << endl;
   myfile.close();
+}
+
+void AgentsLoader::clear(){
+    initial_locations.clear();
+    goal_locations.clear();
+    min_end_time.clear();
+    done.clear();
+    headings.clear();
+    num_of_agents = 0;
+
 }

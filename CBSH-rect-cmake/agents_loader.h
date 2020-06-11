@@ -19,6 +19,8 @@ class AgentsLoader {
   int num_of_agents;
   vector< pair<int, int> > initial_locations;
   vector< pair<int, int> > goal_locations;
+  vector<int> min_end_time;
+  vector<bool> done;
   vector<int> headings;
   vector<double> max_v;  // entry [i] is the max translational velocity for agent i
   vector<double> max_w;  // entry [i] is the max rotational velocity for agent i
@@ -28,7 +30,8 @@ class AgentsLoader {
   AgentsLoader(boost::python::object agents);
   AgentsLoader(int number_of_agent);
 
-    void addAgent ( int start_row, int start_col, int goal_row, int goal_col );
+  void addAgent ( int start_row, int start_col, int goal_row, int goal_col,int min_time = 0,int finish = false, int heading = -1);
+  void clear();
   void printAgentsInitGoal ();
   void saveToFile(const std::string fname);
   pair<int, int> agentStartOrGoalAt(int row, int col);
