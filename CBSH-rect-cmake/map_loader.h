@@ -17,8 +17,13 @@ class MapLoader
   int rows;
   int cols;
 
+  //for kiva map
+  int workpoint_num;
+  int maxtime;
+  unordered_map<int,int> endpoints;
 
-  int start_loc;
+
+    int start_loc;
   int goal_loc;
 
   enum valid_moves_t { NORTH, EAST, SOUTH, WEST, WAIT_MOVE, MOVE_COUNT };  // MOVE_COUNT is the enum's size

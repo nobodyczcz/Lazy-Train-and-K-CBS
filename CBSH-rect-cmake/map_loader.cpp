@@ -4,6 +4,7 @@
 #include<boost/tokenizer.hpp>
 #include <cstring>
 #include <bitset>
+#include <sstream>
 
 
 using namespace boost;
@@ -165,42 +166,79 @@ void MapLoader::loadKiva(string fname)
 {
     string line;
     ifstream myfile (fname.c_str());
-    if (myfile.is_open()) {
-        getline (myfile,line);
-        char_separator<char> sep(",");
-        tokenizer< char_separator<char> > tok(line, sep);
-        tokenizer< char_separator<char> >::iterator beg=tok.begin();
-        int rows = atoi ( (*beg).c_str() ); // read number of rows
-        beg++;
-        int cols = atoi ( (*beg).c_str() ); // read number of cols
-        bool* my_map= new bool[rows*cols];
-        for (int i=0; i<rows*cols; i++)
-            my_map[i] = false;
-        // read map (and start/goal locations)
-        for (int i=0; i<rows; i++) {
-            getline (myfile, line);
-            for (int j=0; j<cols; j++) {
-                my_map[cols*i + j] = (line[j] == '@');
+    if (!myfile.is_open())
+    {
+        cerr << "Map file not found." << endl;
+        return;
+    }
+    //read file
+    getline(myfile, line);
+    boost::char_separator<char> sep(",");
+    boost::tokenizer< boost::char_separator<char> > tok(line, sep);
+    boost::tokenizer< boost::char_separator<char> >::iterator beg = tok.begin();
+    rows = atoi((*beg).c_str()) + 2; // read number of rows
+    beg++;
+    cols = atoi((*beg).c_str()) + 2; // read number of cols
+
+    stringstream ss;
+    getline(myfile, line);
+    ss << line;
+    ss >> workpoint_num;
+
+    int agent_num;
+    ss.clear();
+    getline(myfile, line);
+    ss << line;
+    ss >> agent_num;
+
+    ss.clear();
+    getline(myfile, line);
+    ss << line;
+    ss >> maxtime;
+
+    bool* my_map= new bool[rows*cols];
+    //DeliverGoal.resize(row*col, false);
+    // read map
+    int ep = 0, ag = 0;
+    for (int i = 1; i<rows - 1; i++)
+    {
+        getline(myfile, line);
+        for (int j = 1; j<cols - 1; j++)
+        {
+            my_map[cols*i + j] = (line[j - 1] == '@'); // not a block
+
+            if (line[j - 1] == 'e') //endpoint
+            {
+                endpoints[ep++] = i*cols+ j;
+            }
+            else if (line[j - 1] == 'r') //robot rest
+            {
+                endpoints[workpoint_num + ag] = i*cols + j;
             }
         }
 
-        myfile.close();
-        this->rows = rows;
-        this->cols = cols;
-        this->my_map = my_map;
-        // initialize moves_offset array
-        moves_offset = new int[MapLoader::MOVE_COUNT];
-        moves_offset[MapLoader::valid_moves_t::WAIT_MOVE] = 0;
-        moves_offset[MapLoader::valid_moves_t::NORTH] = -cols;
-        moves_offset[MapLoader::valid_moves_t::EAST] = 1;
-        moves_offset[MapLoader::valid_moves_t::SOUTH] = cols;
-        moves_offset[MapLoader::valid_moves_t::WEST] = -1;
     }
-    else
+    myfile.close();
+
+    //set the border of the map blocked
+    for (int i = 0; i < rows; i++)
     {
-        cerr << "Map file " << fname << " not found." << std::endl;
-        exit(10);
+        my_map[i*cols] = false;
+        my_map[i*cols + cols - 1] = false;
     }
+    for (int j = 1; j < cols - 1; j++)
+    {
+        my_map[j] = false;
+        my_map[rows*cols - cols + j] = false;
+    }
+    this->my_map = my_map;
+    // Possible moves [WAIT, NORTH, EAST, SOUTH, WEST]
+    moves_offset = new int[MapLoader::MOVE_COUNT];
+    moves_offset[MapLoader::valid_moves_t::WAIT_MOVE] = 0;
+    moves_offset[MapLoader::valid_moves_t::NORTH] = -cols;
+    moves_offset[MapLoader::valid_moves_t::EAST] = 1;
+    moves_offset[MapLoader::valid_moves_t::SOUTH] = cols;
+    moves_offset[MapLoader::valid_moves_t::WEST] = -1;
 }
 
 char* MapLoader::mapToChar() 
