@@ -63,7 +63,7 @@ void ReservationTable::deletePath(int agent_id, std::vector<PathEntry>* path) {
 	}
 }
 
-OldConfList* ReservationTable::findConflict(int agent, int currLoc, int nextLoc, int currT,int kDelay) {
+OldConfList* ReservationTable::findConflict(int agent, int currLoc, int nextLoc, int currT,int kDelay, bool ignore_goal_table) {
 	OldConfList* confs =  new OldConfList;
 	int nextT = currT + 1;
 	//cout << "currloc " << currLoc << " nextloc " << nextLoc << endl;
@@ -85,6 +85,7 @@ OldConfList* ReservationTable::findConflict(int agent, int currLoc, int nextLoc,
 			
 			
 		}
+
 		if (goalTable.count(nextLoc)) {
 			goalAgentList::iterator it;
 			for (it = goalTable[nextLoc].begin(); it != goalTable[nextLoc].end(); ++it) {

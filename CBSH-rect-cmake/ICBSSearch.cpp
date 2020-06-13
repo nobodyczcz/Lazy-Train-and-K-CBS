@@ -271,10 +271,14 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 							//cout << "continues conf, jump" << endl;
 							continue;
 						}
-						std::shared_ptr<Conflict> newConf(new Conflict());
-						if((get<3>(*con) < 0) && (get<4>(*con) >= paths[get<0>(*con)]->size() - 1) && option.ignore_target)
+
+						if (option.ignore_target && (get<3>(*con) < 0) && (get<4>(*con) > paths[get<0>(*con)]->size() - 1 + kDelay)){
 						    continue;
-						if (targetReasoning && (get<3>(*con) < 0) && (get<4>(*con) >= paths[get<0>(*con)]->size() - 1)) {
+						}
+
+                        std::shared_ptr<Conflict> newConf(new Conflict());
+
+                        if (targetReasoning && (get<3>(*con) < 0) && (get<4>(*con) >= paths[get<0>(*con)]->size() - 1)) {
 							newConf->targetConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<4>(*con)+ get<5>(*con), kDelay);
 						}
 						//else if (targetReasoning && (get<3>(*con) < 0) && (get<4>(*con) >= paths[get<1>(*con)]->size() - 1)) {
@@ -350,9 +354,12 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 						continue;
 					}
 
-					std::shared_ptr<Conflict> newConf(new Conflict());
-                    if((get<3>(*con) < 0) && (get<4>(*con) >= paths[get<0>(*con)]->size() - 1) && option.ignore_target)
+                    if (option.ignore_target && (get<3>(*con) < 0) && (get<4>(*con) > paths[get<0>(*con)]->size() - 1 + kDelay)){
                         continue;
+                    }
+
+					std::shared_ptr<Conflict> newConf(new Conflict());
+
 					if (targetReasoning && (get<3>(*con) < 0) && (get<4>(*con) > paths[get<0>(*con)]->size() - 1)) {
 						newConf->targetConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<4>(*con), kDelay);
 					}
@@ -2281,10 +2288,10 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
                     g2 = paths[a2]->at(t2_end).location;
 				}
 				else if(option.RM4way==5){
-                    pair<int, int> t1s_result = get_st(*paths[a1], timestep, num_col, action1, action2,false);
-                    pair<int, int> t1e_result = get_gt(*paths[a1], timestep, num_col, action1, action2,false);
-                    pair<int, int> t2s_result = get_st(*paths[a2], timestep2, num_col, action1, action2,false);
-                    pair<int, int> t2e_result = get_gt(*paths[a2], timestep2, num_col, action1, action2,false);
+                    pair<int, int> t1s_result = get_st(*paths[a1], timestep, num_col, action1, action2,false, false);
+                    pair<int, int> t1e_result = get_gt(*paths[a1], timestep, num_col, action1, action2,false, false);
+                    pair<int, int> t2s_result = get_st(*paths[a2], timestep2, num_col, action1, action2,false, false);
+                    pair<int, int> t2e_result = get_gt(*paths[a2], timestep2, num_col, action1, action2,false, false);
                     t1_start = t1s_result.first;
                     t1_end = t1e_result.first;
                     t2_start = t2s_result.first;

@@ -2,6 +2,7 @@
 
 #include <tuple>
 #include <boost/heap/fibonacci_heap.hpp>
+#include <boost/unordered_map.hpp>
 #include <google/dense_hash_map>
 #include <iostream>
 #include <unordered_map>
@@ -44,6 +45,21 @@ struct PathEntry
 	PathEntry(int loc = -1) { location = loc; single = false; }
 	std::list<int> locations; // all possible locations at the same time step
 	OldConfList* conflist=NULL;
+};
+
+struct hvals {
+    boost::unordered_map<int, int> heading;
+    int get_hval(int direction) {
+        if (heading.count(direction)) {
+            return heading[direction];
+        }
+        else {
+            return INT_MAX;
+        }
+    }
+    ~hvals(){
+        heading.clear();
+    }
 };
 
 struct MDDPath {

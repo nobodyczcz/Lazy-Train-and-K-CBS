@@ -11,20 +11,7 @@
 
 using namespace std;
 
-struct hvals {
-	boost::unordered_map<int, int> heading;
-	int get_hval(int direction) {
-		if (heading.count(direction)) {
-			return heading[direction];
-		}
-		else {
-			return INT_MAX;
-		}
-	}
-	~hvals(){
-	    heading.clear();
-	}
-};
+
 template<class Map>
 class ComputeHeuristic 
 {

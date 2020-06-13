@@ -58,8 +58,8 @@ int classifyRectangleConflict(int s1, int s2, int g1, int g2, const std::pair<in
 int classifyFlippedRectangleConflict(int s1, int s2, int g1, int g2, const std::pair<int, int>& Rg, const std::pair<int, int>& Rs, int num_col, int flipType, bool kFullyBlocked);
 
 //Retrieve st and gt for new rm
-pair<int, int> get_st(const std::vector<PathEntry>& path, int timestep,int num_col, int action1,int action2, bool single_only = true);
-pair<int, int> get_gt(const std::vector<PathEntry>& path, int timestep, int num_col, int action1, int action2,bool single_only = true);
+pair<int, int> get_st(const std::vector<PathEntry>& path, int timestep,int num_col, int action1,int action2, bool single_only = true, bool pause_on_stop=true);
+pair<int, int> get_gt(const std::vector<PathEntry>& path, int timestep, int num_col, int action1, int action2,bool single_only = true, bool pause_on_stop=true);
 MDDNode* get_st_mdd(const MDDLevels& mdd, int timestep,int loc, int num_col, int action1, int action2);
 MDDNode* get_gt_mdd(const MDDLevels& mdd, int timestep,int loc, int num_col, int action1, int action2);
 std::pair<MDDNode*,MDDNode*> get_sg_mdd(const MDDLevels& mdd, int timestep,int loc, int num_col, int action1, int action2);

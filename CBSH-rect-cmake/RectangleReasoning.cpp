@@ -244,14 +244,14 @@ bool isRectangleConflict(int s1, int s2, int g1, int g2, int num_col,int kRobust
  * Retrieve st and gt for new rm
  */
 
-pair<int,int> get_st(const std::vector<PathEntry>& path, int timestep, int num_col, int action1, int action2, bool single_only) {
+pair<int,int> get_st(const std::vector<PathEntry>& path, int timestep, int num_col, int action1, int action2, bool single_only, bool pause_on_stop) {
 	pair<int, int> result;
 	int candidate=-1;
 	result.second == 0;
 	int preAction = -1;
 	for (int t = timestep; t > 0; t--) {
 		int action = getAction(path[t].location, path[t - 1].location, num_col);
-		if (action != action1 && action != action2) {
+		if (action != action1 && action != action2 && (action!=action::WAIT || pause_on_stop)) {
             result.first = candidate;
             return result;
         }
@@ -270,14 +270,14 @@ pair<int,int> get_st(const std::vector<PathEntry>& path, int timestep, int num_c
 	return result;
 	
 };
-pair<int, int> get_gt(const std::vector<PathEntry>& path, int timestep, int num_col, int action1, int action2, bool single_only) {
+pair<int, int> get_gt(const std::vector<PathEntry>& path, int timestep, int num_col, int action1, int action2, bool single_only,bool pause_on_stop) {
 	pair<int, int> result;
     int candidate=-1;
     result.second == 0;
 	int preAction = -1;
 	for (int t = timestep; t < path.size()-1; t++) {
 		int action = getAction(path[t + 1].location, path[t].location, num_col);
-		if (action != action1 && action != action2) {
+		if (action != action1 && action != action2 && (action!=action::WAIT || pause_on_stop)) {
 			result.first = candidate;
 			return result;
 		}

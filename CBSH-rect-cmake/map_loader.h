@@ -20,7 +20,7 @@ class MapLoader
   //for kiva map
   int workpoint_num;
   int maxtime;
-  unordered_map<int,int> endpoints;
+
 
 
     int start_loc;
@@ -33,7 +33,7 @@ class MapLoader
   MapLoader(std::string fname); // load map from file
   MapLoader(int rows, int cols); // initialize new [rows x cols] empty map
   MapLoader();
-  void loadKiva(string fname);
+
   vector<pair<int, int>> get_transitions(int loc, int heading, int noWait) const;
   bool getLoc(int loc) ;
   inline bool is_blocked (int row, int col) const { return my_map[row * this->cols + col]; }
@@ -50,6 +50,5 @@ class MapLoader
   void saveToFile(std::string fname);
   int getDegree(int loc);
   bool isFullyBlocked(int start, int end);//check does map block entire area from start to end;
-  int getDistance(int loc1, int loc2);
   ~MapLoader();
 };
