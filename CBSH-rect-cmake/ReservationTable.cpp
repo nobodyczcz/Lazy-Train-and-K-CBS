@@ -123,6 +123,45 @@ OldConfList* ReservationTable::findConflict(int agent, int currLoc, int nextLoc,
 
 }
 
+int ReservationTable::countConflict(int agent, int currLoc, int nextLoc, int currT,int kDelay) {
+    int nextT = currT + 1;
+    if(nextLoc == -1)
+        return 0;
+    int count = 0;
+
+    if (res_table.count(nextLoc)) {
+        //detect vertex conflict and k delay vertex conflict
+        for (int k = -kDelay;  k <= kDelay; k++) {
+
+            int t = nextT + k;
+
+            if (res_table[nextLoc].count(t)) {
+                count++;
+            }
+
+
+        }
+
+        //detect edge conflict, we do not detect k delay edge conflict, because, every k delay edge conflict cause k delay vertex conflict.
+        //every edge conflict cause two k delay vertex conflict, thus don't need to detect edge conflict when k is not 0.
+        if (kDelay == 0) {
+            if (res_table[nextLoc].count(currT)) {
+                agentList::iterator it;
+                for (it = res_table[nextLoc][currT].begin(); it != res_table[nextLoc][currT].end(); ++it) {
+
+                    if (it->second.nextStep != NULL && it->second.nextStep->loc == currLoc) {
+                        count++;
+                    }
+
+                }
+            }
+        }
+
+
+    }
+    return count;
+}
+
 
 
 

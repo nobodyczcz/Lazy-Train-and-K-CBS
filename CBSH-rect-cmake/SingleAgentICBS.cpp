@@ -4,7 +4,7 @@
 #include <ctime>
 
 template<class Map>
-void SingleAgentICBS<Map>::updatePath(LLNode* goal, std::vector<PathEntry> &path)
+void SingleAgentICBS<Map>::updatePath(LLNode* goal, std::vector<PathEntry> &path,ReservationTable* res_table)
 {
 	path.resize(goal->timestep + 1);
 	LLNode* curr = goal;
@@ -14,8 +14,13 @@ void SingleAgentICBS<Map>::updatePath(LLNode* goal, std::vector<PathEntry> &path
 
 		path[t].location = curr->loc;
 		path[t].actionToHere = curr->heading;
-		delete path[t].conflist;
-		path[t].conflist = curr->conflist;
+        path[t].heading = curr->heading;
+
+        delete path[t].conflist;
+        if (t!=0)
+            path[t].conflist =  res_table->findConflict(agent_id, curr->parent->loc, curr->loc, t-1, kRobust);
+        else
+            path[t].conflist = NULL;
 
 		curr->conflist = NULL;
 		curr = curr->parent;
@@ -174,7 +179,7 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 			{
 				//cout << num_generated << endl;
 
-				updatePath(curr, path);
+				updatePath(curr, path, res_table);
 
 				releaseClosedListNodes(&allNodes_table);
 
@@ -246,8 +251,7 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 					continue;
 
 
-				OldConfList* conflicts = res_table->findConflict(agent_id, curr->loc, next_id, curr->timestep, kRobust);
-				int next_internal_conflicts = curr->num_internal_conf + conflicts->size();
+				int next_internal_conflicts = res_table->countConflict(agent_id, curr->loc, next_id, curr->timestep, kRobust);
 
 				
 
