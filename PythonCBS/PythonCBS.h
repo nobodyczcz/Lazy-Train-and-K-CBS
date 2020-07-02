@@ -2,7 +2,7 @@
 #include <string>
 #include <vector>
 #include <boost/python.hpp>
-#include "flat_map_loader.h"
+#include "FlatAgentLoader.h.h"
 
 
 #include "ICBSSearch.h"

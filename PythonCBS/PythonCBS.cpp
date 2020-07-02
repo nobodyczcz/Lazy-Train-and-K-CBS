@@ -1,5 +1,5 @@
 #include "PythonCBS.h"
-#include "flat_map_loader.h"
+#include "FlatAgentLoader.h"
 #include "MDD.h"
 
 namespace p = boost::python;
@@ -60,7 +60,7 @@ PythonCBS<Map>::PythonCBS(p::object railEnv1, std::string algo, int kRobust, int
 	ml = new FlatlandLoader(railEnv.attr("rail"), p::extract<int>(rows), p::extract<int>(cols));
 	std::cout << "load agents " << std::endl;
 
-	al =  new AgentsLoader(railEnv.attr("agents"));
+	al =  new FlatAgentLoader(railEnv.attr("agents"));
 	std::cout << "load done " << std::endl;
 	if (debug) {
 		al->printAgentsInitGoal();

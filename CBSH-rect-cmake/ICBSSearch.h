@@ -13,7 +13,7 @@
 #include "common.h"
 #include "MDD.h"
 #include <unordered_map>
-#include <boost/python.hpp>
+//#include <boost/python.hpp>
 #include <fstream>
 
 
@@ -27,6 +27,7 @@ struct options {
 	bool pairAnalysis = false;
 	bool printFailedPair = false;
 	bool ignore_target = false;
+	int window_size = 0;
 };
 
 
@@ -95,6 +96,9 @@ public:
 	bool I_RM = false;
 	std::clock_t start;
     int num_col;
+
+    options option;
+
 
 
 
@@ -186,7 +190,6 @@ protected:
 	void printStrategy() const;
 	bool timeout=false;
 
-    options option;
 
 
 
@@ -211,22 +214,22 @@ public:
     bool search();
 
     ~MultiMapICBSSearch();
-	boost::python::list outputPaths()
-	{
-		boost::python::list result;
-		for (int i = 0; i < num_of_agents; i++)
-		{
-			boost::python::list agentPath;
-
-
-			for (int t = 0; t < paths[i]->size(); t++) {
-				boost::python::tuple location = boost::python::make_tuple(paths[i]->at(t).location / num_col, paths[i]->at(t).location % num_col, paths[i]->at(t).actionToHere);
-				agentPath.append(location);
-			}
-			result.append(agentPath);
-		}
-		return result;
-	}
+//	boost::python::list outputPaths()
+//	{
+//		boost::python::list result;
+//		for (int i = 0; i < num_of_agents; i++)
+//		{
+//			boost::python::list agentPath;
+//
+//
+//			for (int t = 0; t < paths[i]->size(); t++) {
+//				boost::python::tuple location = boost::python::make_tuple(paths[i]->at(t).location / num_col, paths[i]->at(t).location % num_col, paths[i]->at(t).actionToHere);
+//				agentPath.append(location);
+//			}
+//			result.append(agentPath);
+//		}
+//		return result;
+//	}
 	bool isTimeout() { return timeout; };
 
 	bool trainCorridor1 = false;

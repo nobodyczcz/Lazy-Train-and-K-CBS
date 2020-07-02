@@ -4,7 +4,7 @@
 #include <set>
 #include "SingleAgentICBS.h"
 #include "ICBSNode.h"
-#include "flat_map_loader.h"
+//#include "flat_map_loader.h"
 #include "ConstraintTable.h"
 #include <iostream>
 #include <fstream>
@@ -23,12 +23,12 @@ public:
 	}
 	virtual bool buildMDD( ConstraintTable& constraint_table,
 		int numOfLevels, SingleAgentICBS<MapLoader>& solver) {};
-	virtual bool buildMDD( ConstraintTable& constraint_table,
-		int numOfLevels, SingleAgentICBS<FlatlandLoader>& solver) {};
+//	virtual bool buildMDD( ConstraintTable& constraint_table,
+//		int numOfLevels, SingleAgentICBS<FlatlandLoader>& solver) {};
 	virtual bool buildMDD( ConstraintTable& constraint_table, int numOfLevels,
 		SingleAgentICBS<MapLoader>& solver, int start, int start_time, int start_heading = -1) {};
-	virtual bool buildMDD( ConstraintTable& constraint_table, int numOfLevels,
-		SingleAgentICBS<FlatlandLoader>& solver, int start, int start_time, int start_heading = -1) {};
+//	virtual bool buildMDD( ConstraintTable& constraint_table, int numOfLevels,
+//		SingleAgentICBS<FlatlandLoader>& solver, int start, int start_time, int start_heading = -1) {};
 
 	virtual MDDNode* find(int location, int level) {};
 	virtual void deleteNode(MDDNode* node) {};

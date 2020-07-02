@@ -408,7 +408,7 @@ bool isConstrained(int curr_id, int next_id, int next_timestep, const std::vecto
 	return false;
 };
 template class CorridorReasoning<MapLoader>;
-template class CorridorReasoning<FlatlandLoader>;
+//template class CorridorReasoning<FlatlandLoader>;
 
 //
 //template  int CorridorReasoning::getEnteringTime<MapLoader>(const std::vector<PathEntry>&, const std::vector<PathEntry>&, int, const MapLoader*);

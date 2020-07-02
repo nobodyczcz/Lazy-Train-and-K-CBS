@@ -9,7 +9,6 @@
 #include <vector>
 #include <utility>
 #include "map_loader.h"
-#include <boost/python.hpp>
 
 
 using namespace std;
@@ -27,7 +26,6 @@ class AgentsLoader {
   vector<double> max_a;  // entry [i] is the max accelration for agent i
   AgentsLoader(const std::string fname, const MapLoader &ml, int agentsNum);
   AgentsLoader();
-  AgentsLoader(boost::python::object agents);
   AgentsLoader(int number_of_agent);
 
   void addAgent ( int start_row, int start_col, int goal_row, int goal_col,int min_time = 0,int finish = false, int heading = -1);

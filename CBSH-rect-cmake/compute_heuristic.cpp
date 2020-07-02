@@ -186,5 +186,5 @@ ComputeHeuristic<Map>::~ComputeHeuristic() {
 }
 
 template class ComputeHeuristic<MapLoader>;
-template class ComputeHeuristic<FlatlandLoader>;
+//template class ComputeHeuristic<FlatlandLoader>;
 

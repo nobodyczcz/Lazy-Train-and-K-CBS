@@ -244,17 +244,22 @@ bool isRectangleConflict(int s1, int s2, int g1, int g2, int num_col,int kRobust
  * Retrieve st and gt for new rm
  */
 
-pair<int,int> get_st(const std::vector<PathEntry>& path, int timestep, int num_col, int action1, int action2, bool single_only, bool pause_on_stop) {
+pair<int,int> get_st(const std::vector<PathEntry>& path, int timestep, int num_col, int action1, int action2, int kDelay, bool single_only, bool pause_on_stop) {
 	pair<int, int> result;
 	int candidate=-1;
 	result.second == 0;
 	int preAction = -1;
+	int wait_count = kDelay;
 	for (int t = timestep; t > 0; t--) {
 		int action = getAction(path[t].location, path[t - 1].location, num_col);
-		if (action != action1 && action != action2 && (action!=action::WAIT || pause_on_stop)) {
+		if (action != action1 && action != action2 && (action!=action::WAIT || wait_count == 0 || pause_on_stop)) {
             result.first = candidate;
             return result;
         }
+        if(action == action::WAIT && wait_count > 0 && kDelay > 0)
+		    wait_count --;
+
+		
 		if (!single_only || path[t].single){
 		    candidate = t;
 		}
@@ -270,17 +275,21 @@ pair<int,int> get_st(const std::vector<PathEntry>& path, int timestep, int num_c
 	return result;
 	
 };
-pair<int, int> get_gt(const std::vector<PathEntry>& path, int timestep, int num_col, int action1, int action2, bool single_only,bool pause_on_stop) {
+pair<int, int> get_gt(const std::vector<PathEntry>& path, int timestep, int num_col, int action1, int action2, int kDelay, bool single_only,bool pause_on_stop) {
 	pair<int, int> result;
     int candidate=-1;
     result.second == 0;
 	int preAction = -1;
+	int wait_count = kDelay;
 	for (int t = timestep; t < path.size()-1; t++) {
 		int action = getAction(path[t + 1].location, path[t].location, num_col);
-		if (action != action1 && action != action2 && (action!=action::WAIT || pause_on_stop)) {
+		if (action != action1 && action != action2 && (action!=action::WAIT || wait_count == 0|| pause_on_stop)) {
 			result.first = candidate;
 			return result;
 		}
+
+        if(action == action::WAIT && wait_count > 0 && kDelay > 0)
+            wait_count --;
         if (!single_only || path[t].single){
             candidate = t;
         }
@@ -1465,9 +1474,9 @@ template void generalizedRectangle<MapLoader>(const std::vector<PathEntry>& path
 template bool blockedNodes<MapLoader>(const MDD<MapLoader>& mdd, const Constraint b, int num_col);
 template bool ExtractBarriers<MapLoader>(const MDD<MapLoader>& mdd, int dir1, int dir2, int start, int goal, int start_time, int num_col, std::list<Constraint>& B);
 
-template void generalizedRectangle<FlatlandLoader>(const std::vector<PathEntry>& path1, const std::vector<PathEntry>& path2, const MDD<FlatlandLoader>& mdd1, const MDD<FlatlandLoader>& mdd2,
-	const std::list<Constraint>::const_iterator& b1, const std::list<Constraint>::const_iterator& b2,
-	const std::list<Constraint>& B1, const std::list<Constraint>& B2, int timestep, int num_col,
-	int& best_type, std::pair<int, int>& best_Rs, std::pair<int, int>& best_Rg, int time_limit, std::set<std::pair<int, int>> &visitedRs);
-template bool blockedNodes<FlatlandLoader>(const MDD<FlatlandLoader>& mdd, const Constraint b, int num_col);
-template bool ExtractBarriers<FlatlandLoader>(const MDD<FlatlandLoader>& mdd, int dir1, int dir2, int start, int goal, int start_time, int num_col, std::list<Constraint>& B);
+//template void generalizedRectangle<FlatlandLoader>(const std::vector<PathEntry>& path1, const std::vector<PathEntry>& path2, const MDD<FlatlandLoader>& mdd1, const MDD<FlatlandLoader>& mdd2,
+//	const std::list<Constraint>::const_iterator& b1, const std::list<Constraint>::const_iterator& b2,
+//	const std::list<Constraint>& B1, const std::list<Constraint>& B2, int timestep, int num_col,
+//	int& best_type, std::pair<int, int>& best_Rs, std::pair<int, int>& best_Rg, int time_limit, std::set<std::pair<int, int>> &visitedRs);
+//template bool blockedNodes<FlatlandLoader>(const MDD<FlatlandLoader>& mdd, const Constraint b, int num_col);
+//template bool ExtractBarriers<FlatlandLoader>(const MDD<FlatlandLoader>& mdd, int dir1, int dir2, int start, int goal, int start_time, int num_col, std::list<Constraint>& B);

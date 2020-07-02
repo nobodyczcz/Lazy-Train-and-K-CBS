@@ -127,7 +127,7 @@ elseif(APPLE)
 	add_definitions('-std=c++14')
 
 	message(STATUS ">>>> Found APPLE <<<<")
-#	set(CMAKE_SHARED_LIBRARY_SUFFIX ".dylib")
+	set(CMAKE_SHARED_LIBRARY_SUFFIX ".dylib")
 #	add_definitions('-DBoost_NO_BOOST_CMAKE=ON')
 	set(boostPython python37)
 	find_package(PythonInterp 3.7 REQUIRED)

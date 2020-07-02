@@ -3,7 +3,7 @@
 #include "ConstraintTable.h"
 #include "LLNode.h"
 #include "map_loader.h"
-#include "flat_map_loader.h"
+//#include "flat_map_loader.h"
 #include "compute_heuristic.h"
 #include <vector>
 

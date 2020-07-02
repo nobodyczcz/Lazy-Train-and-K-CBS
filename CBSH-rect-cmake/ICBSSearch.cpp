@@ -253,6 +253,8 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 				if (paths[a1]->at(t).conflist != NULL && paths[a1]->at(t).conflist->size() != 0) {
 					int preciousConflit[4];
 					for (auto con : *(paths[a1]->at(t).conflist)) {
+					    if (option.window_size >0 && get<4>(*con)>option.window_size)
+					        continue;
 						if (debug_mode)
 							cout << "l<" << get<0>(*con) << "," << get<1>(*con) << ","
 							<< "(" << get<2>(*con) / num_col << "," << get<2>(*con) % num_col << ")" << ","
@@ -305,6 +307,9 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 					delete paths[a1]->at(t).conflist;
 				}
 			}
+
+            if(option.ignore_target)
+                continue;
 			for (int a2 = 0; a2 < num_of_agents; a2++)
 			{//low level search can't find target conflict if a1<a2
 				if (a1 == a2)
@@ -318,8 +323,7 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 						break;
 					}
 				}
-				if(!option.ignore_target)
-				    findTargetConflicts(a1, a2, curr);
+				findTargetConflicts(a1, a2, curr);
 
 			}
 		}
@@ -341,6 +345,8 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 
 				int preciousConflit[4];
 				for (auto& con : *(paths[a1]->at(t).conflist)) {
+                    if (option.window_size >0 && get<4>(*con)>option.window_size)
+                        continue;
 					if (preciousConflit[0]== get<0>(*con) &&
 						preciousConflit[1] == get<1>(*con)&&
 						(abs(preciousConflit[2] - get<2>(*con)) ==num_col|| abs(preciousConflit[2] - get<2>(*con)) == 1)&&
@@ -390,11 +396,12 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 				delete paths[a1]->at(t).conflist;
 			}
 
+            if(option.ignore_target)
+                continue;
 			for (int a2 = 0; a2 < num_of_agents; a2++)
 			{//low level search can't find target conflict if a1<a2
 				if (a1 == a2)
 					continue;
-                if(!option.ignore_target)
 				findTargetConflicts(a1, a2, curr);
 				
 			}
@@ -2268,10 +2275,10 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
                 int t1_start, t1_end, t2_start, t2_end;
                 int s1, g1, s2, g2;
 				if (option.RM4way == 3 || option.RM4way == 4){
-                    pair<int, int> t1s_result = get_st(*paths[a1], timestep, num_col, action1, action2);
-                    pair<int, int> t1e_result = get_gt(*paths[a1], timestep, num_col, action1, action2);
-                    pair<int, int> t2s_result = get_st(*paths[a2], timestep2, num_col, action1, action2);
-                    pair<int, int> t2e_result = get_gt(*paths[a2], timestep2, num_col, action1, action2);
+                    pair<int, int> t1s_result = get_st(*paths[a1], timestep, num_col, action1, action2, kDelay);
+                    pair<int, int> t1e_result = get_gt(*paths[a1], timestep, num_col, action1, action2, kDelay);
+                    pair<int, int> t2s_result = get_st(*paths[a2], timestep2, num_col, action1, action2, kDelay);
+                    pair<int, int> t2e_result = get_gt(*paths[a2], timestep2, num_col, action1, action2, kDelay);
                     t1_start = t1s_result.first;
                     t1_end = t1e_result.first;
                     t2_start = t2s_result.first;
@@ -2288,10 +2295,10 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
                     g2 = paths[a2]->at(t2_end).location;
 				}
 				else if(option.RM4way==5){
-                    pair<int, int> t1s_result = get_st(*paths[a1], timestep, num_col, action1, action2,false, false);
-                    pair<int, int> t1e_result = get_gt(*paths[a1], timestep, num_col, action1, action2,false, false);
-                    pair<int, int> t2s_result = get_st(*paths[a2], timestep2, num_col, action1, action2,false, false);
-                    pair<int, int> t2e_result = get_gt(*paths[a2], timestep2, num_col, action1, action2,false, false);
+                    pair<int, int> t1s_result = get_st(*paths[a1], timestep, num_col, action1, action2, kDelay, false, false);
+                    pair<int, int> t1e_result = get_gt(*paths[a1], timestep, num_col, action1, action2, kDelay, false, false);
+                    pair<int, int> t2s_result = get_st(*paths[a2], timestep2, num_col, action1, action2, kDelay,false, false);
+                    pair<int, int> t2e_result = get_gt(*paths[a2], timestep2, num_col, action1, action2, kDelay,false, false);
                     t1_start = t1s_result.first;
                     t1_end = t1e_result.first;
                     t2_start = t2s_result.first;
@@ -3229,5 +3236,5 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 
 
 template class MultiMapICBSSearch<MapLoader>;
-template class MultiMapICBSSearch<FlatlandLoader>;
+//template class MultiMapICBSSearch<FlatlandLoader>;
 
