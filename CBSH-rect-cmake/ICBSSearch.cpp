@@ -1560,59 +1560,58 @@ void MultiMapICBSSearch<Map>::startPairAnalysis(ICBSNode* node,int agent1, int a
     countNodes(analysisEngine->HL_num_expanded);
     if (!result){
         num_failed+=1;
-        if (option.printFailedPair) {
-            MDD<Map> *a1Mdd = new MDD<Map>();
-            MDD<Map> *a2Mdd = new MDD<Map>();
-            // vector < list< pair<int, int> > >* cons_vec = collectConstraints(&node, id);
-            updateConstraintTable(node, agent1);
-            int a1PathLength;
-            int a2PathLength=0;
-            if(node != dummy_start) {
-                for (auto path : node->paths) {
-                    if (path.first ==agent1){
-                        a1PathLength = path.second.size();
-                    }
-                    else if(path.first ==agent2){
-                        a2PathLength = path.second.size();
-                    }
+    }
+    if (option.printFailedPair && analysisEngine->HL_num_expanded>=1000) {
+        MDD<Map> *a1Mdd = new MDD<Map>();
+        MDD<Map> *a2Mdd = new MDD<Map>();
+        // vector < list< pair<int, int> > >* cons_vec = collectConstraints(&node, id);
+        updateConstraintTable(node, agent1);
+        int a1PathLength;
+        int a2PathLength=0;
+        if(node != dummy_start) {
+            for (auto path : node->paths) {
+                if (path.first ==agent1){
+                    a1PathLength = path.second.size();
+                }
+                else if(path.first ==agent2){
+                    a2PathLength = path.second.size();
                 }
             }
-            else{
-                a1PathLength = paths[agent1]->size();
-            }
-            if(a2PathLength==0){
-                a2PathLength = paths[agent2]->size();
-            }
-
-            a1Mdd->buildMDD(constraintTable, a1PathLength + kDelay, *search_engines[agent1]);
-            updateConstraintTable(node, agent2);
-            a2Mdd->buildMDD(constraintTable,  a2PathLength + kDelay, *search_engines[agent2]);
-//            MDD<Map> *a1Mdd = buildMDD(*node, agent1, kDelay);
-//            MDD<Map> *a2Mdd = buildMDD(*node, agent2, kDelay);
-            if (num_failed!=1)
-                analysisOutput<<",";
-            analysisOutput <<"{"<<endl;
-            analysisOutput <<"\"a1\" :"<< agent1 <<"," << endl;
-            analysisOutput <<"\"a1_mdd\" :" <<"["<<endl;
-            a1Mdd->printNodes(analysisOutput);
-            analysisOutput <<"],"<<endl;
-            analysisOutput <<"\"a1_constraints\":"<<"\"";
-            printConstraints(node, agent1,analysisOutput);
-            analysisOutput <<"\","<<endl;
-            analysisOutput << "\"a2\" :"<< agent2 <<"," << endl;
-            analysisOutput <<"\"a2_mdd\" :" <<"["<<endl;
-            a2Mdd->printNodes(analysisOutput);
-            analysisOutput <<"],"<<endl;
-            analysisOutput <<"\"a2_constraints\":"<<"\"";
-            printConstraints(node, agent2,analysisOutput);
-            analysisOutput <<"\","<<endl;
-            analysisOutput <<"\"k\":"<<kDelay <<endl;
-            analysisOutput <<"}"<<endl;
-
-            delete a1Mdd;
-            delete a2Mdd;
+        }
+        else{
+            a1PathLength = paths[agent1]->size();
+        }
+        if(a2PathLength==0){
+            a2PathLength = paths[agent2]->size();
         }
 
+        a1Mdd->buildMDD(constraintTable, a1PathLength + kDelay, *search_engines[agent1]);
+        updateConstraintTable(node, agent2);
+        a2Mdd->buildMDD(constraintTable,  a2PathLength + kDelay, *search_engines[agent2]);
+//            MDD<Map> *a1Mdd = buildMDD(*node, agent1, kDelay);
+//            MDD<Map> *a2Mdd = buildMDD(*node, agent2, kDelay);
+        if (num_failed!=1)
+            analysisOutput<<",";
+        analysisOutput <<"{"<<endl;
+        analysisOutput <<"\"a1\" :"<< agent1 <<"," << endl;
+        analysisOutput <<"\"a1_mdd\" :" <<"["<<endl;
+        a1Mdd->printNodes(analysisOutput);
+        analysisOutput <<"],"<<endl;
+        analysisOutput <<"\"a1_constraints\":"<<"\"";
+        printConstraints(node, agent1,analysisOutput);
+        analysisOutput <<"\","<<endl;
+        analysisOutput << "\"a2\" :"<< agent2 <<"," << endl;
+        analysisOutput <<"\"a2_mdd\" :" <<"["<<endl;
+        a2Mdd->printNodes(analysisOutput);
+        analysisOutput <<"],"<<endl;
+        analysisOutput <<"\"a2_constraints\":"<<"\"";
+        printConstraints(node, agent2,analysisOutput);
+        analysisOutput <<"\","<<endl;
+        analysisOutput <<"\"k\":"<<kDelay <<endl;
+        analysisOutput <<"}"<<endl;
+
+        delete a1Mdd;
+        delete a2Mdd;
     }
     num_pairs+=1;
 }
