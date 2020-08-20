@@ -126,7 +126,7 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 	start->num_internal_conf= 0;
 
 
-	allNodes_table[start] = start;
+	allNodes_table.insert(start);
 	min_f_val = start->getFVal();
 
 	lowerbound = std::max(lowerbound, (double)constraint_table.length_min);
@@ -221,13 +221,14 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 			int next_id = move.first;
 			time_generated += 1;
 			int next_timestep = curr->timestep + 1;
-//            if (max_plan_len <= curr->timestep)
-//            {
-//                if (next_id == curr->loc)
-//                {
-//                    continue;
-//                }
-//            }
+            if (max_plan_len <= curr->timestep)
+            {
+                if (next_id == curr->loc)
+                {
+                    continue;
+                }
+                next_timestep--;
+            }
 			if (!constraint_table.is_constrained(next_id, next_timestep) &&
 				!constraint_table.is_constrained(curr->loc * map_size + next_id, next_timestep))
 			{
@@ -283,7 +284,7 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 					}
 
 					if (it == allNodes_table.end())
-						allNodes_table[next] = next;
+						allNodes_table.insert(next);
 					else
 						goal_nodes.push_back(next);
 
@@ -291,7 +292,7 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 				else
 				{  // update existing node's if needed (only in the open_list)
 					delete(next);  // not needed anymore -- we already generated it before
-					LLNode* existing_next = (*it).second;
+					LLNode* existing_next = (*it);
 
 					if (existing_next->in_openlist == true)
 					{  // if its in the open list
@@ -391,7 +392,7 @@ inline void SingleAgentICBS<Map>::releaseClosedListNodes(hashtable_t* allNodes_t
 	hashtable_t::iterator it;
 	for (it = allNodes_table->begin(); it != allNodes_table->end(); ++it) {
 
-			delete ((*it).second);
+			delete (*it);
 	}
 	for (auto node : goal_nodes)
 		delete node;
@@ -424,8 +425,6 @@ SingleAgentICBS<Map>::SingleAgentICBS(int start_location, int goal_location,  Ma
 	empty_node->loc = -1;
 	deleted_node = new LLNode();
 	deleted_node->loc = -2;
-	allNodes_table.set_empty_key(empty_node);
-	allNodes_table.set_deleted_key(deleted_node);
 
 }
 

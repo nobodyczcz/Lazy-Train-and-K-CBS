@@ -6,6 +6,7 @@
 #include "flat_map_loader.h"
 #include "compute_heuristic.h"
 #include <vector>
+#include <boost/unordered_set.hpp>
 
 typedef std::tuple<int, int, int> CottidorTable_Key; // endpoint1, endpoint2, length
 typedef std::unordered_map<CottidorTable_Key, int, three_tuple_hash> CorridorTable; // value = length of the bypass

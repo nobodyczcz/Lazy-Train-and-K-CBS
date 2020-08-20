@@ -15,7 +15,7 @@
 #include "ConstraintTable.h"
 #include "compute_heuristic.h"
 #include <boost/heap/fibonacci_heap.hpp>
-#include <google/dense_hash_map>
+#include <boost/unordered_set.hpp>
 
 
 template<class Map>
@@ -25,7 +25,7 @@ public:
 	// define typedefs and handles for heap and hash_map
 	typedef boost::heap::fibonacci_heap< LLNode*, boost::heap::compare<LLNode::compare_node> > heap_open_t;
 	typedef boost::heap::fibonacci_heap< LLNode*, boost::heap::compare<LLNode::secondary_compare_node> > heap_focal_t;
-	typedef google::dense_hash_map<LLNode*, LLNode*, LLNode::NodeHasher, LLNode::eqnode> hashtable_t;
+    typedef boost::unordered_set<LLNode*, LLNode::NodeHasher, LLNode::eqnode> hashtable_t;
 	heap_open_t open_list;
 	heap_focal_t focal_list;
 	hashtable_t allNodes_table;
