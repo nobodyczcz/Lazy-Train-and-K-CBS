@@ -6,7 +6,7 @@
 
 #include "MDD.h"
 #include "map_loader.h"
-//#include "flat_map_loader.h"
+#include "flat_map_loader.h"
 #include "LLNode.h"
 #include "Conflict.h"
 #include "ConstraintTable.h"

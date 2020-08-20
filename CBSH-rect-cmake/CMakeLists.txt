@@ -52,6 +52,8 @@ add_executable (CBS-K
 			egraph_reader.h
 			common.h
 			common.cpp
+			flat_map_loader.cpp
+			flat_map_loader.h
 			# ../mapVisualiser/Visualiser.h
 			# ../mapVisualiser/Visualiser.cpp
 			MDDNode.h
@@ -121,43 +123,40 @@ if (WIN32)
 	ELSEIF(NOT Boost_FOUND)
 	  MESSAGE(FATAL_ERROR "Unable to find all boost libs")
 	ENDIF()
+
 elseif(APPLE)
-	add_definitions('-std=c++14')
+	add_definitions('-std=c++11')
 
 	message(STATUS ">>>> Found APPLE <<<<")
-	set(CMAKE_SHARED_LIBRARY_SUFFIX ".dylib")
-#	add_definitions('-DBoost_NO_BOOST_CMAKE=ON')
+	set(CMAKE_SHARED_LIBRARY_SUFFIX ".so")
+	#	add_definitions('-DBoost_NO_BOOST_CMAKE=ON')
 
-	find_path(SPARSEHASH_INCLUDE_DIRS sparsehash/dense_hash_map)
-	if (NOT SPARSEHASH_INCLUDE_DIRS)
-		message(FATAL_ERROR "Could not find <sparsehash/dense_hash_map>.")
-	endif ()
-	include_directories(SYSTEM ${SPARSEHASH_INCLUDE_DIRS})
+	find_package(PythonInterp 3.7 EXACT REQUIRED)
+	find_package(PythonLibs 3.7 EXACT REQUIRED)
 
+	include_directories(${PYTHON_INCLUDE_DIRS})
 
-	# This goes after, since it uses PythonInterp as hint
-
-#	set(Boost_USE_STATIC_LIBS OFF)
+	set(Boost_USE_STATIC_LIBS OFF)
 	set(Boost_USE_MULTITHREADED ON)
-#	set(Boost_USE_STATIC_RUNTIME OFF)
-	FIND_PACKAGE(Boost REQUIRED COMPONENTS system program_options)
+	set(Boost_USE_STATIC_RUNTIME OFF)
 
-	# Detect and add SFML
-	# list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
-	#Find any version 2.X of SFML
-	#See the FindSFML.cmake file for additional details and instructions
-	# find_package(SFML 2 REQUIRED  graphics window system)
-	# if(SFML_FOUND)
-	# include_directories(${SFML_INCLUDE_DIR})
-	# target_link_libraries(CBS-K ${SFML_LIBRARIES} ${SFML_DEPENDENCIES})
-	# endif()
+	# Other boost packages still use normal boost library
+	FIND_PACKAGE(Boost REQUIRED COMPONENTS system program_options thread)
+	include_directories(${Boost_INCLUDE_DIRS})
 
-	if(Boost_FOUND)
-		include_directories(${Boost_INCLUDE_DIRS})
-		target_link_libraries(CBS-K ${Boost_LIBRARIES})
-	else()
-		message(FATAL_ERROR "Could not find boost.")
-	endif()
+	# Find py-boost include dir and py-boost lib
+	find_path(BOOST_PYTHON_INCLUDE_DIR boost/python.hpp HINTS ../py-boost/include)
+	find_library(BOOST_PYTHON NAMES libboost_python37.a HINTS ../py-boost/lib)
+	include_directories(${BOOST_PYTHON_INCLUDE_DIR})
+
+	#Print find result. Make its correct
+	message(STATUS ${PYTHON_INCLUDE_DIRS})
+	message(STATUS ${BOOST_PYTHON_INCLUDE_DIR})
+	message(STATUS ${BOOST_PYTHON})
+
+	target_link_libraries(CBS-K  ${Boost_LIBRARIES} ${PYTHON_LIBRARIES} ${BOOST_PYTHON})
+
+
 else()
 	file(READ "/etc/issue" ETC_ISSUE)
 	string(REGEX MATCH "Ubuntu|Manjaro" DIST ${ETC_ISSUE})
@@ -166,6 +165,12 @@ else()
 	if (NOT SPARSEHASH_INCLUDE_DIRS)
 		message(FATAL_ERROR "Could not find <sparsehash/dense_hash_map>.")
 	endif ()
+
+	set(boostPython python3)
+	find_package(PythonInterp 3.6 REQUIRED)
+	find_package(PythonLibs 3.6 REQUIRED)
+	include_directories(${PYTHON_INCLUDE_DIRS})
+
 	include_directories(SYSTEM ${SPARSEHASH_INCLUDE_DIRS})
 
 
@@ -174,12 +179,12 @@ else()
 	set(Boost_USE_STATIC_LIBS OFF)
 	set(Boost_USE_MULTITHREADED ON)  
 	set(Boost_USE_STATIC_RUNTIME OFF)
-	FIND_PACKAGE(Boost REQUIRED COMPONENTS system program_options )
+	FIND_PACKAGE(Boost REQUIRED COMPONENTS system program_options ${boostPython})
 
 
 	if(Boost_FOUND)
 		include_directories(${Boost_INCLUDE_DIRS})
-		target_link_libraries(CBS-K ${Boost_LIBRARIES})
+		target_link_libraries(CBS-K ${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
 	else()
 		 message(FATAL_ERROR "Could not find boost.")
 	endif()

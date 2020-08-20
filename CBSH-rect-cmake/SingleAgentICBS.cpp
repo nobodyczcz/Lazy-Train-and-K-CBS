@@ -123,9 +123,7 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 	start->focal_handle = focal_list.push(start);
 	start->in_openlist = true;
 	start->time_generated = 0;
-	OldConfList* conflicts = res_table->findConflict(agent_id, start->loc, start->loc, -1, kRobust);
-	start->conflist = conflicts;
-	start->num_internal_conf= conflicts->size();
+	start->num_internal_conf= 0;
 
 
 	allNodes_table[start] = start;
@@ -251,7 +249,7 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 					continue;
 
 
-				int next_internal_conflicts = res_table->countConflict(agent_id, curr->loc, next_id, curr->timestep, kRobust);
+				int next_internal_conflicts = curr->num_internal_conf +  res_table->countConflict(agent_id, curr->loc, next_id, curr->timestep, kRobust);
 
 				
 
@@ -288,7 +286,6 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 						allNodes_table[next] = next;
 					else
 						goal_nodes.push_back(next);
-					next->conflist = conflicts;
 
 				}
 				else
@@ -319,9 +316,7 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 							existing_next->h_val = next_h_val;
 							existing_next->parent = curr;
 							existing_next->num_internal_conf = next_internal_conflicts;
-							delete(existing_next->conflist);
-							existing_next->conflist = conflicts;
-							if (update_open) 
+							if (update_open)
 								open_list.increase(existing_next->open_handle);  // increase because f-val improved
 							if (add_to_focal) 
 								existing_next->focal_handle = focal_list.push(existing_next);
@@ -341,8 +336,6 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 							existing_next->num_internal_conf = next_internal_conflicts;
 							existing_next->open_handle = open_list.push(existing_next);
 							existing_next->in_openlist = true;
-							delete(existing_next->conflist);
-							existing_next->conflist = conflicts;
 							if (existing_next->getFVal() <= lower_bound)
 								existing_next->focal_handle = focal_list.push(existing_next);
 						}
@@ -355,7 +348,8 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 		if (open_list.size() == 0)  // in case OPEN is empty, no path found
 			break;
 		LLNode* open_head = open_list.top();
-		
+
+        assert(open_head->getFVal() >= min_f_val);
 
 		if (open_head->getFVal() > min_f_val) 
 		{
@@ -449,4 +443,4 @@ SingleAgentICBS<Map>::~SingleAgentICBS()
 }
 
 template class SingleAgentICBS<MapLoader>;
-//template class SingleAgentICBS<FlatlandLoader>;
+template class SingleAgentICBS<FlatlandLoader>;

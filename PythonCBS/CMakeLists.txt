@@ -113,36 +113,39 @@ if (WIN32)
 	  MESSAGE(FATAL_ERROR "Unable to find all boost libs")
 	ENDIF()
 
+
 elseif(APPLE)
-	add_definitions('-std=c++14')
+	add_definitions('-std=c++11')
 
 	message(STATUS ">>>> Found APPLE <<<<")
 	set(CMAKE_SHARED_LIBRARY_SUFFIX ".so")
-	add_definitions('-DBoost_NO_BOOST_CMAKE=ON')
-	set(boostPython python38)
+	#	add_definitions('-DBoost_NO_BOOST_CMAKE=ON')
 
-	FIND_PACKAGE(python 3.8 REQUIRED development interpreter)
-	find_path(SPARSEHASH_INCLUDE_DIRS sparsehash/dense_hash_map)
-	if (NOT SPARSEHASH_INCLUDE_DIRS)
-		message(FATAL_ERROR "Could not find <sparsehash/dense_hash_map>.")
-	endif ()
-	include_directories(SYSTEM ${SPARSEHASH_INCLUDE_DIRS})
+	find_package(PythonInterp 3.7 EXACT REQUIRED)
+	find_package(PythonLibs 3.7 EXACT REQUIRED)
 
-
-	# This goes after, since it uses PythonInterp as hint
 	include_directories(${PYTHON_INCLUDE_DIRS})
 
 	set(Boost_USE_STATIC_LIBS OFF)
 	set(Boost_USE_MULTITHREADED ON)
 	set(Boost_USE_STATIC_RUNTIME OFF)
-	FIND_PACKAGE(Boost REQUIRED COMPONENTS system program_options ${boostPython})
 
-	if(Boost_FOUND)
-		include_directories(${Boost_INCLUDE_DIRS})
-		target_link_libraries(PythonCBS ${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
-	else()
-		message(FATAL_ERROR "Could not find boost.")
-	endif()
+	# Other boost packages still use normal boost library
+	FIND_PACKAGE(Boost REQUIRED COMPONENTS system program_options thread)
+	include_directories(${Boost_INCLUDE_DIRS})
+
+	# Find py-boost include dir and py-boost lib
+	find_path(BOOST_PYTHON_INCLUDE_DIR boost/python.hpp HINTS ../py-boost/include)
+	find_library(BOOST_PYTHON NAMES libboost_python37.a HINTS ../py-boost/lib)
+	include_directories(${BOOST_PYTHON_INCLUDE_DIR})
+
+	#Print find result. Make its correct
+	message(STATUS ${PYTHON_INCLUDE_DIRS})
+	message(STATUS ${BOOST_PYTHON_INCLUDE_DIR})
+	message(STATUS ${BOOST_PYTHON})
+
+	target_link_libraries(PythonCBS ${Boost_LIBRARIES} ${PYTHON_LIBRARIES} ${BOOST_PYTHON})
+
 
 else()
 	file(READ "/etc/issue" ETC_ISSUE)

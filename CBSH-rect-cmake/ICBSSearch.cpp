@@ -251,7 +251,6 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 			//collect conflict from path;
 			for (size_t t = 0; t < paths[a1]->size(); t++) {
 				if (paths[a1]->at(t).conflist != NULL && paths[a1]->at(t).conflist->size() != 0) {
-					int preciousConflit[4];
 					for (auto con : *(paths[a1]->at(t).conflist)) {
 					    if (option.window_size >0 && get<4>(*con)>option.window_size)
 					        continue;
@@ -260,19 +259,7 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 							<< "(" << get<2>(*con) / num_col << "," << get<2>(*con) % num_col << ")" << ","
 							<< "(" << get<3>(*con) / num_col << "," << get<3>(*con) % num_col << ")" << ","
 							<< get<4>(*con) << "," << get<5>(*con) << ">; ";
-						//cout << "(" << abs(preciousConflit[2] - get<2>(*con)) << ")";
-						if (preciousConflit[0] == get<0>(*con) &&
-							preciousConflit[1] == get<1>(*con) &&
-							(abs(preciousConflit[2] - get<2>(*con)) == num_col || abs(preciousConflit[2] - get<2>(*con)) == 1) &&
-							abs(get<4>(*con) - preciousConflit[3]) == 1
-							) {
-							preciousConflit[0] = get<0>(*con);
-							preciousConflit[1] = get<1>(*con);
-							preciousConflit[2] = get<2>(*con);
-							preciousConflit[3] = get<4>(*con);
-							//cout << "continues conf, jump" << endl;
-							continue;
-						}
+
 
 						if (option.ignore_target && (get<3>(*con) < 0) && (get<4>(*con) > paths[get<0>(*con)]->size() - 1 + kDelay)){
 						    continue;
@@ -297,11 +284,6 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 						}
 
 						curr.unknownConf.emplace_back(newConf);
-						preciousConflit[0] = get<0>(*con);
-						preciousConflit[1] = get<1>(*con);
-						preciousConflit[2] = get<2>(*con);
-						preciousConflit[3] = get<4>(*con);
-                        con.reset();
 
                     }
 					delete paths[a1]->at(t).conflist;
@@ -343,22 +325,9 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 				if (paths[a1]->at(t).conflist == NULL || paths[a1]->at(t).conflist->size() == 0)
 					continue;
 
-				int preciousConflit[4];
 				for (auto& con : *(paths[a1]->at(t).conflist)) {
                     if (option.window_size >0 && get<4>(*con)>option.window_size)
                         continue;
-					if (preciousConflit[0]== get<0>(*con) &&
-						preciousConflit[1] == get<1>(*con)&&
-						(abs(preciousConflit[2] - get<2>(*con)) ==num_col|| abs(preciousConflit[2] - get<2>(*con)) == 1)&&
-						abs(get<4>(*con)- preciousConflit[3]) == 1
-						) {
-						preciousConflit[0] = get<0>(*con);
-						preciousConflit[1] = get<1>(*con);
-						preciousConflit[2] = get<2>(*con);
-						preciousConflit[3] = get<4>(*con);
-						//cout << "continues conf, jump" << endl;
-						continue;
-					}
 
                     if (option.ignore_target && (get<3>(*con) < 0) && (get<4>(*con) > paths[get<0>(*con)]->size() - 1 + kDelay)){
                         continue;
@@ -387,10 +356,6 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 						<< "(" << get<3>(*con) / num_col << "," << get<3>(*con) % num_col << ")" << ","
 						<< get<4>(*con) << "," << get<5>(*con) << ">; ";
 					curr.unknownConf.emplace_back(newConf);
-					preciousConflit[0] = get<0>(*con);
-					preciousConflit[1] = get<1>(*con);
-					preciousConflit[2] = get<2>(*con);
-					preciousConflit[3] = get<4>(*con);
 
                 }
 				delete paths[a1]->at(t).conflist;
@@ -1083,7 +1048,7 @@ void ICBSSearch::printStrategy() const
 template<class Map>
 bool MultiMapICBSSearch<Map>::search(){
     std::clock_t t1;
-    if(!analysisInstance)
+    if(!analysisInstance && !option.print_nodes)
         printStrategy();
     // set timer
 
@@ -1187,6 +1152,23 @@ bool MultiMapICBSSearch<Map>::search(){
             }
         }
 
+        if(option.print_nodes){
+            cout<<"********************************"<<endl;
+            cout<<"Expand Node #: "<<curr->time_generated<<endl;
+            if (curr->parent!=NULL)
+                cout<<"Parent #: "<<curr->parent->time_generated<<endl;
+            cout<<"g value: "<< curr->g_val<<endl;
+            cout<<"h value: "<< curr->h_val<<endl;
+            cout<<"Classified conflicts: ";
+            for (auto conflict : curr->conflicts)
+                std::cout << *conflict;
+            if (curr->conflict == NULL)
+                cout<<"No conflicts. This is the conflict free goal node"<<endl;
+            else
+                cout<<"We choose conflict: "<<*curr->conflict;
+
+        }
+
         if (curr->conflict == NULL) //Fail to find a conflict => no conflicts
         {  // found a solution (and finish the while look)
             runtime = (std::clock() - start);
@@ -1219,11 +1201,12 @@ bool MultiMapICBSSearch<Map>::search(){
                  << curr->conflict->originalConf2 / num_col << ","
                  << curr->conflict->originalConf2 % num_col << ")"
                  << curr->conflict->t << "," << curr->conflict->k << "," << curr->conflict->type << ">" << std::endl;
-            cout << "always 4 way split " << option.RM4way << endl;
+            cout << "rm split method " << option.RM4way << endl;
             if (screen>=3)
                 printPaths();
 
         }
+
 
         if (screen == 1 || screen==6 ) {
             if(debug_mode)
@@ -1426,6 +1409,50 @@ bool MultiMapICBSSearch<Map>::search(){
                 cout << endl;
             }
         }
+        if(option.print_nodes){
+            for (int i = 0; i < curr->children.size(); i++)
+            {
+                cout<<endl;
+                cout <<"*** Generate Child Node #: "<<curr->children[i]->time_generated<<endl;
+                cout <<"Add new constraints: ";
+                for (auto constraint : curr->children[i]->constraints){
+                    int x, y, z;
+                    constraint_type type;
+                    tie(x, y, z, type) = constraint;
+                    string string_type;
+                    if(type == 0)
+                        string_type = "L";
+                    else if(type == 1)
+                        string_type = "R";
+                    else if(type == 2)
+                        string_type = "B";
+                    else if(type == 3)
+                        string_type = "V";
+                    else if(type == 4)
+                        string_type = "E";
+                    cout<<"<"<<curr->children[i]->agent_id <<"," << x << ","<< y << "," << z << "," << string_type  <<">";
+                }
+                cout<<endl;
+                cout <<"Find new path: "<<endl;
+                for (auto p: curr->children[i]->paths){
+                    cout<<"Agent id: "<<p.first<<" :";
+                    for (auto loc: p.second){
+                        cout << "("<<loc.location<<")->";
+                    }
+                    cout<<endl;
+                }
+                cout<<"Find new unclassified conflict: ";
+                for (auto c: curr->children[i]->unknownConf){
+                    cout << "<" << c->a1 << " "
+                         << c->a2 << ","
+                         << c->originalConf1  << ","
+                         << curr->conflict->originalConf2 << ","
+                         << curr->conflict->t << "," << curr->conflict->type << ">" ;
+                }
+                cout<<endl;
+
+            }
+        }
 //        if (option.pairAnalysis){
 //            for(int i = 0; i < curr->children.size(); i++){
 //                for(int a=0; a < num_of_agents;a++){
@@ -1444,6 +1471,7 @@ bool MultiMapICBSSearch<Map>::search(){
             break;
         }
         ICBSNode* open_head = open_list.top();
+        assert( open_head->f_val >= min_f_val);
         if ( open_head->f_val > min_f_val)
         {
             min_f_val = open_head->f_val;
@@ -1792,16 +1820,24 @@ void MultiMapICBSSearch<Map>::initializeDummyStart() {
 		cout << "Find initial conflict done" << endl;
 	min_f_val = dummy_start->f_val;
 	focal_list_threshold = min_f_val * focal_w;
-	if (debug_mode)
+	if (option.print_nodes)
 	{
-	    printPaths();
+	    cout<<"****************************"<<endl;
+	    cout<<"Initialize dummy start node, node #: 1"<<endl;
+	    for (int i = 0; i<paths.size();i++){
+	        cout<<"Agent id: " << i<<": ";
+	        for (auto p : *paths[i]){
+	            cout<<"("<<p.location <<")->";
+	        }
+	        cout<<endl;
+	    }
 
-		cout << "Dummy start conflicts:";
+		cout << "Dummy start unclassified conflicts:";
 		for (auto &conit : dummy_start->unknownConf) {
 			cout << "<" << conit->a1<< "," << conit->a2 << ","
-				<< "("  << ")" << ","
-				<< "("  << ")" << ","
-				<< conit->t<< ">; ";
+				<< conit->originalConf1 << ","
+				<< conit->originalConf2 << ","
+				<< conit->t<<","<< conit->type<< ">; ";
 
 		}
 		cout << endl;
@@ -3235,5 +3271,5 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 
 
 template class MultiMapICBSSearch<MapLoader>;
-//template class MultiMapICBSSearch<FlatlandLoader>;
+template class MultiMapICBSSearch<FlatlandLoader>;
 

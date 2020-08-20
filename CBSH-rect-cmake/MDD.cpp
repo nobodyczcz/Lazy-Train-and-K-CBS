@@ -1,5 +1,5 @@
 #include "MDD.h"
-//#include "flat_map_loader.h"
+#include "flat_map_loader.h"
 
 #include <iostream>
 
@@ -457,6 +457,6 @@ MDD<Map>::~MDD()
 }
 
 template class MDD<MapLoader>;
-//template class MDD<FlatlandLoader>;
+template class MDD<FlatlandLoader>;
 
 

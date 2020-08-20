@@ -10,7 +10,7 @@
 
 #include "LLNode.h"
 #include "map_loader.h"
-//#include "flat_map_loader.h"
+#include "flat_map_loader.h"
 #include "ReservationTable.h"
 #include "ConstraintTable.h"
 #include "compute_heuristic.h"

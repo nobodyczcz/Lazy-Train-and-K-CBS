@@ -158,16 +158,16 @@ void ComputeHeuristic<Map>::getHVals(vector<hvals>& res,int limit)
 				}
 			}
 
-			int heading = (s->heading + 2) % 4;
-			if (!res[s->loc].heading.count(heading)) {
-				res[s->loc].heading[heading] = s->g_val;
-				
-			}
-			else if (s->g_val < res[s->loc].heading[heading]) {
-				res[s->loc].heading[heading] = s->g_val;
-
-				
-			}
+//			int heading = (s->heading + 2) % 4;
+//			if (!res[s->loc].heading.count(heading)) {
+//				res[s->loc].heading[heading] = s->g_val;
+//
+//			}
+//			else if (s->g_val < res[s->loc].heading[heading]) {
+//				res[s->loc].heading[heading] = s->g_val;
+//
+//
+//			}
 
 			
 
@@ -186,5 +186,5 @@ ComputeHeuristic<Map>::~ComputeHeuristic() {
 }
 
 template class ComputeHeuristic<MapLoader>;
-//template class ComputeHeuristic<FlatlandLoader>;
+template class ComputeHeuristic<FlatlandLoader>;
 

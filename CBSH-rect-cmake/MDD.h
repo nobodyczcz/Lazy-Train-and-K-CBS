@@ -4,7 +4,7 @@
 #include <set>
 #include "SingleAgentICBS.h"
 #include "ICBSNode.h"
-//#include "flat_map_loader.h"
+#include "flat_map_loader.h"
 #include "ConstraintTable.h"
 #include <iostream>
 #include <fstream>

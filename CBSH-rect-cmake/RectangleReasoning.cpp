@@ -1474,9 +1474,9 @@ template void generalizedRectangle<MapLoader>(const std::vector<PathEntry>& path
 template bool blockedNodes<MapLoader>(const MDD<MapLoader>& mdd, const Constraint b, int num_col);
 template bool ExtractBarriers<MapLoader>(const MDD<MapLoader>& mdd, int dir1, int dir2, int start, int goal, int start_time, int num_col, std::list<Constraint>& B);
 
-//template void generalizedRectangle<FlatlandLoader>(const std::vector<PathEntry>& path1, const std::vector<PathEntry>& path2, const MDD<FlatlandLoader>& mdd1, const MDD<FlatlandLoader>& mdd2,
-//	const std::list<Constraint>::const_iterator& b1, const std::list<Constraint>::const_iterator& b2,
-//	const std::list<Constraint>& B1, const std::list<Constraint>& B2, int timestep, int num_col,
-//	int& best_type, std::pair<int, int>& best_Rs, std::pair<int, int>& best_Rg, int time_limit, std::set<std::pair<int, int>> &visitedRs);
-//template bool blockedNodes<FlatlandLoader>(const MDD<FlatlandLoader>& mdd, const Constraint b, int num_col);
-//template bool ExtractBarriers<FlatlandLoader>(const MDD<FlatlandLoader>& mdd, int dir1, int dir2, int start, int goal, int start_time, int num_col, std::list<Constraint>& B);
+template void generalizedRectangle<FlatlandLoader>(const std::vector<PathEntry>& path1, const std::vector<PathEntry>& path2, const MDD<FlatlandLoader>& mdd1, const MDD<FlatlandLoader>& mdd2,
+	const std::list<Constraint>::const_iterator& b1, const std::list<Constraint>::const_iterator& b2,
+	const std::list<Constraint>& B1, const std::list<Constraint>& B2, int timestep, int num_col,
+	int& best_type, std::pair<int, int>& best_Rs, std::pair<int, int>& best_Rg, int time_limit, std::set<std::pair<int, int>> &visitedRs);
+template bool blockedNodes<FlatlandLoader>(const MDD<FlatlandLoader>& mdd, const Constraint b, int num_col);
+template bool ExtractBarriers<FlatlandLoader>(const MDD<FlatlandLoader>& mdd, int dir1, int dir2, int start, int goal, int start_time, int num_col, std::list<Constraint>& B);
