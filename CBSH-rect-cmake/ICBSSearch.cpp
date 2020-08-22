@@ -2101,7 +2101,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
                 break;
             }
         }
-        if( corridor2 && isCorridorConflict(corridor, corridor, &parent))
+        if( corridor2 && isCorridorConflict(corridor, conflict, &parent))
         {
 
             corridor->p = conflict->p;

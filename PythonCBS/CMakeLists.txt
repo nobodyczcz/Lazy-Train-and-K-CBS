@@ -176,26 +176,21 @@ else()
 
 	FIND_PACKAGE(Boost)
 	IF(Boost_FOUND)
-	  SET(Boost_USE_STATIC_LIBS OFF)
-	  SET(Boost_USE_MULTITHREADED ON)
-	  SET(Boost_USE_STATIC_RUNTIME OFF)
-	  FIND_PACKAGE(Boost REQUIRED COMPONENTS system program_options ${boostPython})
-	  INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
+		SET(Boost_USE_STATIC_LIBS OFF)
+		SET(Boost_USE_MULTITHREADED ON)
+		SET(Boost_USE_STATIC_RUNTIME OFF)
+		FIND_PACKAGE(Boost REQUIRED COMPONENTS system program_options python3)
+		INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
 
-	  TARGET_LINK_LIBRARIES(PythonCBS ${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
+		TARGET_LINK_LIBRARIES(PythonCBS ${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
 
 
-	  
+
 
 	ELSEIF(NOT Boost_FOUND)
-	  MESSAGE(FATAL_ERROR "Unable to find correct Boost version. Did you set BOOST_ROOT?")
+		MESSAGE(FATAL_ERROR "Unable to find correct Boost version. Did you set BOOST_ROOT?")
 	ENDIF()
 
-	
 
-	include_directories(${PYTHON_INCLUDE_DIRS})
+
 endif()
-
-IF(CMAKE_COMPILER_IS_GNUCXX)
-  ADD_DEFINITIONS("-Wall")
-ENDIF()
