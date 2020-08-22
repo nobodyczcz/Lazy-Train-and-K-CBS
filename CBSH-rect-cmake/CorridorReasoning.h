@@ -31,8 +31,8 @@ public:
 		 Map* map);
 	int getExitTime(const std::vector<PathEntry>& path, const std::vector<PathEntry>& path2, int t,
 		Map* map);
-	int getBypassLength(int start, int end, std::pair<int, int> blocked,  Map* my_map, int num_col, int map_size, int start_heading = -1);
-	int getBypassLength(int start, int end, std::pair<int, int> blocked,  Map* my_map, int num_col, int map_size, ConstraintTable& constraint_table, int upper_bound, std::vector<hvals> restable, int start_heading = -1);
+//	int getBypassLength(int start, int end, std::pair<int, int> blocked,  Map* my_map, int num_col, int map_size, int start_heading = -1);
+//	int getBypassLength(int start, int end, std::pair<int, int> blocked,  Map* my_map, int num_col, int map_size, ConstraintTable& constraint_table, int upper_bound, std::vector<hvals> restable, int start_heading = -1);
 	int getBypassLength(int start, int end, std::pair<int, int> blocked, Map* my_map, int num_col, int map_size, ConstraintTable& constraint_table, int upper_bound, int start_heading = -1);
 
 };

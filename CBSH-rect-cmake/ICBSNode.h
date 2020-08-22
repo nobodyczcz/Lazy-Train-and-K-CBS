@@ -63,6 +63,8 @@ public:
 	std::list<std::shared_ptr<Conflict>> conflicts;
 	std::list<std::shared_ptr<Conflict>> unknownConf;
 	std::unordered_set<string> resolvedConflicts;
+    std::list<std::shared_ptr<Conflict>> cardinal_waiting;
+    std::list<std::shared_ptr<Conflict>> non_cardinal_waiting;
 
 	// The chosen conflict
 	//std::shared_ptr<RConflict> rConflict;

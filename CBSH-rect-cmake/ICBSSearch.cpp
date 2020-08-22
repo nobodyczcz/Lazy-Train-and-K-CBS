@@ -241,6 +241,8 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 		}
 		copyConflicts(curr.parent->conflicts, curr.conflicts, new_agents);
 		copyConflicts(curr.parent->unknownConf, curr.unknownConf, new_agents);
+        copyConflicts(curr.parent->cardinal_waiting, curr.cardinal_waiting, new_agents);
+        copyConflicts(curr.parent->non_cardinal_waiting, curr.non_cardinal_waiting, new_agents);
 
 		if (debug_mode)
 			cout << "Find Conflicts" << endl;
@@ -464,7 +466,7 @@ void ICBSSearch::findTargetConflicts(int a1, int a2, ICBSNode& curr) {
 
 
 template<class Map>
-bool MultiMapICBSSearch<Map>::isCorridorConflict(std::shared_ptr<Conflict>& corridor, const std::shared_ptr<Conflict>& con, bool cardinal, ICBSNode* node)
+bool MultiMapICBSSearch<Map>::isCorridorConflict(std::shared_ptr<Conflict>& corridor, const std::shared_ptr<Conflict>& con, ICBSNode* node)
 {
 	if (screen >= 4) {
 		cout << "Check is corridor conflict" << endl;
@@ -528,50 +530,50 @@ bool MultiMapICBSSearch<Map>::isCorridorConflict(std::shared_ptr<Conflict>& corr
 	//cout << "iscorridor4" << endl;
 
 
-	if (trainCorridor1) {
-		////cout << "iscorridor41" << endl;
-
-		ComputeHeuristic<Map> compute(paths[a[0]]->front().location, u[1], ml, paths[a[0]]->front().actionToHere);
-		vector<hvals> restable;
-		compute.getHVals(restable, timestep * 2);
-		std::pair<int, int> edge_empty = make_pair(-1, -1);
-		updateConstraintTable(node, a[0]);
-		//cout << "start: " << paths[a[0]]->front().location << " end:" << u[1] << " heading:" << paths[a[0]]->front().actionToHere << endl;
-		int t3 = cp.getExitTime(*paths[a[0]], *paths[a[1]], t[0] + 1, ml);
-		int t3_ = cp.getBypassLength(paths[a[0]]->front().location, u[1], edge, ml, num_col, map_size, constraintTable, t3 + 2 * k + 1, restable, paths[a[0]]->front().actionToHere);
-
-		ComputeHeuristic<Map> compute2(paths[a[1]]->front().location, u[0], ml, paths[a[1]]->front().actionToHere);
-		vector<hvals> restable2;
-		compute2.getHVals(restable2, timestep * 2);
-		updateConstraintTable(node, a[1]);
-		//cout << "start: " << paths[a[1]]->front().location << " end:" << u[0] << " heading:" << paths[a[1]]->front().actionToHere << endl;
-		int t4 = cp.getExitTime(*paths[a[1]], *paths[a[0]], t[1] + 1, ml);
-		int t4_ = cp.getBypassLength(paths[a[1]]->front().location, u[0], edge, ml, num_col, map_size, constraintTable, t3 + k + 1, restable2, paths[a[1]]->front().actionToHere);
-		//cout << t3 << "," << t3_ << "," << t4 << "," << t4_ << endl;
-		//cout << k << endl;
-		if (abs(t3 - t4) <= k && t3_ > t3 && t4_ > t4)
-		{
-			//cout << "iscorridor4.5" << endl;
-
-			corridor = std::shared_ptr<Conflict>(new Conflict());
-			corridor->corridorConflict(a[0], a[1], u[1], u[0], t3, t4, t3_, t4_, k, kDelay);
-			if (blocked(*(paths[corridor->a1]), corridor->constraint1) && blocked(*(paths[corridor->a2]), corridor->constraint2))
-				return true;
-		}
-
-	}
-	if (trainCorridor2) {
-		int e[2];
-		e[0] = cp.getExitTime(*paths[a[0]], *paths[a[1 - 0]], t[0] + 1, ml);
-		e[1] = cp.getExitTime(*paths[a[1]], *paths[a[1 - 1]], t[1] + 1, ml);
-		int el[2];
-		el[0] = paths[a[0]]->at(t[0] + 1).location;
-		el[1] = paths[a[1]]->at(t[1] + 1).location;
-		corridor = std::shared_ptr<Conflict>(new Conflict());
-		corridor->trainCorridorConflict(a[0], a[1], el[0], el[1], t[0], t[1], e[0], e[1], k, kDelay);
-		if (blocked(*(paths[corridor->a1]), corridor->constraint1) && blocked(*(paths[corridor->a2]), corridor->constraint2))
-			return true;
-	}
+//	if (trainCorridor1) {
+//		////cout << "iscorridor41" << endl;
+//
+//		ComputeHeuristic<Map> compute(paths[a[0]]->front().location, u[1], ml, paths[a[0]]->front().actionToHere);
+//		vector<hvals> restable;
+//		compute.getHVals(restable, timestep * 2);
+//		std::pair<int, int> edge_empty = make_pair(-1, -1);
+//		updateConstraintTable(node, a[0]);
+//		//cout << "start: " << paths[a[0]]->front().location << " end:" << u[1] << " heading:" << paths[a[0]]->front().actionToHere << endl;
+//		int t3 = cp.getExitTime(*paths[a[0]], *paths[a[1]], t[0] + 1, ml);
+//		int t3_ = cp.getBypassLength(paths[a[0]]->front().location, u[1], edge, ml, num_col, map_size, constraintTable, t3 + 2 * k + 1, restable, paths[a[0]]->front().actionToHere);
+//
+//		ComputeHeuristic<Map> compute2(paths[a[1]]->front().location, u[0], ml, paths[a[1]]->front().actionToHere);
+//		vector<hvals> restable2;
+//		compute2.getHVals(restable2, timestep * 2);
+//		updateConstraintTable(node, a[1]);
+//		//cout << "start: " << paths[a[1]]->front().location << " end:" << u[0] << " heading:" << paths[a[1]]->front().actionToHere << endl;
+//		int t4 = cp.getExitTime(*paths[a[1]], *paths[a[0]], t[1] + 1, ml);
+//		int t4_ = cp.getBypassLength(paths[a[1]]->front().location, u[0], edge, ml, num_col, map_size, constraintTable, t3 + k + 1, restable2, paths[a[1]]->front().actionToHere);
+//		//cout << t3 << "," << t3_ << "," << t4 << "," << t4_ << endl;
+//		//cout << k << endl;
+//		if (abs(t3 - t4) <= k && t3_ > t3 && t4_ > t4)
+//		{
+//			//cout << "iscorridor4.5" << endl;
+//
+//			corridor = std::shared_ptr<Conflict>(new Conflict());
+//			corridor->corridorConflict(a[0], a[1], u[1], u[0], t3, t4, t3_, t4_, k, kDelay);
+//			if (blocked(*(paths[corridor->a1]), corridor->constraint1) && blocked(*(paths[corridor->a2]), corridor->constraint2))
+//				return true;
+//		}
+//
+//	}
+//	if (trainCorridor2) {
+//		int e[2];
+//		e[0] = cp.getExitTime(*paths[a[0]], *paths[a[1 - 0]], t[0] + 1, ml);
+//		e[1] = cp.getExitTime(*paths[a[1]], *paths[a[1 - 1]], t[1] + 1, ml);
+//		int el[2];
+//		el[0] = paths[a[0]]->at(t[0] + 1).location;
+//		el[1] = paths[a[1]]->at(t[1] + 1).location;
+//		corridor = std::shared_ptr<Conflict>(new Conflict());
+//		corridor->trainCorridorConflict(a[0], a[1], el[0], el[1], t[0], t[1], e[0], e[1], k, kDelay);
+//		if (blocked(*(paths[corridor->a1]), corridor->constraint1) && blocked(*(paths[corridor->a2]), corridor->constraint2))
+//			return true;
+//	}
 	if (corridor2)
 	{
 		if (screen >= 4) {
@@ -617,61 +619,7 @@ bool MultiMapICBSSearch<Map>::isCorridorConflict(std::shared_ptr<Conflict>& corr
 
 	}
 	
-	if (!corridor4)
-		return false;
-	else if (cardinalCorridorReasoning && !cardinal)
-		return false;
-	// try 4-way splitting then
-	if (t[1] > t[0] + 2 * k - 1)
-		return false;
-	//cout << "iscorridor7" << endl;
-
-	//get h
-	std::tuple<int, int, int> key;
-	if (u[0] < u[1])
-	{
-		key = std::make_tuple(u[0], u[1], k);
-	}
-	else
-	{
-		key = std::make_tuple(u[1], u[0], k);
-	}
-	
-	CorridorTable::const_iterator got = corridorTable.find(key);
-	int h;
-	if (got == corridorTable.end())
-	{
-		h = cp.getBypassLength(u[0], u[1], edge, ml, num_col, map_size);
-		corridorTable[key] = h;
-	}
-	else
-	{
-		h = got->second;
-	}
-	if (h > 0 && k >= h - 1)
-		return false;
-	//cout << "iscorridor8" << endl;
-
-	for (int i = 0; i < 2; i++)
-	{
-		bool satisfied = false;
-		for (int j = t[0] + k; j <= t[0] + std::min(2 * k, h - 1); j++)
-		{
-			if (getLocation(*paths[a[i]], j) == u[1-i])
-			{
-				satisfied = true;
-				break;
-			}
-		}
-		if (!satisfied)
-			return false;
-	}
-	//cout << "iscorridor9" << endl;
-
-	corridor = std::shared_ptr<Conflict>(new Conflict());
-	corridor->corridorConflict(a[0], a[1], u[0], u[1], t[0], t[1], k, h,kDelay);
-	// TODO: test whether block all paths
-	return true;
+	return false;
 }
 
 
@@ -2096,1177 +2044,562 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 			parent.conflicts.push_back(con);
 			continue;
 		}
+        else if (con->type == conflict_type::STANDARD &&
+            paths[con->a1]->size() <= con->t || paths[con->a2]->size() <= con->t) //conflict happens after agent reaches its goal
+        {
+            parent.conflicts.push_back(con);
+            continue;
+        }
+		else if(con->p == conflict_priority::CARDINAL){ // we don't need corridor reasoning for start conflicts
+            parent.cardinal_waiting.push_back(con);
+        }
+        else{
+            parent.non_cardinal_waiting.push_back(con);
+        }
 
-		// Corridor reasoning
-		std::shared_ptr<Conflict> corridor;
-		if ((corridor2 || corridor4) && isCorridorConflict(corridor, con, cardinal1 && cardinal2, &parent))
-		{
-			
-
-			corridor->p = con->p;
-			parent.conflicts.push_back(corridor);
-			continue;
-		}
-		else if (corridor2 || corridor4) {
-			if (screen >= 4) {
-				cout << "not corridor conflict" << endl;
-			}
-		}
-		if (con->type == conflict_type::STANDARD &&
-			paths[con->a1]->size() <= con->t || paths[con->a2]->size() <= con->t) //conflict happens after agent reaches its goal
-		{
-			parent.conflicts.push_back(con);
-			continue;
-		}
-
-
-		//Rectangle reasoning for semi and non cardinal vertex conflicts
-		if (cons_strategy == constraint_strategy::CBSH_CR)//Identify cardinal rectangle by start and goals
-		{
-			if (isRectangleConflict(al.initial_locations[a1], al.initial_locations[a2], al.goal_locations[a1], al.goal_locations[a2],
-				paths[a1]->size() - 1, paths[a2]->size() - 1) &&
-				classifyRectangleConflict(al.initial_locations[a1], al.initial_locations[a2], al.goal_locations[a1], al.goal_locations[a2]) == 2)
-			{
-				std::pair<int, int> Rg = getRg(al.initial_locations[a1], al.goal_locations[a1], al.goal_locations[a2]);
-				std::pair<int, int> Rs = getRs(al.initial_locations[a1], al.initial_locations[a2], al.goal_locations[a1]);
-				int Rg_t = con->t + abs(Rg.first - loc1 / num_col) + abs(Rg.second - loc1 % num_col);
-
-				auto new_rectangle = std::shared_ptr<Conflict>(new Conflict(loc1,con->k,timestep));
-
-				int rt1, rt2;
-
-				if(option.RM4way>=2 && option.RM4way<=5){
-                    if (con->k == 0) {
-                        rt1 = timestep - getMahattanDistance(Rs.first, Rs.second, loc1 / num_col, loc1%num_col);
-                        rt2 = rt1;
-                    }
-                    else {
-                        rt1 = timestep - getMahattanDistance(Rs.first, Rs.second, loc1 / num_col, loc1%num_col);
-                        rt2 = timestep2 - getMahattanDistance(Rs.first, Rs.second, loc1 / num_col, loc1%num_col) - 1;
-                    }
-				}
-				else{
-                    rt1 = timestep - getMahattanDistance(Rs.first, Rs.second, loc1 / num_col, loc1%num_col);
-                    rt2 = rt1;
-				}
-
-				bool success;
-				int way = option.RM4way==1?6:4;
-				if(option.RM4way>=6){
-				    way = option.RM4way;
-				}
-
-                if (screen >= 5) {
-                    cout << "s1: " << al.initial_locations[a1].first << " " << al.initial_locations[a1].second << endl;
-                    cout << "g1: " << al.goal_locations[a1].first << " " << al.goal_locations[a1].second << endl;
-                    cout << "s1_t: " << 0 << endl;
-                    cout << "rt1: " << rt1 << endl;
-
-
-                    cout << "s2: " << al.initial_locations[a2].first << " " << al.initial_locations[a2].second << endl;
-                    cout << "g2: " << al.goal_locations[a2].first << " " << al.goal_locations[a2].second << endl;
-                    cout << "s2_t: " << 0 << endl;
-                    cout << "rt2: " << rt2 << endl;
-
-                    cout << "Rs: " << Rs.first << " " << Rs.second << endl;
-                    cout << "Rg: " << Rg.first << " " << Rg.second << endl;
-                    cout << "split setting: "<<way<<endl;
-                }
-
-				success = new_rectangle->kRectangleConflict(a1, a2, Rs, Rg,
-					al.initial_locations[a1],
-					al.initial_locations[a2],
-					rt1, rt2, paths, 0, 0,
-					al.goal_locations[a1],
-					al.goal_locations[a2],
-					num_col, kDelay, way, false);
-
-				bool isBlocked = true;
-
-				for (auto constraint : new_rectangle->multiConstraint1) {
-					isBlocked = isBlocked && blocked(*paths[new_rectangle->a1], constraint);
-				}
-				for (auto constraint : new_rectangle->multiConstraint2) {
-					isBlocked = isBlocked && blocked(*paths[new_rectangle->a2], constraint);
-				}
-
-				if (success && isBlocked) {
-					new_rectangle->p = conflict_priority::CARDINAL;
-					parent.conflicts.push_back(new_rectangle);
-					if(screen>=5){
-					    cout<<"Add "<<*new_rectangle<<endl;
-					}
-					continue;
-				}
-				else if (screen >= 4) {
-					cout << "Not success or not blocked" << endl;
-					cout << "succcess " << success << endl;
-					cout << "isBlocked " << isBlocked << endl;
-				}
-			}
-		}
-		else if (cons_strategy == constraint_strategy::CBSH_R)//Identify rectangle by start and goals
-		{
-			//cout << "identify rectangle by start and goals" << endl;
-			//Identify rectangles by start and goals
-			if (isRectangleConflict(al.initial_locations[a1], al.initial_locations[a2], al.goal_locations[a1], al.goal_locations[a2],
-				paths[a1]->size() - 1, paths[a2]->size() - 1))
-			{
-				int type = classifyRectangleConflict(al.initial_locations[a1], al.initial_locations[a2], al.goal_locations[a1], al.goal_locations[a2]);
-				std::pair<int, int> Rg = getRg(al.initial_locations[a1], al.goal_locations[a1], al.goal_locations[a2]);
-				std::pair<int, int> Rs = getRs(al.initial_locations[a1], al.initial_locations[a2], al.goal_locations[a1]);
-				int Rg_t = con->t + abs(Rg.first - loc1 / num_col) + abs(Rg.second - loc1 % num_col);
-
-				auto new_rectangle = std::shared_ptr<Conflict>(new Conflict(loc1,con->k,timestep));
-				int rt1, rt2;
-				if (con->k == 0) {
-					rt1 = timestep - getMahattanDistance(Rs.first, Rs.second, loc1 / num_col, loc1%num_col);
-					rt2 = rt1;
-				}
-				else {
-					rt1 = timestep - getMahattanDistance(Rs.first, Rs.second, loc1 / num_col, loc1%num_col);
-					rt2 = timestep2 - getMahattanDistance(Rs.first, Rs.second, loc1 / num_col, loc1%num_col) - 1;
-				}
-
-				bool success;
-				success = new_rectangle->kRectangleConflict(a1, a2, Rs, Rg,
-					al.initial_locations[a1],
-					al.initial_locations[a2],
-					rt1, rt2, paths, 0, 0,
-					al.goal_locations[a1],
-					al.goal_locations[a2],
-					num_col, kDelay, 4, false);
-
-				bool isBlocked = true;
-
-				for (auto constraint : new_rectangle->multiConstraint1) {
-					isBlocked = isBlocked && blocked(*paths[new_rectangle->a1], constraint);
-				}
-				for (auto constraint : new_rectangle->multiConstraint2) {
-					isBlocked = isBlocked && blocked(*paths[new_rectangle->a2], constraint);
-				}
-
-				if (success && isBlocked)
-				{
-
-					if (type == 2)
-						new_rectangle->p = conflict_priority::CARDINAL;
-					else if (type == 1) // && !findRectangleConflict(parent.parent, *conflict))
-						new_rectangle->p = conflict_priority::SEMI;
-					else //if (type == 0 && !findRectangleConflict(parent.parent, *conflict))
-						new_rectangle->p = conflict_priority::NON;
-					parent.conflicts.push_back(new_rectangle);
-					continue;
-				}
-				else if(screen>=4) {
-					cout << "Not success or not blocked" << endl;
-					cout << "succcess " << success << endl;
-					cout << "isBlocked " << isBlocked << endl;
-
-				}
-			}
-		}
-		else if (rectangleMDD && (option.RM4way>=3)) {
-            std::clock_t RM_Start = std::clock();
-
-
-            if (screen >= 4) {
-				cout << "new rm rectangle detecting" << endl;
-				cout << "timestep: " << timestep << endl;
-				cout << "timestep2: " << timestep2 << endl;
-
-			}
-			bool not_rectangle = false;
-			int action1, action2, action_diff;
-			if (timestep != 0 ) {
-
-				action1 = getAction(paths.at(a1)->at(timestep).location, paths.at(a1)->at(timestep - 1).location, num_col);
-			}
-
-			if (timestep == 0 || action1 == action::WAIT) {
-
-				action1 = getAction(paths.at(a1)->at(timestep + 1).location, paths.at(a1)->at(timestep).location, num_col);
-			}
-
-			if (timestep2 != 0 ) {
-				action2 = getAction(paths.at(a2)->at(timestep2).location, paths.at(a2)->at(timestep2 - 1).location, num_col);
-			}
-
-			if (timestep2 == 0 || action2 == action::WAIT) {
-
-				action2 = getAction(paths.at(a2)->at(timestep2 + 1).location, paths.at(a2)->at(timestep2).location, num_col);
-			}
-
-			
-
-			if (screen >= 4) {
-				cout << "action1: " << action1 << endl;
-				cout << "action2: " << action2 << endl;
-			}
-
-			action_diff = abs(action1 - action2);
-
-            if ((action1!=action::WAIT && action2!=action::WAIT) &&(action_diff == 1 || action_diff == 3)) {
-                int t1_start, t1_end, t2_start, t2_end;
-                int s1, g1, s2, g2;
-				if (option.RM4way == 3 || option.RM4way == 4){
-                    pair<int, int> t1s_result = get_st(*paths[a1], timestep, num_col, action1, action2, kDelay);
-                    pair<int, int> t1e_result = get_gt(*paths[a1], timestep, num_col, action1, action2, kDelay);
-                    pair<int, int> t2s_result = get_st(*paths[a2], timestep2, num_col, action1, action2, kDelay);
-                    pair<int, int> t2e_result = get_gt(*paths[a2], timestep2, num_col, action1, action2, kDelay);
-                    t1_start = t1s_result.first;
-                    t1_end = t1e_result.first;
-                    t2_start = t2s_result.first;
-                    t2_end = t2e_result.first;
-                    if(t1_start==-1 || t2_start==-1 ||t1_end==-1||t2_end==-1){
-                        parent.conflicts.push_back(con);
-                        RMTime += std::clock() - RM_Start;
-                        RMFailBeforeRec+=1;
-                        continue;
-                    }
-                    s1 = paths[a1]->at(t1_start).location;
-                    g1 = paths[a1]->at(t1_end).location;
-                    s2 = paths[a2]->at(t2_start).location;
-                    g2 = paths[a2]->at(t2_end).location;
-				}
-				else if(option.RM4way==5){
-                    pair<int, int> t1s_result = get_st(*paths[a1], timestep, num_col, action1, action2, kDelay, false, false);
-                    pair<int, int> t1e_result = get_gt(*paths[a1], timestep, num_col, action1, action2, kDelay, false, false);
-                    pair<int, int> t2s_result = get_st(*paths[a2], timestep2, num_col, action1, action2, kDelay,false, false);
-                    pair<int, int> t2e_result = get_gt(*paths[a2], timestep2, num_col, action1, action2, kDelay,false, false);
-                    t1_start = t1s_result.first;
-                    t1_end = t1e_result.first;
-                    t2_start = t2s_result.first;
-                    t2_end = t2e_result.first;
-                    if(t1_start==-1 || t2_start==-1 ||t1_end==-1||t2_end==-1){
-                        parent.conflicts.push_back(con);
-                        RMTime += std::clock() - RM_Start;
-                        RMFailBeforeRec+=1;
-                        if(screen>=5)
-                            cout<<"failed to extract rectangle starts or goals"<<endl;
-                        continue;
-                    }
-                    s1 = paths[a1]->at(t1_start).location;
-                    g1 = paths[a1]->at(t1_end).location;
-                    s2 = paths[a2]->at(t2_start).location;
-                    g2 = paths[a2]->at(t2_end).location;
-				}
-                else if(option.RM4way==6){
-                    const MDD<Map>* a1MDD = buildMDD(parent, a1);
-                    const MDD<Map>* a2MDD = buildMDD(parent,a2);
-                    std::pair<MDDNode*,MDDNode*> t1_result = get_sg_mdd(a1MDD->levels, timestep,paths.at(a1)->at(timestep).location, num_col, action1, action2);
-                    std::pair<MDDNode*,MDDNode*> t2_result = get_sg_mdd(a2MDD->levels, timestep2,paths.at(a2)->at(timestep2).location, num_col, action1, action2);
-                    t1_start = t1_result.first->level;
-                    t1_end = t1_result.second->level;
-                    t2_start = t2_result.first->level;
-                    t2_end = t2_result.second->level;
-                    s1 = t1_result.first->location;
-                    g1 = t1_result.second->location;
-                    s2 = t2_result.first->location;
-                    g2 = t2_result.second->location;
-
-                }
-
-
-				int new_type, new_area,a1_Rs_t,a1_Rg_t;
-				std::pair<int, int> Rg, Rs;
-				Rg = getRg(std::make_pair(s1 / num_col, s1 % num_col), std::make_pair(g1 / num_col, g1 % num_col),
-					std::make_pair(g2 / num_col, g2 % num_col));
-				Rs = getRs(std::make_pair(s1 / num_col, s1 % num_col), std::make_pair(s2 / num_col, s2 % num_col),
-					std::make_pair(g1 / num_col, g1 % num_col));
-
-				a1_Rs_t = getMahattanDistance(s1 / num_col, s1%num_col, Rs.first, Rs.second) + t1_start;
-				a1_Rg_t = getMahattanDistance(s1 / num_col, s1%num_col, Rg.first, Rg.second) + t1_start;
-
-				int earlyCrosst = -1;
-				int lateCrosst = -1;
-
-                if (!isRectangleConflict(s1, s2, g1, g2, num_col, kDelay, abs(t1_start - t2_start), option.RM4way >=4 ? true: false)){
-                    earlyCrosst = get_earlyCrosst(*paths[a1], *paths[a2], timestep, a1_Rs_t, con->k);
-                    lateCrosst = get_lateCrosst(*paths[a1], *paths[a2], timestep, a1_Rg_t, con->k);
-                    if (earlyCrosst != -1) {
-                        Rs = std::make_pair(paths[a1]->at(earlyCrosst).location / num_col, paths[a1]->at(earlyCrosst).location % num_col);
-                        a1_Rs_t = getMahattanDistance(s1 / num_col, s1%num_col, Rs.first, Rs.second) + t1_start;
-                    }
-
-                    if (lateCrosst != -1) {
-                        Rg = std::make_pair(paths[a1]->at(lateCrosst).location / num_col, paths[a1]->at(lateCrosst).location % num_col);
-                        a1_Rg_t = getMahattanDistance(s1 / num_col, s1%num_col, Rg.first, Rg.second) + t1_start;
-                    }
-                }
-
-				
-				new_area = (abs(Rs.first - Rg.first)+1) * (abs(Rs.second - Rg.second)+1);
-
-				if (s1 == s2 || s1 == g1 || s2 == g2 || new_area <= 2) {
-                    parent.conflicts.push_back(con);
-                    RMTime += std::clock() - RM_Start;
-                    RMFailBeforeRec+=1;
-                    if(screen>=5)
-                        cout<<"s or g are same or area<=2"<<endl;
-                    continue;
-                    continue;
-				}
-
-//				double findsgtime =  std::clock() - RM_Start;
-//                runtime_findsg += findsgtime;
-				RMDetectionCount+=1;
-
-                int rt1, rt2; //root time
-                std::shared_ptr<Conflict> rectangle = nullptr;
-                int total_k = -1;
-
-
-                if (option.RM4way <5 && !isRectangleConflict(s1, s2, g1, g2, num_col, kDelay, abs(t1_start - t2_start), option.RM4way >=4 ? true: false)){
-                    parent.conflicts.push_back(con);
-//                    RMTime += std::clock() - RM_Start;
-                    RMFailBeforeRec+=1;
-                    if(screen>=5)
-                        cout<<"failed pass rectangle check"<<endl;
-                    continue;
-                }
-
-				if (option.RM4way == 3) {
-				    if (!isRectangleConflict(s1, s2, g1, g2, num_col, kDelay, abs(t1_start - t2_start), option.RM4way >=4 ? true: false)){
-                        parent.conflicts.push_back(con);
-//                        RMTime += std::clock() - RM_Start;
-                        RMFailBeforeRec+=1;
-                        if(screen>=5)
-                            cout<<"failed pass rectangle check"<<endl;
-                        continue;
-				    }
-                    new_type = classifyRectangleConflict(s1, s2, g1, g2, Rg, num_col, I_RM);
-
-                    if ((!paths[a1]->at(t1_start).single||!paths[a1]->at(t1_end).single) && new_type > 0)
-                        new_type--;
-                    if ((!paths[a2]->at(t2_start).single || !paths[a2]->at(t2_end).single) && new_type > 0)
-                        new_type--;
-
-                    if (con->k == 0 ) {
-                        rt1 = a1_Rs_t;
-                        rt2 = a1_Rs_t;
-                    }
-                    else {
-                        rt1 = timestep - getMahattanDistance(Rs.first, Rs.second, loc1 / num_col, loc1%num_col);
-                        rt2 = timestep2 - getMahattanDistance(Rs.first, Rs.second, loc1 / num_col, loc1%num_col) - 1;
-                    }
-
-
-                    int maxWidth = kDelay >= 1 ? 1 : 0;
-                    for (int barrierWidth = 0; barrierWidth <= maxWidth ; barrierWidth++) {
-                        if (screen >= 4) {
-                            cout <<"Check barrier width: "<< barrierWidth << endl;
-                        }
-                        std::shared_ptr<Conflict> temp = std::shared_ptr<Conflict>(
-                                new Conflict(loc1, con->k, timestep));
-//                        std::clock_t buildMDDStart = std::clock();
-
-                        const MDD<Map>* a1MDD = buildMDD(parent,a1,barrierWidth);
-                        const MDD<Map>* a2MDD = buildMDD(parent,a2,barrierWidth);
-//                        RMBuildMDDTime+=std::clock() - buildMDDStart;
-
-                        temp->kRectangleConflict(a1, a2, Rs, Rg,
-                                                 make_pair(s1 / num_col, s1 % num_col),
-                                                 make_pair(s2 / num_col, s2 % num_col),
-                                                 rt1, rt2, paths, t1_start, t2_start,
-                                                 make_pair(g1 / num_col, g1 % num_col),
-                                                 make_pair(g2 / num_col, g2 % num_col),
-                                                 num_col, barrierWidth, option.RM4way, I_RM,
-                                                 &(a1MDD->levels), &(a2MDD->levels));
-
-                        if (screen >= 4) {
-                            cout << temp->multiConstraint1.size() << endl;
-                            cout << temp->multiConstraint2.size() << endl;
-
-
-                        }
-                        assert(temp->multiConstraint1.size() == 2 && "a1 no two constraints");
-                        assert(temp->multiConstraint2.size() == 2 && "a2 no two constraints");
-                        ConstraintTable entranceTable;
-                        entranceTable.insert(temp->multiConstraint1.back(), 0, num_col, map_size);
-
-                        ConstraintTable exitTable;
-                        exitTable.insert(temp->multiConstraint1.front(), 0, num_col, map_size);
-
-                        bool a1Cut = -1 != haveSolutionCondition1(a1MDD->levels,
-                                                                  temp->multiConstraint1.back(), entranceTable,
-                                                                  temp->multiConstraint1.front(), exitTable
-                        );
-
-                        ConstraintTable entranceTable2;
-                        entranceTable.insert(temp->multiConstraint2.back(), 0, num_col, map_size);
-                        ConstraintTable exitTable2;
-                        exitTable.insert(temp->multiConstraint2.front(), 0, num_col, map_size);
-                        bool a2Cut = -1 != haveSolutionCondition1(a2MDD->levels,
-                                                                  temp->multiConstraint2.back(), entranceTable,
-                                                                  temp->multiConstraint2.front(), exitTable
-                        );
-                        if (a1Cut && a2Cut) {
-                            rectangle = temp;
-                            if (screen >= 4) {
-                                cout << "both cut barrierWidth " << barrierWidth << endl;
-                                cout << "conflicts amount " << parent.conflicts.size() << endl;
-                            }
-                        } else {
-                            if (screen >= 4) {
-                                cout << "not cut barrierWidth " << barrierWidth << endl;
-                                cout << "a1Cut: " << a1Cut << " a2Cut: " << a2Cut<< endl;
-
-                            }
-                            break;
-                        }
-                    }
-                }
-				else if (option.RM4way>=4){
-				    if(screen >=4){
-				        cout << "Start finding best k rectangle." << endl;
-				    }
-                    rt1 = timestep - getMahattanDistance(Rs.first, Rs.second, loc1 / num_col, loc1%num_col);
-                    rt2 = rt1;
-                    int a1kMax = kDelay;
-                    int a2kMax = kDelay;
-                    new_type = -1;
-//                    int preA1Type = 0;
-//                    int preA2Type = 0;
-                    for (int a1k=0; a1k<=a1kMax; a1k++){
-                        for (int a2k=0; a2k<=a2kMax; a2k++){
-//                            std::clock_t buildMDDStart = std::clock();
-                            const MDD<Map>* a1MDD = buildMDD(parent,a1,a1k);
-                            const MDD<Map>* a2MDD = buildMDD(parent,a2,a2k - con->k >=0 ? a2k-con->k:0);
-//                            RMBuildMDDTime+=std::clock() - buildMDDStart;
-                            if(screen >=4){
-                                cout << "a1k: " << a1k << endl;
-                                cout << "a2k: " << a2k << endl;
-                                cout << "a1mdd levels: "<< a1MDD->levels.size()<<endl;
-                                cout << "a2mdd levels: "<< a2MDD->levels.size()<<endl;
-                            }
-                            std::shared_ptr<Conflict> temp = std::shared_ptr<Conflict>(
-                                    new Conflict(loc1, con->k, timestep));
-
-                            int result = temp->generalKRectangleConflict(a1, a2, Rs, Rg,
-                                                                  make_pair(s1 / num_col, s1 % num_col),
-                                                                  make_pair(s2 / num_col, s2 % num_col),
-                                                                  rt1, rt2, paths, t1_start, t2_start,
-                                                                  make_pair(g1 / num_col, g1 % num_col),
-                                                                  make_pair(g2 / num_col, g2 % num_col),
-                                                                  num_col, a1k, a2k, con->k, option.RM4way,
-                                                                  &(a1MDD->levels), &(a2MDD->levels));
-                            if(screen >=4){
-                                cout << "result: " << result << endl;
-                            }
-                            if (result == 1){
-                                a1kMax = a1k;
-                                break;
-                            }
-                            else if(result ==2){
-                                a2kMax = a2k;
-                                continue;
-                            }
-
-                            bool empty_constraint = false;
-                            for (auto constraint : temp->multiConstraint1){
-                                if (constraint.size()==0){
-                                    if(screen >=4){
-                                        cout << "constraint for a1 is empty" << endl;
-                                    }
-                                    empty_constraint = true;
-                                }
-                            }
-
-                            for (auto constraint : temp->multiConstraint2){
-                                if (constraint.size()==0){
-                                    if(screen >=4){
-                                        cout << "constraint for a2 is empty" << endl;
-                                    }
-                                    empty_constraint = true;
-                                }
-                            }
-                            if(empty_constraint){
-                                continue;
-                            }
-
-                            assert(temp->multiConstraint1.size() == 2 && "a1 no two constraints");
-                            assert(temp->multiConstraint2.size() == 2 && "a2 no two constraints");
-
-                            int a1_type = classifyBarrierAndRectangle(a1MDD->levels,
-                                    temp->multiConstraint1.back(),
-                                    temp->multiConstraint1.front(),
-                                    num_col, map_size);
-                            int a2_type = classifyBarrierAndRectangle(a2MDD->levels,
-                                                                      temp->multiConstraint2.back(),
-                                                                      temp->multiConstraint2.front(),
-                                                                      num_col, map_size);
-                            if(a1_type == -1 || a2_type == -1){
-                                if(screen >=4){
-                                    cout << "a1_type: " << a1_type << endl;
-                                    cout << "a2_type: " << a2_type << endl;
-                                    cout << "Not satisfy condition1 and condition2" << endl;
-                                }
-                                if (a1_type == -1){
-                                    a1kMax = a1k;
-                                    break;
-                                }
-                                if (a2_type == -1) {
-                                    a2kMax = a2k;
-                                    continue;
-                                }
-                            }
-
-//                            preA1Type = a1_type > preA1Type? a1_type:preA1Type;
-//                            preA2Type = a2_type > preA2Type? a2_type:preA2Type;
-
-                            int temp_type = a1_type + a1_type;
-                            int temp_total_k = a1k+a2k;
-
-                            if(screen >= 4){
-                                cout << "temp type: "<<temp_type<<" temp total k: "<< temp_total_k << endl;
-                            }
-
-                            if (temp_total_k > total_k || (temp_total_k == total_k && temp_type > new_type)){
-                                rectangle = temp;
-                                new_type = temp_type;
-                                total_k = temp_total_k;
-
-                                if(screen >=4){
-                                    cout << "Select this one" << endl;
-                                    cout<<"rectangle: "<< *rectangle << endl;
-                                }
-
-                            }
-                            else{
-                                if(screen >=4){
-                                    cout << "Abandon this one"<<endl;
-                                }
-                            }
-
-                        }
-                    }
-
-
-				}
-//                runtime_find_rectangle += std::clock() - RM_Start -findsgtime;
-
-
-                if (screen >= 5) {
-                    cout << "initial_Rs: " << Rs.first << " " << Rs.second << endl;
-                    cout << "initial_Rg: " << Rg.first << " " << Rg.second << endl;
-                    cout << "earlyCrosst: " << earlyCrosst << endl;
-                    cout << "lateCrosst: " << lateCrosst << endl;
-                    cout << "s1: " << s1 / num_col << " " << s1 % num_col << endl;
-                    cout << "g1: " << g1 / num_col << " " << g1 % num_col << endl;
-                    cout << "s1_t: " << t1_start << endl;
-                    cout << "rt1: " << rt1 << endl;
-
-
-                    cout << "s2: " << s2 / num_col << " " << s2 % num_col << endl;
-                    cout << "g2: " << g2 / num_col << " " << g2 % num_col << endl;
-                    cout << "s2_t: " << t2_start << endl;
-                    cout << "rt2: " << rt2 << endl;
-
-                    cout << "Rs: " << Rs.first << " " << Rs.second << endl;
-                    cout << "Rg: " << Rg.first << " " << Rg.second << endl;
-
-                    cout << "area:" << new_area << endl;
-                }
-
-                if (rectangle == nullptr){
-                    not_rectangle = true;
-                    if (screen >= 4) {
-                        cout <<"rectangle == nullptr"<<endl;
-                    }
-                    parent.conflicts.push_back(con);
-                    RMTime += std::clock() - RM_Start;
-                    continue;
-                }
-                else{
-                    rectangle->multiConstraint1.pop_back();
-                    rectangle->multiConstraint2.pop_back();
-                }
-
-				bool isBlocked = true;
-                if (screen >= 4) {
-                    cout <<"Check constraint and current path"<<endl;
-                    cout << "Constraint 1 size: " << rectangle->multiConstraint1.size()<<endl;
-                    cout << "Constraint 2 size: " << rectangle->multiConstraint2.size()<<endl;
-                    cout << "a1: " <<endl;
-                    for (auto i : rectangle->multiConstraint1.front()){
-                        cout << "<(" << std::get<0>(i)/num_col <<","<<std::get<0>(i)%num_col << ")," << std::get<1>(i) << "," <<
-                             std::get<2>(i) << "," << std::get<3>(i) << ">";
-                    }
-                    cout <<endl;
-                    cout << "a2: " <<endl;
-                    for (auto i : rectangle->multiConstraint2.front()){
-                        cout << "<(" << std::get<0>(i)/num_col <<","<<std::get<0>(i)%num_col << ")," << std::get<1>(i) << "," <<
-                             std::get<2>(i) << "," << std::get<3>(i) << ">";
-                    }
-                    cout<<endl;
-                }
-				for (auto constraint : rectangle->multiConstraint1) {
-					isBlocked = isBlocked && blocked(*paths[rectangle->a1], constraint);
-				}
-				for (auto constraint : rectangle->multiConstraint2) {
-					isBlocked = isBlocked && blocked(*paths[rectangle->a2], constraint);
-				}
-
-
-				if (!not_rectangle && isBlocked) {
-
-					if (new_type == 2)
-						rectangle->p = conflict_priority::CARDINAL;
-					else if (new_type == 1) // && !findRectangleConflict(parent.parent, *conflict))
-						rectangle->p = conflict_priority::SEMI;
-					else //if (type == 0 && !findRectangleConflict(parent.parent, *conflict))
-						rectangle->p = conflict_priority::NON;
-
-					parent.conflicts.push_back(rectangle);
-					if (screen >= 4){
-                        cout << "add " << *rectangle << endl;
-                        cout << "conflicts amount " << parent.conflicts.size()<<endl;
-					}
-					RMSuccessCount+=1;
-                    RMTime += std::clock() - RM_Start;
-					continue;
-				}
-				else {
-					if (screen >= 4) {
-						cout<<"rectangle: "<< *rectangle << endl;
-                        cout << "not rectangle" << endl;
-                        if (!isBlocked)
-						    cout << "not blocked" << endl;
-
-					}
-                    parent.conflicts.push_back(con);
-                    RMTime += std::clock() - RM_Start;
-                    continue;
-				}
-
-
-			}
-		}
-
-
-		else if (rectangleMDD )
-		{
-
-			//stringstream conString;
-			////con << *(con);
-			//if (con->k == 0) {
-			//	conString << min(con->a1, con->a2) << ",";
-			//	conString << max(con->a1, con->a2);
-			//}
-			//else {
-			//	conString << con->a1 << ",";
-			//	conString << con->a2;
-			//}
-			//conString << ",("
-			//	<< con->originalConf1 / num_col << ","
-			//	<< con->originalConf1 % num_col << ")" << ",("
-			//	<< con->originalConf2 / num_col << ","
-			//	<< con->originalConf2 % num_col << "),"
-			//	<< con->t << "," << con->k << "," << conflict_type::RECTANGLE4;
-			//ICBSNode* temp = &parent;
-
-			//bool repeat = false;
-			//while (temp != NULL) {
-			//	if (temp->resolvedConflicts.count(conString.str())) {
-			//		repeat = true;
-			//		break;
-			//	}
-			//	temp = temp->parent;
-			//}
-			//if (repeat) {
-			//	parent.conflicts.push_back(con);
-			//	continue;
-			//}
-
-
-
-			std::clock_t RM_Start = std::clock();
-			
-			std::list<int>	s1s = getStartCandidates(*paths[a1], timestep, num_col);
-			std::list<int>	g1s = getGoalCandidates(*paths[a1], timestep, num_col);
-			std::list<int>	s2s = getStartCandidates(*paths[a2], timestep2, num_col);
-			std::list<int>	g2s = getGoalCandidates(*paths[a2], timestep2, num_col);
-
-			
-			// Try all possible combinations
-			bool found = false;
-			std::shared_ptr<Conflict> rectangle; // = std::shared_ptr<Conflict>(new Conflict());
-			int type = -1;
-			int area = 0;
-			int distance = 0;
-			std::pair<int, int> Rgf;
-			std::pair<int, int> Rsf;
-			int t1_startf;
-			int t1_endf;
-			int t2_startf;
-			int t2_endf;
-			int Rg_tf;
-			int Rs_tf;
-			int rt1_f;
-			int rt2_f;
-			int s1f;
-			int s2f;
-			int g1f;
-			int g2f;
-			int flipTypef;
-			bool isChasing = false;
-			bool isChasingf = false;
-
-			int flipType=-1;
-			if (screen >= 4) {
-				cout << "try find rectangle" << endl;
-				cout << "Agents: " << *con << endl;
-				cout << "s1s length" << s1s.size() << endl;
-				cout << "s2s length" << s2s.size() << endl;
-
-			}
-
-			for (int t1_start : s1s)
-			{
-				for (int t1_end : g1s)
-				{
-
-					int s1 = paths[a1]->at(t1_start).location;
-					int g1 = paths[a1]->at(t1_end).location;
-					if (!isManhattanOptimal(s1, g1, t1_end - t1_start, num_col)) {
-						if (screen >= 5) {
-							cout << "s1: " << s1/num_col<<","<< s1%num_col << endl;
-							cout << "g1: " << g1 / num_col << "," << g1 % num_col << endl;
-							cout << "s1 g1 not optimal" << endl;
-						}
-						continue;
-					}
-					
-					for (int t2_start : s2s)
-					{
-						for (int t2_end : g2s)
-						{
-							isChasing = 0;
-							
-							int s2 = paths[a2]->at(t2_start).location;
-							int g2 = paths[a2]->at(t2_end).location;
-							if (!isManhattanOptimal(s2, g2, t2_end - t2_start, num_col)) {
-								if (screen >= 5) {
-									cout << "s2: " << s2 / num_col << "," << s2 % num_col << endl;
-									cout << "g2: " << g2 / num_col << "," << g2 % num_col << endl;
-									cout << "s2 g2 not optimal" << endl;
-								}
-
-								continue;
-							}
-							
-							if (option.flippedRec) {
-								int flipped = isFlippedRectangleConflict(s1, s2, g1, g2, num_col);
-								if (flipped <= -1 || (flipped>=1 && kDelay==0)) //flipped <= -1 means not a rectangle. 
-																				//0 means rectangle with no flip. 1 is 1 flip. 2 is 2 flip.
-								{
-									if (screen >=5) {
-										cout << "s1: " << s1 / num_col << " " << s1 % num_col << endl;
-										cout << "g1: " << g1 / num_col << " " << g1 % num_col << endl;
-										cout << "s1_t: " << t1_start << endl;
-
-										cout << "s2: " << s2 / num_col << " " << s2 % num_col << endl;
-										cout << "g2: " << g2 / num_col << " " << g2 % num_col << endl;
-										cout << "s2_t: " << t2_start << endl;
-
-										cout << "flip type: "<<flipped << endl;
-
-										cout << "not flipped" << endl;
-									}
-
-									continue;
-								}
-								flipType = flipped;
-							}
-							else if (!isRectangleConflict(s1, s2, g1, g2, num_col,kDelay,abs(t1_start-t2_start),I_RM))
-								continue;
-							if (screen >= 5) {
-								cout << "is rectangle" << endl;
-							}
-
-							if (((s2/num_col - s1/num_col) * (s1 / num_col - g1 / num_col) < 0 && (s2 % num_col - s1 % num_col) * (s1% num_col - g1 % num_col) < 0) 
-								|| ((s1 / num_col - s2 / num_col) * (s2 / num_col - g2 / num_col) < 0 && (s1% num_col - s2 % num_col) * (s2% num_col - g2 % num_col) < 0)) {
-								isChasing = true;
-							}
-
-
-							int new_type, new_area;
-							std::pair<int, int> Rg, Rs;
-
-							if (option.flippedRec) {
-								Rg = getFlippedRg(std::make_pair(s1 / num_col, s1 % num_col), std::make_pair(s2 / num_col, s2 % num_col), 
-									std::make_pair(g1 / num_col, g1 % num_col),std::make_pair(g2 / num_col, g2 % num_col),flipType);
-								Rs = getFlippedRs(std::make_pair(s1 / num_col, s1 % num_col), std::make_pair(s2 / num_col, s2 % num_col),
-									std::make_pair(g1 / num_col, g1 % num_col), std::make_pair(g2 / num_col, g2 % num_col), flipType);
-								new_area = (abs(Rs.first - Rg.first) + 1) * (abs(Rs.second - Rg.second) + 1);
-								bool kFullyBlocked = isKFullyBlocked(std::make_pair(s1 / num_col, s1 % num_col), std::make_pair(s2 / num_col, s2 % num_col),
-									Rs, Rg, kDelay,t1_start,t2_start);
-								/*if (!kFullyBlocked) {
-									if (screen >= 5) {
-										cout << "not fully blocked" << endl;
-									}
-									continue;
-								}*/
-								new_type = classifyFlippedRectangleConflict(s1, s2, g1, g2, Rg, Rs, num_col, flipType, kFullyBlocked);
-								if (flipType == 1 && new_type <= -1) {
-									if (screen >= 5) {
-										cout << "fliptype 1 and non-cardinal" << endl;
-									}
-									continue;
-								}
-								if (flipType == 2 && new_type <= -1) {
-									if (screen >= 5) {
-										cout << "fliptype 2 and non-cardinal" << endl;
-									}
-									continue;
-								}
-							}
-							else {
-								Rg = getRg(std::make_pair(s1 / num_col, s1 % num_col), std::make_pair(g1 / num_col, g1 % num_col),
-									std::make_pair(g2 / num_col, g2 % num_col));
-								Rs = getRs(std::make_pair(s1 / num_col, s1 % num_col), std::make_pair(s2 / num_col, s2 % num_col),
-									std::make_pair(g1 / num_col, g1 % num_col));
-								new_area = (abs(Rs.first - Rg.first) + 1) * (abs(Rs.second - Rg.second) + 1);
-								new_type = classifyRectangleConflict(s1, s2, g1, g2, Rg, num_col,I_RM);
-								
-								
-							}
-							int new_distance = abs(s2 / num_col - s2 / num_col) + abs(s2 %num_col - s2 % num_col) +
-								abs(s1 / num_col - s1 / num_col) + abs(s1 %num_col - s1 % num_col);
-							
-							
-							if (new_type > type || (new_type == type && new_area > area) || (new_type == type && new_area == area && new_distance > distance))
-							{
-								if (screen >= 4) {
-									cout << "s1: " << s1 / num_col << " "<< s1 % num_col << endl;
-									cout << "g1: " << g1 / num_col << " "<< g1 % num_col << endl;
-									cout << "s1_t: " << t1_start << endl;
-
-									cout << "s2: " << s2 / num_col << " "<< s2 % num_col << endl;
-									cout << "g2: " << g2 / num_col << " "<< g2 % num_col << endl;
-									cout << "s2_t: " << t2_start << endl;
-
-									cout << "Rs: " << Rs.first << " " << Rs.second << endl;
-									cout << "Rg: " << Rg.first << " " << Rg.second << endl;
-
-									cout << "type " << new_type << " flip type " << flipType << endl;
-								}
-
-								auto new_rectangle = std::shared_ptr<Conflict>(new Conflict(loc1,con->k,timestep));
-								int Rs_t = con->t - abs(Rs.first - loc1 / num_col) - abs(Rs.second - loc1 % num_col);
-
-								int rt1, rt2;
-								if(option.RM4way>=2 && option.RM4way<=5) {
-                                    if (con->k == 0) {
-                                        rt1 = timestep -
-                                              getMahattanDistance(Rs.first, Rs.second, loc1 / num_col, loc1 % num_col);
-                                        rt2 = rt1;
-                                    } else {
-                                        rt1 = timestep -
-                                              getMahattanDistance(Rs.first, Rs.second, loc1 / num_col, loc1 % num_col);
-                                        rt2 = timestep2 -
-                                              getMahattanDistance(Rs.first, Rs.second, loc1 / num_col, loc1 % num_col) -
-                                              1;
-                                    }
-                                }
-								else{
-								    rt1=Rs_t;
-								    rt2=Rs_t;
-								}
-								/*cout << "loc:" << loc1 << " t:" << timestep << endl;
-								cout << "s1 " << s1 << " s2 " << s2 << " g1 " << g1 << " g2 " << g2 << " rg " << Rg.first << " " << Rg.second <<" Rg_t "<< Rg_t<< endl;
-*/								bool success;
-//								if (option.flippedRec) {
-//									success=new_rectangle->flippedRectangleConflict(a1, a2, Rs, Rg,
-//										make_pair(s1 / num_col, s1 % num_col),
-//										make_pair(s2 / num_col, s2 % num_col),
-//										Rs_t, paths, t1_start, t2_start,
-//										make_pair(g1 / num_col, g1 % num_col),
-//										make_pair(g2 / num_col, g2 % num_col),
-//										num_col, kDelay, flipType);
-//
-//								}
-//								else{
-									success=new_rectangle->kRectangleConflict(a1, a2, Rs, Rg,
-										make_pair(s1 / num_col, s1 % num_col),
-										make_pair(s2 / num_col, s2 % num_col),
-										rt1, rt2, paths, t1_start, t2_start,
-										make_pair(g1 / num_col, g1 % num_col),
-										make_pair(g2 / num_col, g2 % num_col),
-										num_col, kDelay, option.RM4way,I_RM);
-//								}
-
-								if (!success) {
-									if (screen >= 4)
-										cout << "Create rectangle conflict failed" << endl;
-									continue;
-								}
-
-								if (screen >= 4) {
-									cout << *new_rectangle << endl;
-								}
-
-
-								bool isBlocked = true;
-
-
-								for (auto constraint : new_rectangle->multiConstraint1) {
-									isBlocked = isBlocked && blocked(*paths[new_rectangle->a1], constraint);
-								}
-								for (auto constraint : new_rectangle->multiConstraint2) {
-									isBlocked = isBlocked && blocked(*paths[new_rectangle->a2], constraint);
-								}
-
-								if (option.RM4way>=3) {
-									
-
-									if (isBlocked) {
-										previousRetangle[0] = a1;
-										previousRetangle[1] = a2;
-										previousRetangle[2] = Rs.first*num_col + Rs.second;
-										previousRetangle[3] = Rg.first*num_col + Rg.second;
-
-										//cout << "blocked, select this one" << endl;
-										rectangle = new_rectangle;
-										if (new_type == 2)
-											rectangle->p = conflict_priority::CARDINAL;
-										else if (new_type == 1) // && !findRectangleConflict(parent.parent, *conflict))
-											rectangle->p = conflict_priority::SEMI;
-										else //if (type == 0 && !findRectangleConflict(parent.parent, *conflict))
-											rectangle->p = conflict_priority::NON;
-										type = new_type;
-										area = new_area;
-										distance = new_distance;
-									}
-									else {
-										if (screen >= 4)
-											cout << "4way RM not blocked" << endl;
-									}
-								}
-								else if (isBlocked)
-								{
-									
-									previousRetangle[0] = a1;
-									previousRetangle[1] = a2;
-									previousRetangle[2] = Rs.first*num_col+Rs.second;
-									previousRetangle[3] = Rg.first*num_col+Rg.second;
-
-									//cout << "blocked, select this one" << endl;
-									rectangle = new_rectangle;
-									if (new_type == 2)
-										rectangle->p = conflict_priority::CARDINAL;
-									else if (new_type == 1) // && !findRectangleConflict(parent.parent, *conflict))
-										rectangle->p = conflict_priority::SEMI;
-									else //if (type == 0 && !findRectangleConflict(parent.parent, *conflict))
-										rectangle->p = conflict_priority::NON;
-									type = new_type;
-									area = new_area;
-									distance = new_distance;
-									t1_startf= t1_start;
-									t1_endf= t1_end;
-									t2_startf= t2_start;
-									t2_endf= t2_end;
-									Rg_tf= Rs_t;
-									Rs_tf = Rs_t;
-									rt1_f = rt1;
-									rt2_f = rt2;
-
-									s1f= s1;
-									s2f= s2;
-									g1f= g1;
-									g2f= g2;
-									Rsf = Rs;
-									Rgf = Rg;
-
-									flipTypef = flipType;
-									if (I_RM)
-										isChasingf = isChasing;
-								}
-								else {
-									if (new_rectangle.unique()) {
-										new_rectangle.reset();
-									}
-									if (screen >= 4)
-										cout << "not blocked" << endl;
-								}
-								
-								// rectangle = std::shared_ptr<tuple<int, int, int, int, int>>
-								//	(new tuple<int, int, int, int, int>(get<0>(*con), get<1>(*con), -1 - Rg.first * num_col - Rg.second, t1_start, t2_start));						
-							}
-						}
-					}
-				}
-			}
-
-			if (type >= 0)
-			{
-
-				if (option.RM4way < 3) {
-					if (kDelay > 0) {
-						auto new_rectangle = std::shared_ptr<Conflict>(new Conflict(loc1, con->k, timestep));
-						/*if (kDelay > 0) {
-							vector<MDDPath*> a1kMDD;
-							vector<MDDPath*> a2kMDD;
-							for (int i = 1; i <= kDelay; i++) {*/
-						MDD<Map> a1MDD;
-						MDD<Map> a2MDD;
-						updateConstraintTable(&parent, a1);
-						int tempk = kDelay;
-						//if (option.RM4way == 2) {
-						//	int tempk = kDelay > 1 ? 1 : kDelay;
-						//}
-
-						a1MDD.buildMDD(constraintTable, t1_endf - t1_startf + 1 + tempk,
-							*(search_engines[a1]), s1f, t1_startf, g1f,
-							paths[a1]->at(t1_startf).actionToHere);
-
-						updateConstraintTable(&parent, a2);
-						a2MDD.buildMDD(constraintTable, t2_endf - t2_startf + 1 + tempk,
-							*(search_engines[a2]), s2f, t2_startf, g2f,
-							paths[a2]->at(t2_startf).actionToHere);
-
-                        MDDLevels a1MDDPath;
-                        a1MDDPath = a1MDD.levels;
-
-                        MDDLevels a2MDDPath;
-                        a2MDDPath = a2MDD.levels;
-
-
-
-
-						//cout << "Create MDD Done" << endl;
-
-//						if (option.flippedRec) {
-//							new_rectangle->flippedRectangleConflict(a1, a2, Rsf, Rgf,
-//								make_pair(s1f / num_col, s1f % num_col),
-//								make_pair(s2f / num_col, s2f % num_col),
-//								Rg_tf, paths, t1_startf, t2_startf,
-//								make_pair(g1f / num_col, g1f % num_col),
-//								make_pair(g2f / num_col, g2f % num_col),
-//								num_col, kDelay, flipTypef, &a1MDDPath, &a2MDDPath);
-//						}
-//						else {
-							new_rectangle->kRectangleConflict(a1, a2, Rsf, Rgf,
-								make_pair(s1f / num_col, s1f % num_col),
-								make_pair(s2f / num_col, s2f % num_col),
-								rt1_f, rt2_f, paths, t1_startf, t2_startf,
-								make_pair(g1f / num_col, g1f % num_col),
-								make_pair(g2f / num_col, g2f % num_col),
-								num_col, kDelay, option.RM4way,I_RM, &a1MDDPath, &a2MDDPath);
-//						}
-
-						rectangle = new_rectangle;
-						rectangle->isChasing = isChasingf;
-					}
-
-
-					if (type == 2)
-						rectangle->p = conflict_priority::CARDINAL;
-					else if (type == 1) // && !findRectangleConflict(parent.parent, *conflict))
-						rectangle->p = conflict_priority::SEMI;
-					else //if (type == 0 && !findRectangleConflict(parent.parent, *conflict))
-						rectangle->p = conflict_priority::NON;
-				}
-			
-				
-				
-
-				parent.conflicts.push_back(rectangle);
-				if (screen>=4)
-					cout << "add " << *rectangle << endl;
-
-				RMTime += std::clock() - RM_Start;
-
-				continue;
-
-			}
-			else {
-				RMTime += std::clock() - RM_Start;
-			}
-		}
-		else if (cons_strategy == constraint_strategy::CBSH_GR) // generalized rectangles 
-		{
-			if (loc2 >= 0) // Edge conflict
-				continue;
-			if (paths[a1]->size() <= timestep || paths[a2]->size() <= timestep)//conflict happens after agent reaches its goal
-				continue;
-
-			int from1 = (*paths[a1])[timestep - 1].location;
-			int from2 = (*paths[a2])[timestep - 1].location;
-			if (from1 == from2 || // same direction
-				from1 == loc1 || from2 == loc1 || //wait actions
-				abs(from1 - from2) == 2 || abs(from1 - from2) == num_col * 2) //opposite direction
-				continue;
-
-			std::list<int>	s1s = getStartCandidates(*paths[a1], timestep, loc1 - from1, loc1 - from2);
-			std::list<int>	g1s = getGoalCandidates(*paths[a1], timestep, loc1 - from1, loc1 - from2);
-			std::list<int>	s2s = getStartCandidates(*paths[a2], timestep, loc1 - from1, loc1 - from2);
-			std::list<int>	g2s = getGoalCandidates(*paths[a2], timestep, loc1 - from1, loc1 - from2);
-
-
-			MDD<Map>* mdd1 = NULL, *mdd2 = NULL;
-			ConstraintsHasher c(a1, &parent,paths[a1]->size());
-			typename std::unordered_map<ConstraintsHasher, MDD<Map>*>::const_iterator got = mddTable[c.a].find(c);
-			if (got != mddTable[c.a].end())
-			{
-				mdd1 = got->second;
-			}
-			else
-			{
-				std::cout << "ERROR" << std::endl;
-			}
-			std::list<Constraint> B1;
-			bool haveBarriers = ExtractBarriers<Map>(*mdd1, loc1 - from1, loc1 - from2, paths[a1]->at(s1s.back()).location, paths[a1]->at(g1s.back()).location, s1s.back(), num_col, B1);
-			if (!haveBarriers)
-				continue;
-
-			c.a = a2;
-			got = mddTable[c.a].find(c);
-			if (got != mddTable[c.a].end())
-			{
-				mdd2 = got->second;
-			}
-			else
-			{
-				std::cout << "ERROR" << std::endl;
-			}
-			std::list<Constraint> B2;
-			haveBarriers = ExtractBarriers<Map>(*mdd2, loc1 - from2, loc1 - from1, paths[a2]->at(s2s.back()).location, paths[a2]->at(g2s.back()).location, s2s.back(), num_col, B2);
-			if (!haveBarriers)
-				continue;
-
-			// Try all possible combinations
-			int type = -1;
-			list<Constraint>::const_iterator b1_entry = B1.cbegin();
-			list<Constraint>::const_iterator b2_entry = B2.cbegin();
-			std::pair<int, int> Rs, Rg;
-			std::set<std::pair<int, int>> visitedRs;
-			generalizedRectangle<Map>(*paths[a1], *paths[a2], *mdd1, *mdd2, b1_entry, b2_entry, B1, B2, timestep, num_col, type, Rs, Rg, std::clock() * CLOCKS_PER_SEC * 1.0 / 1000 + time_limit - runtime, visitedRs);
-			if (type < 0)
-				continue;
-			int Rg_t = timestep + abs(Rg.first - loc1 / num_col) + abs(Rg.second - loc1 % num_col);
-			std::shared_ptr<Conflict> rectangle = std::shared_ptr<Conflict>(new Conflict());
-			rectangle->rectangleConflict(a1, a2, Rs, Rg, loc1 - from1, loc1 - from2, Rg_t, paths, num_col);
-			if (type == 2)
-				rectangle->p = conflict_priority::CARDINAL;
-			else if (type == 1) // && !findRectangleConflict(parent.parent, *conflict))
-				rectangle->p = conflict_priority::SEMI;
-			else //if (type == 0 && !findRectangleConflict(parent.parent, *conflict))
-				rectangle->p = conflict_priority::NON;
-			if (blocked(*paths[rectangle->a1], rectangle->constraint1) && blocked(*paths[rectangle->a2], rectangle->constraint2))
-			{
-				parent.conflicts.push_back(rectangle);
-				continue;
-			}
-		}
 		
+            
 		parent.conflicts.push_back(con);
 	}
+
+    if (!(corridor2||rectangleMDD))
+        return;
+    bool found = false;
+    while ( !parent.cardinal_waiting.empty()){
+        std::shared_ptr<Conflict> conflict  = parent.cardinal_waiting.front();
+        parent.cardinal_waiting.pop_front();
+        // Corridor reasoning
+        std::shared_ptr<Conflict> corridor;
+        if(rectangleMDD && option.RM4way>=3){
+            bool isRectangle = rectangleReasoning(conflict,parent);
+            if (isRectangle) {
+                parent.conflicts.remove(conflict);
+                found = true;
+                break;
+            }
+        }
+        if( corridor2 && isCorridorConflict(corridor, conflict, &parent))
+        {
+
+            corridor->p = conflict->p;
+            parent.conflicts.push_back(corridor);
+            parent.conflicts.remove(conflict);
+
+            found = true;
+            break;
+        }
+    }
+
+    while ( !parent.non_cardinal_waiting.empty() && !found){
+        std::shared_ptr<Conflict> conflict  = parent.non_cardinal_waiting.front();
+        parent.non_cardinal_waiting.pop_front();
+        std::shared_ptr<Conflict> corridor;
+        if(rectangleMDD && option.RM4way>=3){
+            bool isRectangle = rectangleReasoning(conflict,parent);
+            if (isRectangle) {
+                parent.conflicts.remove(conflict);
+                break;
+            }
+        }
+        if( corridor2 && isCorridorConflict(corridor, corridor, &parent))
+        {
+
+            corridor->p = conflict->p;
+            parent.conflicts.push_back(corridor);
+            parent.conflicts.remove(conflict);
+            break;
+        }
+    }
 
 	// remove conflicts that cannot be chosen, to save some memory
 	removeLowPriorityConflicts(parent.conflicts);
 }
+
+template<class Map>
+bool MultiMapICBSSearch<Map>::rectangleReasoning(const std::shared_ptr<Conflict>& con,ICBSNode &parent){
+    std::clock_t RM_Start = std::clock();
+    int a1 = con->a1, a2 = con->a2;
+    int loc1, loc2, timestep,timestep2;
+    constraint_type type;
+    loc1 = con->originalConf1;
+    loc2 = con->originalConf2;
+    timestep = con->t;
+    timestep2 = timestep + con->k;
+
+
+    if (screen >= 4) {
+        cout << "new rm rectangle detecting" << endl;
+        cout << "timestep: " << timestep << endl;
+        cout << "timestep2: " << timestep2 << endl;
+
+    }
+    bool not_rectangle = false;
+    int action1, action2, action_diff;
+    if (timestep != 0 ) {
+
+        action1 = getAction(paths.at(a1)->at(timestep).location, paths.at(a1)->at(timestep - 1).location, num_col);
+    }
+
+    if (timestep == 0 || action1 == action::WAIT) {
+
+        action1 = getAction(paths.at(a1)->at(timestep + 1).location, paths.at(a1)->at(timestep).location, num_col);
+    }
+
+    if (timestep2 != 0 ) {
+        action2 = getAction(paths.at(a2)->at(timestep2).location, paths.at(a2)->at(timestep2 - 1).location, num_col);
+    }
+
+    if (timestep2 == 0 || action2 == action::WAIT) {
+
+        action2 = getAction(paths.at(a2)->at(timestep2 + 1).location, paths.at(a2)->at(timestep2).location, num_col);
+    }
+
+
+
+    if (screen >= 4) {
+        cout << "action1: " << action1 << endl;
+        cout << "action2: " << action2 << endl;
+    }
+
+    action_diff = abs(action1 - action2);
+
+    if ((action1!=action::WAIT && action2!=action::WAIT) &&(action_diff == 1 || action_diff == 3)) {
+        int t1_start, t1_end, t2_start, t2_end;
+        int s1, g1, s2, g2;
+        if (option.RM4way == 3 || option.RM4way == 4){
+            pair<int, int> t1s_result = get_st(*paths[a1], timestep, num_col, action1, action2, kDelay);
+            pair<int, int> t1e_result = get_gt(*paths[a1], timestep, num_col, action1, action2, kDelay);
+            pair<int, int> t2s_result = get_st(*paths[a2], timestep2, num_col, action1, action2, kDelay);
+            pair<int, int> t2e_result = get_gt(*paths[a2], timestep2, num_col, action1, action2, kDelay);
+            t1_start = t1s_result.first;
+            t1_end = t1e_result.first;
+            t2_start = t2s_result.first;
+            t2_end = t2e_result.first;
+            if(t1_start==-1 || t2_start==-1 ||t1_end==-1||t2_end==-1){
+                parent.conflicts.push_back(con);
+                RMTime += std::clock() - RM_Start;
+                RMFailBeforeRec+=1;
+                return false;
+            }
+            s1 = paths[a1]->at(t1_start).location;
+            g1 = paths[a1]->at(t1_end).location;
+            s2 = paths[a2]->at(t2_start).location;
+            g2 = paths[a2]->at(t2_end).location;
+        }
+        else if(option.RM4way==5){
+            pair<int, int> t1s_result = get_st(*paths[a1], timestep, num_col, action1, action2, kDelay, false, false);
+            pair<int, int> t1e_result = get_gt(*paths[a1], timestep, num_col, action1, action2, kDelay, false, false);
+            pair<int, int> t2s_result = get_st(*paths[a2], timestep2, num_col, action1, action2, kDelay,false, false);
+            pair<int, int> t2e_result = get_gt(*paths[a2], timestep2, num_col, action1, action2, kDelay,false, false);
+            t1_start = t1s_result.first;
+            t1_end = t1e_result.first;
+            t2_start = t2s_result.first;
+            t2_end = t2e_result.first;
+            if(t1_start==-1 || t2_start==-1 ||t1_end==-1||t2_end==-1){
+                parent.conflicts.push_back(con);
+                RMTime += std::clock() - RM_Start;
+                RMFailBeforeRec+=1;
+                if(screen>=5)
+                    cout<<"failed to extract rectangle starts or goals"<<endl;
+                return false;
+            }
+            s1 = paths[a1]->at(t1_start).location;
+            g1 = paths[a1]->at(t1_end).location;
+            s2 = paths[a2]->at(t2_start).location;
+            g2 = paths[a2]->at(t2_end).location;
+        }
+        else if(option.RM4way==6){
+            const MDD<Map>* a1MDD = buildMDD(parent, a1);
+            const MDD<Map>* a2MDD = buildMDD(parent,a2);
+            std::pair<MDDNode*,MDDNode*> t1_result = get_sg_mdd(a1MDD->levels, timestep,paths.at(a1)->at(timestep).location, num_col, action1, action2);
+            std::pair<MDDNode*,MDDNode*> t2_result = get_sg_mdd(a2MDD->levels, timestep2,paths.at(a2)->at(timestep2).location, num_col, action1, action2);
+            t1_start = t1_result.first->level;
+            t1_end = t1_result.second->level;
+            t2_start = t2_result.first->level;
+            t2_end = t2_result.second->level;
+            s1 = t1_result.first->location;
+            g1 = t1_result.second->location;
+            s2 = t2_result.first->location;
+            g2 = t2_result.second->location;
+
+        }
+
+
+        int new_type, new_area,a1_Rs_t,a1_Rg_t;
+        std::pair<int, int> Rg, Rs;
+        Rg = getRg(std::make_pair(s1 / num_col, s1 % num_col), std::make_pair(g1 / num_col, g1 % num_col),
+                   std::make_pair(g2 / num_col, g2 % num_col));
+        Rs = getRs(std::make_pair(s1 / num_col, s1 % num_col), std::make_pair(s2 / num_col, s2 % num_col),
+                   std::make_pair(g1 / num_col, g1 % num_col));
+
+        a1_Rs_t = getMahattanDistance(s1 / num_col, s1%num_col, Rs.first, Rs.second) + t1_start;
+        a1_Rg_t = getMahattanDistance(s1 / num_col, s1%num_col, Rg.first, Rg.second) + t1_start;
+
+        int earlyCrosst = -1;
+        int lateCrosst = -1;
+
+        if (!isRectangleConflict(s1, s2, g1, g2, num_col, kDelay, abs(t1_start - t2_start), option.RM4way >=4 ? true: false)){
+            earlyCrosst = get_earlyCrosst(*paths[a1], *paths[a2], timestep, a1_Rs_t, con->k);
+            lateCrosst = get_lateCrosst(*paths[a1], *paths[a2], timestep, a1_Rg_t, con->k);
+            if (earlyCrosst != -1) {
+                Rs = std::make_pair(paths[a1]->at(earlyCrosst).location / num_col, paths[a1]->at(earlyCrosst).location % num_col);
+                a1_Rs_t = getMahattanDistance(s1 / num_col, s1%num_col, Rs.first, Rs.second) + t1_start;
+            }
+
+            if (lateCrosst != -1) {
+                Rg = std::make_pair(paths[a1]->at(lateCrosst).location / num_col, paths[a1]->at(lateCrosst).location % num_col);
+                a1_Rg_t = getMahattanDistance(s1 / num_col, s1%num_col, Rg.first, Rg.second) + t1_start;
+            }
+        }
+
+
+        new_area = (abs(Rs.first - Rg.first)+1) * (abs(Rs.second - Rg.second)+1);
+
+        if (s1 == s2 || s1 == g1 || s2 == g2 || new_area <= 2) {
+            parent.conflicts.push_back(con);
+            RMTime += std::clock() - RM_Start;
+            RMFailBeforeRec+=1;
+            if(screen>=5)
+                cout<<"s or g are same or area<=2"<<endl;
+            return false;
+        }
+
+//				double findsgtime =  std::clock() - RM_Start;
+//                runtime_findsg += findsgtime;
+        RMDetectionCount+=1;
+
+        int rt1, rt2; //root time
+        std::shared_ptr<Conflict> rectangle = nullptr;
+        int total_k = -1;
+
+
+        if (option.RM4way <5 && !isRectangleConflict(s1, s2, g1, g2, num_col, kDelay, abs(t1_start - t2_start), option.RM4way >=4 ? true: false)){
+            parent.conflicts.push_back(con);
+//                    RMTime += std::clock() - RM_Start;
+            RMFailBeforeRec+=1;
+            if(screen>=5)
+                cout<<"failed pass rectangle check"<<endl;
+            return false;
+        }
+
+        if (option.RM4way == 3) {
+            if (!isRectangleConflict(s1, s2, g1, g2, num_col, kDelay, abs(t1_start - t2_start), option.RM4way >=4 ? true: false)){
+                parent.conflicts.push_back(con);
+//                        RMTime += std::clock() - RM_Start;
+                RMFailBeforeRec+=1;
+                if(screen>=5)
+                    cout<<"failed pass rectangle check"<<endl;
+                return false;
+            }
+            new_type = classifyRectangleConflict(s1, s2, g1, g2, Rg, num_col, I_RM);
+
+            if ((!paths[a1]->at(t1_start).single||!paths[a1]->at(t1_end).single) && new_type > 0)
+                new_type--;
+            if ((!paths[a2]->at(t2_start).single || !paths[a2]->at(t2_end).single) && new_type > 0)
+                new_type--;
+
+            if (con->k == 0 ) {
+                rt1 = a1_Rs_t;
+                rt2 = a1_Rs_t;
+            }
+            else {
+                rt1 = timestep - getMahattanDistance(Rs.first, Rs.second, loc1 / num_col, loc1%num_col);
+                rt2 = timestep2 - getMahattanDistance(Rs.first, Rs.second, loc1 / num_col, loc1%num_col) - 1;
+            }
+
+
+            int maxWidth = kDelay >= 1 ? 1 : 0;
+            for (int barrierWidth = 0; barrierWidth <= maxWidth ; barrierWidth++) {
+                if (screen >= 4) {
+                    cout <<"Check barrier width: "<< barrierWidth << endl;
+                }
+                std::shared_ptr<Conflict> temp = std::shared_ptr<Conflict>(
+                        new Conflict(loc1, con->k, timestep));
+//                        std::clock_t buildMDDStart = std::clock();
+
+                const MDD<Map>* a1MDD = buildMDD(parent,a1,barrierWidth);
+                const MDD<Map>* a2MDD = buildMDD(parent,a2,barrierWidth);
+//                        RMBuildMDDTime+=std::clock() - buildMDDStart;
+
+                temp->kRectangleConflict(a1, a2, Rs, Rg,
+                                         make_pair(s1 / num_col, s1 % num_col),
+                                         make_pair(s2 / num_col, s2 % num_col),
+                                         rt1, rt2, paths, t1_start, t2_start,
+                                         make_pair(g1 / num_col, g1 % num_col),
+                                         make_pair(g2 / num_col, g2 % num_col),
+                                         num_col, barrierWidth, option.RM4way, I_RM,
+                                         &(a1MDD->levels), &(a2MDD->levels));
+
+                if (screen >= 4) {
+                    cout << temp->multiConstraint1.size() << endl;
+                    cout << temp->multiConstraint2.size() << endl;
+
+
+                }
+                assert(temp->multiConstraint1.size() == 2 && "a1 no two constraints");
+                assert(temp->multiConstraint2.size() == 2 && "a2 no two constraints");
+                ConstraintTable entranceTable;
+                entranceTable.insert(temp->multiConstraint1.back(), 0, num_col, map_size);
+
+                ConstraintTable exitTable;
+                exitTable.insert(temp->multiConstraint1.front(), 0, num_col, map_size);
+
+                bool a1Cut = -1 != haveSolutionCondition1(a1MDD->levels,
+                                                          temp->multiConstraint1.back(), entranceTable,
+                                                          temp->multiConstraint1.front(), exitTable
+                );
+
+                ConstraintTable entranceTable2;
+                entranceTable.insert(temp->multiConstraint2.back(), 0, num_col, map_size);
+                ConstraintTable exitTable2;
+                exitTable.insert(temp->multiConstraint2.front(), 0, num_col, map_size);
+                bool a2Cut = -1 != haveSolutionCondition1(a2MDD->levels,
+                                                          temp->multiConstraint2.back(), entranceTable,
+                                                          temp->multiConstraint2.front(), exitTable
+                );
+                if (a1Cut && a2Cut) {
+                    rectangle = temp;
+                    if (screen >= 4) {
+                        cout << "both cut barrierWidth " << barrierWidth << endl;
+                        cout << "conflicts amount " << parent.conflicts.size() << endl;
+                    }
+                } else {
+                    if (screen >= 4) {
+                        cout << "not cut barrierWidth " << barrierWidth << endl;
+                        cout << "a1Cut: " << a1Cut << " a2Cut: " << a2Cut<< endl;
+
+                    }
+                    break;
+                }
+            }
+        }
+        else if (option.RM4way>=4){
+            if(screen >=4){
+                cout << "Start finding best k rectangle." << endl;
+            }
+            rt1 = timestep - getMahattanDistance(Rs.first, Rs.second, loc1 / num_col, loc1%num_col);
+            rt2 = rt1;
+            int a1kMax = kDelay;
+            int a2kMax = kDelay;
+            new_type = -1;
+//                    int preA1Type = 0;
+//                    int preA2Type = 0;
+            for (int a1k=0; a1k<=a1kMax; a1k++){
+                for (int a2k=0; a2k<=a2kMax; a2k++){
+//                            std::clock_t buildMDDStart = std::clock();
+                    const MDD<Map>* a1MDD = buildMDD(parent,a1,a1k);
+                    const MDD<Map>* a2MDD = buildMDD(parent,a2,a2k - con->k >=0 ? a2k-con->k:0);
+//                            RMBuildMDDTime+=std::clock() - buildMDDStart;
+                    if(screen >=4){
+                        cout << "a1k: " << a1k << endl;
+                        cout << "a2k: " << a2k << endl;
+                        cout << "a1mdd levels: "<< a1MDD->levels.size()<<endl;
+                        cout << "a2mdd levels: "<< a2MDD->levels.size()<<endl;
+                    }
+                    std::shared_ptr<Conflict> temp = std::shared_ptr<Conflict>(
+                            new Conflict(loc1, con->k, timestep));
+
+                    int result = temp->generalKRectangleConflict(a1, a2, Rs, Rg,
+                                                                 make_pair(s1 / num_col, s1 % num_col),
+                                                                 make_pair(s2 / num_col, s2 % num_col),
+                                                                 rt1, rt2, paths, t1_start, t2_start,
+                                                                 make_pair(g1 / num_col, g1 % num_col),
+                                                                 make_pair(g2 / num_col, g2 % num_col),
+                                                                 num_col, a1k, a2k, con->k, option.RM4way,
+                                                                 &(a1MDD->levels), &(a2MDD->levels));
+                    if(screen >=4){
+                        cout << "result: " << result << endl;
+                    }
+                    if (result == 1){
+                        a1kMax = a1k;
+                        break;
+                    }
+                    else if(result ==2){
+                        a2kMax = a2k;
+                        continue;
+                    }
+
+                    bool empty_constraint = false;
+                    for (auto constraint : temp->multiConstraint1){
+                        if (constraint.size()==0){
+                            if(screen >=4){
+                                cout << "constraint for a1 is empty" << endl;
+                            }
+                            empty_constraint = true;
+                        }
+                    }
+
+                    for (auto constraint : temp->multiConstraint2){
+                        if (constraint.size()==0){
+                            if(screen >=4){
+                                cout << "constraint for a2 is empty" << endl;
+                            }
+                            empty_constraint = true;
+                        }
+                    }
+                    if(empty_constraint){
+                        continue;
+                    }
+
+                    assert(temp->multiConstraint1.size() == 2 && "a1 no two constraints");
+                    assert(temp->multiConstraint2.size() == 2 && "a2 no two constraints");
+
+                    int a1_type = classifyBarrierAndRectangle(a1MDD->levels,
+                                                              temp->multiConstraint1.back(),
+                                                              temp->multiConstraint1.front(),
+                                                              num_col, map_size);
+                    int a2_type = classifyBarrierAndRectangle(a2MDD->levels,
+                                                              temp->multiConstraint2.back(),
+                                                              temp->multiConstraint2.front(),
+                                                              num_col, map_size);
+                    if(a1_type == -1 || a2_type == -1){
+                        if(screen >=4){
+                            cout << "a1_type: " << a1_type << endl;
+                            cout << "a2_type: " << a2_type << endl;
+                            cout << "Not satisfy condition1 and condition2" << endl;
+                        }
+                        if (a1_type == -1){
+                            a1kMax = a1k;
+                            break;
+                        }
+                        if (a2_type == -1) {
+                            a2kMax = a2k;
+                            continue;
+                        }
+                    }
+
+//                            preA1Type = a1_type > preA1Type? a1_type:preA1Type;
+//                            preA2Type = a2_type > preA2Type? a2_type:preA2Type;
+
+                    int temp_type = a1_type + a1_type;
+                    int temp_total_k = a1k+a2k;
+
+                    if(screen >= 4){
+                        cout << "temp type: "<<temp_type<<" temp total k: "<< temp_total_k << endl;
+                    }
+
+                    if (temp_total_k > total_k || (temp_total_k == total_k && temp_type > new_type)){
+                        rectangle = temp;
+                        new_type = temp_type;
+                        total_k = temp_total_k;
+
+                        if(screen >=4){
+                            cout << "Select this one" << endl;
+                            cout<<"rectangle: "<< *rectangle << endl;
+                        }
+
+                    }
+                    else{
+                        if(screen >=4){
+                            cout << "Abandon this one"<<endl;
+                        }
+                    }
+
+                }
+            }
+
+
+        }
+//                runtime_find_rectangle += std::clock() - RM_Start -findsgtime;
+
+
+        if (screen >= 5) {
+            cout << "initial_Rs: " << Rs.first << " " << Rs.second << endl;
+            cout << "initial_Rg: " << Rg.first << " " << Rg.second << endl;
+            cout << "earlyCrosst: " << earlyCrosst << endl;
+            cout << "lateCrosst: " << lateCrosst << endl;
+            cout << "s1: " << s1 / num_col << " " << s1 % num_col << endl;
+            cout << "g1: " << g1 / num_col << " " << g1 % num_col << endl;
+            cout << "s1_t: " << t1_start << endl;
+            cout << "rt1: " << rt1 << endl;
+
+
+            cout << "s2: " << s2 / num_col << " " << s2 % num_col << endl;
+            cout << "g2: " << g2 / num_col << " " << g2 % num_col << endl;
+            cout << "s2_t: " << t2_start << endl;
+            cout << "rt2: " << rt2 << endl;
+
+            cout << "Rs: " << Rs.first << " " << Rs.second << endl;
+            cout << "Rg: " << Rg.first << " " << Rg.second << endl;
+
+            cout << "area:" << new_area << endl;
+        }
+
+        if (rectangle == nullptr){
+            not_rectangle = true;
+            if (screen >= 4) {
+                cout <<"rectangle == nullptr"<<endl;
+            }
+            parent.conflicts.push_back(con);
+            RMTime += std::clock() - RM_Start;
+            return false;
+        }
+        else{
+            rectangle->multiConstraint1.pop_back();
+            rectangle->multiConstraint2.pop_back();
+        }
+
+        bool isBlocked = true;
+        if (screen >= 4) {
+            cout <<"Check constraint and current path"<<endl;
+            cout << "Constraint 1 size: " << rectangle->multiConstraint1.size()<<endl;
+            cout << "Constraint 2 size: " << rectangle->multiConstraint2.size()<<endl;
+            cout << "a1: " <<endl;
+            for (auto i : rectangle->multiConstraint1.front()){
+                cout << "<(" << std::get<0>(i)/num_col <<","<<std::get<0>(i)%num_col << ")," << std::get<1>(i) << "," <<
+                     std::get<2>(i) << "," << std::get<3>(i) << ">";
+            }
+            cout <<endl;
+            cout << "a2: " <<endl;
+            for (auto i : rectangle->multiConstraint2.front()){
+                cout << "<(" << std::get<0>(i)/num_col <<","<<std::get<0>(i)%num_col << ")," << std::get<1>(i) << "," <<
+                     std::get<2>(i) << "," << std::get<3>(i) << ">";
+            }
+            cout<<endl;
+        }
+        for (auto constraint : rectangle->multiConstraint1) {
+            isBlocked = isBlocked && blocked(*paths[rectangle->a1], constraint);
+        }
+        for (auto constraint : rectangle->multiConstraint2) {
+            isBlocked = isBlocked && blocked(*paths[rectangle->a2], constraint);
+        }
+
+
+        if (!not_rectangle && isBlocked) {
+
+            if (new_type == 2)
+                rectangle->p = conflict_priority::CARDINAL;
+            else if (new_type == 1) // && !findRectangleConflict(parent.parent, *conflict))
+                rectangle->p = conflict_priority::SEMI;
+            else //if (type == 0 && !findRectangleConflict(parent.parent, *conflict))
+                rectangle->p = conflict_priority::NON;
+
+            parent.conflicts.push_back(rectangle);
+            if (screen >= 4){
+                cout << "add " << *rectangle << endl;
+                cout << "conflicts amount " << parent.conflicts.size()<<endl;
+            }
+            RMSuccessCount+=1;
+            RMTime += std::clock() - RM_Start;
+            return true;
+        }
+        else {
+            if (screen >= 4) {
+                cout<<"rectangle: "<< *rectangle << endl;
+                cout << "not rectangle" << endl;
+                if (!isBlocked)
+                    cout << "not blocked" << endl;
+
+            }
+            parent.conflicts.push_back(con);
+            RMTime += std::clock() - RM_Start;
+            return false;
+        }
+    }
+
+}
+        
+
 
 
 

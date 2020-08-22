@@ -207,7 +207,8 @@ public:
 	void updateConstraintTable(ICBSNode* cTurr, int agent_id);
 	void classifyConflicts(ICBSNode &parent);
 	void initializeDummyStart();
-	bool isCorridorConflict(std::shared_ptr<Conflict>& corridor, const std::shared_ptr<Conflict>& con, bool cardinal, ICBSNode* node);
+	bool isCorridorConflict(std::shared_ptr<Conflict>& corridor, const std::shared_ptr<Conflict>& con, ICBSNode* node);
+	bool rectangleReasoning(const std::shared_ptr<Conflict>& con,ICBSNode &parent);
 
 	bool findPathForSingleAgent(ICBSNode*  node, int ag, double lowerbound = 0);
 	// Runs the algorithm until the problem is solved or time is exhausted 
