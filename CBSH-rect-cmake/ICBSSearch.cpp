@@ -2049,8 +2049,6 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
         if(rectangleMDD && option.RM4way>=3){
             std::shared_ptr<Conflict> rectangle = nullptr;
             bool isRectangle = rectangleReasoning(conflict,parent, rectangle);
-            cout<<isRectangle<<endl;
-            assert(isRectangle <=1);
             if (isRectangle) {
                 parent.conflicts.remove(conflict);
                 found = true;
