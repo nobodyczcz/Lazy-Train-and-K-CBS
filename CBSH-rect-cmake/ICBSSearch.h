@@ -208,7 +208,7 @@ public:
 	void classifyConflicts(ICBSNode &parent);
 	void initializeDummyStart();
 	bool isCorridorConflict(std::shared_ptr<Conflict>& corridor, const std::shared_ptr<Conflict>& con, ICBSNode* node);
-	bool rectangleReasoning(const std::shared_ptr<Conflict>& con,ICBSNode &parent);
+	bool rectangleReasoning(const std::shared_ptr<Conflict>& con,ICBSNode &parent,std::shared_ptr<Conflict>& rectangle);
 
 	bool findPathForSingleAgent(ICBSNode*  node, int ag, double lowerbound = 0);
 	// Runs the algorithm until the problem is solved or time is exhausted 

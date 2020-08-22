@@ -2071,11 +2071,13 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
         // Corridor reasoning
         std::shared_ptr<Conflict> corridor;
         if(rectangleMDD && option.RM4way>=3){
-            bool isRectangle = rectangleReasoning(conflict,parent);
+            std::shared_ptr<Conflict> rectangle = nullptr;
+            bool isRectangle = rectangleReasoning(conflict,parent, rectangle);
             if (isRectangle) {
                 parent.conflicts.remove(conflict);
                 found = true;
-                break;
+                if(rectangle->p  == conflict_priority::CARDINAL)
+                    break;
             }
         }
         if( corridor2 && isCorridorConflict(corridor, conflict, &parent))
@@ -2095,7 +2097,8 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
         parent.non_cardinal_waiting.pop_front();
         std::shared_ptr<Conflict> corridor;
         if(rectangleMDD && option.RM4way>=3){
-            bool isRectangle = rectangleReasoning(conflict,parent);
+            std::shared_ptr<Conflict> rectangle = nullptr;
+            bool isRectangle = rectangleReasoning(conflict,parent,rectangle);
             if (isRectangle) {
                 parent.conflicts.remove(conflict);
                 break;
@@ -2116,7 +2119,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 }
 
 template<class Map>
-bool MultiMapICBSSearch<Map>::rectangleReasoning(const std::shared_ptr<Conflict>& con,ICBSNode &parent){
+bool MultiMapICBSSearch<Map>::rectangleReasoning(const std::shared_ptr<Conflict>& con,ICBSNode &parent,std::shared_ptr<Conflict>& rectangle){
     std::clock_t RM_Start = std::clock();
     int a1 = con->a1, a2 = con->a2;
     int loc1, loc2, timestep,timestep2;
@@ -2269,7 +2272,7 @@ bool MultiMapICBSSearch<Map>::rectangleReasoning(const std::shared_ptr<Conflict>
         RMDetectionCount+=1;
 
         int rt1, rt2; //root time
-        std::shared_ptr<Conflict> rectangle = nullptr;
+
         int total_k = -1;
 
 

@@ -80,7 +80,7 @@ bool operator < (const Conflict& conflict1, const Conflict& conflict2) // return
 		return false;
 	else if (conflict2.type == conflict_type::TARGET)
 		return true;
-	
+
 
     if (conflict1.p < conflict2.p)
 		return false;
