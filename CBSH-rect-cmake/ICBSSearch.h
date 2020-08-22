@@ -192,6 +192,11 @@ protected:
 	bool timeout=false;
 
 
+    void finalConflictCheck(ICBSNode& curr);
+    void conflict_between_2(ICBSNode& curr, int a1, int a2);
+
+
+
 
 
 };

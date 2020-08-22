@@ -31,72 +31,6 @@ inline void ICBSSearch::updatePaths(ICBSNode* curr)
 
 
 
-/*std::vector <std::list< std::pair<int, int> > >* ICBSSearch::collectConstraints(ICBSNode* curr, int agent_id)
-{
-	std::clock_t t1 = std::clock();
-	// extract all constraints on agent_id
-	list < tuple<int, int, int> > constraints;
-	int max_timestep = -1;
-	while (curr != dummy_start) 
-	{
-		if (curr->agent_id == agent_id) 
-		{
-			for (auto constraint : curr->constraints)
-			{
-				constraints.push_back(constraint);
-				if (get<2>(constraint) > max_timestep) // calc constraints' max_timestep
-					max_timestep = get<2>(constraint);
-				if(-1 - get<2>(constraint) > max_timestep) // calc constraints' max_timestep
-					max_timestep = -1 - get<2>(constraint);
-			}
-		}
-		curr = curr->parent;
-	}
-
-
-	// initialize a constraint vector of length max_timestep+1. Each entry is an empty list< pair<int,int> > (loc1,loc2)
-	vector < list< pair<int, int> > >* cons_vec = new vector < list< pair<int, int> > >(max_timestep + 1, list< pair<int, int> >());
-	
-	for (list< tuple<int, int, int> >::iterator it = constraints.begin(); it != constraints.end(); it++) 
-	{
-		if (get<2>(*it) < 0) // time range constraint
-		{
-			int loc = get<0>(*it);
-			int t1 = -1 - get<1>(*it);
-			int t2 = -1 - get<2>(*it);			
-			for (int i = t1; i <= t2; i++)
-				cons_vec->at(i).push_back(make_pair(loc, -1));
-		}
-		else if (get<0>(*it) < 0) // barrier constraint
-		{
-			int x1 = (-get<0>(*it) - 1) / num_col, y1 = (-get<0>(*it) - 1) % num_col;
-			int x2 = get<1>(*it) / num_col, y2 = get<1>(*it) % num_col;
-			if (x1 == x2)
-			{
-				if (y1 < y2)
-					for (int i = 0; i <= std::min(y2 - y1, get<2>(*it)); i++)
-						cons_vec->at(get<2>(*it) - i).push_back(make_pair(x1 * num_col + y2 - i, -1));
-				else
-					for (int i = 0; i <= std::min(y1 - y2, get<2>(*it)); i++)
-						cons_vec->at(get<2>(*it) - i).push_back(make_pair(x1 * num_col + y2 + i, -1));
-			}
-			else // y1== y2
-			{
-				if (x1 < x2)
-					for (int i = 0; i <= std::min(x2 - x1, get<2>(*it)); i++)
-						cons_vec->at(get<2>(*it) - i).push_back(make_pair((x2 - i) * num_col + y1, -1));
-				else
-					for (int i = 0; i <= std::min(x1 - x2, get<2>(*it)); i++)
-						cons_vec->at(get<2>(*it) - i).push_back(make_pair((x2 + i) * num_col + y1, -1));
-			}
-		}
-		else
-			cons_vec->at(get<2>(*it)).push_back(make_pair(get<0>(*it), get<1>(*it)));
-	}
-	
-	runtime_updatecons += std::clock() - t1;
-	return cons_vec;
-}*/
 
 int ICBSSearch::computeHeuristics(const ICBSNode& curr)
 {
@@ -213,17 +147,57 @@ void ICBSSearch::copyConflicts(const std::list<std::shared_ptr<Conflict >>& conf
 	}
 }
 
-//void ICBSSearch::copyConflicts(const std::list<std::shared_ptr<CConflict >>& conflicts,
-//	std::list<std::shared_ptr<CConflict>>& copy, int excluded_agent) const
-//{
-//	for (std::list<std::shared_ptr<CConflict>>::const_iterator it = conflicts.begin(); it != conflicts.end(); ++it)
-//	{
-//		if (get<0>(**it) != excluded_agent && get<1>(**it) != excluded_agent)
-//		{
-//			copy.push_back(*it);
-//		}
-//	}
-//}
+void ICBSSearch::conflict_between_2(ICBSNode& curr, int a1, int a2)
+{
+    size_t min_path_length = paths[a1]->size() < paths[a2]->size() ? paths[a1]->size() : paths[a2]->size();
+    for (size_t timestep = 0; timestep < min_path_length; timestep++)
+    {
+        for (int k = -kDelay; k<=kDelay;k++){
+            int  t = timestep+k;
+            if (t<0 || t >= paths[a1]->size() || t >= paths[a2]->size())
+                continue;
+            int loc1 = paths[a1]->at(t).location;
+            int loc2 = paths[a2]->at(t).location;
+            if (loc1 == loc2)
+            {
+                cout<<"Find "<<k<<" delay conflict between "<< a1 <<" and "<<a2<<endl;
+
+            }
+            else if (kDelay==0 && timestep < min_path_length - 1
+                     && loc1 == paths[a2]->at(timestep + 1).location
+                     && loc2 == paths[a1]->at(timestep + 1).location)
+            {
+                cout<<"Find edge conflict between "<< a1 <<" and "<<a2<<endl;
+
+            }
+        }
+
+    }
+    if (paths[a1]->size() != paths[a2]->size())
+    {
+        int a1_ = paths[a1]->size() < paths[a2]->size() ? a1 : a2;
+        int a2_ = paths[a1]->size() < paths[a2]->size() ? a2 : a1;
+        int loc1 = paths[a1_]->back().location;
+        for (size_t timestep = min_path_length; timestep < paths[a2_]->size(); timestep++)
+        {
+            int loc2 = paths[a2_]->at(timestep).location;
+            if (loc1 == loc2)
+            {
+                cout<<"Find target conflict between "<< a1_ <<" and "<<a2_<<endl;
+            }
+        }
+    }
+}
+
+void ICBSSearch::finalConflictCheck(ICBSNode& curr)
+{
+        for(int a1 = 0; a1 < num_of_agents ; a1++) {
+            for (int a2 = a1 + 1; a2 < num_of_agents; a2++) {
+                conflict_between_2(curr, a1, a2);
+            }
+        }
+        cout<<"Final conflict check done"<<endl;
+}
 
 
 
@@ -1122,8 +1096,10 @@ bool MultiMapICBSSearch<Map>::search(){
             runtime = (std::clock() - start);
             solution_found = true;
             solution_cost = curr->g_val;
-            if (debug_mode)
+            if (debug_mode) {
                 printHLTree();
+                finalConflictCheck(*curr);
+            }
             if (screen >= 1)
                 printPaths();
             if(!analysisInstance)
@@ -2073,10 +2049,13 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
         if(rectangleMDD && option.RM4way>=3){
             std::shared_ptr<Conflict> rectangle = nullptr;
             bool isRectangle = rectangleReasoning(conflict,parent, rectangle);
+            cout<<isRectangle<<endl;
+            assert(isRectangle <=1);
             if (isRectangle) {
                 parent.conflicts.remove(conflict);
                 found = true;
-                if(rectangle->p  == conflict_priority::CARDINAL)
+                assert(rectangle != nullptr);
+                if( rectangle->p  == conflict_priority::CARDINAL)
                     break;
             }
         }
@@ -2100,6 +2079,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
             std::shared_ptr<Conflict> rectangle = nullptr;
             bool isRectangle = rectangleReasoning(conflict,parent,rectangle);
             if (isRectangle) {
+                assert(rectangle != nullptr);
                 parent.conflicts.remove(conflict);
                 break;
             }
@@ -2166,6 +2146,7 @@ bool MultiMapICBSSearch<Map>::rectangleReasoning(const std::shared_ptr<Conflict>
 
     action_diff = abs(action1 - action2);
 
+
     if ((action1!=action::WAIT && action2!=action::WAIT) &&(action_diff == 1 || action_diff == 3)) {
         int t1_start, t1_end, t2_start, t2_end;
         int s1, g1, s2, g2;
@@ -2179,7 +2160,6 @@ bool MultiMapICBSSearch<Map>::rectangleReasoning(const std::shared_ptr<Conflict>
             t2_start = t2s_result.first;
             t2_end = t2e_result.first;
             if(t1_start==-1 || t2_start==-1 ||t1_end==-1||t2_end==-1){
-                parent.conflicts.push_back(con);
                 RMTime += std::clock() - RM_Start;
                 RMFailBeforeRec+=1;
                 return false;
@@ -2198,8 +2178,8 @@ bool MultiMapICBSSearch<Map>::rectangleReasoning(const std::shared_ptr<Conflict>
             t1_end = t1e_result.first;
             t2_start = t2s_result.first;
             t2_end = t2e_result.first;
+
             if(t1_start==-1 || t2_start==-1 ||t1_end==-1||t2_end==-1){
-                parent.conflicts.push_back(con);
                 RMTime += std::clock() - RM_Start;
                 RMFailBeforeRec+=1;
                 if(screen>=5)
@@ -2226,6 +2206,7 @@ bool MultiMapICBSSearch<Map>::rectangleReasoning(const std::shared_ptr<Conflict>
             g2 = t2_result.second->location;
 
         }
+
 
 
         int new_type, new_area,a1_Rs_t,a1_Rg_t;
@@ -2259,7 +2240,6 @@ bool MultiMapICBSSearch<Map>::rectangleReasoning(const std::shared_ptr<Conflict>
         new_area = (abs(Rs.first - Rg.first)+1) * (abs(Rs.second - Rg.second)+1);
 
         if (s1 == s2 || s1 == g1 || s2 == g2 || new_area <= 2) {
-            parent.conflicts.push_back(con);
             RMTime += std::clock() - RM_Start;
             RMFailBeforeRec+=1;
             if(screen>=5)
@@ -2277,7 +2257,6 @@ bool MultiMapICBSSearch<Map>::rectangleReasoning(const std::shared_ptr<Conflict>
 
 
         if (option.RM4way <5 && !isRectangleConflict(s1, s2, g1, g2, num_col, kDelay, abs(t1_start - t2_start), option.RM4way >=4 ? true: false)){
-            parent.conflicts.push_back(con);
 //                    RMTime += std::clock() - RM_Start;
             RMFailBeforeRec+=1;
             if(screen>=5)
@@ -2287,7 +2266,6 @@ bool MultiMapICBSSearch<Map>::rectangleReasoning(const std::shared_ptr<Conflict>
 
         if (option.RM4way == 3) {
             if (!isRectangleConflict(s1, s2, g1, g2, num_col, kDelay, abs(t1_start - t2_start), option.RM4way >=4 ? true: false)){
-                parent.conflicts.push_back(con);
 //                        RMTime += std::clock() - RM_Start;
                 RMFailBeforeRec+=1;
                 if(screen>=5)
@@ -2533,7 +2511,6 @@ bool MultiMapICBSSearch<Map>::rectangleReasoning(const std::shared_ptr<Conflict>
             if (screen >= 4) {
                 cout <<"rectangle == nullptr"<<endl;
             }
-            parent.conflicts.push_back(con);
             RMTime += std::clock() - RM_Start;
             return false;
         }
@@ -2594,11 +2571,11 @@ bool MultiMapICBSSearch<Map>::rectangleReasoning(const std::shared_ptr<Conflict>
                     cout << "not blocked" << endl;
 
             }
-            parent.conflicts.push_back(con);
             RMTime += std::clock() - RM_Start;
             return false;
         }
     }
+    return false;
 
 }
         
