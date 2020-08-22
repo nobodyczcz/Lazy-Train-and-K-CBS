@@ -2086,7 +2086,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
             parent.conflicts.remove(conflict);
 
             found = true;
-            break;
+//            break;
         }
     }
 
@@ -2107,7 +2107,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
             corridor->p = conflict->p;
             parent.conflicts.push_back(corridor);
             parent.conflicts.remove(conflict);
-            break;
+//            break;
         }
     }
 
