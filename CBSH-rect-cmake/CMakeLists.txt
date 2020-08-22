@@ -160,24 +160,47 @@ elseif(APPLE)
 else()
 	file(READ "/etc/issue" ETC_ISSUE)
 	string(REGEX MATCH "Ubuntu|Manjaro" DIST ${ETC_ISSUE})
+    if(DIST STREQUAL "Ubuntu")
+		message(STATUS ">>>> Found Ubuntu <<<<")
+		set(boostPython python-py36)
+	elseif(DIST STREQUAL "Manjaro")
+		message(STATUS ">>>> Found Manjaro <<<<")
+		set(boostPython python38)
+	else()
+		message(STATUS ">>>> Found unknown distribution <<<<")
+		set(boostPython python37)
+	endif()
 
-	set(boostPython python3)
-	find_package(PythonInterp 3.6 REQUIRED)
-	find_package(PythonLibs 3.6 REQUIRED)
-	include_directories(${PYTHON_INCLUDE_DIRS})
+	find_path(SPARSEHASH_INCLUDE_DIRS sparsehash/dense_hash_map)
+	if (NOT SPARSEHASH_INCLUDE_DIRS)
+		message(FATAL_ERROR "Could not find <sparsehash/dense_hash_map>.")
+	endif ()
+	include_directories(SYSTEM ${SPARSEHASH_INCLUDE_DIRS} )
+
+	find_package(PythonInterp 3.8 REQUIRED)
 
 	# This goes after, since it uses PythonInterp as hint
+	find_package(PythonLibs 3.8 REQUIRED)
+	include_directories(${PYTHON_INCLUDE_DIRS})
+	MESSAGE(${PYTHON_LIBRARIES} ${PYTHON_INCLUDE_DIRS})
 
-	set(Boost_USE_STATIC_LIBS OFF)
-	set(Boost_USE_MULTITHREADED ON)  
-	set(Boost_USE_STATIC_RUNTIME OFF)
-	FIND_PACKAGE(Boost REQUIRED COMPONENTS system program_options ${boostPython})
+	FIND_PACKAGE(Boost)
+	IF(Boost_FOUND)
+	  SET(Boost_USE_STATIC_LIBS OFF)
+	  SET(Boost_USE_MULTITHREADED ON)
+	  SET(Boost_USE_STATIC_RUNTIME OFF)
+	  FIND_PACKAGE(Boost REQUIRED COMPONENTS system program_options python3)
+	  INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
+
+	  TARGET_LINK_LIBRARIES(CBS-K ${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
 
 
-	if(Boost_FOUND)
-		include_directories(${Boost_INCLUDE_DIRS})
-		target_link_libraries(CBS-K ${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
-	else()
-		 message(FATAL_ERROR "Could not find boost.")
-	endif()
+	  
+
+	ELSEIF(NOT Boost_FOUND)
+	  MESSAGE(FATAL_ERROR "Unable to find correct Boost version. Did you set BOOST_ROOT?")
+	ENDIF()
+
+	
+
 endif()
