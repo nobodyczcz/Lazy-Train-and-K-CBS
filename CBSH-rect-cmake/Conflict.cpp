@@ -81,17 +81,17 @@ bool operator < (const Conflict& conflict1, const Conflict& conflict2) // return
     else if (conflict2.type == conflict_type::TARGET)
         return true;
 
-    if (conflict1.type == conflict_type::RECTANGLE4 && conflict2.type == conflict_type::RECTANGLE4)
-    {
-        if (conflict1.p < conflict2.p)
-            return false;
-        else
-            return true;
-    }
-    else if (conflict1.type == conflict_type::RECTANGLE4)
-        return false;
-    else if (conflict2.type == conflict_type::RECTANGLE4)
-        return true;
+//    if (conflict1.type == conflict_type::RECTANGLE4 && conflict2.type == conflict_type::RECTANGLE4)
+//    {
+//        if (conflict1.p < conflict2.p)
+//            return false;
+//        else
+//            return true;
+//    }
+//    else if (conflict1.type == conflict_type::RECTANGLE4)
+//        return false;
+//    else if (conflict2.type == conflict_type::RECTANGLE4)
+//        return true;
 
 
     if (conflict1.p < conflict2.p)
@@ -112,16 +112,7 @@ bool operator < (const Conflict& conflict1, const Conflict& conflict2) // return
 			if (conflict2.type != conflict_type::CORRIDOR2)
 				return false;
 		}
-		else if (conflict1.type == conflict_type::CORRIDOR4)
-		{
-			if (conflict2.type == conflict_type::CORRIDOR2)
-			{
-				return true;
-			}
-			else if (conflict2.type != conflict_type::CORRIDOR4)
-				return false;
-		}
-		else if (conflict2.type == conflict_type::CORRIDOR4 || conflict2.type == conflict_type::CORRIDOR2)
+		else if (conflict2.type == conflict_type::CORRIDOR4 )
 		{
 			return true;
 		}
@@ -143,11 +134,7 @@ bool operator < (const Conflict& conflict1, const Conflict& conflict2) // return
 		{
 			return false;
 		}
-		
-		/*if (conflict2.type == conflict_type::RECTANGLE &&  conflict1.type != conflict_type::RECTANGLE)
-		{
-			return true;
-		}*/
+
 	}
 
 

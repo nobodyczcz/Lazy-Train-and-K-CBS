@@ -2076,7 +2076,8 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
             if (isRectangle) {
                 parent.conflicts.remove(conflict);
                 found = true;
-                break;
+                if(rectangle->p  == conflict_priority::CARDINAL)
+                    break;
             }
         }
         if( corridor2 && isCorridorConflict(corridor, conflict, &parent))
