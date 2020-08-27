@@ -92,7 +92,7 @@ int CorridorReasoning<Map>::getExitTime(const std::vector<PathEntry>& path, cons
 	if (t >= path.size())
 		t = path.size() - 1;
 	int loc = path[t].location;
-	while (loc != path.front().location && loc != path2.back().location &&
+	while (loc != path.back().location && loc != path2.front().location &&
 		map->getDegree(loc) == 2)
 	{
 		t++;
@@ -286,7 +286,7 @@ int CorridorReasoning<Map>::getExitTime(const std::vector<PathEntry>& path, cons
 //}
 
 template<class Map>
-int CorridorReasoning<Map>::getBypassLength(int start, int end, std::pair<int, int> blocked, Map* my_map, int num_col, int map_size, ConstraintTable& constraint_table, int upper_bound, int start_heading)
+int CorridorReasoning<Map>::getBypassLength(int start, int end, std::pair<int, int> blocked, Map* my_map, int num_col, int map_size, ConstraintTable& constraint_table, int upper_bound,std::vector<hvals>& goalHeuTable, int start_heading, int end_heading)
 {
 	int length = INT_MAX;
 	// generate a heap that can save nodes (and a open_handle)
@@ -299,7 +299,8 @@ int CorridorReasoning<Map>::getBypassLength(int start, int end, std::pair<int, i
     hashtable_t nodes;
     hashtable_t::iterator it; // will be used for find()
 
-	LLNode* root = new LLNode(start, 0, getMahattanDistance(start, end, num_col), NULL, 0);
+    int start_h_val = abs(goalHeuTable[end].get_hval(end_heading) - goalHeuTable[start].get_hval(start_heading));
+    LLNode* root = new LLNode(start, 0, start_h_val, NULL, 0);
 	root->heading = start_heading;
 	root->open_handle = heap.push(root);  // add root to heap
 	nodes.insert(root);       // add root to hash_table (nodes)
@@ -310,7 +311,7 @@ int CorridorReasoning<Map>::getBypassLength(int start, int end, std::pair<int, i
 	{
 		curr = heap.top();
 		heap.pop();
-		if (curr->loc == end)
+		if (curr->loc == end && goalHeuTable[end].get_hval(end_heading) >= goalHeuTable[curr->loc].get_hval(curr->heading))
 		{
 			length = curr->g_val;
 			break;
@@ -351,7 +352,7 @@ int CorridorReasoning<Map>::getBypassLength(int start, int end, std::pair<int, i
 						next_heading = move.second;
 
 				int next_g_val = curr->g_val + 1;
-				int next_h_val = getMahattanDistance(next_loc, end, num_col);
+				int next_h_val = abs(goalHeuTable[end].get_hval(end_heading) - goalHeuTable[next_loc].get_hval(next_heading));
 				if (next_g_val + next_h_val >= upper_bound) // the cost of the path is larger than the upper bound
 					continue;
 				LLNode* next = new LLNode(next_loc, next_g_val, next_h_val, NULL, next_timestep);
