@@ -466,7 +466,7 @@ bool MultiMapICBSSearch<Map>::isCorridorConflict(std::shared_ptr<Conflict>& corr
 	}
 	else if (ml->getDegree(loc2) == 2)
 		curr = loc2;
-	if (curr <= 0)
+	if (curr <= 0 || !ml->notCorner(curr))
 		return false;
 	//cout << "iscorridor2" << endl;
 

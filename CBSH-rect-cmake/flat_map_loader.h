@@ -21,8 +21,12 @@ public:
 	railCell get_full_cell(int location);
 	FlatlandLoader();
 	int getDegree(int loc);
+    bool notCorner(int loc){
+        return true;
+    };
 
-	boost::python::object rail;
+
+    boost::python::object rail;
 	railCell* railMap;
 	vector<pair<int, int>> get_transitions(int location, int heading = -1, bool noWait=false) const;
 	~FlatlandLoader();

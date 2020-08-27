@@ -56,6 +56,17 @@ int MapLoader::getDegree(int loc)
 	return degree;
 }
 
+bool MapLoader::notCorner(int loc)
+{
+    if (loc < 0 || loc >= map_size() || getLoc(loc))
+        return false;
+    if ((0 < loc - cols && !getLoc(loc - cols)) && (loc + cols < map_size() && !getLoc(loc + cols)))
+        return true;
+    if ((loc % cols > 0 && !getLoc(loc - 1)) && (loc % cols < cols - 1 && !getLoc(loc + 1)))
+        return true;
+    return false;
+}
+
 bool MapLoader::isFullyBlocked(int start, int end) {
 	int start_x = start / cols;
 	int start_y = start % cols;

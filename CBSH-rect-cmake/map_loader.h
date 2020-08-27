@@ -49,6 +49,8 @@ class MapLoader
   void printPath (std::vector<int> path);
   void saveToFile(std::string fname);
   int getDegree(int loc);
-  bool isFullyBlocked(int start, int end);//check does map block entire area from start to end;
+  bool notCorner(int loc);
+
+    bool isFullyBlocked(int start, int end);//check does map block entire area from start to end;
   ~MapLoader();
 };
