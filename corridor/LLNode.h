@@ -17,7 +17,7 @@ public:
 	int h_val = 0;
 	LLNode* parent;
 	int timestep = 0;
-	int num_internal_conf = 0; 
+	int num_internal_conf = 0;
 	bool in_openlist = false;
 
 	// the following is used to comapre nodes in the OPEN list

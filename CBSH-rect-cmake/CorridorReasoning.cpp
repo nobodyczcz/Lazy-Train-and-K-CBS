@@ -356,7 +356,6 @@ int CorridorReasoning<Map>::getBypassLength(int start, int end, std::pair<int, i
 				if (next_g_val + next_h_val >= upper_bound) // the cost of the path is larger than the upper bound
 					continue;
 				LLNode* next = new LLNode(next_loc, next_g_val, next_h_val, NULL, next_timestep);
-
 				next->heading = next_heading;
 				next->actionToHere = move.second;
 				next->time_generated = time_generated;
@@ -374,7 +373,8 @@ int CorridorReasoning<Map>::getBypassLength(int start, int end, std::pair<int, i
 					{
 						existing_next->g_val = next_g_val;
 						existing_next->timestep = next_timestep;
-						heap.update(existing_next->open_handle);
+
+                        heap.update(existing_next->open_handle);
 					}
 				}
 			}
