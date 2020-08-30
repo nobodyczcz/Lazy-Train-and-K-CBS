@@ -69,17 +69,17 @@ std::ostream& operator<<(std::ostream& os, const Conflict& conflict)
 
 bool operator < (const Conflict& conflict1, const Conflict& conflict2) // return true if conflict2 has higher priority
 {
-	if (conflict1.type == conflict_type::TARGET && conflict2.type == conflict_type::TARGET)
-    {
-        if (conflict1.p < conflict2.p)
-            return false;
-        else
-            return true;
-    }
-    else if (conflict1.type == conflict_type::TARGET)
-        return false;
-    else if (conflict2.type == conflict_type::TARGET)
-        return true;
+//	if (conflict1.type == conflict_type::TARGET && conflict2.type == conflict_type::TARGET)
+//    {
+//        if (conflict1.p < conflict2.p)
+//            return false;
+//        else
+//            return true;
+//    }
+//    else if (conflict1.type == conflict_type::TARGET)
+//        return false;
+//    else if (conflict2.type == conflict_type::TARGET)
+//        return true;
 
 //    if (conflict1.type == conflict_type::RECTANGLE4 && conflict2.type == conflict_type::RECTANGLE4)
 //    {
@@ -100,22 +100,25 @@ bool operator < (const Conflict& conflict1, const Conflict& conflict2) // return
 		return true;
 	else if (conflict1.p == conflict_priority::CARDINAL) // both are cardinal
 	{
-	    if (conflict1.type == conflict_type::RECTANGLE4 || conflict1.type == conflict_type::RECTANGLE){
+        if (conflict1.type == conflict_type::RECTANGLE4 || conflict1.type == conflict_type::RECTANGLE){
             if (conflict2.type != conflict_type::RECTANGLE4 || conflict2.type != conflict_type::RECTANGLE)
                 return false;
 	    }
 	    else if (conflict2.type == conflict_type::RECTANGLE4 || conflict2.type == conflict_type::RECTANGLE){
 	        return true;
 	    }
-		else if (conflict1.type == conflict_type::CORRIDOR2)
+        else if (conflict1.type == conflict_type::CORRIDOR2)
 		{
 			if (conflict2.type != conflict_type::CORRIDOR2)
 				return false;
 		}
-		else if (conflict2.type == conflict_type::CORRIDOR4 )
-		{
-			return true;
-		}
+        else if (conflict1.type == conflict_type::TARGET ){
+            if (conflict2.type != conflict_type::TARGET )
+                return false;
+        }
+        else if (conflict2.type == conflict_type::TARGET ) {
+            return true;
+        }
 	}
 	else // both are semi or both are non 
 	{
@@ -126,14 +129,21 @@ bool operator < (const Conflict& conflict1, const Conflict& conflict2) // return
         else if (conflict2.type == conflict_type::RECTANGLE4 || conflict2.type == conflict_type::RECTANGLE){
             return true;
         }
-		else if (conflict2.type == conflict_type::CORRIDOR2 &&  conflict1.type != conflict_type::CORRIDOR2)
+        if (conflict2.type == conflict_type::CORRIDOR2 &&  conflict1.type != conflict_type::CORRIDOR2)
 		{
 			return true;
 		}
-		else	if (conflict2.type != conflict_type::CORRIDOR2 &&  conflict1.type == conflict_type::CORRIDOR2)
+		else if (conflict2.type != conflict_type::CORRIDOR2 &&  conflict1.type == conflict_type::CORRIDOR2)
 		{
 			return false;
 		}
+        else if (conflict1.type == conflict_type::TARGET ){
+            if (conflict2.type != conflict_type::TARGET )
+                return false;
+        }
+        else if (conflict2.type == conflict_type::TARGET ) {
+            return true;
+        }
 
 	}
 

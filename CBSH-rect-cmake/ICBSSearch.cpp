@@ -2416,7 +2416,7 @@ bool MultiMapICBSSearch<Map>::rectangleReasoning(const std::shared_ptr<Conflict>
 //                            preA1Type = a1_type > preA1Type? a1_type:preA1Type;
 //                            preA2Type = a2_type > preA2Type? a2_type:preA2Type;
 
-                    int temp_type = a1_type + a1_type;
+                    int temp_type = a1_type + a2_type;
                     int temp_total_k = a1k+a2k;
 
                     if(screen >= 4){
