@@ -752,6 +752,9 @@ bool ICBSSearch::generateChild(ICBSNode*  node, ICBSNode* curr)
 
 			if (replan)
 			{
+			    if (screen>=2){
+			        cout<<"Replan for agent: "<< ag<<endl;
+			    }
 				double lowerbound = (int)paths[ag]->size() - 1;
 				if (!findPathForSingleAgent(node, ag, lowerbound))
 					return false;
