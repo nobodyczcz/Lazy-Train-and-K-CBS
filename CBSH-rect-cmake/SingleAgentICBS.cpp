@@ -130,6 +130,8 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 	min_f_val = start->getFVal();
 
 	max_plan_len = std::max((int)max_plan_len,(int)constraint_table.latest_timestep);
+//    max_plan_len = std::max((int)max_plan_len,(int)constraint_table.length_min);
+
 
 	lowerbound = std::max(lowerbound, (double)constraint_table.length_min);
 	lowerbound = std::max(lowerbound, (double)min_end_time);

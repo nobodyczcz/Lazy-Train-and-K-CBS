@@ -68,6 +68,8 @@ void ConstraintTable::insert(std::list<Constraint> &constraints, int agent_id, i
             if (x < 0 && y == agent_id)
             { // <-1, agent_id, t>: path of agent_id should be of length at least t + 1
                 this->length_min = max(this->length_min, z + 1);
+                if(this->length_min > this->latest_timestep)
+                    this->latest_timestep = this->length_min;
 
             }
             else if (x >= 0 && y == agent_id)
