@@ -81,8 +81,8 @@ public:
 	int g_val;
 	int h_val;
 	int f_val;
-	size_t depth; // depath of this CT node
-	size_t makespan; // makespan over all paths
+	size_t depth = 0; // depath of this CT node
+	size_t makespan = 0; // makespan over all paths
 	int num_of_collisions; // number of conflicts in the current paths
 
 	uint64_t time_expanded;

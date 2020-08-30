@@ -148,6 +148,7 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 //    cout<<" length min:"<<constraint_table.length_min<<endl;
 //    cout<<" id:"<<this->agent_id<<endl;
 //    cout<<" max_plan_len"<< max_plan_len<<endl;
+//cout<<" 469: "<< constraint_table.is_constrained(469, 22)<<endl;
 
 	while (!focal_list.empty()) 
 	{
@@ -241,6 +242,7 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 			if (!constraint_table.is_constrained(next_id, next_timestep) &&
 				!constraint_table.is_constrained(curr->loc * map_size + next_id, next_timestep))
 			{
+
 				// compute cost to next_id via curr node
 				int next_g_val = curr->g_val + 1;
 				int next_heading;
