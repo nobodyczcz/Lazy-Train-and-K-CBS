@@ -107,11 +107,6 @@ bool operator < (const Conflict& conflict1, const Conflict& conflict2) // return
 	    else if (conflict2.type == conflict_type::RECTANGLE4 || conflict2.type == conflict_type::RECTANGLE){
 	        return true;
 	    }
-        else if (conflict1.type == conflict_type::CORRIDOR2)
-		{
-			if (conflict2.type != conflict_type::CORRIDOR2)
-				return false;
-		}
         else if (conflict1.type == conflict_type::TARGET ){
             if (conflict2.type != conflict_type::TARGET )
                 return false;
@@ -119,6 +114,16 @@ bool operator < (const Conflict& conflict1, const Conflict& conflict2) // return
         else if (conflict2.type == conflict_type::TARGET ) {
             return true;
         }
+        else if (conflict1.type == conflict_type::CORRIDOR2)
+		{
+			if (conflict2.type != conflict_type::CORRIDOR2)
+				return false;
+		}
+        else if (conflict2.type == conflict_type::CORRIDOR2 ) {
+            return true;
+        }
+
+
 	}
 	else // both are semi or both are non 
 	{
@@ -133,10 +138,6 @@ bool operator < (const Conflict& conflict1, const Conflict& conflict2) // return
 		{
 			return true;
 		}
-		else if (conflict2.type != conflict_type::CORRIDOR2 &&  conflict1.type == conflict_type::CORRIDOR2)
-		{
-			return false;
-		}
         else if (conflict1.type == conflict_type::TARGET ){
             if (conflict2.type != conflict_type::TARGET )
                 return false;
@@ -144,6 +145,14 @@ bool operator < (const Conflict& conflict1, const Conflict& conflict2) // return
         else if (conflict2.type == conflict_type::TARGET ) {
             return true;
         }
+		else if (conflict2.type != conflict_type::CORRIDOR2 &&  conflict1.type == conflict_type::CORRIDOR2)
+		{
+			return false;
+		}
+        else if (conflict2.type == conflict_type::CORRIDOR2 ) {
+            return true;
+        }
+
 
 	}
 
