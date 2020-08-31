@@ -2327,10 +2327,17 @@ bool MultiMapICBSSearch<Map>::rectangleReasoning(const std::shared_ptr<Conflict>
             if(screen >=4){
                 cout << "Start finding best k rectangle." << endl;
             }
-            rt1 = timestep - getMahattanDistance(Rs.first, Rs.second, loc1 / num_col, loc1%num_col) - t1_waits;//TODO: Here can improve.
-//            rt1 = t1_start + getMahattanDistance(Rs.first, Rs.second, s1 / num_col, s2%num_col);//TODO: Here can improve.
+//            rt1 = timestep - getMahattanDistance(Rs.first, Rs.second, loc1 / num_col, loc1%num_col) - t1_waits;//TODO: Here can improve.
+//            rt2 = timestep - getMahattanDistance(Rs.first, Rs.second, loc1 / num_col, loc1%num_col) - t2_waits;
 
-            rt2 = rt1;
+            rt1 = t1_start + getMahattanDistance(Rs.first, Rs.second, s1 / num_col, s1%num_col);//TODO: Here can improve.
+            rt2 = t2_start + getMahattanDistance(Rs.first, Rs.second, s2 / num_col, s2%num_col);
+
+
+//            rt1 = std::min(rt1,rt2);
+//            rt2 = rt1;
+            int root = std::min(rt1,rt2);
+            int diff = std::abs(rt1-rt2);
             int a1kMax = kDelay;
             int a2kMax = kDelay;
             new_type = -1;
@@ -2339,8 +2346,8 @@ bool MultiMapICBSSearch<Map>::rectangleReasoning(const std::shared_ptr<Conflict>
             for (int a1k=0; a1k<=a1kMax; a1k++){
                 for (int a2k=0; a2k<=a2kMax; a2k++){
 //                            std::clock_t buildMDDStart = std::clock();
-                    const MDD<Map>* a1MDD = buildMDD(parent,a1,a1k);
-                    const MDD<Map>* a2MDD = buildMDD(parent,a2,a2k - con->k >=0 ? a2k-con->k:0);
+                    const MDD<Map>* a1MDD = buildMDD(parent,a1,rt1-root == 0 ? a1k : a1k - diff > 0? a1k - diff:0);
+                    const MDD<Map>* a2MDD = buildMDD(parent,a2,rt2-root == 0 ? a2k : a2k - diff > 0? a2k - diff:0);
 //                            RMBuildMDDTime+=std::clock() - buildMDDStart;
                     if(screen >=4){
                         cout << "a1k: " << a1k << endl;
@@ -2354,7 +2361,7 @@ bool MultiMapICBSSearch<Map>::rectangleReasoning(const std::shared_ptr<Conflict>
                     int result = temp->generalKRectangleConflict(a1, a2, Rs, Rg,
                                                                  make_pair(s1 / num_col, s1 % num_col),
                                                                  make_pair(s2 / num_col, s2 % num_col),
-                                                                 rt1, rt2, paths, t1_start, t2_start,
+                                                                 root, root, paths, t1_start, t2_start,
                                                                  make_pair(g1 / num_col, g1 % num_col),
                                                                  make_pair(g2 / num_col, g2 % num_col),
                                                                  num_col, a1k, a2k, con->k, option.RM4way,
@@ -2464,12 +2471,15 @@ bool MultiMapICBSSearch<Map>::rectangleReasoning(const std::shared_ptr<Conflict>
             cout << "g1: " << g1 / num_col << " " << g1 % num_col << endl;
             cout << "s1_t: " << t1_start << endl;
             cout << "rt1: " << rt1 << endl;
+            cout <<"a1 waits"<<t1_waits<<endl;
 
 
             cout << "s2: " << s2 / num_col << " " << s2 % num_col << endl;
             cout << "g2: " << g2 / num_col << " " << g2 % num_col << endl;
             cout << "s2_t: " << t2_start << endl;
             cout << "rt2: " << rt2 << endl;
+            cout <<"a2 waits"<<t2_waits<<endl;
+
 
             cout << "Rs: " << Rs.first << " " << Rs.second << endl;
             cout << "Rg: " << Rg.first << " " << Rg.second << endl;
