@@ -13,8 +13,6 @@ ENDIF()
 ADD_LIBRARY(PythonCBS SHARED
 		PythonCBS.cpp
 		PythonCBS.h
-		FlatAgentLoader.cpp
-		FlatAgentLoader.h
 		../CBSH-rect-cmake/flat_map_loader.h
 		../CBSH-rect-cmake/flat_map_loader.cpp
 		../CBSH-rect-cmake/agents_loader.h

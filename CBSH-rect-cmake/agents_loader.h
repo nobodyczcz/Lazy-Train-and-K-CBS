@@ -9,7 +9,9 @@
 #include <vector>
 #include <utility>
 #include "map_loader.h"
+#include <boost/python.hpp>
 
+namespace p = boost::python;
 
 using namespace std;
 
@@ -27,6 +29,7 @@ class AgentsLoader {
   AgentsLoader(const std::string fname, const MapLoader &ml, int agentsNum);
   AgentsLoader();
   AgentsLoader(int number_of_agent);
+  AgentsLoader(p::object agents);
 
   void addAgent ( int start_row, int start_col, int goal_row, int goal_col,int min_time = 0,int finish = false, int heading = -1);
   void clear();

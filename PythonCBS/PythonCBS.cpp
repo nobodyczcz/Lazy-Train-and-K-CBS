@@ -1,5 +1,4 @@
 #include "PythonCBS.h"
-#include "FlatAgentLoader.h"
 #include "MDD.h"
 
 namespace p = boost::python;
@@ -60,7 +59,7 @@ PythonCBS<Map>::PythonCBS(p::object railEnv1, std::string algo, int kRobust, int
 	ml = new FlatlandLoader(railEnv.attr("rail"), p::extract<int>(rows), p::extract<int>(cols));
 	std::cout << "load agents " << std::endl;
 
-	al =  new FlatAgentLoader(railEnv.attr("agents"));
+	al =  new AgentsLoader(railEnv.attr("agents"));
 	std::cout << "load done " << std::endl;
 	if (debug) {
 		al->printAgentsInitGoal();
@@ -71,7 +70,7 @@ PythonCBS<Map>::PythonCBS(p::object railEnv1, std::string algo, int kRobust, int
 template <class Map>
 p::list PythonCBS<Map>::getResult() {
 
-	return icbs->outputPaths();
+//	return icbs->outputPaths();
 }
 
 template <class Map>

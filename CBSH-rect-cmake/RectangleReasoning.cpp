@@ -247,59 +247,63 @@ bool isRectangleConflict(int s1, int s2, int g1, int g2, int num_col,int kRobust
 pair<int,int> get_st(const std::vector<PathEntry>& path, int timestep, int num_col, int action1, int action2, int kDelay, bool single_only, bool pause_on_stop) {
 	pair<int, int> result;
 	int candidate=-1;
-	result.second == 0;
-	int preAction = -1;
+	result.second = 0;
+//	int preAction = -1;
 	int wait_count = kDelay;
 	for (int t = timestep; t > 0; t--) {
 		int action = getAction(path[t].location, path[t - 1].location, num_col);
 		if (action != action1 && action != action2 && (action!=action::WAIT || wait_count == 0 || pause_on_stop)) {
             result.first = candidate;
+            result.second = kDelay - wait_count;
             return result;
         }
-        if(action == action::WAIT && wait_count > 0 && kDelay > 0)
-		    wait_count --;
+//        if(action == action::WAIT && wait_count > 0 && kDelay > 0)
+//		    wait_count --;
 
 		
 		if (!single_only || path[t].single){
 		    candidate = t;
 		}
-		if (preAction != -1 && action != preAction) {
-			result.second++;
-		}
-		preAction = action;
+//		if (preAction != -1 && action != preAction) {
+//			result.second++;
+//		}
+//		preAction = action;
 	}
 
 	//st is start location
 	result.first = 0;
-	//result.second++;
+    result.second = kDelay - wait_count;
+    //result.second++;
 	return result;
 	
 };
 pair<int, int> get_gt(const std::vector<PathEntry>& path, int timestep, int num_col, int action1, int action2, int kDelay, bool single_only,bool pause_on_stop) {
 	pair<int, int> result;
     int candidate=-1;
-    result.second == 0;
-	int preAction = -1;
+    result.second = 0;
+//	int preAction = -1;
 	int wait_count = kDelay;
 	for (int t = timestep; t < path.size()-1; t++) {
 		int action = getAction(path[t + 1].location, path[t].location, num_col);
 		if (action != action1 && action != action2 && (action!=action::WAIT || wait_count == 0|| pause_on_stop)) {
 			result.first = candidate;
-			return result;
+            result.second = kDelay - wait_count;
+            return result;
 		}
 
-        if(action == action::WAIT && wait_count > 0 && kDelay > 0)
-            wait_count --;
+//        if(action == action::WAIT && wait_count > 0 && kDelay > 0)
+//            wait_count --;
         if (!single_only || path[t].single){
             candidate = t;
         }
-		if (preAction != -1 && action != preAction) {
-			result.second++;
-		}
-		preAction = action;
+//		if (preAction != -1 && action != preAction) {
+//			result.second++;
+//		}
+//		preAction = action;
 	}
 	result.first = path.size() - 1;
-	//result.second++;
+    result.second = kDelay - wait_count;
+    //result.second++;
 	return result;
 
 };
@@ -340,6 +344,25 @@ MDDNode* get_st_mdd(const MDDLevels& mdd, int timestep,int loc, int num_col, int
     return furthest_node;
 
 };
+
+int get_opt_mdd(const MDDLevels& mdd, int loc, int heading){
+    bool found = false;
+    int opt_t = -1;
+    for (int t = 0; t<mdd.size(); t++){
+        for (auto node: mdd[t]){
+            if (node->location == loc && node->heading == heading){
+                found = true;
+                opt_t = t;
+                break;
+            }
+        }
+        if (found)
+            break;
+    }
+
+    return opt_t;
+};
+
 MDDNode* get_gt_mdd(const MDDLevels& mdd, int timestep,int loc, int num_col, int action1, int action2){
     MDDNode* start;
     for (auto node : mdd[timestep]){

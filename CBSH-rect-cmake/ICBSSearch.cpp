@@ -2113,6 +2113,8 @@ bool MultiMapICBSSearch<Map>::rectangleReasoning(const std::shared_ptr<Conflict>
 
     if ((action1!=action::WAIT && action2!=action::WAIT) &&(action_diff == 1 || action_diff == 3)) {
         int t1_start, t1_end, t2_start, t2_end;
+        int t1_waits = 0;
+        int t2_waits = 0;
         int s1, g1, s2, g2;
         if (option.RM4way == 3 || option.RM4way == 4){
             pair<int, int> t1s_result = get_st(*paths[a1], timestep, num_col, action1, action2, kDelay);
@@ -2183,22 +2185,22 @@ bool MultiMapICBSSearch<Map>::rectangleReasoning(const std::shared_ptr<Conflict>
         a1_Rs_t = getMahattanDistance(s1 / num_col, s1%num_col, Rs.first, Rs.second) + t1_start;
         a1_Rg_t = getMahattanDistance(s1 / num_col, s1%num_col, Rg.first, Rg.second) + t1_start;
 
-        int earlyCrosst = -1;
-        int lateCrosst = -1;
-
-        if (!isRectangleConflict(s1, s2, g1, g2, num_col, kDelay, abs(t1_start - t2_start), option.RM4way >=4 ? true: false)){
-            earlyCrosst = get_earlyCrosst(*paths[a1], *paths[a2], timestep, a1_Rs_t, con->k);
-            lateCrosst = get_lateCrosst(*paths[a1], *paths[a2], timestep, a1_Rg_t, con->k);
-            if (earlyCrosst != -1) {
-                Rs = std::make_pair(paths[a1]->at(earlyCrosst).location / num_col, paths[a1]->at(earlyCrosst).location % num_col);
-                a1_Rs_t = getMahattanDistance(s1 / num_col, s1%num_col, Rs.first, Rs.second) + t1_start;
-            }
-
-            if (lateCrosst != -1) {
-                Rg = std::make_pair(paths[a1]->at(lateCrosst).location / num_col, paths[a1]->at(lateCrosst).location % num_col);
-                a1_Rg_t = getMahattanDistance(s1 / num_col, s1%num_col, Rg.first, Rg.second) + t1_start;
-            }
-        }
+//        int earlyCrosst = -1;
+//        int lateCrosst = -1;
+//
+//        if (!isRectangleConflict(s1, s2, g1, g2, num_col, kDelay, abs(t1_start - t2_start), option.RM4way >=4 ? true: false)){
+//            earlyCrosst = get_earlyCrosst(*paths[a1], *paths[a2], timestep, a1_Rs_t, con->k);
+//            lateCrosst = get_lateCrosst(*paths[a1], *paths[a2], timestep, a1_Rg_t, con->k);
+//            if (earlyCrosst != -1) {
+//                Rs = std::make_pair(paths[a1]->at(earlyCrosst).location / num_col, paths[a1]->at(earlyCrosst).location % num_col);
+//                a1_Rs_t = getMahattanDistance(s1 / num_col, s1%num_col, Rs.first, Rs.second) + t1_start;
+//            }
+//
+//            if (lateCrosst != -1) {
+//                Rg = std::make_pair(paths[a1]->at(lateCrosst).location / num_col, paths[a1]->at(lateCrosst).location % num_col);
+//                a1_Rg_t = getMahattanDistance(s1 / num_col, s1%num_col, Rg.first, Rg.second) + t1_start;
+//            }
+//        }
 
 
         new_area = (abs(Rs.first - Rg.first)+1) * (abs(Rs.second - Rg.second)+1);
@@ -2322,7 +2324,7 @@ bool MultiMapICBSSearch<Map>::rectangleReasoning(const std::shared_ptr<Conflict>
             if(screen >=4){
                 cout << "Start finding best k rectangle." << endl;
             }
-            rt1 = timestep - getMahattanDistance(Rs.first, Rs.second, loc1 / num_col, loc1%num_col);
+            rt1 = t1_start + getMahattanDistance(Rs.first, Rs.second, s1 / num_col, s2%num_col);//TODO: Here can improve.
             rt2 = rt1;
             int a1kMax = kDelay;
             int a2kMax = kDelay;
@@ -2451,8 +2453,8 @@ bool MultiMapICBSSearch<Map>::rectangleReasoning(const std::shared_ptr<Conflict>
         if (screen >= 5) {
             cout << "initial_Rs: " << Rs.first << " " << Rs.second << endl;
             cout << "initial_Rg: " << Rg.first << " " << Rg.second << endl;
-            cout << "earlyCrosst: " << earlyCrosst << endl;
-            cout << "lateCrosst: " << lateCrosst << endl;
+//            cout << "earlyCrosst: " << earlyCrosst << endl;
+//            cout << "lateCrosst: " << lateCrosst << endl;
             cout << "s1: " << s1 / num_col << " " << s1 % num_col << endl;
             cout << "g1: " << g1 / num_col << " " << g1 % num_col << endl;
             cout << "s1_t: " << t1_start << endl;

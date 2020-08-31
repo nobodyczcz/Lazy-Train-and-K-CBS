@@ -2,7 +2,7 @@
 #include <string>
 #include <vector>
 #include <boost/python.hpp>
-#include "FlatAgentLoader.h.h"
+#include "agents_loader.h"
 
 
 #include "ICBSSearch.h"
@@ -23,7 +23,7 @@ private:
 	std::string algo;
 	p::object railEnv;
 	FlatlandLoader* ml;
-	AgentsLoader* al;
+    AgentsLoader* al;
 	constraint_strategy s;
 	options options1;
 	int timeLimit;
