@@ -2125,6 +2125,9 @@ bool MultiMapICBSSearch<Map>::rectangleReasoning(const std::shared_ptr<Conflict>
             t1_end = t1e_result.first;
             t2_start = t2s_result.first;
             t2_end = t2e_result.first;
+            t1_waits = t1s_result.second;
+            t2_waits = t2s_result.second;
+
             if(t1_start==-1 || t2_start==-1 ||t1_end==-1||t2_end==-1){
                 RMTime += std::clock() - RM_Start;
                 RMFailBeforeRec+=1;
@@ -2324,7 +2327,9 @@ bool MultiMapICBSSearch<Map>::rectangleReasoning(const std::shared_ptr<Conflict>
             if(screen >=4){
                 cout << "Start finding best k rectangle." << endl;
             }
-            rt1 = t1_start + getMahattanDistance(Rs.first, Rs.second, s1 / num_col, s2%num_col);//TODO: Here can improve.
+            rt1 = timestep - getMahattanDistance(Rs.first, Rs.second, loc1 / num_col, loc1%num_col) - t1_waits;//TODO: Here can improve.
+//            rt1 = t1_start + getMahattanDistance(Rs.first, Rs.second, s1 / num_col, s2%num_col);//TODO: Here can improve.
+
             rt2 = rt1;
             int a1kMax = kDelay;
             int a2kMax = kDelay;

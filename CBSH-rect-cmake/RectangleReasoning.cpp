@@ -250,15 +250,18 @@ pair<int,int> get_st(const std::vector<PathEntry>& path, int timestep, int num_c
 	result.second = 0;
 //	int preAction = -1;
 	int wait_count = kDelay;
+	int waits = 0;
 	for (int t = timestep; t > 0; t--) {
 		int action = getAction(path[t].location, path[t - 1].location, num_col);
 		if (action != action1 && action != action2 && (action!=action::WAIT || wait_count == 0 || pause_on_stop)) {
             result.first = candidate;
-            result.second = kDelay - wait_count;
+            result.second = waits;
             return result;
         }
-//        if(action == action::WAIT && wait_count > 0 && kDelay > 0)
-//		    wait_count --;
+        if(action == action::WAIT && wait_count > 0 && kDelay > 0) {
+//            wait_count--;
+            waits++;
+        }
 
 		
 		if (!single_only || path[t].single){
@@ -272,7 +275,7 @@ pair<int,int> get_st(const std::vector<PathEntry>& path, int timestep, int num_c
 
 	//st is start location
 	result.first = 0;
-    result.second = kDelay - wait_count;
+    result.second = waits;
     //result.second++;
 	return result;
 	
@@ -283,16 +286,19 @@ pair<int, int> get_gt(const std::vector<PathEntry>& path, int timestep, int num_
     result.second = 0;
 //	int preAction = -1;
 	int wait_count = kDelay;
+	int waits = 0;
 	for (int t = timestep; t < path.size()-1; t++) {
 		int action = getAction(path[t + 1].location, path[t].location, num_col);
 		if (action != action1 && action != action2 && (action!=action::WAIT || wait_count == 0|| pause_on_stop)) {
 			result.first = candidate;
-            result.second = kDelay - wait_count;
+            result.second = waits;
             return result;
 		}
 
-//        if(action == action::WAIT && wait_count > 0 && kDelay > 0)
-//            wait_count --;
+        if(action == action::WAIT && wait_count > 0 && kDelay > 0) {
+//            wait_count--;
+            waits ++ ;
+        }
         if (!single_only || path[t].single){
             candidate = t;
         }
@@ -302,7 +308,7 @@ pair<int, int> get_gt(const std::vector<PathEntry>& path, int timestep, int num_
 //		preAction = action;
 	}
 	result.first = path.size() - 1;
-    result.second = kDelay - wait_count;
+    result.second = waits;
     //result.second++;
 	return result;
 
