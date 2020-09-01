@@ -677,7 +677,7 @@ public:
     int generalKRectangleConflict(int a1, int a2, const std::pair<int, int>& Rs, const std::pair<int, int>& Rg,
                             const std::pair<int, int>& s1, const std::pair<int, int>& s2, int rt1,int rt2,
                             const std::vector<Path*>& paths, int S1_t, int S2_t, const std::pair<int, int>& G1, const std::pair<int, int>& G2,
-                            int num_col, int a1k, int a2k, int conflict_k, int RM4way, const MDDLevels* a1kMDD, const MDDLevels* a2kMDD) // For K-RM
+                            int num_col, int a1k, int a2k,int a1_extended,int a2_extended, int conflict_k, int RM4way, const MDDLevels* a1kMDD, const MDDLevels* a2kMDD) // For K-RM
     {
         this->a1 = a1;
         this->a2 = a2;
@@ -710,9 +710,9 @@ public:
 
 
 //        int a1_extended = (a2k - conflict_k >= 0 ? a2k - conflict_k : 0)/2;
-        int a1_extended = a2k/2;
-
-        int a2_extended = a1k/2;
+//        int a1_extended = a2k/2;
+//
+//        int a2_extended = a1k/2;
 
         int R1_x, R1_y, R2_x, R2_y, G1_x, G1_y, G2_x, G2_y, G1_t, G2_t,E1_t,E2_t;
 
@@ -732,7 +732,7 @@ public:
 
 
             int a2_exit = Rg_x + sign_a2 * a2_extended;
-			int a2_entrance = Rs.first - +sign_a2 * a2_extended;
+			int a2_entrance = Rs.first - sign_a2 * a2_extended;
 //			a2_entrance = sign_a2 * a2_entrance > sign_a2 * s2_x ? a2_entrance : s2_x;
 
             if (sign_a1 * a1_entrance < sign_a1 * s1_y || sign_a1 * a1_exit > sign_a1 * g1_y){
@@ -798,7 +798,7 @@ public:
 
             int a2_exit = Rg_y + sign_a2 * a2_extended;
 //          a2_exit = sign_a2 * a2_exit < sign_a2*g2_y ? a2_exit : g2_y;
-			int a2_entrance = Rs.second - +sign_a2 * a2_extended;
+			int a2_entrance = Rs.second - sign_a2 * a2_extended;
 //			a2_entrance = sign_a2 * a2_entrance > sign_a2 * s2_y ? a2_entrance : s2_y;
 
             if (sign_a1 * a1_entrance < sign_a1 * s1_x || sign_a1 * a1_exit > sign_a1 * g1_x){
@@ -863,7 +863,7 @@ public:
 
             int a2_exit = Rg_y + sign_a2 * a2_extended;
 //            a2_exit = sign_a2 * a2_exit < sign_a2*g2_y ? a2_exit : g2_y;
-			int a2_entrance = Rs.second - +sign_a2 * a2_extended;
+			int a2_entrance = Rs.second - sign_a2 * a2_extended;
 //			a2_entrance = sign_a2 * a2_entrance > sign_a2 * s2_y ? a2_entrance : s2_y;
 
             if (sign_a1 * a1_entrance < sign_a1 * s1_x || sign_a1 * a1_exit > sign_a1 * g1_x){
@@ -926,7 +926,7 @@ public:
 
             int a2_exit = Rg_x + sign_a2 * a2_extended;
 //            a2_exit = sign_a2 * a2_exit < sign_a2*g2_x ? a2_exit : g2_x;
-			int a2_entrance = Rs.first - +sign_a2 * a2_extended;
+			int a2_entrance = Rs.first - sign_a2 * a2_extended;
 //			a2_entrance = sign_a2 * a2_entrance > sign_a2 * s2_x ? a2_entrance : s2_x;
 
             if (sign_a1 * a1_entrance < sign_a1 * s1_y || sign_a1 * a1_exit > sign_a1 * g1_y){

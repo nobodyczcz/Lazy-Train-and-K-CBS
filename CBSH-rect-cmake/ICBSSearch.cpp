@@ -2346,12 +2346,19 @@ bool MultiMapICBSSearch<Map>::rectangleReasoning(const std::shared_ptr<Conflict>
             for (int a1k=0; a1k<=a1kMax; a1k++){
                 for (int a2k=0; a2k<=a2kMax; a2k++){
 //                            std::clock_t buildMDDStart = std::clock();
-                    const MDD<Map>* a1MDD = buildMDD(parent,a1,rt1-root == 0 ? a1k : a1k - diff > 0? a1k - diff:0);
-                    const MDD<Map>* a2MDD = buildMDD(parent,a2,rt2-root == 0 ? a2k : a2k - diff > 0? a2k - diff:0);
+                    int real_a1k = rt1==root ? a1k : a1k - diff > 0? a1k - diff:0;
+                    int real_a2k = rt2==root ? a2k : a2k - diff > 0? a2k - diff:0;
+                    const MDD<Map>* a1MDD = buildMDD(parent,a1,real_a1k);
+                    const MDD<Map>* a2MDD = buildMDD(parent,a2,real_a2k);
 //                            RMBuildMDDTime+=std::clock() - buildMDDStart;
                     if(screen >=4){
+                        cout << "root: " << root << endl;
+                        cout << "diff: " << diff << endl;
+
                         cout << "a1k: " << a1k << endl;
                         cout << "a2k: " << a2k << endl;
+                        cout << "real_a1k: " << real_a1k << endl;
+                        cout << "real_a2k: " << real_a2k << endl;
                         cout << "a1mdd levels: "<< a1MDD->levels.size()<<endl;
                         cout << "a2mdd levels: "<< a2MDD->levels.size()<<endl;
                     }
@@ -2364,7 +2371,7 @@ bool MultiMapICBSSearch<Map>::rectangleReasoning(const std::shared_ptr<Conflict>
                                                                  root, root, paths, t1_start, t2_start,
                                                                  make_pair(g1 / num_col, g1 % num_col),
                                                                  make_pair(g2 / num_col, g2 % num_col),
-                                                                 num_col, a1k, a2k, con->k, option.RM4way,
+                                                                 num_col, a1k, a2k,real_a1k/2, real_a2k/2, con->k, option.RM4way,
                                                                  &(a1MDD->levels), &(a2MDD->levels));
                     if(screen >=4){
                         cout << "result: " << result << endl;
