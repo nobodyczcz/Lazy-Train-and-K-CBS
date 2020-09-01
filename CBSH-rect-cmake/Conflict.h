@@ -76,11 +76,11 @@ bool addFlippedHorizontalLongBarrierConstraint(const std::vector<PathEntry>& pat
 
 bool addGeneralKVerticalBarrierConstraint(const std::vector<PathEntry>& path, int y,
                                           int Ri_x, int Rg_x, int Rg_t, int num_col, int St,
-                                          std::list<Constraint>& constraints, int k, const MDDLevels* kMDD);
+                                          std::list<Constraint>& constraints, int k,int extended, const MDDLevels* kMDD);
 
 bool addGeneralKHorizontalBarrierConstraint(const std::vector<PathEntry>& path, int x,
                                             int Ri_y, int Rg_y, int Rg_t, int num_col, int St,
-                                            std::list<Constraint>& constraints, int k, const MDDLevels* kMDD);
+                                            std::list<Constraint>& constraints, int k,int extended, const MDDLevels* kMDD);
 
 
 
@@ -756,23 +756,23 @@ public:
 
 
             std::list<Constraint> constraint11;
-            addGeneralKVerticalBarrierConstraint(*paths[a1], a1_exit, R1_x, G1_x, G1_t, num_col, S1_t, constraint11, a1k, a1kMDD);
+            addGeneralKVerticalBarrierConstraint(*paths[a1], a1_exit, R1_x, G1_x, G1_t, num_col, S1_t, constraint11, a1k,a2_extended, a1kMDD);
             multiConstraint1.push_back(constraint11);
 
 
             //chasing case always 4 way split
             std::list<Constraint> constraint12;
-            addGeneralKVerticalBarrierConstraint(*paths[a1], a1_entrance, R1_x, G1_x, E1_t, num_col, S1_t, constraint12, a1k, a1kMDD);
+            addGeneralKVerticalBarrierConstraint(*paths[a1], a1_entrance, R1_x, G1_x, E1_t, num_col, S1_t, constraint12, a1k,a2_extended, a1kMDD);
             multiConstraint1.push_back(constraint12);
 
 
             std::list<Constraint> constraint21;
-            addGeneralKHorizontalBarrierConstraint(*paths[a2], a2_exit, R2_y, G2_y, G2_t, num_col, S2_t, constraint21, a2k, a2kMDD);
+            addGeneralKHorizontalBarrierConstraint(*paths[a2], a2_exit, R2_y, G2_y, G2_t, num_col, S2_t, constraint21, a2k,a1_extended, a2kMDD);
             multiConstraint2.push_back(constraint21);
 
             //chasing case always 4 way split
             std::list<Constraint> constraint22;
-            addGeneralKHorizontalBarrierConstraint(*paths[a2], a2_entrance, R2_y, G2_y, E2_t, num_col, S2_t, constraint22, a2k, a2kMDD);
+            addGeneralKHorizontalBarrierConstraint(*paths[a2], a2_entrance, R2_y, G2_y, E2_t, num_col, S2_t, constraint22, a2k,a1_extended, a2kMDD);
             multiConstraint2.push_back(constraint22);
             this->isChasing = true;
 
@@ -823,24 +823,24 @@ public:
 
             std::list<Constraint> constraint11;
 
-            addGeneralKHorizontalBarrierConstraint(*paths[a1], a1_exit, R1_y, G1_y, G1_t, num_col, S1_t, constraint11, a1k, a1kMDD);
+            addGeneralKHorizontalBarrierConstraint(*paths[a1], a1_exit, R1_y, G1_y, G1_t, num_col, S1_t, constraint11, a1k,a2_extended, a1kMDD);
             multiConstraint1.push_back(constraint11);
 
             //chasing case always 4 way split
             std::list<Constraint> constraint12;
-            addGeneralKHorizontalBarrierConstraint(*paths[a1], a1_entrance, R1_y, G1_y, E1_t, num_col, S1_t, constraint12, a1k, a1kMDD);
+            addGeneralKHorizontalBarrierConstraint(*paths[a1], a1_entrance, R1_y, G1_y, E1_t, num_col, S1_t, constraint12, a1k,a2_extended, a1kMDD);
             multiConstraint1.push_back(constraint12);
 
 
 
 
             std::list<Constraint> constraint21;
-            addGeneralKVerticalBarrierConstraint(*paths[a2], a2_exit, R2_x, G2_x, G2_t, num_col, S2_t, constraint21, a2k, a2kMDD);
+            addGeneralKVerticalBarrierConstraint(*paths[a2], a2_exit, R2_x, G2_x, G2_t, num_col, S2_t, constraint21, a2k,a1_extended, a2kMDD);
             multiConstraint2.push_back(constraint21);
 
             //chasing case always 4 way split
             std::list<Constraint> constraint22;
-            addGeneralKVerticalBarrierConstraint(*paths[a2], a2_entrance, R2_x, G2_x, E2_t, num_col, S2_t, constraint22, a2k, a2kMDD);
+            addGeneralKVerticalBarrierConstraint(*paths[a2], a2_entrance, R2_x, G2_x, E2_t, num_col, S2_t, constraint22, a2k,a1_extended, a2kMDD);
             multiConstraint2.push_back(constraint22);
 
             this->isChasing = true;
@@ -889,24 +889,24 @@ public:
 
             std::list<Constraint> constraint11;
 
-            addGeneralKHorizontalBarrierConstraint(*paths[a1], a1_exit, R1_y, G1_y, G1_t, num_col, S1_t, constraint11, a1k, a1kMDD);
+            addGeneralKHorizontalBarrierConstraint(*paths[a1], a1_exit, R1_y, G1_y, G1_t, num_col, S1_t, constraint11, a1k,a2_extended, a1kMDD);
             multiConstraint1.push_back(constraint11);
 
             if (split4way || a1_4way) {
                 std::list<Constraint> constraint12;
-                addGeneralKHorizontalBarrierConstraint(*paths[a1], a1_entrance, R1_y, G1_y, E1_t, num_col, S1_t, constraint12, a1k, a1kMDD);
+                addGeneralKHorizontalBarrierConstraint(*paths[a1], a1_entrance, R1_y, G1_y, E1_t, num_col, S1_t, constraint12, a1k,a2_extended, a1kMDD);
                 multiConstraint1.push_back(constraint12);
             }
 
 
 
             std::list<Constraint> constraint21;
-            addGeneralKVerticalBarrierConstraint(*paths[a2], a2_exit, R2_x, G2_x, G2_t, num_col, S2_t, constraint21, a2k, a2kMDD);
+            addGeneralKVerticalBarrierConstraint(*paths[a2], a2_exit, R2_x, G2_x, G2_t, num_col, S2_t, constraint21, a2k,a1_extended, a2kMDD);
             multiConstraint2.push_back(constraint21);
 
             if (split4way || a2_4way) {
                 std::list<Constraint> constraint22;
-                addGeneralKVerticalBarrierConstraint(*paths[a2], a2_entrance, R2_x, G2_x, E2_t, num_col, S2_t, constraint22, a2k, a2kMDD);
+                addGeneralKVerticalBarrierConstraint(*paths[a2], a2_entrance, R2_x, G2_x, E2_t, num_col, S2_t, constraint22, a2k,a1_extended, a2kMDD);
                 multiConstraint2.push_back(constraint22);
             }
 
@@ -949,24 +949,24 @@ public:
 
 
             std::list<Constraint> constraint11;
-            addGeneralKVerticalBarrierConstraint(*paths[a1], a1_exit, R1_x, G1_x, G1_t, num_col, S1_t, constraint11, a1k, a1kMDD);
+            addGeneralKVerticalBarrierConstraint(*paths[a1], a1_exit, R1_x, G1_x, G1_t, num_col, S1_t, constraint11, a1k,a2_extended, a1kMDD);
             multiConstraint1.push_back(constraint11);
 
 
             if (split4way || a1_4way) {
                 std::list<Constraint> constraint12;
-                addGeneralKVerticalBarrierConstraint(*paths[a1], a1_entrance, R1_x, G1_x, E1_t, num_col, S1_t, constraint12, a1k, a1kMDD);
+                addGeneralKVerticalBarrierConstraint(*paths[a1], a1_entrance, R1_x, G1_x, E1_t, num_col, S1_t, constraint12, a1k,a2_extended, a1kMDD);
                 multiConstraint1.push_back(constraint12);
             }
 
 
             std::list<Constraint> constraint21;
-            addGeneralKHorizontalBarrierConstraint(*paths[a2], a2_exit, R2_y, G2_y, G2_t, num_col, S2_t, constraint21, a2k, a2kMDD);
+            addGeneralKHorizontalBarrierConstraint(*paths[a2], a2_exit, R2_y, G2_y, G2_t, num_col, S2_t, constraint21, a2k,a1_extended, a2kMDD);
             multiConstraint2.push_back(constraint21);
 
             if (split4way || a2_4way) {
                 std::list<Constraint> constraint22;
-                addGeneralKHorizontalBarrierConstraint(*paths[a2], a2_entrance, R2_y, G2_y, E2_t, num_col, S2_t, constraint22, a2k, a2kMDD);
+                addGeneralKHorizontalBarrierConstraint(*paths[a2], a2_entrance, R2_y, G2_y, E2_t, num_col, S2_t, constraint22, a2k,a1_extended, a2kMDD);
                 multiConstraint2.push_back(constraint22);
             }
 
