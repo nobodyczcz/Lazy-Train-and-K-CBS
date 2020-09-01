@@ -709,7 +709,9 @@ public:
         int a2RgBypass = a2Rg + 2 * (getMahattanDistance(s1_x, s1_y, Rs.first, Rs.second) + 1);
 
 
-        int a1_extended = (a2k - conflict_k >= 0 ? a2k - conflict_k : 0)/2;
+//        int a1_extended = (a2k - conflict_k >= 0 ? a2k - conflict_k : 0)/2;
+        int a1_extended = a2k/2;
+
         int a2_extended = a1k/2;
 
         int R1_x, R1_y, R2_x, R2_y, G1_x, G1_y, G2_x, G2_y, G1_t, G2_t,E1_t,E2_t;

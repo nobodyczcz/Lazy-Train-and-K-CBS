@@ -170,10 +170,13 @@ int classifyBarrierAndRectangle(const MDDLevels& mdd, std::list<Constraint>& ent
     ConstraintTable exitTable;
     exitTable.insert(exit, 0, num_col, map_size);
     int condition1Result = haveSolutionCondition1(mdd, entrance, entranceTable, exit, exitTable);
+//    cout<<"condition1 "<<condition1Result<<endl;
     if (condition1Result == -1){
         return -1;
     }
     else{
+//        cout<<"condition2 "<<haveSolutionCondition2(mdd, entrance, entranceTable, exit, exitTable)<<endl;
+
         if (haveSolutionCondition2(mdd, entrance, entranceTable, exit, exitTable) || condition1Result == 0)
             return 0;
         else
