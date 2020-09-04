@@ -2330,6 +2330,11 @@ bool MultiMapICBSSearch<Map>::rectangleReasoning(const std::shared_ptr<Conflict>
 //            rt1 = timestep - getMahattanDistance(Rs.first, Rs.second, loc1 / num_col, loc1%num_col) - t1_waits;//TODO: Here can improve.
 //            rt2 = timestep - getMahattanDistance(Rs.first, Rs.second, loc1 / num_col, loc1%num_col) - t2_waits;
 
+            const MDD<Map>* MDD1 = buildMDD(parent,a1,0);
+            const MDD<Map>* MDD2 = buildMDD(parent,a2,0);
+            t1_start = get_opt_mdd(MDD1->levels,s1,paths[a1]->at(t1_start).heading);
+            t2_start = get_opt_mdd(MDD2->levels,s2,paths[a2]->at(t2_start).heading);
+
             rt1 = t1_start + getMahattanDistance(Rs.first, Rs.second, s1 / num_col, s1%num_col);//TODO: Here can improve.
             rt2 = t2_start + getMahattanDistance(Rs.first, Rs.second, s2 / num_col, s2%num_col);
 

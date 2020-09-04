@@ -100,15 +100,14 @@ public:
 				
 				if (n1->g_val == n2->g_val)
 				{
-				/*if (rand() % 2 == 0)
-					return true;
-				else
-					return false;*/
-					
-					if (rand() % 2 == 0)
-						return true;
-					else
-						return false;
+                    return n1->h_val >= n2->h_val;
+
+
+
+//                    if (rand() % 2 == 0)
+//						return true;
+//					else
+//						return false;
 				}
 				return n1->g_val <= n2->g_val;
 					

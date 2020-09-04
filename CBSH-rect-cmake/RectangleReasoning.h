@@ -62,6 +62,7 @@ pair<int, int> get_st(const std::vector<PathEntry>& path, int timestep,int num_c
 pair<int, int> get_gt(const std::vector<PathEntry>& path, int timestep, int num_col, int action1, int action2, int kDelay, bool single_only = true, bool pause_on_stop=true);
 MDDNode* get_st_mdd(const MDDLevels& mdd, int timestep,int loc, int num_col, int action1, int action2);
 MDDNode* get_gt_mdd(const MDDLevels& mdd, int timestep,int loc, int num_col, int action1, int action2);
+int get_opt_mdd(const MDDLevels& mdd, int loc, int heading);
 std::pair<MDDNode*,MDDNode*> get_sg_mdd(const MDDLevels& mdd, int timestep,int loc, int num_col, int action1, int action2);
 int get_earlyCrosst(const std::vector<PathEntry>& path1, const std::vector<PathEntry>& path2, int timestep, int earlyBound, int delta);
 int get_lateCrosst(const std::vector<PathEntry>& path1, const std::vector<PathEntry>& path2, int timestep, int lateBound, int delta);
