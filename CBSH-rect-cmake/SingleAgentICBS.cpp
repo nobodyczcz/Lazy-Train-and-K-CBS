@@ -48,26 +48,6 @@ int SingleAgentICBS<Map>::extractLastGoalTimestep(int goal_location, const std::
 }
 
 
-// input: curr_id (location at time next_timestep-1) ; next_id (location at time next_timestep); next_timestep
-//        cons[timestep] is a list of <loc1,loc2> of (vertex/edge) constraints for that timestep.
-//inline bool SingleAgentICBS::isConstrained(int curr_id, int next_id, int next_timestep, const std::vector< std::list< std::pair<int, int> > >* cons)  const
-//{
-//	if (cons == NULL)
-//		return false;
-//	// check vertex constraints (being in next_id at next_timestep is disallowed)
-//	if (next_timestep < static_cast<int>(cons->size()))
-//	{
-//		for (std::list< std::pair<int, int> >::const_iterator it = cons->at(next_timestep).begin(); it != cons->at(next_timestep).end(); ++it)
-//		{
-//			if ((std::get<0>(*it) == next_id && std::get<1>(*it) < 0)//vertex constraint
-//				|| (std::get<0>(*it) == curr_id && std::get<1>(*it) == next_id)) // edge constraint
-//				return true;
-//		}
-//	}
-//	return false;
-//}
-
-
 template<class Map>
 int SingleAgentICBS<Map>::numOfConflictsForStep(int curr_id, int next_id, int next_timestep, const bool* res_table, int max_plan_len) {
 	int retVal = 0;
@@ -140,15 +120,7 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 	int time_generated = 0;
 	int time_check_count = 0;
 	std:clock_t runtime;
-	//for (int h = 0; h < my_heuristic.size();h++) {
-	//	//for (int heading = 0; heading<5;heading++)
-	//		std::cout << "(" << h << ": heading:"<<-1 <<": "<< my_heuristic[h].heading[-1] << ")";
-	//}
-//	cout<<" length max:"<<constraint_table.length_max<<endl;
-//    cout<<" length min:"<<constraint_table.length_min<<endl;
-//    cout<<" id:"<<this->agent_id<<endl;
-//    cout<<" max_plan_len"<< max_plan_len<<endl;
-//cout<<" 469: "<< constraint_table.is_constrained(469, 22)<<endl;
+
 
 	while (!focal_list.empty()) 
 	{
@@ -159,29 +131,17 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 			 	return false;
 			 }
 		}
-//		cout << "focal size " << focal_list.size() << endl;
 
 		LLNode* curr = focal_list.top(); focal_list.pop();
 		open_list.erase(curr->open_handle);
-//		cout <<"f: "<< curr->getFVal() <<" g: "<<curr->g_val<<" h: "<<curr->h_val<< endl;
+
 		curr->in_openlist = false;
 		num_expanded++;
-		//cout << "focal size " << focal_list.size() << endl;
-		//cout << "goal_location: " << goal_location << " curr time: " << curr->timestep << " length_min: " << constraint_table.length_min << endl;
+
 		// check if the popped node is a goal
 		if (curr->loc == goal_location && curr->timestep >= constraint_table.length_min && curr->timestep >= min_end_time)
 		{
-//			bool parentAtGoal = false;
-//			LLNode* temp = curr;
-//			for (int x = 0; x <= kRobust; x++) {
-//				if (temp->parent == NULL) {
-//					break;
-//				}
-//				if (temp->parent->loc == goal_location) {
-//					parentAtGoal = true;
-//				}
-//				temp = temp->parent;
-//			}
+
 			if (curr->parent == NULL || curr->parent->loc != goal_location)
 			{
 				//cout << num_generated << endl;
@@ -206,20 +166,6 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 
 		}
 
-//		if(curr->timestep >= max_plan_len) {
-//            if (curr->parent != NULL)
-//                cout << "Parent loc: " << curr->parent->loc << " heading: " << curr->parent->heading << " f: "
-//                     << curr->parent->getFVal() << " g: " << curr->parent->g_val << " h: " << curr->parent->h_val
-//                     << " num_internal_conf: " << curr->parent->num_internal_conf << " current lower boundary: "
-//                     << lower_bound << endl;
-//
-//            cout << "current loc: " << curr->loc << " heading: " << curr->heading << " f: " << curr->getFVal() << " g: "
-//                 << curr->g_val << " h: " << curr->h_val << " num_internal_conf: " << curr->num_internal_conf
-//                 << " current lower boundary: " << lower_bound << endl;
-//            assert(curr->loc <= map_size && "loc out of map size");
-//            cout << "focal size " << focal_list.size() << endl;
-//        }
-//
 
 		vector<pair<int, int>> transitions = ml->get_transitions(curr->loc, curr->heading,false);
 

@@ -1091,7 +1091,6 @@ bool MultiMapICBSSearch<Map>::search(){
                  << curr->conflict->originalConf2 / num_col << ","
                  << curr->conflict->originalConf2 % num_col << ")"
                  << curr->conflict->t << "," << curr->conflict->k << "," << curr->conflict->type << ">" << std::endl;
-            cout << "rm split method " << option.RM4way << endl;
             if (screen>=3)
                 printPaths();
 
@@ -1631,17 +1630,6 @@ MultiMapICBSSearch<Map>::MultiMapICBSSearch(Map* ml, AgentsLoader& al, double f_
         ch.getHVals(search_engines[i]->my_heuristic);
 
 
-//		if (debug_mode) {
-//			std::cout << "Heuristic table for " << i << ": ";
-//			for (int h = 0; h < search_engines[i]->my_heuristic.size(); h++) {
-//				for (int heading = 0; heading < 5; heading++)
-//					if (search_engines[i]->my_heuristic[h].heading[heading]<INT_MAX)
-//					std::cout << "(" << h << ": "<<heading<<": " << search_engines[i]->my_heuristic[h].heading[heading] << ")";
-//			}
-//			std::cout << std::endl;
-//
-//		}
-
 	}
 
 	if (debug_mode) {
@@ -1743,33 +1731,6 @@ void MultiMapICBSSearch<Map>::initializeDummyStart() {
 
 }
 
-//template<class Map>
-//void MultiMapICBSSearch<Map>::buildMDD(ICBSNode& curr, int id)
-//{
-//	if (debug_mode)
-//		cout << "start build MDD" << endl;
-//	MDD<Map> * mdd = new MDD<Map>();
-//
-//	vector < list< pair<int, int> > >* cons_vec = collectConstraints(&curr, id);
-//	mdd->buildMDD(*cons_vec, paths[id]->size(), *search_engines[id]);
-//
-//	for (int i = 0; i < mdd->levels.size(); i++)
-//		paths[id]->at(i).single = mdd->levels[i].size() == 1;
-//	if (cons_strategy == constraint_strategy::CBSH_RM)
-//	{
-//		for (int i = 0; i < mdd->levels.size(); i++)
-//		{
-//			for (MDDNode* n : mdd->levels[i])
-//			{
-//				paths[id]->at(i).locations.push_back(n->location);
-//			}
-//		}
-//	}
-//	delete mdd;
-//	delete cons_vec;
-//	if (debug_mode)
-//		cout << "build MDD done" << endl;
-//}
 
 template<class Map>
 MDD<Map>* MultiMapICBSSearch<Map>::buildMDD(ICBSNode& node, int id, int k)
@@ -2012,7 +1973,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
         parent.cardinal_waiting.pop_front();
         // Corridor reasoning
         std::shared_ptr<Conflict> corridor;
-        if(rectangleMDD && option.RM4way>=3){
+        if(rectangleMDD ){
             std::shared_ptr<Conflict> rectangle = nullptr;
             bool isRectangle = rectangleReasoning(conflict,parent, rectangle);
             if (isRectangle) {
@@ -2039,7 +2000,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
         std::shared_ptr<Conflict> conflict  = parent.non_cardinal_waiting.front();
         parent.non_cardinal_waiting.pop_front();
         std::shared_ptr<Conflict> corridor;
-        if(rectangleMDD && option.RM4way>=3){
+        if(rectangleMDD){
             std::shared_ptr<Conflict> rectangle = nullptr;
             bool isRectangle = rectangleReasoning(conflict,parent,rectangle);
             if (isRectangle) {
@@ -2116,68 +2077,31 @@ bool MultiMapICBSSearch<Map>::rectangleReasoning(const std::shared_ptr<Conflict>
         int t1_waits = 0;
         int t2_waits = 0;
         int s1, g1, s2, g2;
-        if (option.RM4way == 3 || option.RM4way == 4){
-            pair<int, int> t1s_result = get_st(*paths[a1], timestep, num_col, action1, action2, kDelay);
-            pair<int, int> t1e_result = get_gt(*paths[a1], timestep, num_col, action1, action2, kDelay);
-            pair<int, int> t2s_result = get_st(*paths[a2], timestep2, num_col, action1, action2, kDelay);
-            pair<int, int> t2e_result = get_gt(*paths[a2], timestep2, num_col, action1, action2, kDelay);
-            t1_start = t1s_result.first;
-            t1_end = t1e_result.first;
-            t2_start = t2s_result.first;
-            t2_end = t2e_result.first;
-            t1_waits = t1s_result.second;
-            t2_waits = t2s_result.second;
 
-            if(t1_start==-1 || t2_start==-1 ||t1_end==-1||t2_end==-1){
-                RMTime += std::clock() - RM_Start;
-                RMFailBeforeRec+=1;
-                return false;
-            }
-            s1 = paths[a1]->at(t1_start).location;
-            g1 = paths[a1]->at(t1_end).location;
-            s2 = paths[a2]->at(t2_start).location;
-            g2 = paths[a2]->at(t2_end).location;
+        //find furthest correct direction action along the path.
+        pair<int, int> t1s_result = get_st(*paths[a1], timestep, num_col, action1, action2, kDelay, false, false);
+        pair<int, int> t1e_result = get_gt(*paths[a1], timestep, num_col, action1, action2, kDelay, false, false);
+        pair<int, int> t2s_result = get_st(*paths[a2], timestep2, num_col, action1, action2, kDelay,false, false);
+        pair<int, int> t2e_result = get_gt(*paths[a2], timestep2, num_col, action1, action2, kDelay,false, false);
+        t1_start = t1s_result.first;
+        t1_end = t1e_result.first;
+        t2_start = t2s_result.first;
+        t2_end = t2e_result.first;
+
+        if(t1_start==-1 || t2_start==-1 ||t1_end==-1||t2_end==-1){
+            RMTime += std::clock() - RM_Start;
+            RMFailBeforeRec+=1;
+            if(screen>=5)
+                cout<<"failed to extract rectangle starts or goals"<<endl;
+            return false;
         }
-        else if(option.RM4way==5){
-            pair<int, int> t1s_result = get_st(*paths[a1], timestep, num_col, action1, action2, kDelay, false, false);
-            pair<int, int> t1e_result = get_gt(*paths[a1], timestep, num_col, action1, action2, kDelay, false, false);
-            pair<int, int> t2s_result = get_st(*paths[a2], timestep2, num_col, action1, action2, kDelay,false, false);
-            pair<int, int> t2e_result = get_gt(*paths[a2], timestep2, num_col, action1, action2, kDelay,false, false);
-            t1_start = t1s_result.first;
-            t1_end = t1e_result.first;
-            t2_start = t2s_result.first;
-            t2_end = t2e_result.first;
-
-            if(t1_start==-1 || t2_start==-1 ||t1_end==-1||t2_end==-1){
-                RMTime += std::clock() - RM_Start;
-                RMFailBeforeRec+=1;
-                if(screen>=5)
-                    cout<<"failed to extract rectangle starts or goals"<<endl;
-                return false;
-            }
-            s1 = paths[a1]->at(t1_start).location;
-            g1 = paths[a1]->at(t1_end).location;
-            s2 = paths[a2]->at(t2_start).location;
-            g2 = paths[a2]->at(t2_end).location;
-        }
-        else if(option.RM4way==6){
-            const MDD<Map>* a1MDD = buildMDD(parent, a1);
-            const MDD<Map>* a2MDD = buildMDD(parent,a2);
-            std::pair<MDDNode*,MDDNode*> t1_result = get_sg_mdd(a1MDD->levels, timestep,paths.at(a1)->at(timestep).location, num_col, action1, action2);
-            std::pair<MDDNode*,MDDNode*> t2_result = get_sg_mdd(a2MDD->levels, timestep2,paths.at(a2)->at(timestep2).location, num_col, action1, action2);
-            t1_start = t1_result.first->level;
-            t1_end = t1_result.second->level;
-            t2_start = t2_result.first->level;
-            t2_end = t2_result.second->level;
-            s1 = t1_result.first->location;
-            g1 = t1_result.second->location;
-            s2 = t2_result.first->location;
-            g2 = t2_result.second->location;
-
-        }
+        s1 = paths[a1]->at(t1_start).location;
+        g1 = paths[a1]->at(t1_end).location;
+        s2 = paths[a2]->at(t2_start).location;
+        g2 = paths[a2]->at(t2_end).location;
 
 
-
+        //calculate areas and so on. Rg and Rs are D and E in the paper.
         int new_type, new_area,a1_Rs_t,a1_Rg_t;
         std::pair<int, int> Rg, Rs;
         Rg = getRg(std::make_pair(s1 / num_col, s1 % num_col), std::make_pair(g1 / num_col, g1 % num_col),
@@ -2188,22 +2112,6 @@ bool MultiMapICBSSearch<Map>::rectangleReasoning(const std::shared_ptr<Conflict>
         a1_Rs_t = getMahattanDistance(s1 / num_col, s1%num_col, Rs.first, Rs.second) + t1_start;
         a1_Rg_t = getMahattanDistance(s1 / num_col, s1%num_col, Rg.first, Rg.second) + t1_start;
 
-//        int earlyCrosst = -1;
-//        int lateCrosst = -1;
-//
-//        if (!isRectangleConflict(s1, s2, g1, g2, num_col, kDelay, abs(t1_start - t2_start), option.RM4way >=4 ? true: false)){
-//            earlyCrosst = get_earlyCrosst(*paths[a1], *paths[a2], timestep, a1_Rs_t, con->k);
-//            lateCrosst = get_lateCrosst(*paths[a1], *paths[a2], timestep, a1_Rg_t, con->k);
-//            if (earlyCrosst != -1) {
-//                Rs = std::make_pair(paths[a1]->at(earlyCrosst).location / num_col, paths[a1]->at(earlyCrosst).location % num_col);
-//                a1_Rs_t = getMahattanDistance(s1 / num_col, s1%num_col, Rs.first, Rs.second) + t1_start;
-//            }
-//
-//            if (lateCrosst != -1) {
-//                Rg = std::make_pair(paths[a1]->at(lateCrosst).location / num_col, paths[a1]->at(lateCrosst).location % num_col);
-//                a1_Rg_t = getMahattanDistance(s1 / num_col, s1%num_col, Rg.first, Rg.second) + t1_start;
-//            }
-//        }
 
 
         new_area = (abs(Rs.first - Rg.first)+1) * (abs(Rs.second - Rg.second)+1);
@@ -2216,269 +2124,165 @@ bool MultiMapICBSSearch<Map>::rectangleReasoning(const std::shared_ptr<Conflict>
             return false;
         }
 
-//				double findsgtime =  std::clock() - RM_Start;
-//                runtime_findsg += findsgtime;
+
         RMDetectionCount+=1;
 
         int rt1, rt2; //root time
 
         int total_k = -1;
 
-
-        if (option.RM4way <5 && !isRectangleConflict(s1, s2, g1, g2, num_col, kDelay, abs(t1_start - t2_start), option.RM4way >=4 ? true: false)){
-//                    RMTime += std::clock() - RM_Start;
-            RMFailBeforeRec+=1;
-            if(screen>=5)
-                cout<<"failed pass rectangle check"<<endl;
-            return false;
+        if(screen >=4){
+            cout << "Start finding best k rectangle." << endl;
         }
 
-        if (option.RM4way == 3) {
-            if (!isRectangleConflict(s1, s2, g1, g2, num_col, kDelay, abs(t1_start - t2_start), option.RM4way >=4 ? true: false)){
-//                        RMTime += std::clock() - RM_Start;
-                RMFailBeforeRec+=1;
-                if(screen>=5)
-                    cout<<"failed pass rectangle check"<<endl;
-                return false;
-            }
-            new_type = classifyRectangleConflict(s1, s2, g1, g2, Rg, num_col, I_RM);
+        //get earliest timestep agent visit s1 s2 (B1 B2 in the paper) from mdd.
+        const MDD<Map>* MDD1 = buildMDD(parent,a1,0);
+        const MDD<Map>* MDD2 = buildMDD(parent,a2,0);
+        t1_start = get_opt_mdd(MDD1->levels,s1,paths[a1]->at(t1_start).heading);
+        t2_start = get_opt_mdd(MDD2->levels,s2,paths[a2]->at(t2_start).heading);
 
-            if ((!paths[a1]->at(t1_start).single||!paths[a1]->at(t1_end).single) && new_type > 0)
-                new_type--;
-            if ((!paths[a2]->at(t2_start).single || !paths[a2]->at(t2_end).single) && new_type > 0)
-                new_type--;
-
-            if (con->k == 0 ) {
-                rt1 = a1_Rs_t;
-                rt2 = a1_Rs_t;
-            }
-            else {
-                rt1 = timestep - getMahattanDistance(Rs.first, Rs.second, loc1 / num_col, loc1%num_col);
-                rt2 = timestep2 - getMahattanDistance(Rs.first, Rs.second, loc1 / num_col, loc1%num_col) - 1;
-            }
+        //ideal root time for each agent visit D (in real D might be unavaliable)
+        rt1 = t1_start + getMahattanDistance(Rs.first, Rs.second, s1 / num_col, s1%num_col);//TODO: Here can improve.
+        rt2 = t2_start + getMahattanDistance(Rs.first, Rs.second, s2 / num_col, s2%num_col);
 
 
-            int maxWidth = kDelay >= 1 ? 1 : 0;
-            for (int barrierWidth = 0; barrierWidth <= maxWidth ; barrierWidth++) {
-                if (screen >= 4) {
-                    cout <<"Check barrier width: "<< barrierWidth << endl;
+        int root = std::min(rt1,rt2);
+        int diff = std::abs(rt1-rt2);
+        int a1kMax = kDelay;
+        int a2kMax = kDelay;
+        new_type = -1;
+
+        //try all combination of possible k to check does any barriers build by the combination satisfy condition 1 in the paper.
+        for (int a1k=0; a1k<=a1kMax; a1k++){
+            for (int a2k=0; a2k<=a2kMax; a2k++){
+                int real_a1k = rt1==root ? a1k : a1k - diff > 0? a1k - diff:0;
+                int real_a2k = rt2==root ? a2k : a2k - diff > 0? a2k - diff:0;
+                const MDD<Map>* a1MDD = buildMDD(parent,a1,real_a1k);
+                const MDD<Map>* a2MDD = buildMDD(parent,a2,real_a2k);
+                if(screen >=4){
+                    cout << "root: " << root << endl;
+                    cout << "diff: " << diff << endl;
+
+                    cout << "a1k: " << a1k << endl;
+                    cout << "a2k: " << a2k << endl;
+                    cout << "real_a1k: " << real_a1k << endl;
+                    cout << "real_a2k: " << real_a2k << endl;
+                    cout << "a1mdd levels: "<< a1MDD->levels.size()<<endl;
+                    cout << "a2mdd levels: "<< a2MDD->levels.size()<<endl;
                 }
                 std::shared_ptr<Conflict> temp = std::shared_ptr<Conflict>(
                         new Conflict(loc1, con->k, timestep));
-//                        std::clock_t buildMDDStart = std::clock();
 
-                const MDD<Map>* a1MDD = buildMDD(parent,a1,barrierWidth);
-                const MDD<Map>* a2MDD = buildMDD(parent,a2,barrierWidth);
-//                        RMBuildMDDTime+=std::clock() - buildMDDStart;
-
-                temp->kRectangleConflict(a1, a2, Rs, Rg,
-                                         make_pair(s1 / num_col, s1 % num_col),
-                                         make_pair(s2 / num_col, s2 % num_col),
-                                         rt1, rt2, paths, t1_start, t2_start,
-                                         make_pair(g1 / num_col, g1 % num_col),
-                                         make_pair(g2 / num_col, g2 % num_col),
-                                         num_col, barrierWidth, option.RM4way, I_RM,
-                                         &(a1MDD->levels), &(a2MDD->levels));
-
-                if (screen >= 4) {
-                    cout << temp->multiConstraint1.size() << endl;
-                    cout << temp->multiConstraint2.size() << endl;
-
-
+                //build barriers based on k
+                int result = temp->generalKRectangleConflict(a1, a2, Rs, Rg,
+                                                             make_pair(s1 / num_col, s1 % num_col),
+                                                             make_pair(s2 / num_col, s2 % num_col),
+                                                             root, root, paths, t1_start, t2_start,
+                                                             make_pair(g1 / num_col, g1 % num_col),
+                                                             make_pair(g2 / num_col, g2 % num_col),
+                                                             num_col, a1k, a2k,real_a2k/2, real_a1k/2,
+                                                             &(a1MDD->levels), &(a2MDD->levels));
+                if(screen >=4){
+                    cout << "result: " << result << endl;
                 }
-                assert(temp->multiConstraint1.size() == 2 && "a1 no two constraints");
-                assert(temp->multiConstraint2.size() == 2 && "a2 no two constraints");
-                ConstraintTable entranceTable;
-                entranceTable.insert(temp->multiConstraint1.back(), 0, num_col, map_size);
 
-                ConstraintTable exitTable;
-                exitTable.insert(temp->multiConstraint1.front(), 0, num_col, map_size);
-
-                bool a1Cut = -1 != haveSolutionCondition1(a1MDD->levels,
-                                                          temp->multiConstraint1.back(), entranceTable,
-                                                          temp->multiConstraint1.front(), exitTable
-                );
-
-                ConstraintTable entranceTable2;
-                entranceTable.insert(temp->multiConstraint2.back(), 0, num_col, map_size);
-                ConstraintTable exitTable2;
-                exitTable.insert(temp->multiConstraint2.front(), 0, num_col, map_size);
-                bool a2Cut = -1 != haveSolutionCondition1(a2MDD->levels,
-                                                          temp->multiConstraint2.back(), entranceTable,
-                                                          temp->multiConstraint2.front(), exitTable
-                );
-                if (a1Cut && a2Cut) {
-                    rectangle = temp;
-                    if (screen >= 4) {
-                        cout << "both cut barrierWidth " << barrierWidth << endl;
-                        cout << "conflicts amount " << parent.conflicts.size() << endl;
-                    }
-                } else {
-                    if (screen >= 4) {
-                        cout << "not cut barrierWidth " << barrierWidth << endl;
-                        cout << "a1Cut: " << a1Cut << " a2Cut: " << a2Cut<< endl;
-
-                    }
+                //result == 1 or 2 means the barriers are shifted over the any s1/s2/g1/g2 (B1/B2/A1/A2 in the paper)
+                if (result == 1){
+                    a1kMax = a1k;
                     break;
                 }
-            }
-        }
-        else if (option.RM4way>=4){
-            if(screen >=4){
-                cout << "Start finding best k rectangle." << endl;
-            }
-//            rt1 = timestep - getMahattanDistance(Rs.first, Rs.second, loc1 / num_col, loc1%num_col) - t1_waits;//TODO: Here can improve.
-//            rt2 = timestep - getMahattanDistance(Rs.first, Rs.second, loc1 / num_col, loc1%num_col) - t2_waits;
+                else if(result ==2){
+                    a2kMax = a2k;
+                    continue;
+                }
 
-            const MDD<Map>* MDD1 = buildMDD(parent,a1,0);
-            const MDD<Map>* MDD2 = buildMDD(parent,a2,0);
-            t1_start = get_opt_mdd(MDD1->levels,s1,paths[a1]->at(t1_start).heading);
-            t2_start = get_opt_mdd(MDD2->levels,s2,paths[a2]->at(t2_start).heading);
-
-            rt1 = t1_start + getMahattanDistance(Rs.first, Rs.second, s1 / num_col, s1%num_col);//TODO: Here can improve.
-            rt2 = t2_start + getMahattanDistance(Rs.first, Rs.second, s2 / num_col, s2%num_col);
-
-
-//            rt1 = std::min(rt1,rt2);
-//            rt2 = rt1;
-            int root = std::min(rt1,rt2);
-            int diff = std::abs(rt1-rt2);
-            int a1kMax = kDelay;
-            int a2kMax = kDelay;
-            new_type = -1;
-//                    int preA1Type = 0;
-//                    int preA2Type = 0;
-            for (int a1k=0; a1k<=a1kMax; a1k++){
-                for (int a2k=0; a2k<=a2kMax; a2k++){
-//                            std::clock_t buildMDDStart = std::clock();
-                    int real_a1k = rt1==root ? a1k : a1k - diff > 0? a1k - diff:0;
-                    int real_a2k = rt2==root ? a2k : a2k - diff > 0? a2k - diff:0;
-                    const MDD<Map>* a1MDD = buildMDD(parent,a1,real_a1k);
-                    const MDD<Map>* a2MDD = buildMDD(parent,a2,real_a2k);
-//                            RMBuildMDDTime+=std::clock() - buildMDDStart;
-                    if(screen >=4){
-                        cout << "root: " << root << endl;
-                        cout << "diff: " << diff << endl;
-
-                        cout << "a1k: " << a1k << endl;
-                        cout << "a2k: " << a2k << endl;
-                        cout << "real_a1k: " << real_a1k << endl;
-                        cout << "real_a2k: " << real_a2k << endl;
-                        cout << "a1mdd levels: "<< a1MDD->levels.size()<<endl;
-                        cout << "a2mdd levels: "<< a2MDD->levels.size()<<endl;
+                //check is barriers empty, the barriers follows jiaoyang's rm work that only constraint locations exist in k-mdd
+                //The multiConstraint1 contains both entry and exit barrier.
+                bool empty_constraint = false;
+                for (auto constraint : temp->multiConstraint1){
+                    if (constraint.size()==0){
+                        if(screen >=4){
+                            cout << "constraint for a1 is empty" << endl;
+                        }
+                        empty_constraint = true;
                     }
-                    std::shared_ptr<Conflict> temp = std::shared_ptr<Conflict>(
-                            new Conflict(loc1, con->k, timestep));
+                }
 
-                    int result = temp->generalKRectangleConflict(a1, a2, Rs, Rg,
-                                                                 make_pair(s1 / num_col, s1 % num_col),
-                                                                 make_pair(s2 / num_col, s2 % num_col),
-                                                                 root, root, paths, t1_start, t2_start,
-                                                                 make_pair(g1 / num_col, g1 % num_col),
-                                                                 make_pair(g2 / num_col, g2 % num_col),
-                                                                 num_col, a1k, a2k,real_a2k/2, real_a1k/2, con->k, option.RM4way,
-                                                                 &(a1MDD->levels), &(a2MDD->levels));
-                    if(screen >=4){
-                        cout << "result: " << result << endl;
+                for (auto constraint : temp->multiConstraint2){
+                    if (constraint.size()==0){
+                        if(screen >=4){
+                            cout << "constraint for a2 is empty" << endl;
+                        }
+                        empty_constraint = true;
                     }
-                    if (result == 1){
+                }
+                if(empty_constraint){
+                    continue;
+                }
+
+                assert(temp->multiConstraint1.size() == 2 && "a1 no two constraints");
+                assert(temp->multiConstraint2.size() == 2 && "a2 no two constraints");
+
+                //check does entry and exit satisfy condition 1 in the paper, also classify the rectangle.
+                int a1_type = classifyBarrierAndRectangle(a1MDD->levels,
+                                                          temp->multiConstraint1.back(),
+                                                          temp->multiConstraint1.front(),
+                                                          num_col, map_size);
+                int a2_type = classifyBarrierAndRectangle(a2MDD->levels,
+                                                          temp->multiConstraint2.back(),
+                                                          temp->multiConstraint2.front(),
+                                                          num_col, map_size);
+                //-1 means does not satisfy condition 1.
+                if(a1_type == -1 || a2_type == -1){
+                    if(screen >=4){
+                        cout << "a1_type: " << a1_type << endl;
+                        cout << "a2_type: " << a2_type << endl;
+                        cout << "Not satisfy condition1 and condition2" << endl;
+                    }
+                    if (a1_type == -1){
                         a1kMax = a1k;
                         break;
                     }
-                    else if(result ==2){
+                    if (a2_type == -1) {
                         a2kMax = a2k;
                         continue;
                     }
+                }
 
-                    bool empty_constraint = false;
-                    for (auto constraint : temp->multiConstraint1){
-                        if (constraint.size()==0){
-                            if(screen >=4){
-                                cout << "constraint for a1 is empty" << endl;
-                            }
-                            empty_constraint = true;
-                        }
-                    }
 
-                    for (auto constraint : temp->multiConstraint2){
-                        if (constraint.size()==0){
-                            if(screen >=4){
-                                cout << "constraint for a2 is empty" << endl;
-                            }
-                            empty_constraint = true;
-                        }
-                    }
-                    if(empty_constraint){
-                        continue;
-                    }
+                int temp_type = a1_type + a2_type;
+                int temp_total_k = a1k+a2k;
 
-                    assert(temp->multiConstraint1.size() == 2 && "a1 no two constraints");
-                    assert(temp->multiConstraint2.size() == 2 && "a2 no two constraints");
+                if(screen >= 4){
+                    cout << "temp type: "<<temp_type<<" temp total k: "<< temp_total_k << endl;
+                }
 
-                    int a1_type = classifyBarrierAndRectangle(a1MDD->levels,
-                                                              temp->multiConstraint1.back(),
-                                                              temp->multiConstraint1.front(),
-                                                              num_col, map_size);
-                    int a2_type = classifyBarrierAndRectangle(a2MDD->levels,
-                                                              temp->multiConstraint2.back(),
-                                                              temp->multiConstraint2.front(),
-                                                              num_col, map_size);
-                    if(a1_type == -1 || a2_type == -1){
-                        if(screen >=4){
-                            cout << "a1_type: " << a1_type << endl;
-                            cout << "a2_type: " << a2_type << endl;
-                            cout << "Not satisfy condition1 and condition2" << endl;
-                        }
-                        if (a1_type == -1){
-                            a1kMax = a1k;
-                            break;
-                        }
-                        if (a2_type == -1) {
-                            a2kMax = a2k;
-                            continue;
-                        }
-                    }
+                if (temp_total_k > total_k || (temp_total_k == total_k && temp_type > new_type)){
+                    rectangle = temp;
+                    new_type = temp_type;
+                    total_k = temp_total_k;
 
-//                            preA1Type = a1_type > preA1Type? a1_type:preA1Type;
-//                            preA2Type = a2_type > preA2Type? a2_type:preA2Type;
-
-                    int temp_type = a1_type + a2_type;
-                    int temp_total_k = a1k+a2k;
-
-                    if(screen >= 4){
-                        cout << "temp type: "<<temp_type<<" temp total k: "<< temp_total_k << endl;
-                    }
-
-                    if (temp_total_k > total_k || (temp_total_k == total_k && temp_type > new_type)){
-                        rectangle = temp;
-                        new_type = temp_type;
-                        total_k = temp_total_k;
-
-                        if(screen >=4){
-                            cout << "Select this one" << endl;
-                            cout<<"rectangle: "<< *rectangle << endl;
-                        }
-
-                    }
-                    else{
-                        if(screen >=4){
-                            cout << "Abandon this one"<<endl;
-                        }
+                    if(screen >=4){
+                        cout << "Select this one" << endl;
+                        cout<<"rectangle: "<< *rectangle << endl;
                     }
 
                 }
+                else{
+                    if(screen >=4){
+                        cout << "Abandon this one"<<endl;
+                    }
+                }
+
             }
 
 
         }
-//                runtime_find_rectangle += std::clock() - RM_Start -findsgtime;
 
 
         if (screen >= 5) {
             cout << "initial_Rs: " << Rs.first << " " << Rs.second << endl;
             cout << "initial_Rg: " << Rg.first << " " << Rg.second << endl;
-//            cout << "earlyCrosst: " << earlyCrosst << endl;
-//            cout << "lateCrosst: " << lateCrosst << endl;
             cout << "s1: " << s1 / num_col << " " << s1 % num_col << endl;
             cout << "g1: " << g1 / num_col << " " << g1 % num_col << endl;
             cout << "s1_t: " << t1_start << endl;
@@ -2508,10 +2312,12 @@ bool MultiMapICBSSearch<Map>::rectangleReasoning(const std::shared_ptr<Conflict>
             return false;
         }
         else{
+            //remove entry barriers
             rectangle->multiConstraint1.pop_back();
             rectangle->multiConstraint2.pop_back();
         }
 
+        //check does final constraint block the current path
         bool isBlocked = true;
         if (screen >= 4) {
             cout <<"Check constraint and current path"<<endl;
@@ -2542,9 +2348,9 @@ bool MultiMapICBSSearch<Map>::rectangleReasoning(const std::shared_ptr<Conflict>
 
             if (new_type == 2)
                 rectangle->p = conflict_priority::CARDINAL;
-            else if (new_type == 1) // && !findRectangleConflict(parent.parent, *conflict))
+            else if (new_type == 1)
                 rectangle->p = conflict_priority::SEMI;
-            else //if (type == 0 && !findRectangleConflict(parent.parent, *conflict))
+            else
                 rectangle->p = conflict_priority::NON;
 
             parent.conflicts.push_back(rectangle);
