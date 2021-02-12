@@ -62,3 +62,21 @@ int getAction(int loc, int pre_loc,int num_col) {
 		return -1;
 	}
 }
+
+bool equal_occupation(list<int>& l1, list<int>& l2){
+    if (l1.size() != l2.size())
+        return false;
+    else{
+        auto it1 = l1.begin();
+        auto it2 = l2.begin();
+        while (it1 != l1.end() && it2 != l2.end()){
+            if (*it1 != *it2){
+
+                return false;
+            }
+            it1++;
+            it2++;
+        }
+        return true;
+    }
+}

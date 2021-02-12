@@ -37,6 +37,7 @@ struct PathEntry
 {
 
 	int location;
+	list<int> occupations;
 	int heading;
 	bool single;
 	int actionToHere;
@@ -112,3 +113,5 @@ int getMahattanDistance(int loc1_x, int loc1_y, int loc2_x, int loc2_y);
 int getArea(int loc1_x, int loc1_y, int loc2_x, int loc2_y);
 
 int getAction(int loc, int pre_loc, int num_col);
+
+bool equal_occupation(list<int>& l1, list<int>& l2);

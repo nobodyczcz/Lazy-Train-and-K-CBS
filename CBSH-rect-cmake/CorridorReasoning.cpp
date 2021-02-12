@@ -103,7 +103,7 @@ int CorridorReasoning<Map>::getExitTime(const std::vector<PathEntry>& path, cons
 
 
 template<class Map>
-int CorridorReasoning<Map>::getBypassLength(int start, int end, std::pair<int, int> blocked, Map* my_map, int num_col, int map_size, ConstraintTable& constraint_table, int upper_bound,std::vector<hvals>& goalHeuTable, int start_heading, int end_heading)
+int CorridorReasoning<Map>::getBypassLength(int start, int end, std::pair<int, int> blocked, Map* my_map, int num_col, int map_size, ConstraintTable& constraint_table, int upper_bound,std::vector<hvals>& goalHeuTable, int start_heading, int end_heading, int k)
 {
 	int length = INT_MAX;
 	// generate a heap that can save nodes (and a open_handle)
@@ -117,7 +117,8 @@ int CorridorReasoning<Map>::getBypassLength(int start, int end, std::pair<int, i
     hashtable_t::iterator it; // will be used for find()
 
     int start_h_val = abs(goalHeuTable[end].get_hval(end_heading) - goalHeuTable[start].get_hval(start_heading));
-    LLNode* root = new LLNode(start, 0, start_h_val, NULL, 0);
+    LLNode* root = new LLNode(list<int>(), 0, start_h_val, NULL, 0);
+    root->locs.push_back(start); //todo:: start also should be occupation.
 	root->heading = start_heading;
 	root->open_handle = heap.push(root);  // add root to heap
 	nodes.insert(root);       // add root to hash_table (nodes)
@@ -128,17 +129,20 @@ int CorridorReasoning<Map>::getBypassLength(int start, int end, std::pair<int, i
 	{
 		curr = heap.top();
 		heap.pop();
-		if (curr->loc == end && goalHeuTable[end].get_hval(end_heading) >= goalHeuTable[curr->loc].get_hval(curr->heading))
+		if (curr->locs.front() == end && goalHeuTable[end].get_hval(end_heading) >= goalHeuTable[curr->locs.front()].get_hval(curr->heading))
 		{
 			length = curr->g_val;
 			break;
 		}
-		vector<pair<int, int>> transitions = my_map->get_transitions(curr->loc, curr->heading, false);
+		vector<pair<int, int>> transitions = my_map->get_transitions(curr->locs.front(), curr->heading, false);
 
 		for (const pair<int, int> move : transitions)
 		{
 			int next_loc = move.first;
 			time_generated += 1;
+			list<int> next_locs;
+            if (!getOccupations(next_locs, next_loc, curr,k));
+                continue;
 
 			int next_timestep = curr->timestep + 1;
 			if (constraint_table.latest_timestep <= curr->timestep)
@@ -151,10 +155,10 @@ int CorridorReasoning<Map>::getBypassLength(int start, int end, std::pair<int, i
 			}
 
 			if (!constraint_table.is_constrained(next_loc, next_timestep) &&
-				!constraint_table.is_constrained(curr->loc * map_size + next_loc, next_timestep))
+				!constraint_table.is_constrained(curr->locs.front() * map_size + next_loc, next_timestep))
 			{  // if that grid is not blocked
-				if ((curr->loc == blocked.first && next_loc == blocked.second) ||
-					(curr->loc == blocked.second && next_loc == blocked.first)) // use the prohibited edge
+				if ((curr->locs.front() == blocked.first && next_loc == blocked.second) ||
+					(curr->locs.front() == blocked.second && next_loc == blocked.first)) // use the prohibited edge
 				{
 					continue;
 				}
@@ -172,7 +176,7 @@ int CorridorReasoning<Map>::getBypassLength(int start, int end, std::pair<int, i
 				int next_h_val = abs(goalHeuTable[end].get_hval(end_heading) - goalHeuTable[next_loc].get_hval(next_heading));
 				if (next_g_val + next_h_val >= upper_bound) // the cost of the path is larger than the upper bound
 					continue;
-				LLNode* next = new LLNode(next_loc, next_g_val, next_h_val, NULL, next_timestep);
+				LLNode* next = new LLNode(next_locs, next_g_val, next_h_val, NULL, next_timestep);
 				next->heading = next_heading;
 				next->actionToHere = move.second;
 				next->time_generated = time_generated;
@@ -202,6 +206,25 @@ int CorridorReasoning<Map>::getBypassLength(int start, int end, std::pair<int, i
 		delete (*it);
 	}
 	return length;
+}
+
+template<class Map>
+bool CorridorReasoning<Map>::getOccupations(list<int>& next_locs, int next_id, LLNode* curr, int k){
+    next_locs.push_back(next_id);
+    auto parent = curr;
+    int pre_loc = next_id;
+    bool conf_free = true;
+    while(parent != nullptr && next_locs.size()<k){
+        if (pre_loc!= parent->locs.front()) {
+            next_locs.push_back(parent->locs.front());
+            if(next_locs.front() == next_locs.back()){
+                conf_free = false;
+                break;
+            }
+        }
+        parent = parent->parent;
+    }
+    return conf_free;
 }
 
 

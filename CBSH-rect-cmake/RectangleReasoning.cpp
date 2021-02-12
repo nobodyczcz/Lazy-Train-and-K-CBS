@@ -30,7 +30,7 @@ bool isCut(MDDLevels& mdd, std::list<Constraint>& constraints,int num_col, int m
             if (child == goal){
                     return false;
             }
-            if (explored.count(child)==0 && !consTable.is_constrained(child->location,child->level)){
+            if (explored.count(child)==0 && !consTable.is_constrained(child->locs.front(),child->level)){
                 queue.push_front(child);
             }
         }
@@ -66,7 +66,7 @@ int haveSolutionCondition1(const MDDLevels& mdd,
     queue.push_front(mdd[0].front());
     explored.insert(mdd[0].front());
 
-    if(entranceTable.is_constrained(queue.front()->location,queue.front()->level)){
+    if(entranceTable.is_constrained(queue.front()->locs.front(),queue.front()->level)){
         return 1;
     }
 
@@ -78,14 +78,14 @@ int haveSolutionCondition1(const MDDLevels& mdd,
 
         for (auto child : current->children){
             if (child == goal){
-                if(exitTable.is_constrained(child->location,child->level) || traverse_exit.count(current) > 0)
+                if(exitTable.is_constrained(child->locs.front(),child->level) || traverse_exit.count(current) > 0)
                     solutionTraverseExit = true;
                 else
                     solutionBypassExit = true;
             }
-            if (explored.count(child)==0 && !entranceTable.is_constrained(child->location,child->level)){
+            if (explored.count(child)==0 && !entranceTable.is_constrained(child->locs.front(),child->level)){
 
-                if(exitTable.is_constrained(child->location,child->level) || traverse_exit.count(current) > 0){
+                if(exitTable.is_constrained(child->locs.front(),child->level) || traverse_exit.count(current) > 0){
                     traverse_exit.insert(child);
                     queue.push_front(child);
                     explored.insert(child);
@@ -132,7 +132,7 @@ bool haveSolutionCondition2(const MDDLevels& mdd,
     queue.push_front(mdd[0].front());
     explored.insert(mdd[0].front());
 
-    if(entranceTable.is_constrained(queue.front()->location,queue.front()->level)){
+    if(entranceTable.is_constrained(queue.front()->locs.front(),queue.front()->level)){
         traverse_entrance.insert(queue.front());
     }
     while(!queue.empty()){
@@ -141,12 +141,12 @@ bool haveSolutionCondition2(const MDDLevels& mdd,
 
         for (auto child : current->children){
             if (child == goal){
-                if(entranceTable.is_constrained(child->location,child->level) || traverse_entrance.count(current) > 0)
+                if(entranceTable.is_constrained(child->locs.front(),child->level) || traverse_entrance.count(current) > 0)
                     return true;
             }
-            if (explored.count(child)==0 && !exitTable.is_constrained(child->location,child->level)){
+            if (explored.count(child)==0 && !exitTable.is_constrained(child->locs.front(),child->level)){
 
-                if(entranceTable.is_constrained(child->location,child->level) || traverse_entrance.count(current) > 0){
+                if(entranceTable.is_constrained(child->locs.front(),child->level) || traverse_entrance.count(current) > 0){
                     traverse_entrance.insert(child);
                     queue.push_front(child);
                     explored.insert(child);
@@ -320,7 +320,7 @@ pair<int, int> get_gt(const std::vector<PathEntry>& path, int timestep, int num_
 MDDNode* get_st_mdd(const MDDLevels& mdd, int timestep,int loc, int num_col, int action1, int action2){
     MDDNode* start;
     for (auto node : mdd[timestep]){
-        if (node->location == loc)
+        if (node->locs.front() == loc)
             start = node;
     }
 
@@ -341,7 +341,7 @@ MDDNode* get_st_mdd(const MDDLevels& mdd, int timestep,int loc, int num_col, int
             distance = current_distance;
         }
         for (auto node : current->parents){
-            int action = getAction(current->location, node->location, num_col);
+            int action = getAction(current->locs.front(), node->locs.front(), num_col);
             if ((action == action1 || action == action2) && explored.count(node) == 0) {
                 queue.push_back(node);
                 explored.insert(node);
@@ -359,7 +359,7 @@ int get_opt_mdd(const MDDLevels& mdd, int loc, int heading){
     int opt_t = -1;
     for (int t = 0; t<mdd.size(); t++){
         for (auto node: mdd[t]){
-            if (node->location == loc && node->heading == heading){
+            if (node->locs.front() == loc && node->heading == heading){
                 found = true;
                 opt_t = t;
                 break;
@@ -375,7 +375,7 @@ int get_opt_mdd(const MDDLevels& mdd, int loc, int heading){
 MDDNode* get_gt_mdd(const MDDLevels& mdd, int timestep,int loc, int num_col, int action1, int action2){
     MDDNode* start;
     for (auto node : mdd[timestep]){
-        if (node->location == loc)
+        if (node->locs.front() == loc)
             start = node;
     }
 
@@ -397,7 +397,7 @@ MDDNode* get_gt_mdd(const MDDLevels& mdd, int timestep,int loc, int num_col, int
             distance = current_distance;
         }
         for (auto node : current->children){
-            int action = getAction( node->location,current->location, num_col);
+            int action = getAction( node->locs.front(),current->locs.front(), num_col);
             if ((action == action1 || action == action2) && explored.count(node) == 0) {
                 queue.push_back(node);
                 explored.insert(node);
@@ -412,7 +412,7 @@ MDDNode* get_gt_mdd(const MDDLevels& mdd, int timestep,int loc, int num_col, int
 std::pair<MDDNode*,MDDNode*> get_sg_mdd(const MDDLevels& mdd, int timestep,int loc, int num_col, int action1, int action2) {
     MDDNode* start;
     for (auto node : mdd[timestep]){
-        if (node->location == loc)
+        if (node->locs.front() == loc)
             start = node;
     }
 
@@ -434,7 +434,7 @@ std::pair<MDDNode*,MDDNode*> get_sg_mdd(const MDDLevels& mdd, int timestep,int l
 
             bool no_valid = true;
             for (auto node : current->parents){
-                int action = getAction(current->location, node->location, num_col);
+                int action = getAction(current->locs.front(), node->locs.front(), num_col);
                 if (action == action1 || action == action2){
                     no_valid = false;
                     if (explored.count(node) == 0) {
@@ -454,7 +454,7 @@ std::pair<MDDNode*,MDDNode*> get_sg_mdd(const MDDLevels& mdd, int timestep,int l
 
             bool no_valid = true;
             for (auto node : current->children){
-                int action = getAction( node->location,current->location, num_col);
+                int action = getAction( node->locs.front(),current->locs.front(), num_col);
                 if (action == action1 || action == action2){
                     no_valid = false;
                     if (explored.count(node) == 0) {
@@ -1143,18 +1143,18 @@ bool ExtractBarriers(const MDD<Map>& mdd, int dir1, int dir2, int start, int goa
 			int barrier_id, barrier_time;
 			if (abs(dir1) == 1) //vertical barriers
 			{
-				barrier_id = abs(start % num_col - n->location % num_col);
-				barrier_time = n->location / num_col * sign2 + barrierZeroTime + barrier_id;
+				barrier_id = abs(start % num_col - n->locs.front() % num_col);
+				barrier_time = n->locs.front() / num_col * sign2 + barrierZeroTime + barrier_id;
 			}
 			else
 			{
-				barrier_id = abs(start / num_col - n->location / num_col);
-				barrier_time = n->location % num_col * sign2 + barrierZeroTime + barrier_id;
+				barrier_id = abs(start / num_col - n->locs.front() / num_col);
+				barrier_time = n->locs.front() % num_col * sign2 + barrierZeroTime + barrier_id;
 			}
 			if (barrier_id < num_barrier && !block[barrier_id] && barrier_time == n->level)
 			{
 				if (n->children.size() == 1 && extent_L[barrier_id] == INT_MAX &&
-					abs(dir1) * abs(n->location - n->children.front()->location) == num_col);// the only child node is on the same barrier
+					abs(dir1) * abs(n->locs.front() - n->children.front()->locs.front()) == num_col);// the only child node is on the same barrier
 				else
 				{
 					extent_L[barrier_id] = std::min(extent_L[barrier_id], n->level);
@@ -1366,7 +1366,7 @@ bool blockedNodes(const MDD<Map>& mdd, const Constraint b, int num_col)
 		int loc = (b_l.first + (t - t_b_l) * sign1) * num_col + b_l.second + (t - t_b_l) * sign2;
 		for (auto n : mdd.levels[t])
 		{
-			if (n->location == loc)
+			if (n->locs.front() == loc)
 				return true;
 		}
 	}

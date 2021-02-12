@@ -14,7 +14,7 @@ class LLNode
 {
 public:
 
-	int loc;
+	list<int> locs;
 	int g_val;
 	int h_val = 0;
 	int heading;
@@ -126,9 +126,10 @@ public:
 
 	LLNode();
 	LLNode(const LLNode& other);
-	LLNode(int loc, int g_val, int h_val, LLNode* parent, int timestep,
+	LLNode(list<int> locs, int g_val, int h_val, LLNode* parent, int timestep,
 		int num_internal_conf = 0, bool in_openlist = false);
-	inline double getFVal() const { return g_val + h_val; }
+	inline double getFVal() const { return
+	+ h_val; }
 	~LLNode(){
 	}
 
@@ -139,10 +140,24 @@ public:
 	{
 		bool operator()(const LLNode* s1, const LLNode* s2) const 
 		{
+		    if (s1 == s2)
+		        return true;
+		    if (!s1 || !s2 || s1->timestep != s2->timestep || s1->locs.size() != s2->locs.size() || s1->heading != s2->heading)
+		        return false;
 
-			return (s1 == s2) || (s1 && s2 &&
-				s1->loc == s2->loc &&
-				s1->timestep == s2->timestep && s1->heading == s2->heading);
+		    bool same = true;
+		    auto s1_it = s1->locs.begin();
+		    auto s2_it = s2->locs.begin();
+		    while (s1_it != s1->locs.end() && s2_it != s2->locs.end()){
+		        if(*s1_it != *s2_it) {
+                    same = false;
+                    break;
+                }
+		        s1_it++;
+		        s2_it++;
+		    }
+
+			return same;
 		}
 	};
 
@@ -151,7 +166,11 @@ public:
 	{
 		std::size_t operator()(const LLNode* n) const 
 		{
-			size_t loc_hash = std::hash<int>()(n->loc);
+		    int loc_multi = 1;
+		    for(int loc : n->locs){
+		        loc_multi = loc_multi*loc;
+		    }
+			size_t loc_hash = std::hash<int>()(loc_multi);
 			size_t timestep_hash = std::hash<int>()(n->timestep);
 			size_t heading = std::hash<int>()(n->heading);
 

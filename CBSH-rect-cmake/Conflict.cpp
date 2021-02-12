@@ -152,76 +152,76 @@ bool addGeneralKVerticalBarrierConstraint(const std::vector<PathEntry>& path, in
 {
 
 
-    int sign = Ri_x < Rg_x ? 1 : -1;
-    int Ri_t = Rg_t - abs(Ri_x - Rg_x);
-
-    for (int t2 = Ri_t; t2 <= Rg_t; t2++)
-    {
-        int loc = (Ri_x + (t2 - Ri_t) * sign) * num_col + y;
-//        std::cout << "target loc: " << loc / num_col << "," << loc % num_col << std::endl;
-        for (int i = 0; i <= k; i++) {
-            if (t2 + i < kMDD->size()){
-                bool find = false;
-                for (auto node : kMDD->at(t2 + i)){
-                    if (node->location == loc){
-                        find = true;
-                        break;
-                    }
-                }
-                if (find) {
-                    constraints.emplace_back(loc, -1, t2 + i , constraint_type::VERTEX); // add constraints [t1, t2]
-//                    std::cout << "kmdd loc: " << loc / num_col << "," << loc % num_col << " t: " << t2 + i << "|";
-                }
-            }
-        }
-//        std::cout <<endl;
-
-    }
-
-    //add constraint for extended area
-
-    for (int extend = 1;  extend <= extended; extend++){
-        int t_left = Ri_t + extend;
-        int t_right = Rg_t + extend;
-        int range = k - extend * 2;
-        int loc_left = (Ri_x - extend * sign) * num_col + y;
-        int loc_right = (Rg_x + extend * sign) * num_col + y;
-        if (range < 0){
-            break;
-        }
-
-        for (int i = 0; i <= range; i++) {
-
-            if (t_left + i < kMDD->size()){
-                bool find = false;
-                for (auto node : kMDD->at(t_left + i)){
-                    if (node->location == loc_left){
-                        find = true;
-                        break;
-                    }
-                }
-                if (find) {
-                    constraints.emplace_back(loc_left, -1, t_left + i , constraint_type::VERTEX); // add constraints [t1, t2]
-                    //std::cout << "kmdd loc: " << loc / num_col << "," << loc % num_col << " t: " << t2 + i + consk << "|";
-                }
-            }
-
-            if (t_right + i < kMDD->size()){
-                bool find = false;
-                for (auto node : kMDD->at(t_right + i)){
-                    if (node->location == loc_right){
-                        find = true;
-                        break;
-                    }
-                }
-                if (find) {
-                    constraints.emplace_back(loc_right, -1, t_right + i , constraint_type::VERTEX); // add constraints [t1, t2]
-                    //std::cout << "kmdd loc: " << loc / num_col << "," << loc % num_col << " t: " << t2 + i + consk << "|";
-                }
-            }
-        }
-
-    }
+//    int sign = Ri_x < Rg_x ? 1 : -1;
+//    int Ri_t = Rg_t - abs(Ri_x - Rg_x);
+//
+//    for (int t2 = Ri_t; t2 <= Rg_t; t2++)
+//    {
+//        int loc = (Ri_x + (t2 - Ri_t) * sign) * num_col + y;
+////        std::cout << "target loc: " << loc / num_col << "," << loc % num_col << std::endl;
+//        for (int i = 0; i <= k; i++) {
+//            if (t2 + i < kMDD->size()){
+//                bool find = false;
+//                for (auto node : kMDD->at(t2 + i)){
+//                    if (node->location == loc){
+//                        find = true;
+//                        break;
+//                    }
+//                }
+//                if (find) {
+//                    constraints.emplace_back(loc, -1, t2 + i , constraint_type::VERTEX); // add constraints [t1, t2]
+////                    std::cout << "kmdd loc: " << loc / num_col << "," << loc % num_col << " t: " << t2 + i << "|";
+//                }
+//            }
+//        }
+////        std::cout <<endl;
+//
+//    }
+//
+//    //add constraint for extended area
+//
+//    for (int extend = 1;  extend <= extended; extend++){
+//        int t_left = Ri_t + extend;
+//        int t_right = Rg_t + extend;
+//        int range = k - extend * 2;
+//        int loc_left = (Ri_x - extend * sign) * num_col + y;
+//        int loc_right = (Rg_x + extend * sign) * num_col + y;
+//        if (range < 0){
+//            break;
+//        }
+//
+//        for (int i = 0; i <= range; i++) {
+//
+//            if (t_left + i < kMDD->size()){
+//                bool find = false;
+//                for (auto node : kMDD->at(t_left + i)){
+//                    if (node->location == loc_left){
+//                        find = true;
+//                        break;
+//                    }
+//                }
+//                if (find) {
+//                    constraints.emplace_back(loc_left, -1, t_left + i , constraint_type::VERTEX); // add constraints [t1, t2]
+//                    //std::cout << "kmdd loc: " << loc / num_col << "," << loc % num_col << " t: " << t2 + i + consk << "|";
+//                }
+//            }
+//
+//            if (t_right + i < kMDD->size()){
+//                bool find = false;
+//                for (auto node : kMDD->at(t_right + i)){
+//                    if (node->location == loc_right){
+//                        find = true;
+//                        break;
+//                    }
+//                }
+//                if (find) {
+//                    constraints.emplace_back(loc_right, -1, t_right + i , constraint_type::VERTEX); // add constraints [t1, t2]
+//                    //std::cout << "kmdd loc: " << loc / num_col << "," << loc % num_col << " t: " << t2 + i + consk << "|";
+//                }
+//            }
+//        }
+//
+//    }
 
     if (constraints.empty())
     {
@@ -239,77 +239,77 @@ bool addGeneralKHorizontalBarrierConstraint(const std::vector<PathEntry>& path, 
                                                 std::list<Constraint>& constraints, int k,int extended, const MDDLevels* kMDD)
 {
 
-    //add constraint for main area
-    int sign = Ri_y < Rg_y ? 1 : -1;
-    int Ri_t = Rg_t - abs(Ri_y - Rg_y);
-    for (int t2 = Ri_t; t2 <= Rg_t; t2++)
-    {
-        int loc = (Ri_y + (t2 - Ri_t) * sign) + x * num_col;
-//        std::cout << "target loc: " << loc / num_col << "," << loc % num_col << std::endl;
-        for (int i = 0; i <= k; i++) {
-
-            if (t2 + i < kMDD->size()){
-                bool find = false;
-                for (auto node : kMDD->at(t2 + i)){
-                    if (node->location == loc){
-                        find = true;
-                        break;
-                    }
-                }
-                if (find) {
-                    constraints.emplace_back(loc, -1, t2 + i , constraint_type::VERTEX); // add constraints [t1, t2]
-//                        std::cout << "kmdd loc: " << loc / num_col << "," << loc % num_col << " t: " << t2 + i << "|";
-                }
-            }
-
-        }
-//        std::cout <<endl;
-
-    }
-
-    //add constraint for extended area
-    for (int extend = 1;  extend <= extended; extend++){
-        int t_left = Ri_t + extend;
-        int t_right = Rg_t + extend;
-        int range = k - extend * 2;
-        int loc_left = (Ri_y - extend * sign) + x * num_col ;
-        int loc_right = (Rg_y + extend * sign) + x * num_col ;
-        if (range < 0){
-            break;
-        }
-
-        for (int i = 0; i <= range; i++) {
-
-            if (t_left + i < kMDD->size()){
-                bool find = false;
-                for (auto node : kMDD->at(t_left + i)){
-                    if (node->location == loc_left){
-                        find = true;
-                        break;
-                    }
-                }
-                if (find) {
-                    constraints.emplace_back(loc_left, -1, t_left + i , constraint_type::VERTEX); // add constraints [t1, t2]
-                    //std::cout << "kmdd loc: " << loc / num_col << "," << loc % num_col << " t: " << t2 + i + consk << "|";
-                }
-            }
-
-            if (t_right + i < kMDD->size()){
-                bool find = false;
-                for (auto node : kMDD->at(t_right + i)){
-                    if (node->location == loc_right){
-                        find = true;
-                        break;
-                    }
-                }
-                if (find) {
-                    constraints.emplace_back(loc_right, -1, t_right + i , constraint_type::VERTEX); // add constraints [t1, t2]
-                    //std::cout << "kmdd loc: " << loc / num_col << "," << loc % num_col << " t: " << t2 + i + consk << "|";
-                }
-            }
-        }
-
-    }
+//    //add constraint for main area
+//    int sign = Ri_y < Rg_y ? 1 : -1;
+//    int Ri_t = Rg_t - abs(Ri_y - Rg_y);
+//    for (int t2 = Ri_t; t2 <= Rg_t; t2++)
+//    {
+//        int loc = (Ri_y + (t2 - Ri_t) * sign) + x * num_col;
+////        std::cout << "target loc: " << loc / num_col << "," << loc % num_col << std::endl;
+//        for (int i = 0; i <= k; i++) {
+//
+//            if (t2 + i < kMDD->size()){
+//                bool find = false;
+//                for (auto node : kMDD->at(t2 + i)){
+//                    if (node->location == loc){
+//                        find = true;
+//                        break;
+//                    }
+//                }
+//                if (find) {
+//                    constraints.emplace_back(loc, -1, t2 + i , constraint_type::VERTEX); // add constraints [t1, t2]
+////                        std::cout << "kmdd loc: " << loc / num_col << "," << loc % num_col << " t: " << t2 + i << "|";
+//                }
+//            }
+//
+//        }
+////        std::cout <<endl;
+//
+//    }
+//
+//    //add constraint for extended area
+//    for (int extend = 1;  extend <= extended; extend++){
+//        int t_left = Ri_t + extend;
+//        int t_right = Rg_t + extend;
+//        int range = k - extend * 2;
+//        int loc_left = (Ri_y - extend * sign) + x * num_col ;
+//        int loc_right = (Rg_y + extend * sign) + x * num_col ;
+//        if (range < 0){
+//            break;
+//        }
+//
+//        for (int i = 0; i <= range; i++) {
+//
+//            if (t_left + i < kMDD->size()){
+//                bool find = false;
+//                for (auto node : kMDD->at(t_left + i)){
+//                    if (node->location == loc_left){
+//                        find = true;
+//                        break;
+//                    }
+//                }
+//                if (find) {
+//                    constraints.emplace_back(loc_left, -1, t_left + i , constraint_type::VERTEX); // add constraints [t1, t2]
+//                    //std::cout << "kmdd loc: " << loc / num_col << "," << loc % num_col << " t: " << t2 + i + consk << "|";
+//                }
+//            }
+//
+//            if (t_right + i < kMDD->size()){
+//                bool find = false;
+//                for (auto node : kMDD->at(t_right + i)){
+//                    if (node->location == loc_right){
+//                        find = true;
+//                        break;
+//                    }
+//                }
+//                if (find) {
+//                    constraints.emplace_back(loc_right, -1, t_right + i , constraint_type::VERTEX); // add constraints [t1, t2]
+//                    //std::cout << "kmdd loc: " << loc / num_col << "," << loc % num_col << " t: " << t2 + i + consk << "|";
+//                }
+//            }
+//        }
+//
+//    }
 
 
     if (constraints.empty())

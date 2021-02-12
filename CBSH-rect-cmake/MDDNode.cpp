@@ -4,9 +4,9 @@
 #include "MDDNode.h"
 
 
-MDDNode::MDDNode(int currloc, MDDNode* parent)
+MDDNode::MDDNode(std::list<int> currlocs, MDDNode* parent)
 {
-    location = currloc;
+    locs = currlocs;
     if(parent == NULL)
         level = 0;
     else

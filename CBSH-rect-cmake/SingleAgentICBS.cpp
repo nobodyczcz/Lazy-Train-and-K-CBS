@@ -12,13 +12,14 @@ void SingleAgentICBS<Map>::updatePath(LLNode* goal, std::vector<PathEntry> &path
 	for(int t = goal->g_val; t >= 0; t--)
 	{
 
-		path[t].location = curr->loc;
+		path[t].location = curr->locs.front();
+		path[t].occupations = curr->locs;
 		path[t].actionToHere = curr->heading;
         path[t].heading = curr->heading;
 
         delete path[t].conflist;
         if (t!=0)
-            path[t].conflist =  res_table->findConflict(agent_id, curr->parent->loc, curr->loc, t-1, kRobust);
+            path[t].conflist =  res_table->findConflict(agent_id, curr->parent->locs.front(), curr->locs, t-1, kRobust);
         else
             path[t].conflist = NULL;
 
@@ -96,7 +97,8 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 	hashtable_t::iterator it;  // will be used for find()
 
 	 // generate start and add it to the OPEN list
-	LLNode* start = new LLNode(start_location, 0, my_heuristic[start_location].heading[start_heading], NULL, 0, 0, false);
+	LLNode* start = new LLNode(list<int>(), 0, my_heuristic[start_location].heading[start_heading], NULL, 0, 0, false);
+	start->locs.push_back(start_location);
 	start->heading = start_heading;
 	num_generated++;
 	start->open_handle = open_list.push(start);
@@ -139,11 +141,11 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 		num_expanded++;
 
 		// check if the popped node is a goal
-		if (curr->loc == goal_location && curr->timestep >= constraint_table.length_min && curr->timestep >= min_end_time)
+		if (curr->locs.size() == 1 && curr->locs.front() == goal_location && curr->timestep >= constraint_table.length_min && curr->timestep >= min_end_time)
 		{
 
-			if (curr->parent == NULL || curr->parent->loc != goal_location)
-			{
+//			if (curr->parent == NULL || curr->parent->loc != goal_location)
+//			{
 				//cout << num_generated << endl;
 
 				updatePath(curr, path, res_table);
@@ -157,7 +159,7 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 				goal_nodes.clear();
 
 				return true;
-			}
+//			}
 		}
 		
 
@@ -167,143 +169,162 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 		}
 
 
-		vector<pair<int, int>> transitions = ml->get_transitions(curr->loc, curr->heading,false);
+		vector<pair<int, int>> transitions = ml->get_transitions(curr->locs.front(), curr->heading,false);
 
 		for (const pair<int, int> move : transitions)
 		{
 			int next_id = move.first;
+			if (curr->locs.front() == goal_location && next_id != goal_location )
+			    continue;
+			list<int> next_locs ;
+
+            if(curr->locs.front() == goal_location && next_id == goal_location){
+                next_locs = curr->locs;
+                next_locs.pop_back();
+            }
+			else if (!getOccupations(next_locs, next_id, curr))
+			    continue;
+
+			assert(next_locs.size()<= kRobust);
 			time_generated += 1;
 			int next_timestep = curr->timestep + 1;
 
             if (max_plan_len <= curr->timestep)
             {
-                if (next_id == curr->loc)
+                if (next_id == curr->locs.front())
                 {
                     continue;
                 }
                 next_timestep-- ;
             }
 
-
-			if (!constraint_table.is_constrained(next_id, next_timestep) &&
-				!constraint_table.is_constrained(curr->loc * map_size + next_id, next_timestep))
-			{
-
-				// compute cost to next_id via curr node
-				int next_g_val = curr->g_val + 1;
-				int next_heading;
-
-				if (curr->heading == -1) //heading == 4 means no heading info
-					next_heading = -1;
-				else
-					if (move.second == 4) //move == 4 means wait
-						next_heading = curr->heading;
-					else
-						next_heading = move.second;
-
-				int next_h_val = my_heuristic[next_id].get_hval(next_heading);
-				//cout << "next_h_val " << next_h_val << endl;
-				if (next_g_val + next_h_val > constraint_table.length_max)
-					continue;
+            //check does head have edge constraint or body have vertex constraint.
+            bool constrained = false;
+            if (constraint_table.is_constrained(curr->locs.front() * map_size + next_id, next_timestep))
+                constrained = true;
+            for(auto loc:next_locs){
+                if (constraint_table.is_constrained(loc, next_timestep) )
+                    constrained = true;
+            }
 
 
-				int next_internal_conflicts = curr->num_internal_conf +  res_table->countConflict(agent_id, curr->loc, next_id, curr->timestep, kRobust);
+			if (constrained)
+			    continue;
 
-				
+            // compute cost to next_id via curr node
+            int next_g_val = curr->g_val + 1;
+            int next_heading;
 
-				// generate (maybe temporary) node
-				LLNode* next = new LLNode(next_id, next_g_val, next_h_val,	curr, next_timestep, next_internal_conflicts, false);
-				next->heading = next_heading;
-				next->actionToHere = move.second;
-				next->time_generated = time_generated;
-				//std::cout << "current: (" << curr->loc << "," << curr->heading << "," << curr->getFVal() << ") " << "next: (" << next->loc << "," << next->heading << "," << next->getFVal() << ")" << std::endl;
+            if (curr->heading == -1) //heading == 4 means no heading info
+                next_heading = -1;
+            else
+                if (move.second == 4) //move == 4 means wait
+                    next_heading = curr->heading;
+                else
+                    next_heading = move.second;
 
-				// try to retrieve it from the hash table
-				it = allNodes_table.find(next);
-				if (it == allNodes_table.end() || (next_id == goal_location && (constraint_table.length_min > 0 || min_end_time >0)) )
-				{
-
-					//cout << "Possible child loc: " << next->loc << " heading: " << next->heading << " f: " << next->getFVal() << " g: " << next->g_val << " h: " << next->h_val<< " num_internal_conf: " << next->num_internal_conf << endl;
-					//cout << "h: " << my_heuristic[next_id].get_hval(next_heading) << endl;
-					
-
-					next->open_handle = open_list.push(next);
-					next->in_openlist = true;
-					num_generated++;
-					if (next->getFVal() <= lower_bound) {
-						//cout << "focal size " << focal_list.size() << endl;
-						//cout << "put in focal list" << endl;
-						next->focal_handle = focal_list.push(next);
-						next->in_focallist = true;
-						//cout << "focal size " << focal_list.size() << endl;
+            int next_h_val = my_heuristic[next_id].get_hval(next_heading);
+            //cout << "next_h_val " << next_h_val << endl;
+            if (next_g_val + next_h_val > constraint_table.length_max)
+                continue;
 
 
-					}
+            int next_internal_conflicts = curr->num_internal_conf +  res_table->countConflict(agent_id, curr->locs.front(), next_locs, curr->timestep, kRobust);
 
-					if (it == allNodes_table.end())
-						allNodes_table.insert(next);
-					else
-						goal_nodes.push_back(next);
 
-				}
-				else
-				{  // update existing node's if needed (only in the open_list)
-					delete(next);  // not needed anymore -- we already generated it before
-					LLNode* existing_next = (*it);
 
-					if (existing_next->in_openlist == true)
-					{  // if its in the open list
-						if (existing_next->getFVal() > next_g_val + next_h_val ||
-							(existing_next->getFVal() == next_g_val + next_h_val && existing_next->num_internal_conf > next_internal_conflicts))
-						{
-							// if f-val decreased through this new path (or it remains the same and there's less internal conflicts)
-							bool add_to_focal = false;  // check if it was above the focal bound before and now below (thus need to be inserted)
-							bool update_in_focal = false;  // check if it was inside the focal and needs to be updated (because f-val changed)
-							bool update_open = false;
-							if ((next_g_val + next_h_val) <= lower_bound)
-							{  // if the new f-val qualify to be in FOCAL
-								if (existing_next->getFVal() > lower_bound)
-									add_to_focal = true;  // and the previous f-val did not qualify to be in FOCAL then add
-								else
-									update_in_focal = true;  // and the previous f-val did qualify to be in FOCAL then update
-							}
-							if (existing_next->getFVal() > next_g_val + next_h_val)
-								update_open = true;
-							// update existing node
-							existing_next->g_val = next_g_val;
-							existing_next->h_val = next_h_val;
-							existing_next->timestep = next_timestep;
+            // generate (maybe temporary) node
+            LLNode* next = new LLNode(next_locs, next_g_val, next_h_val,	curr, next_timestep, next_internal_conflicts, false);
+            next->heading = next_heading;
+            next->actionToHere = move.second;
+            next->time_generated = time_generated;
+            //std::cout << "current: (" << curr->loc << "," << curr->heading << "," << curr->getFVal() << ") " << "next: (" << next->loc << "," << next->heading << "," << next->getFVal() << ")" << std::endl;
 
-                            existing_next->parent = curr;
-							existing_next->num_internal_conf = next_internal_conflicts;
-							if (update_open)
-								open_list.increase(existing_next->open_handle);  // increase because f-val improved
-							if (add_to_focal) 
-								existing_next->focal_handle = focal_list.push(existing_next);
-							if (update_in_focal) 
-								focal_list.update(existing_next->focal_handle);  // should we do update? yes, because number of conflicts may go up or down
-						}				
-					}
-					else 
-					{  // if its in the closed list (reopen)
-						if (existing_next->getFVal() > next_g_val + next_h_val ||
-							(existing_next->getFVal() == next_g_val + next_h_val && existing_next->num_internal_conf > next_internal_conflicts)) 
-						{
-							// if f-val decreased through this new path (or it remains the same and there's less internal conflicts)
-							existing_next->g_val = next_g_val;
-							existing_next->h_val = next_h_val;
-                            existing_next->timestep = next_timestep;
+            // try to retrieve it from the hash table
+            it = allNodes_table.find(next);
+            if (it == allNodes_table.end() || (next_id == goal_location && (constraint_table.length_min > 0 || min_end_time >0)) )
+            {
 
-							existing_next->parent = curr;
-							existing_next->num_internal_conf = next_internal_conflicts;
-							existing_next->open_handle = open_list.push(existing_next);
-							existing_next->in_openlist = true;
-							if (existing_next->getFVal() <= lower_bound)
-								existing_next->focal_handle = focal_list.push(existing_next);
-						}
-					}  // end update a node in closed list
-				}  // end update an existing node
-			}// end if case forthe move is legal
+                //cout << "Possible child loc: " << next->loc << " heading: " << next->heading << " f: " << next->getFVal() << " g: " << next->g_val << " h: " << next->h_val<< " num_internal_conf: " << next->num_internal_conf << endl;
+                //cout << "h: " << my_heuristic[next_id].get_hval(next_heading) << endl;
+
+
+                next->open_handle = open_list.push(next);
+                next->in_openlist = true;
+                num_generated++;
+                if (next->getFVal() <= lower_bound) {
+                    //cout << "focal size " << focal_list.size() << endl;
+                    //cout << "put in focal list" << endl;
+                    next->focal_handle = focal_list.push(next);
+                    next->in_focallist = true;
+                    //cout << "focal size " << focal_list.size() << endl;
+
+
+                }
+
+                if (it == allNodes_table.end())
+                    allNodes_table.insert(next);
+                else
+                    goal_nodes.push_back(next);
+
+            }
+            else
+            {  // update existing node's if needed (only in the open_list)
+                delete(next);  // not needed anymore -- we already generated it before
+                LLNode* existing_next = (*it);
+
+                if (existing_next->in_openlist == true)
+                {  // if its in the open list
+                    if (existing_next->getFVal() > next_g_val + next_h_val ||
+                        (existing_next->getFVal() == next_g_val + next_h_val && existing_next->num_internal_conf > next_internal_conflicts))
+                    {
+                        // if f-val decreased through this new path (or it remains the same and there's less internal conflicts)
+                        bool add_to_focal = false;  // check if it was above the focal bound before and now below (thus need to be inserted)
+                        bool update_in_focal = false;  // check if it was inside the focal and needs to be updated (because f-val changed)
+                        bool update_open = false;
+                        if ((next_g_val + next_h_val) <= lower_bound)
+                        {  // if the new f-val qualify to be in FOCAL
+                            if (existing_next->getFVal() > lower_bound)
+                                add_to_focal = true;  // and the previous f-val did not qualify to be in FOCAL then add
+                            else
+                                update_in_focal = true;  // and the previous f-val did qualify to be in FOCAL then update
+                        }
+                        if (existing_next->getFVal() > next_g_val + next_h_val)
+                            update_open = true;
+                        // update existing node
+                        existing_next->g_val = next_g_val;
+                        existing_next->h_val = next_h_val;
+                        existing_next->timestep = next_timestep;
+
+                        existing_next->parent = curr;
+                        existing_next->num_internal_conf = next_internal_conflicts;
+                        if (update_open)
+                            open_list.increase(existing_next->open_handle);  // increase because f-val improved
+                        if (add_to_focal)
+                            existing_next->focal_handle = focal_list.push(existing_next);
+                        if (update_in_focal)
+                            focal_list.update(existing_next->focal_handle);  // should we do update? yes, because number of conflicts may go up or down
+                    }
+                }
+                else
+                {  // if its in the closed list (reopen)
+                    if (existing_next->getFVal() > next_g_val + next_h_val ||
+                        (existing_next->getFVal() == next_g_val + next_h_val && existing_next->num_internal_conf > next_internal_conflicts))
+                    {
+                        // if f-val decreased through this new path (or it remains the same and there's less internal conflicts)
+                        existing_next->g_val = next_g_val;
+                        existing_next->h_val = next_h_val;
+                        existing_next->timestep = next_timestep;
+
+                        existing_next->parent = curr;
+                        existing_next->num_internal_conf = next_internal_conflicts;
+                        existing_next->open_handle = open_list.push(existing_next);
+                        existing_next->in_openlist = true;
+                        if (existing_next->getFVal() <= lower_bound)
+                            existing_next->focal_handle = focal_list.push(existing_next);
+                    }
+                }  // end update a node in closed list
+            }  // end update an existing node
 		}  // end for loop that generates successors
 		//cout << "focal list size"<<focal_list.size() << endl;
 		// update FOCAL if min f-val increased
@@ -347,6 +368,25 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 }
 
 template<class Map>
+bool SingleAgentICBS<Map>::getOccupations(list<int>& next_locs, int next_id, LLNode* curr){
+    next_locs.push_back(next_id);
+    auto parent = curr;
+    int pre_loc = next_id;
+    bool conf_free = true;
+    while(parent != nullptr && next_locs.size()<kRobust){
+        if (pre_loc!= parent->locs.front()) {
+            next_locs.push_back(parent->locs.front());
+            if(next_locs.front() == next_locs.back()){
+                conf_free = false;
+                break;
+            }
+        }
+        parent = parent->parent;
+    }
+    return conf_free;
+}
+
+template<class Map>
 inline void SingleAgentICBS<Map>::releaseClosedListNodes(hashtable_t* allNodes_table)
 {
 
@@ -363,6 +403,7 @@ inline void SingleAgentICBS<Map>::releaseClosedListNodes(hashtable_t* allNodes_t
 template<class Map>
 SingleAgentICBS<Map>::SingleAgentICBS(int start_location, int goal_location,  Map* ml1,int agent_id, int start_heading, int kRobust, int min_end):ml(ml1)
 {
+    cout<<"start"<<endl;
 	this->agent_id = agent_id;
 	this->start_heading = start_heading;
 
@@ -383,9 +424,11 @@ SingleAgentICBS<Map>::SingleAgentICBS(int start_location, int goal_location,  Ma
 	this->kRobust = kRobust;
 	// initialize allNodes_table (hash table)
 	empty_node = new LLNode();
-	empty_node->loc = -1;
-	deleted_node = new LLNode();
-	deleted_node->loc = -2;
+	empty_node->locs.push_back(-1);
+
+    deleted_node = new LLNode();
+	deleted_node->locs.push_back(-2);
+
 
 }
 

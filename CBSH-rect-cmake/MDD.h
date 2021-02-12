@@ -9,10 +9,12 @@
 #include <iostream>
 #include <fstream>
 #include "MDDNode.h"
+#include "common.h"
 
 class MDDEmpty {
 public:
 	MDDLevels levels;
+	std::vector<std::unordered_set<int>> level_locs;
 	int getMahattanDistance(int loc1, int loc2, int map_cols)
 	{
 		int loc1_x = loc1 / map_cols;
@@ -23,14 +25,16 @@ public:
 	}
 	virtual bool buildMDD( ConstraintTable& constraint_table,
 		int numOfLevels, SingleAgentICBS<MapLoader>& solver) {};
-//	virtual bool buildMDD( ConstraintTable& constraint_table,
+    virtual bool getOccupations(list<int>& next_locs, int next_id, MDDNode* curr, int k){};
+
+    //	virtual bool buildMDD( ConstraintTable& constraint_table,
 //		int numOfLevels, SingleAgentICBS<FlatlandLoader>& solver) {};
-	virtual bool buildMDD( ConstraintTable& constraint_table, int numOfLevels,
-		SingleAgentICBS<MapLoader>& solver, int start, int start_time, int start_heading = -1) {};
+//	virtual bool buildMDD( ConstraintTable& constraint_table, int numOfLevels,
+//		SingleAgentICBS<MapLoader>& solver, int start, int start_time, int start_heading = -1) {};
 //	virtual bool buildMDD( ConstraintTable& constraint_table, int numOfLevels,
 //		SingleAgentICBS<FlatlandLoader>& solver, int start, int start_time, int start_heading = -1) {};
 
-	virtual MDDNode* find(int location, int level) {};
+	virtual MDDNode* find(list<int> locs, int level) {};
 	virtual void deleteNode(MDDNode* node) {};
 	virtual void clear() {};
 	virtual void print() {};
@@ -43,10 +47,11 @@ class MDD: public MDDEmpty
 public:
 	bool buildMDD( ConstraintTable& constraints,
 		int numOfLevels,  SingleAgentICBS<Map> &solver);
-	bool buildMDD( ConstraintTable& constraints, int numOfLevels, SingleAgentICBS<Map> & solver, int start, int start_time,int start_heading=-1);
-	bool buildMDD(ConstraintTable& constraints, int numOfLevels, SingleAgentICBS<Map> & solver, int start, int start_time,int goal, int start_heading = -1);
+    bool getOccupations(list<int>& next_locs, int next_id, MDDNode* curr, int k);
+//	bool buildMDD( ConstraintTable& constraints, int numOfLevels, SingleAgentICBS<Map> & solver, int start, int start_time,int start_heading=-1);
+//	bool buildMDD(ConstraintTable& constraints, int numOfLevels, SingleAgentICBS<Map> & solver, int start, int start_time,int goal, int start_heading = -1);
 
-	MDDNode* find(int location, int level);
+	MDDNode* find(list<int> locs, int level);
 	void deleteNode(MDDNode* node);
 	void clear();
 	void print() {
@@ -77,7 +82,7 @@ public:
                 else
                     out<<",";
 
-                out << node->location;
+                out << node->locs.front();
             }
             out << "]" << endl;
         }

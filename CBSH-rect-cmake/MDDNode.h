@@ -14,8 +14,9 @@
 class MDDNode
 {
 public:
-    MDDNode(int currloc, MDDNode* parent);
-    int location;
+    MDDNode(std::list<int> currlocs, MDDNode* parent);
+
+    std::list<int> locs;
     int row;
     int col;
     int level;
@@ -23,7 +24,23 @@ public:
 
     bool operator == (const MDDNode & node) const
     {
-        return (this->location == node.location) && (this->level == node.level) && (this->heading == node.heading);
+        bool same_locs = true;
+        if (this->locs.size() != node.locs.size())
+            same_locs = false;
+        else{
+            auto it1 = this->locs.begin();
+            auto it2 = node.locs.begin();
+            while (it1 != this->locs.end() && it2 != node.locs.end()){
+                if (*it1 != *it2){
+                    same_locs = false;
+                    break;
+                }
+                it1++;
+                it2++;
+            }
+        }
+
+        return (same_locs) && (this->level == node.level) && (this->heading == node.heading);
     }
 
 

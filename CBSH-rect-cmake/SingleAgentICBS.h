@@ -95,6 +95,7 @@ public:
 		size_t max_plan_len, double lowerbound,
 		std::clock_t start = 0, int time_limit = 0);
 	bool validMove(int curr, int next) const; // whetehr curr->next is a valid move
+    bool getOccupations(list<int>& next_locs,int next_id, LLNode* curr);
 
 	inline void releaseClosedListNodes(hashtable_t* allNodes_table);
 
