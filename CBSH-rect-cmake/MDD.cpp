@@ -160,6 +160,7 @@ bool MDD<Map>::getOccupations(list<int>& next_locs, int next_id, MDDNode* curr, 
     while(parent != nullptr && next_locs.size() < k){
         if (pre_loc!= parent->locs.front()) {
             next_locs.push_back(parent->locs.front());
+            pre_loc = parent->locs.front();
             if(next_locs.front() == next_locs.back()){
                 conf_free = false;
                 break;

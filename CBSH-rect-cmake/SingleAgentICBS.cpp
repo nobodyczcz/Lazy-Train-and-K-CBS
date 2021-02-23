@@ -6,9 +6,27 @@
 template<class Map>
 void SingleAgentICBS<Map>::updatePath(LLNode* goal, std::vector<PathEntry> &path,ReservationTable* res_table)
 {
-	path.resize(goal->g_val + 1);
+    path.clear();
+	path.resize(goal->g_val + 1 + kRobust);
 	LLNode* curr = goal;
 	num_of_conf = goal->num_internal_conf;
+
+	// Include the goal shrink process to path
+    list<int> goalLocs =  goal->locs;
+    goalLocs.pop_back();
+    for (int t = goal->g_val+1; t < path.size();t++){
+        path[t].location = goalLocs.front();
+        path[t].occupations = goalLocs;
+        path[t].actionToHere = goal->heading;
+        path[t].heading = goal->heading;
+
+        if (t!=0)
+            path[t].conflist =  res_table->findConflict(agent_id, goalLocs.front(), goalLocs, t-1, kRobust);
+        else
+            path[t].conflist = NULL;
+        goalLocs.pop_back();
+	}
+
 	for(int t = goal->g_val; t >= 0; t--)
 	{
 
@@ -17,7 +35,6 @@ void SingleAgentICBS<Map>::updatePath(LLNode* goal, std::vector<PathEntry> &path
 		path[t].actionToHere = curr->heading;
         path[t].heading = curr->heading;
 
-        delete path[t].conflist;
         if (t!=0)
             path[t].conflist =  res_table->findConflict(agent_id, curr->parent->locs.front(), curr->locs, t-1, kRobust);
         else
@@ -26,6 +43,8 @@ void SingleAgentICBS<Map>::updatePath(LLNode* goal, std::vector<PathEntry> &path
 		curr->conflist = NULL;
 		curr = curr->parent;
 	}
+
+
 }
 
 
@@ -141,11 +160,11 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 		num_expanded++;
 
 		// check if the popped node is a goal
-		if (curr->locs.size() == 1 && curr->locs.front() == goal_location && curr->timestep >= constraint_table.length_min && curr->timestep >= min_end_time)
+		if ( curr->locs.front() == goal_location && curr->timestep >= constraint_table.length_min && curr->timestep >= min_end_time)
 		{
 
-//			if (curr->parent == NULL || curr->parent->loc != goal_location)
-//			{
+			if (curr->parent == NULL || curr->parent->locs.front() != goal_location)
+			{
 				//cout << num_generated << endl;
 
 				updatePath(curr, path, res_table);
@@ -159,7 +178,7 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 				goal_nodes.clear();
 
 				return true;
-//			}
+			}
 		}
 		
 
@@ -178,14 +197,10 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 			    continue;
 			list<int> next_locs ;
 
-            if(curr->locs.front() == goal_location && next_id == goal_location){
-                next_locs = curr->locs;
-                next_locs.pop_back();
-            }
-			else if (!getOccupations(next_locs, next_id, curr))
+            if (!getOccupations(next_locs, next_id, curr))
 			    continue;
 
-			assert(next_locs.size()<= kRobust);
+			assert(next_locs.size()<= kRobust+1);
 			time_generated += 1;
 			int next_timestep = curr->timestep + 1;
 
@@ -202,10 +217,29 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
             bool constrained = false;
             if (constraint_table.is_constrained(curr->locs.front() * map_size + next_id, next_timestep))
                 constrained = true;
+
+
             for(auto loc:next_locs){
                 if (constraint_table.is_constrained(loc, next_timestep) )
                     constrained = true;
             }
+
+            //For node at goal location, we need to consider collision when agent shrink to goal hole.
+            if (next_id == goal_location){
+                list<int> onTargetLocs = next_locs;
+                onTargetLocs.pop_back();
+                int onTargetTimestep = next_timestep + 1;
+                while(!onTargetLocs.empty()){
+                    for (int loc: onTargetLocs){
+                        if (constraint_table.is_constrained(loc, next_timestep) )
+                            constrained = true;
+                    }
+                    onTargetTimestep++;
+                    onTargetLocs.pop_back();
+                }
+
+            }
+
 
 
 			if (constrained)
@@ -373,9 +407,10 @@ bool SingleAgentICBS<Map>::getOccupations(list<int>& next_locs, int next_id, LLN
     auto parent = curr;
     int pre_loc = next_id;
     bool conf_free = true;
-    while(parent != nullptr && next_locs.size()<kRobust){
+    while(parent != nullptr && next_locs.size()<=kRobust){
         if (pre_loc!= parent->locs.front()) {
             next_locs.push_back(parent->locs.front());
+            pre_loc = parent->locs.front();
             if(next_locs.front() == next_locs.back()){
                 conf_free = false;
                 break;

@@ -128,8 +128,7 @@ public:
 	LLNode(const LLNode& other);
 	LLNode(list<int> locs, int g_val, int h_val, LLNode* parent, int timestep,
 		int num_internal_conf = 0, bool in_openlist = false);
-	inline double getFVal() const { return
-	+ h_val; }
+	inline double getFVal() const { return g_val + h_val; }
 	~LLNode(){
 	}
 
