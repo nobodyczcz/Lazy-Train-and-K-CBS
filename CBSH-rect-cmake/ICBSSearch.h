@@ -47,6 +47,7 @@ public:
 	double runtime_findsg;
 	double runtime_find_rectangle;
 	double RMBuildMDDTime;
+	double runtime_mdd = 0;
 
 	int RMDetectionCount=0;
 	int RMSuccessCount=0;

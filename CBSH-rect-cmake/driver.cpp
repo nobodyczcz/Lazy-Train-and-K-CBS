@@ -151,7 +151,7 @@ int main(int argc, char** argv)
 		icbs.num_target<<","<< icbs.num_chasingRectangle << "," <<
 		icbs.less10 << ","<<icbs.less100 << ","<<icbs.less1000 << ","<<icbs.less10000 <<"," << icbs.less100000 <<","
 		<<icbs.larger100000 << "," <<icbs.num_pairs <<"," <<icbs.num_failed << ","<< validTrain<<","
-		<<icbs.num_body_conflict<<","<<icbs.num_goal_conflict<<","<<icbs.num_self_conflict<<","<< endl;
+		<<icbs.num_body_conflict<<","<<icbs.num_goal_conflict<<","<<icbs.num_self_conflict<<","<<icbs.runtime_mdd<< endl;
 	stats.close();
 
     if(vm.count("statistic")){

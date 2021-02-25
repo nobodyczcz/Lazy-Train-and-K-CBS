@@ -74,6 +74,12 @@ public:
 		this->k = k;
 		this->t = t;
 	};
+	void clear(){
+        constraint1.clear();
+        constraint2.clear();
+        multiConstraint1.clear();
+        multiConstraint2.clear();
+	}
 
 	void vertexConflict(int a1, int a2, int v, int t,int k=0,int kRobust =0)
 	{
@@ -89,6 +95,21 @@ public:
 //		}
 		type = conflict_type::STANDARD;
 	}
+
+    void vertexConflictRange(int a1, int a2, int v, int t,int k=0,int range =0)
+    {
+        this->a1 = a1;
+        this->a2 = a2;
+        this->t = t;
+        this->k = k;
+        this->originalConf1 = v;
+        this->originalConf2 = -1;
+		for (int i = 0; i <= range; i++) {
+            this->constraint1.emplace_back(v, -1, t+i, constraint_type::VERTEX);
+            this->constraint2.emplace_back(v, -1, t+i, constraint_type::VERTEX);
+		}
+        type = conflict_type::STANDARD;
+    }
 		
 	void edgeConflict(int a1, int a2, int v1, int v2, int t)
 	{

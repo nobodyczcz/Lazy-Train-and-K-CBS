@@ -1774,6 +1774,7 @@ void MultiMapICBSSearch<Map>::initializeDummyStart() {
 template<class Map>
 MDD<Map>* MultiMapICBSSearch<Map>::buildMDD(ICBSNode& node, int id, int k)
 {
+    clock_t t = std::clock();
     TotalMDD+=1;
     if (k>0){
         TotalKMDD+=1;
@@ -1819,6 +1820,7 @@ MDD<Map>* MultiMapICBSSearch<Map>::buildMDD(ICBSNode& node, int id, int k)
             }
         }
     }
+    runtime_mdd += (std::clock()-t)/CLOCKS_PER_SEC;
 	return mdd;
 }
 
@@ -1932,7 +1934,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 		bool cardinal1 = false, cardinal2 = false;
 		if (timestep >= paths[a1]->size())
 			cardinal1 = true;
-		else if (!paths[a1]->at(0).single)
+		else if (paths[a1]->at(0).singles.empty())
 		{
             for (int l: paths[a1]->at(timestep).occupations){
                 if (l == loc1 || l ==loc2){
@@ -1946,15 +1948,19 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
                 paths[a1]->at(i).singles.resize(kDelay+1);
                 for(int j=0;j<kDelay+1;j++){
                     paths[a1]->at(i).singles[j] = mdd->level_locs[i][j].size() == 1;
+//                    cout<<mdd->level_locs[i][j].size()<<",";
+//                    assert(mdd->level_locs[i][j].size() >=1);
+
                 }
             }
+			cout<<endl;
 			if (mddTable.empty())
 				delete mdd;
 
         }
 		if (timestep2 >= paths[a2]->size())
 			cardinal2 = true;
-		else if (!paths[a2]->at(0).single)
+		else if (paths[a2]->at(0).singles.empty())
 		{
             for (int l: paths[a2]->at(timestep).occupations){
                 if (l == loc1 || l ==loc2){
@@ -1967,8 +1973,12 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
                 paths[a2]->at(i).singles.resize(kDelay+1);
                 for(int j=0;j<kDelay+1;j++){
                     paths[a2]->at(i).singles[j] = mdd->level_locs[i][j].size() == 1;
+//                    cout<<mdd->level_locs[i][j].size()<<",";
+//                    assert(mdd->level_locs[i][j].size() >=1);
+
                 }
             }
+            cout<< endl;
 			if (mddTable.empty())
 				delete mdd;
 		}
@@ -1977,15 +1987,20 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 		{
 		    assert(a1_p == a2_p && a2_p ==0);
 			cardinal1 = paths[a1]->at(timestep).singles[0] && paths[a1]->at(timestep - 1).singles[0];
-			cardinal2 = paths[a2]->at(timestep2).singles[0] && paths[a2]->at(timestep2 - 1).singles[0];
+			cardinal2 = paths[a2]->at(timestep).singles[0] && paths[a2]->at(timestep - 1).singles[0];
 		}
 		else // vertex conflict or target conflict
 		{
 			if (!cardinal1)
 				cardinal1 = paths[a1]->at(timestep).singles[a1_p];
 			if (!cardinal2)
-				cardinal2 = paths[a2]->at(timestep2).singles[a2_p];
+				cardinal2 = paths[a2]->at(timestep).singles[a2_p];
+
+			con->clear();
+            int range = min(kDelay - a1_p,kDelay - a2_p);
+            con->vertexConflictRange(a1,a2,loc1,timestep,con->k,range);
 		}
+
 
 		if (cardinal1 && cardinal2)
 		{

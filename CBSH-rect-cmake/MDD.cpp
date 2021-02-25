@@ -18,6 +18,7 @@ bool MDD<Map>::buildMDD( ConstraintTable& constraints, int numOfLevels, SingleAg
 	levels.resize(numOfLevels);
 	//cout << "start: " << solver.start_heading << endl;
 	//cout << "goal: " << solver.goal_location << endl;
+	bool done = false;
 
 	while (!open.empty())
 	{
@@ -40,12 +41,13 @@ bool MDD<Map>::buildMDD( ConstraintTable& constraints, int numOfLevels, SingleAg
 				std::cerr << "Failed to build MDD!" << std::endl;
 				exit(1);
 			}
+			done = true;
 			break;
 		}
 		// We want (g + 1)+h <= f = numOfLevels - 1, so h <= numOfLevels - g. -1 because it's the bound of the children.
 //		double heuristicBound = numOfLevels - node->level - 2+ 0.001;
 
-        double heuristicBound = numOfLevels-solver.kRobust - node->level - 2+ 0.001;
+        double heuristicBound = numOfLevels-node->locs.size() - node->level - 1+ 0.001;
 
 
         vector<pair<int, int>> transitions = solver.ml->get_transitions(node->locs.front(),node->heading,false);
@@ -127,6 +129,7 @@ bool MDD<Map>::buildMDD( ConstraintTable& constraints, int numOfLevels, SingleAg
 			}
 		}
 	}
+	assert(done);
 	// Backward
 	for (int t = numOfLevels - 1; t > 0; t--)
 	{
@@ -142,8 +145,10 @@ bool MDD<Map>::buildMDD( ConstraintTable& constraints, int numOfLevels, SingleAg
 			}
 		}
 	}
+    assert(!levels[0].empty());
 
-	// Delete useless nodes (nodes who don't have any children)
+
+    // Delete useless nodes (nodes who don't have any children)
 	for (std::list<MDDNode*>::iterator it = closed.begin(); it != closed.end(); ++it)
 		if ((*it)->children.empty() && (*it)->level < numOfLevels - 1){
 //            auto node = std::find(levels[(*it)->level].begin(),levels[(*it)->level].end(),*it);
@@ -158,12 +163,13 @@ bool MDD<Map>::buildMDD( ConstraintTable& constraints, int numOfLevels, SingleAg
     for (int t = numOfLevels - 1; t >= 0; t--)
     {
         level_locs[t].resize(solver.kRobust+1);
+        assert(!levels[t].empty());
         for (std::list<MDDNode*>::iterator it = levels[t].begin(); it != levels[t].end(); ++it)
         {
             int position = 0;
             for(auto loc_it = (*it)->locs.begin();loc_it != (*it)->locs.end();loc_it++,position++){
                 if (!level_locs[t][position].count(*loc_it))
-                    level_locs[t][position].insert((*loc_it));
+                    level_locs[t][position].insert(*loc_it);
             }
 
         }
