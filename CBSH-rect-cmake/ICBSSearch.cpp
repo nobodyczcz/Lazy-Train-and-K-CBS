@@ -864,8 +864,13 @@ bool ICBSSearch::isValidTrain()
 void ICBSSearch::printPaths(Path& path) const
 {
 
-		for (int t = 0; t < path.size(); t++)
-			std::cout << t<<"(" << path.at(t).location / num_col << "," << path.at(t).location % num_col << ")->";
+		for (int t = 0; t < path.size(); t++){
+            std::cout << t;
+            for (int loc: path[t].occupations){
+                std::cout <<"(" << loc / num_col << "," << loc % num_col << ")";
+            }
+            std::cout <<"->";
+        }
 		std::cout << std::endl;
 }
 
@@ -1328,6 +1333,8 @@ bool MultiMapICBSSearch<Map>::search(){
                 cout <<"Child "<<i<< " conflicts:"<< curr->children[i]->unknownConf.size();
 
                 cout << endl;
+                printPaths(curr->children[i]->paths.front().second);
+
             }
         }
         if(option.print_nodes){
@@ -1392,7 +1399,6 @@ bool MultiMapICBSSearch<Map>::search(){
             break;
         }
         ICBSNode* open_head = open_list.top();
-        printPaths(open_head->paths.front().second);
         assert( open_head->f_val >= min_f_val);
         if ( open_head->f_val > min_f_val)
         {
@@ -1920,15 +1926,28 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 		timestep2 = timestep + con->k;
 		//std::tie(loc1, loc2, timestep, type) = con->constraint1.front();
 		parent.unknownConf.pop_front();
+
+		int a1_p = 0, a2_p = 0;
 		
 		bool cardinal1 = false, cardinal2 = false;
 		if (timestep >= paths[a1]->size())
 			cardinal1 = true;
 		else if (!paths[a1]->at(0).single)
 		{
+            for (int l: paths[a1]->at(timestep).occupations){
+                if (l == loc1 || l ==loc2){
+                    break;
+                }
+                a1_p++;
+            }
+
 			MDD<Map>* mdd = buildMDD(parent, a1);
-			for (int i = 0; i < mdd->levels.size(); i++)
-				paths[a1]->at(i).single = mdd->level_locs[i].size() == 1;
+			for (int i = 0; i < mdd->levels.size(); i++) {
+                paths[a1]->at(i).singles.resize(kDelay+1);
+                for(int j=0;j<kDelay+1;j++){
+                    paths[a1]->at(i).singles[j] = mdd->level_locs[i][j].size() == 1;
+                }
+            }
 			if (mddTable.empty())
 				delete mdd;
 
@@ -1937,24 +1956,35 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 			cardinal2 = true;
 		else if (!paths[a2]->at(0).single)
 		{
+            for (int l: paths[a2]->at(timestep).occupations){
+                if (l == loc1 || l ==loc2){
+                    break;
+                }
+                a2_p++;
+            }
 			MDD<Map>* mdd = buildMDD(parent, a2);
-			for (int i = 0; i < mdd->levels.size(); i++)
-				paths[a2]->at(i).single = mdd->level_locs[i].size() == 1;
+            for (int i = 0; i < mdd->levels.size(); i++) {
+                paths[a2]->at(i).singles.resize(kDelay+1);
+                for(int j=0;j<kDelay+1;j++){
+                    paths[a2]->at(i).singles[j] = mdd->level_locs[i][j].size() == 1;
+                }
+            }
 			if (mddTable.empty())
 				delete mdd;
 		}
 
 		if (type == conflict_type::STANDARD && loc2 >= 0) // Edge conflict
 		{
-			cardinal1 = paths[a1]->at(timestep).single && paths[a1]->at(timestep - 1).single;
-			cardinal2 = paths[a2]->at(timestep2).single && paths[a2]->at(timestep2 - 1).single;
+		    assert(a1_p == a2_p && a2_p ==0);
+			cardinal1 = paths[a1]->at(timestep).singles[0] && paths[a1]->at(timestep - 1).singles[0];
+			cardinal2 = paths[a2]->at(timestep2).singles[0] && paths[a2]->at(timestep2 - 1).singles[0];
 		}
 		else // vertex conflict or target conflict
 		{
 			if (!cardinal1)
-				cardinal1 = paths[a1]->at(timestep).single;
+				cardinal1 = paths[a1]->at(timestep).singles[a1_p];
 			if (!cardinal2)
-				cardinal2 = paths[a2]->at(timestep2).single;
+				cardinal2 = paths[a2]->at(timestep2).singles[a2_p];
 		}
 
 		if (cardinal1 && cardinal2)

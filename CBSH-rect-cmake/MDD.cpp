@@ -155,12 +155,17 @@ bool MDD<Map>::buildMDD( ConstraintTable& constraints, int numOfLevels, SingleAg
 
 	//in train pathfinding, agent may reach same location with di
 	level_locs.resize(levels.size());
-    for (int t = numOfLevels - 1; t > 0; t--)
+    for (int t = numOfLevels - 1; t >= 0; t--)
     {
+        level_locs[t].resize(solver.kRobust+1);
         for (std::list<MDDNode*>::iterator it = levels[t].begin(); it != levels[t].end(); ++it)
         {
-            if (!level_locs[t].count((*it)->locs.front()))
-                level_locs[t].insert((*it)->locs.front());
+            int position = 0;
+            for(auto loc_it = (*it)->locs.begin();loc_it != (*it)->locs.end();loc_it++,position++){
+                if (!level_locs[t][position].count(*loc_it))
+                    level_locs[t][position].insert((*loc_it));
+            }
+
         }
     }
 
@@ -170,7 +175,7 @@ bool MDD<Map>::buildMDD( ConstraintTable& constraints, int numOfLevels, SingleAg
 template<class Map>
 bool MDD<Map>::getOccupations(list<int>& next_locs, int next_id, MDDNode* curr, int k){
     next_locs.push_back(next_id);
-    auto parent = curr->parent;
+    auto parent = curr;
     int pre_loc = next_id;
     bool conf_free = true;
     while(parent != nullptr && next_locs.size() <= k){

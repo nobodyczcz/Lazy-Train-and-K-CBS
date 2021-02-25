@@ -38,6 +38,7 @@ struct PathEntry
 
 	int location;
 	list<int> occupations;
+	vector<bool> singles;
 	int heading;
 	bool single;
 	int actionToHere;

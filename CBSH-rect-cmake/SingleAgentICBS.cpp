@@ -137,7 +137,7 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 	lowerbound = std::max(lowerbound, (double)constraint_table.length_min);
 	lowerbound = std::max(lowerbound, (double)min_end_time);
 	lower_bound = std::max(lowerbound, f_weight * min_f_val);
-	cout<<"initial lower_bound "<<lower_bound<<","<<constraint_table.length_min<<","<<min_end_time<<","<<min_f_val<<f_weight<<","<<lowerbound<<endl;
+//	cout<<"initial lower_bound "<<lower_bound<<","<<constraint_table.length_min<<","<<min_end_time<<","<<min_f_val<<f_weight<<","<<lowerbound<<endl;
 
 	int time_generated = 0;
 	int time_check_count = 0;
@@ -274,7 +274,7 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
             next->time_generated = time_generated;
             //std::cout << "current: (" << curr->loc << "," << curr->heading << "," << curr->getFVal() << ") " << "next: (" << next->loc << "," << next->heading << "," << next->getFVal() << ")" << std::endl;
 
-//            if (agent_id == 10 && (curr->locs.front() == 457 || curr->locs.front() == 490 )){
+//            if (agent_id == 0 && ( curr->locs.front() == 519)){
 //                cout << "current: " <<curr->locs.front()<<","<<curr->locs.back()<<","<< curr->g_val<<","<<curr->h_val<<","<<curr->num_internal_conf<<curr->getFVal() << endl;
 //                cout << "child: " <<next->locs.front()<<","<<next->locs.back()<<","<< next->g_val<<","<<next->h_val<<","<<next->num_internal_conf<<next->getFVal() << endl;
 //                cout << "min_f"<<min_f_val<<",l b"<<lower_bound<<","<<open_list.top()->getFVal()<<endl;
@@ -417,7 +417,7 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 template<class Map>
 bool SingleAgentICBS<Map>::getOccupations(list<int>& next_locs, int next_id, LLNode* curr){
     next_locs.push_back(next_id);
-    auto parent = curr->parent;
+    auto parent = curr;
     int pre_loc = next_id;
     bool conf_free = true;
     while(parent != nullptr && next_locs.size()<=kRobust){
@@ -451,7 +451,6 @@ inline void SingleAgentICBS<Map>::releaseClosedListNodes(hashtable_t* allNodes_t
 template<class Map>
 SingleAgentICBS<Map>::SingleAgentICBS(int start_location, int goal_location,  Map* ml1,int agent_id, int start_heading, int kRobust, int min_end):ml(ml1)
 {
-    cout<<"start"<<endl;
 	this->agent_id = agent_id;
 	this->start_heading = start_heading;
 

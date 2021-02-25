@@ -14,7 +14,7 @@
 class MDDEmpty {
 public:
 	MDDLevels levels;
-	std::vector<std::unordered_set<int>> level_locs;
+	std::vector<std::vector<std::unordered_set<int>>> level_locs;
 	int getMahattanDistance(int loc1, int loc2, int map_cols)
 	{
 		int loc1_x = loc1 / map_cols;
