@@ -1953,7 +1953,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 
                 }
             }
-			cout<<endl;
+//			cout<<endl;
 			if (mddTable.empty())
 				delete mdd;
 
@@ -1978,7 +1978,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 
                 }
             }
-            cout<< endl;
+//            cout<< endl;
 			if (mddTable.empty())
 				delete mdd;
 		}
