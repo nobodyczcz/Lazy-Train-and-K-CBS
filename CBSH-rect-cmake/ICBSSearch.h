@@ -100,11 +100,15 @@ public:
 
     options option;
 
-
+    int num_body_conflict = 0;
+    int num_goal_conflict = 0;
+    int num_self_conflict = 0;
 
 
     void printBT(const std::string& prefix, const ICBSNode* node, bool isLeft);
 	void printHLTree();
+    bool isValidTrain();
+
     vector<vector<PathEntry>*> getPaths(){ return paths;};
 
 
@@ -187,8 +191,9 @@ protected:
 	// print
 	void printPaths() const;
 	void printPaths(Path& path) const;
-	
-	void printStrategy() const;
+
+
+    void printStrategy() const;
 	bool timeout=false;
 
 

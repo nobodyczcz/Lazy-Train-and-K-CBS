@@ -7,6 +7,7 @@
 MDDNode::MDDNode(std::list<int> currlocs, MDDNode* parent)
 {
     locs = currlocs;
+    this->parent = parent;
     if(parent == NULL)
         level = 0;
     else

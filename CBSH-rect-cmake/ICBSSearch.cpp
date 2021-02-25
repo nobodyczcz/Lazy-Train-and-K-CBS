@@ -755,7 +755,7 @@ bool ICBSSearch::generateChild(ICBSNode*  node, ICBSNode* curr)
 			    if (screen>=2){
 			        cout<<"Replan for agent: "<< ag<<endl;
 			    }
-				double lowerbound = (int)paths[ag]->size() - 1;
+				double lowerbound = (int)paths[ag]->size() - kDelay - 1; //The shrink at goal is added after search complete
 				if (!findPathForSingleAgent(node, ag, lowerbound))
 					return false;
 			}
@@ -763,7 +763,7 @@ bool ICBSSearch::generateChild(ICBSNode*  node, ICBSNode* curr)
 	}
 	else
 	{
-		double lowerbound = (int)paths[node->agent_id]->size() - 1;
+		double lowerbound = (int)paths[node->agent_id]->size() - kDelay-1;//The shrink at goal is added after search complete
 		// if (curr->conflict->p == conflict_priority::CARDINAL && curr->conflict->type != conflict_type::CORRIDOR2)
 		//	lowerbound += 1;
 
@@ -829,11 +829,43 @@ void ICBSSearch::printPaths() const
 		std::cout << std::endl;
 	}
 }
+
+bool ICBSSearch::isValidTrain()
+{
+    bool valid = true;
+    unordered_map<int,unordered_map<int,int>> rt;
+    for (int i = 0; i < num_of_agents; i++)
+    {
+
+        for (int t = 0; t < paths[i]->size(); t++){
+
+            for (int loc : (*paths[i])[t].occupations) {
+                if (!rt.count(loc))
+                    rt[loc] = unordered_map<int,int>();
+
+                if (!rt[loc].count(t))
+                    rt[loc][t]=i;
+                else {
+                        cout<<i<<" body conflict t "<< t<<" with "<<rt[loc][t]<<endl;
+                    if (i == rt[loc][t])
+                        num_self_conflict++;
+                    num_body_conflict++;
+                    valid = false;
+                }
+
+            }
+
+        }
+
+    }
+    return valid;
+}
+
 void ICBSSearch::printPaths(Path& path) const
 {
 
 		for (int t = 0; t < path.size(); t++)
-			std::cout << "(" << path.at(t).location / num_col << "," << path.at(t).location % num_col << ")->";
+			std::cout << t<<"(" << path.at(t).location / num_col << "," << path.at(t).location % num_col << ")->";
 		std::cout << std::endl;
 }
 
@@ -1360,6 +1392,7 @@ bool MultiMapICBSSearch<Map>::search(){
             break;
         }
         ICBSNode* open_head = open_list.top();
+        printPaths(open_head->paths.front().second);
         assert( open_head->f_val >= min_f_val);
         if ( open_head->f_val > min_f_val)
         {
@@ -1895,7 +1928,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 		{
 			MDD<Map>* mdd = buildMDD(parent, a1);
 			for (int i = 0; i < mdd->levels.size(); i++)
-				paths[a1]->at(i).single = mdd->levels[i].size() == 1;
+				paths[a1]->at(i).single = mdd->level_locs[i].size() == 1;
 			if (mddTable.empty())
 				delete mdd;
 
@@ -1906,7 +1939,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 		{
 			MDD<Map>* mdd = buildMDD(parent, a2);
 			for (int i = 0; i < mdd->levels.size(); i++)
-				paths[a2]->at(i).single = mdd->levels[i].size() == 1;
+				paths[a2]->at(i).single = mdd->level_locs[i].size() == 1;
 			if (mddTable.empty())
 				delete mdd;
 		}

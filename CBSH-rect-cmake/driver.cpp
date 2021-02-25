@@ -134,9 +134,13 @@ int main(int argc, char** argv)
 	
 	bool res;
 	res = icbs.runICBSSearch();
+	bool validTrain = icbs.isValidTrain();
 	ofstream stats;
 	stats.open(vm["output"].as<string>(), ios::trunc);
-	stats << icbs.runtime/ CLOCKS_PER_SEC << "," <<
+    if (vm["screen"].as<int>() >= 1) {
+        cout<<"Valid Train Plan: "<< validTrain<<" body conflicts: "<<icbs.num_body_conflict<<" goal conflict: "<<icbs.num_goal_conflict<<" self conflict: "<<icbs.num_self_conflict<<endl;
+    }
+	stats  << icbs.runtime/ CLOCKS_PER_SEC << "," <<
 		icbs.HL_num_expanded << "," << icbs.HL_num_generated << "," <<
 		icbs.LL_num_expanded << "," << icbs.LL_num_generated << "," <<
 		vm["agents"].as<string>() << "," << icbs.solution_cost << "," << 
@@ -146,7 +150,8 @@ int main(int argc, char** argv)
 		icbs.num_corridor2 << "," << icbs.num_corridor4 << "," << 
 		icbs.num_target<<","<< icbs.num_chasingRectangle << "," <<
 		icbs.less10 << ","<<icbs.less100 << ","<<icbs.less1000 << ","<<icbs.less10000 <<"," << icbs.less100000 <<","
-		<<icbs.larger100000 << "," <<icbs.num_pairs <<"," <<icbs.num_failed << ","<< endl;
+		<<icbs.larger100000 << "," <<icbs.num_pairs <<"," <<icbs.num_failed << ","<< validTrain<<","
+		<<icbs.num_body_conflict<<","<<icbs.num_goal_conflict<<","<<icbs.num_self_conflict<<","<< endl;
 	stats.close();
 
     if(vm.count("statistic")){

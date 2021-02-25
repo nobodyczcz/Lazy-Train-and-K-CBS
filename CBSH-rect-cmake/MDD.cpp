@@ -6,7 +6,7 @@
 template<class Map>
 bool MDD<Map>::buildMDD( ConstraintTable& constraints, int numOfLevels, SingleAgentICBS<Map> & solver)
 {
-	MDDNode* root = new MDDNode(std::list<int>(), NULL); // Root
+	MDDNode* root = new MDDNode(std::list<int>(), nullptr); // Root
 	root->locs.push_back(solver.start_location);
 	root->heading = solver.start_heading;
 	root->row = solver.start_location / solver.num_col;
@@ -29,13 +29,13 @@ bool MDD<Map>::buildMDD( ConstraintTable& constraints, int numOfLevels, SingleAg
 			levels[numOfLevels - 1].push_back(node);
 			if(!open.empty())
 			{
-				//while (!open.empty())
-				//{
-				//	MDDNode* node = open.front();
-				//	open.pop();
-				//	cout << "loc: " << node->location << " heading: " << node->heading<<" h "<< solver.my_heuristic[node->location].heading[node->heading] <<" "<< solver.my_heuristic[node->location].heading.count(node->heading)<< endl;
-				//	
-				//}
+				while (!open.empty())
+				{
+					MDDNode* node = open.front();
+					open.pop();
+					cout << "loc: " << node->locs.front()<<","<< node->locs.back()<<","<<node->locs.size() << " heading: " << node->heading<<" h "<< solver.my_heuristic[node->locs.front()].heading[node->heading] <<" "<< solver.my_heuristic[node->locs.front()].heading.count(node->heading)<< endl;
+
+				}
 				
 				std::cerr << "Failed to build MDD!" << std::endl;
 				exit(1);
@@ -43,9 +43,12 @@ bool MDD<Map>::buildMDD( ConstraintTable& constraints, int numOfLevels, SingleAg
 			break;
 		}
 		// We want (g + 1)+h <= f = numOfLevels - 1, so h <= numOfLevels - g. -1 because it's the bound of the children.
-		double heuristicBound = numOfLevels - node->level - 2+ 0.001; 
+//		double heuristicBound = numOfLevels - node->level - 2+ 0.001;
 
-		vector<pair<int, int>> transitions = solver.ml->get_transitions(node->locs.front(),node->heading,false);
+        double heuristicBound = numOfLevels-solver.kRobust - node->level - 2+ 0.001;
+
+
+        vector<pair<int, int>> transitions = solver.ml->get_transitions(node->locs.front(),node->heading,false);
 		//cout << "current " << node->location << " heading " << node->heading << endl;
 		for (const pair<int, int> move : transitions)
 		{
@@ -71,11 +74,21 @@ bool MDD<Map>::buildMDD( ConstraintTable& constraints, int numOfLevels, SingleAg
 			else if (!getOccupations(new_locs,newLoc,node,solver.kRobust))
 			    continue;
 
+            //check does head have edge constraint or body have vertex constraint.
+            bool constrained = false;
+            if (constraints.is_constrained(node->locs.front() * solver.map_size + newLoc, node->level + 1))
+                constrained = true;
+
+
+            for(auto loc:new_locs){
+                if (constraints.is_constrained(loc, node->level + 1) )
+                    constrained = true;
+            }
+
 			//cout << "newLoc " << newLoc << " heading " << new_heading<<" h "<< solver.my_heuristic[newLoc].heading[new_heading] << endl;
 
 			if (solver.my_heuristic[newLoc].heading.count(new_heading) && solver.my_heuristic[newLoc].heading[new_heading] < heuristicBound &&
-				!constraints.is_constrained(newLoc, node->level + 1) &&
-				!constraints.is_constrained(node->locs.front() * solver.map_size + newLoc, node->level + 1)) // valid move
+				!constrained) // valid move
 			{
 				std::list<MDDNode*>::reverse_iterator child = closed.rbegin();
 				bool find = false;
@@ -103,6 +116,7 @@ bool MDD<Map>::buildMDD( ConstraintTable& constraints, int numOfLevels, SingleAg
 				if (!find) // Else generate a new mdd node
 				{
 					MDDNode* childNode = new MDDNode(new_locs, node);
+					childNode->parent = node;
 					childNode->heading = new_heading;
 					childNode->row = newLoc / solver.num_col;
 					childNode->col = newLoc % solver.num_col;
@@ -138,6 +152,8 @@ bool MDD<Map>::buildMDD( ConstraintTable& constraints, int numOfLevels, SingleAg
 //            }
 			delete (*it);
 		}
+
+	//in train pathfinding, agent may reach same location with di
 	level_locs.resize(levels.size());
     for (int t = numOfLevels - 1; t > 0; t--)
     {
@@ -154,10 +170,10 @@ bool MDD<Map>::buildMDD( ConstraintTable& constraints, int numOfLevels, SingleAg
 template<class Map>
 bool MDD<Map>::getOccupations(list<int>& next_locs, int next_id, MDDNode* curr, int k){
     next_locs.push_back(next_id);
-    auto parent = curr;
+    auto parent = curr->parent;
     int pre_loc = next_id;
     bool conf_free = true;
-    while(parent != nullptr && next_locs.size() < k){
+    while(parent != nullptr && next_locs.size() <= k){
         if (pre_loc!= parent->locs.front()) {
             next_locs.push_back(parent->locs.front());
             pre_loc = parent->locs.front();

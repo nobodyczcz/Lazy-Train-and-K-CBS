@@ -137,6 +137,7 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 	lowerbound = std::max(lowerbound, (double)constraint_table.length_min);
 	lowerbound = std::max(lowerbound, (double)min_end_time);
 	lower_bound = std::max(lowerbound, f_weight * min_f_val);
+	cout<<"initial lower_bound "<<lower_bound<<","<<constraint_table.length_min<<","<<min_end_time<<","<<min_f_val<<f_weight<<","<<lowerbound<<endl;
 
 	int time_generated = 0;
 	int time_check_count = 0;
@@ -231,7 +232,7 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
                 int onTargetTimestep = next_timestep + 1;
                 while(!onTargetLocs.empty()){
                     for (int loc: onTargetLocs){
-                        if (constraint_table.is_constrained(loc, next_timestep) )
+                        if (constraint_table.is_constrained(loc, onTargetTimestep) )
                             constrained = true;
                     }
                     onTargetTimestep++;
@@ -258,7 +259,6 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
                     next_heading = move.second;
 
             int next_h_val = my_heuristic[next_id].get_hval(next_heading);
-            //cout << "next_h_val " << next_h_val << endl;
             if (next_g_val + next_h_val > constraint_table.length_max)
                 continue;
 
@@ -274,6 +274,12 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
             next->time_generated = time_generated;
             //std::cout << "current: (" << curr->loc << "," << curr->heading << "," << curr->getFVal() << ") " << "next: (" << next->loc << "," << next->heading << "," << next->getFVal() << ")" << std::endl;
 
+//            if (agent_id == 10 && (curr->locs.front() == 457 || curr->locs.front() == 490 )){
+//                cout << "current: " <<curr->locs.front()<<","<<curr->locs.back()<<","<< curr->g_val<<","<<curr->h_val<<","<<curr->num_internal_conf<<curr->getFVal() << endl;
+//                cout << "child: " <<next->locs.front()<<","<<next->locs.back()<<","<< next->g_val<<","<<next->h_val<<","<<next->num_internal_conf<<next->getFVal() << endl;
+//                cout << "min_f"<<min_f_val<<",l b"<<lower_bound<<","<<open_list.top()->getFVal()<<endl;
+//
+//            }
             // try to retrieve it from the hash table
             it = allNodes_table.find(next);
             if (it == allNodes_table.end() || (next_id == goal_location && (constraint_table.length_min > 0 || min_end_time >0)) )
@@ -359,6 +365,13 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
                     }
                 }  // end update a node in closed list
             }  // end update an existing node
+
+//            if (agent_id == 10 && curr->locs.front() == 458){
+//                auto it1 = allNodes_table.find(next);
+//                assert(it1 != allNodes_table.end());
+//                LLNode* existing_next = (*it1);
+//                cout<<"find "<<existing_next->locs.front()<<","<<existing_next->locs.back()<<","<< existing_next->g_val<<","<<existing_next->h_val << ","<<existing_next->num_internal_conf<<","<<existing_next->getFVal()<<","<<existing_next->in_focallist<< endl;
+//            }
 		}  // end for loop that generates successors
 		//cout << "focal list size"<<focal_list.size() << endl;
 		// update FOCAL if min f-val increased
@@ -404,7 +417,7 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 template<class Map>
 bool SingleAgentICBS<Map>::getOccupations(list<int>& next_locs, int next_id, LLNode* curr){
     next_locs.push_back(next_id);
-    auto parent = curr;
+    auto parent = curr->parent;
     int pre_loc = next_id;
     bool conf_free = true;
     while(parent != nullptr && next_locs.size()<=kRobust){

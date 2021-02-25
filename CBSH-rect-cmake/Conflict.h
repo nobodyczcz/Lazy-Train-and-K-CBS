@@ -83,10 +83,10 @@ public:
 		this->k = k;
 		this->originalConf1 = v;
 		this->originalConf2 = -1;
-		for (int i = 0; i <= kRobust; i++) {
-			this->constraint1.emplace_back(v, -1, t+i, constraint_type::VERTEX);
-			this->constraint2.emplace_back(v, -1, t+i, constraint_type::VERTEX);
-		}
+//		for (int i = 0; i <= kRobust; i++) {
+			this->constraint1.emplace_back(v, -1, t, constraint_type::VERTEX);
+			this->constraint2.emplace_back(v, -1, t, constraint_type::VERTEX);
+//		}
 		type = conflict_type::STANDARD;
 	}
 		

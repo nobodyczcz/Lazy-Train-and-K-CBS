@@ -17,25 +17,26 @@ void ReservationTable::addPath(int agent_id, std::vector<PathEntry>* path) {
 		return;
 	AgentStep* preStep = NULL;
 	for (int t = 0; t < path->size(); t++) {
-		int loc = path->at(t).location;
-		if (!res_table.count(loc)) {
-			res_table[loc] = timeline();
-		}
-		if (!res_table[loc].count(t)) {
-			res_table[loc][t] = agentList();
-		}
-		
+	    for (int loc : path->at(t).occupations) {
+            if (!res_table.count(loc)) {
+                res_table[loc] = timeline();
+            }
+            if (!res_table[loc].count(t)) {
+                res_table[loc][t] = agentList();
+            }
 
-		res_table[loc][t][agent_id] = AgentStep(agent_id, loc, t);
-		if (preStep != NULL) {
-			preStep->nextStep = &(res_table[loc][t][agent_id]);
-		}
-		res_table[loc][t][agent_id].preStep = preStep;
-		preStep = &(res_table[loc][t][agent_id]);
 
-		if (t == path->size() - 1) {
-			goalTable[loc][agent_id] = t;
-		}
+            res_table[loc][t][agent_id] = AgentStep(agent_id, loc, t);
+            if (preStep != NULL) {
+                preStep->nextStep = &(res_table[loc][t][agent_id]);
+            }
+            res_table[loc][t][agent_id].preStep = preStep;
+            preStep = &(res_table[loc][t][agent_id]);
+
+            if (t == path->size() - 1) {
+                goalTable[loc][agent_id] = t;
+            }
+        }
 	}
 }
 
@@ -49,17 +50,19 @@ void ReservationTable::addPaths(vector<vector<PathEntry>*>* paths,int exclude) {
 
 void ReservationTable::deletePath(int agent_id, std::vector<PathEntry>* path) {
 	for (int t = 0; t < path->size(); t++) {
-		int loc = (*path)[t].location;
-		if (res_table.count(loc)) {
-			if (res_table[loc].count(t)) {
-				res_table[loc][t].erase(agent_id);
-			}
-		}
-		if (t == path->size() - 1) {
-			if (goalTable[loc].count(agent_id)) {
-				goalTable[loc].erase(agent_id);
-			}
-		}
+        for (int loc : path->at(t).occupations) {
+
+            if (res_table.count(loc)) {
+                if (res_table[loc].count(t)) {
+                    res_table[loc][t].erase(agent_id);
+                }
+            }
+            if (t == path->size() - 1) {
+                if (goalTable[loc].count(agent_id)) {
+                    goalTable[loc].erase(agent_id);
+                }
+            }
+        }
 	}
 }
 
@@ -99,7 +102,7 @@ OldConfList* ReservationTable::findConflict(int agent, int currLoc, list<int> ne
             }
         }
 
-        train_cell_number +=1;
+        train_cell_number ++;
     }
 			
 			
@@ -107,18 +110,20 @@ OldConfList* ReservationTable::findConflict(int agent, int currLoc, list<int> ne
 
 
     //detect edge conflict
-    int nextLoc = next_locs.front();
-    if (res_table.count(nextLoc) && res_table[nextLoc].count(currT)) {
-        agentList::iterator it;
-        for (it = res_table[nextLoc][currT].begin(); it != res_table[nextLoc][currT].end(); ++it) {
+    if (kDelay == 0) {
+        int nextLoc = next_locs.front();
+        if (res_table.count(nextLoc) && res_table[nextLoc].count(currT)) {
+            agentList::iterator it;
+            for (it = res_table[nextLoc][currT].begin(); it != res_table[nextLoc][currT].end(); ++it) {
 
-            if (it->second.nextStep != NULL && it->second.nextStep->loc == currLoc) {
-                confs->push_back(std::shared_ptr<tuple<int, int, int, int, int, int>>(
-                    new tuple<int, int, int, int, int, int>(
-                        agent, it->second.agent_id, currLoc, nextLoc, nextT, 0)));
+                if (it->second.nextStep != NULL && it->second.nextStep->loc == currLoc) {
+                    confs->push_back(std::shared_ptr<tuple<int, int, int, int, int, int>>(
+                            new tuple<int, int, int, int, int, int>(
+                                    agent, it->second.agent_id, currLoc, nextLoc, nextT, 0)));
+                }
+
+
             }
-
-
         }
     }
 
