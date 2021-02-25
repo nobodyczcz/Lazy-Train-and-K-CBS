@@ -7,7 +7,7 @@ template<class Map>
 void SingleAgentICBS<Map>::updatePath(LLNode* goal, std::vector<PathEntry> &path,ReservationTable* res_table)
 {
     path.clear();
-	path.resize(goal->g_val + 1 + kRobust);
+	path.resize(goal->g_val + 1 + goal->locs.size()-1);
 	LLNode* curr = goal;
 	num_of_conf = goal->num_internal_conf;
 
