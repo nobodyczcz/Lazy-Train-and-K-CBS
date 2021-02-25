@@ -34,11 +34,12 @@ bool MDD<Map>::buildMDD( ConstraintTable& constraints, int numOfLevels, SingleAg
 				{
 					MDDNode* node = open.front();
 					open.pop();
-					cout << "loc: " << node->locs.front()<<","<< node->locs.back()<<","<<node->locs.size() << " heading: " << node->heading<<" h "<< solver.my_heuristic[node->locs.front()].heading[node->heading] <<" "<< solver.my_heuristic[node->locs.front()].heading.count(node->heading)<< endl;
+					cout << "loc: " << node->locs.front()<<","<< node->locs.back()<<","<<node->locs.size()<<" level: "<< node->level << " heading: " << node->heading<<" h "<< solver.my_heuristic[node->locs.front()].heading[node->heading] <<" "<< solver.my_heuristic[node->locs.front()].heading.count(node->heading)<< endl;
 
 				}
 				
 				std::cerr << "Failed to build MDD!" << std::endl;
+				assert(false);
 				exit(1);
 			}
 			done = true;
@@ -47,11 +48,9 @@ bool MDD<Map>::buildMDD( ConstraintTable& constraints, int numOfLevels, SingleAg
 		// We want (g + 1)+h <= f = numOfLevels - 1, so h <= numOfLevels - g. -1 because it's the bound of the children.
 //		double heuristicBound = numOfLevels - node->level - 2+ 0.001;
 
-        double heuristicBound = numOfLevels-node->locs.size() - node->level - 1+ 0.001;
 
 
         vector<pair<int, int>> transitions = solver.ml->get_transitions(node->locs.front(),node->heading,false);
-		//cout << "current " << node->location << " heading " << node->heading << endl;
 		for (const pair<int, int> move : transitions)
 		{
 			int new_heading;
@@ -86,8 +85,12 @@ bool MDD<Map>::buildMDD( ConstraintTable& constraints, int numOfLevels, SingleAg
                 if (constraints.is_constrained(loc, node->level + 1) )
                     constrained = true;
             }
+            double heuristicBound = double(numOfLevels)-double(new_locs.size()) - double(node->level) - 1.0+ 0.001;
+//            cout << " Expand node: " << node->locs.front()<<","<< node->locs.back()<<","<<node->locs.size() << " heading: " << node->heading<<" h "<< solver.my_heuristic[node->locs.front()].heading[node->heading] <<" "<< heuristicBound<< endl;
 
-			//cout << "newLoc " << newLoc << " heading " << new_heading<<" h "<< solver.my_heuristic[newLoc].heading[new_heading] << endl;
+
+
+            //cout << "newLoc " << newLoc << " heading " << new_heading<<" h "<< solver.my_heuristic[newLoc].heading[new_heading] << endl;
 
 			if (solver.my_heuristic[newLoc].heading.count(new_heading) && solver.my_heuristic[newLoc].heading[new_heading] < heuristicBound &&
 				!constrained) // valid move
