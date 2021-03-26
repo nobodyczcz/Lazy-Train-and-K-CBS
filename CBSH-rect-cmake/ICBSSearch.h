@@ -76,6 +76,7 @@ public:
 	uint64_t num_target = 0;
 	uint64_t num_standard = 0;
 	uint64_t num_chasingRectangle = 0;
+    uint64_t num_train_standard = 0;
 
 
 	bool solution_found;
@@ -214,7 +215,7 @@ public:
     MultiMapICBSSearch(){};
 	MultiMapICBSSearch(Map * ml, AgentsLoader & al, double f_w, constraint_strategy c, int time_limit, int screen,int kDlay, options options1);	
 	// build MDD
-	MDD<Map>* buildMDD(ICBSNode& node, int id, int k=0);
+	MDD<Map>* buildMDD(ICBSNode& node, int id, int k=0, bool train = false);
 	void updateConstraintTable(ICBSNode* cTurr, int agent_id);
 	void classifyConflicts(ICBSNode &parent);
 	void initializeDummyStart();
@@ -225,6 +226,7 @@ public:
 	// Runs the algorithm until the problem is solved or time is exhausted 
 	bool runICBSSearch();
     bool search();
+    void checkRepeatance(ICBSNode* curr);
 
     ~MultiMapICBSSearch();
 //	boost::python::list outputPaths()

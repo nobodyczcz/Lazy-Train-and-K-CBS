@@ -11,12 +11,14 @@ public:
 	int length_max = INT_MAX;
 	int goal_location;
 	int latest_timestep = 0; // No negative constraints after this timestep.
+	bool has_train = false;
 
 	void clear(){
 		CT.clear(); 
 		length_min = 0, 
 		length_max = INT_MAX; 
 		latest_timestep = 0;
+		has_train = false;
 		CT_Single.clear();
 	}
 	void insert(int loc, int t_min, int t_max);

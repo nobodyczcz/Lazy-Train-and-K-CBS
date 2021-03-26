@@ -59,6 +59,7 @@ public:
 	int flipType = 0;
 	bool repeat = false;
 	bool isChasing = false;
+	bool train_conflict = false;
 	std::list<Constraint> constraint1;
 	std::vector<std::list<Constraint>> multiConstraint1;
 	std::list<Constraint> constraint2;
@@ -81,7 +82,7 @@ public:
         multiConstraint2.clear();
 	}
 
-	void vertexConflict(int a1, int a2, int v, int t,int k=0,int kRobust =0)
+	void vertexTrainConflict(int a1, int a2, int v, int t,int k=0,int kRobust =0)
 	{
 		this->a1 = a1;
 		this->a2 = a2;
@@ -89,14 +90,14 @@ public:
 		this->k = k;
 		this->originalConf1 = v;
 		this->originalConf2 = -1;
+		this->train_conflict = true;
 //		for (int i = 0; i <= kRobust; i++) {
-			this->constraint1.emplace_back(v, -1, t, constraint_type::VERTEX);
-			this->constraint2.emplace_back(v, -1, t, constraint_type::VERTEX);
+			this->constraint1.emplace_back(v, -1, t, constraint_type::TRAIN_VERTEX);
+			this->constraint2.emplace_back(v, -1, t, constraint_type::TRAIN_VERTEX);
 //		}
 		type = conflict_type::STANDARD;
 	}
-
-    void vertexConflictRange(int a1, int a2, int v, int t,int k=0,int range =0)
+    void vertexTrainConflictRange(int a1, int a2, int v, int t,int k=0,int range =0)
     {
         this->a1 = a1;
         this->a2 = a2;
@@ -104,10 +105,24 @@ public:
         this->k = k;
         this->originalConf1 = v;
         this->originalConf2 = -1;
-		for (int i = 0; i <= range; i++) {
+        for (int i = 0; i <= range; i++) {
+            this->constraint1.emplace_back(v, -1, t+i, constraint_type::TRAIN_VERTEX);
+            this->constraint2.emplace_back(v, -1, t+i, constraint_type::TRAIN_VERTEX);
+        }
+        type = conflict_type::STANDARD;
+    }
+    void vertexConflict(int a1, int a2, int v, int t,int k=0,int kRobust =0)
+    {
+        this->a1 = a1;
+        this->a2 = a2;
+        this->t = t;
+        this->k = k;
+        this->originalConf1 = v;
+        this->originalConf2 = -1;
+        for (int i = 0; i <= kRobust; i++) {
             this->constraint1.emplace_back(v, -1, t+i, constraint_type::VERTEX);
             this->constraint2.emplace_back(v, -1, t+i, constraint_type::VERTEX);
-		}
+        }
         type = conflict_type::STANDARD;
     }
 		

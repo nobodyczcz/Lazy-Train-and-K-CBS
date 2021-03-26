@@ -8,12 +8,12 @@
 #include <list>
 #include <vector>
 #include <unordered_set>
-enum conflict_type { TARGET, CORRIDOR2, CORRIDOR4, RECTANGLE,RECTANGLE4, STANDARD, TYPE_COUNT };
+enum conflict_type { TARGET, CORRIDOR2, CORRIDOR4, RECTANGLE,RECTANGLE4, STANDARD,TRAIN_STANDARD, TYPE_COUNT };
 enum conflict_priority { CARDINAL, SEMI, NON, UNKNOWN, PRIORITY_COUNT };
 
-enum constraint_type { LENGTH, RANGE, BARRIER, VERTEX, EDGE, CONSTRAINT_COUNT };
+enum constraint_type { LENGTH, RANGE, BARRIER, VERTEX, EDGE, TRAIN_VERTEX, CONSTRAINT_COUNT };
 typedef std::tuple<int, int, int, constraint_type> Constraint;
-typedef std::list<std::shared_ptr<std::tuple<int, int, int, int, int,int>>> OldConfList;
+typedef std::list<std::shared_ptr<std::tuple<int, int, int, int, int,int,bool>>> OldConfList;
 
 enum constraint_strategy { CBS, ICBS, CBSH, CBSH_CR, CBSH_R, CBSH_RM, CBSH_GR, STRATEGY_COUNT };
 enum action { UP, RIGHT, DOWN, LEFT, WAIT };

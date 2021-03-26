@@ -18,6 +18,7 @@ public:
 	int g_val;
 	int h_val = 0;
 	int heading;
+	bool train_mode = false;
 	int actionToHere = 4;
 	std::vector<int> possible_next_heading;
 	LLNode* parent=NULL;
@@ -127,7 +128,7 @@ public:
 	LLNode();
 	LLNode(const LLNode& other);
 	LLNode(list<int> locs, int g_val, int h_val, LLNode* parent, int timestep,
-		int num_internal_conf = 0, bool in_openlist = false);
+		int num_internal_conf = 0, bool in_openlist = false, bool train_mode = false);
 	inline double getFVal() const { return g_val + h_val; }
 	~LLNode(){
 	}
@@ -143,17 +144,22 @@ public:
 		        return true;
 		    if (!s1 || !s2 || s1->timestep != s2->timestep || s1->locs.size() != s2->locs.size() || s1->heading != s2->heading)
 		        return false;
-
-		    bool same = true;
-		    auto s1_it = s1->locs.begin();
-		    auto s2_it = s2->locs.begin();
-		    while (s1_it != s1->locs.end() && s2_it != s2->locs.end()){
-		        if(*s1_it != *s2_it) {
-                    same = false;
-                    break;
+		    assert(s1->train_mode == s2->train_mode);
+            bool same = true;
+		    if(s1->train_mode && s2->train_mode){
+                auto s1_it = s1->locs.begin();
+                auto s2_it = s2->locs.begin();
+                while (s1_it != s1->locs.end() && s2_it != s2->locs.end()){
+                    if(*s1_it != *s2_it) {
+                        same = false;
+                        break;
+                    }
+                    s1_it++;
+                    s2_it++;
                 }
-		        s1_it++;
-		        s2_it++;
+		    }
+		    else{
+		        same = s1->locs.front() == s2->locs.front();
 		    }
 
 			return same;
@@ -165,9 +171,15 @@ public:
 	{
 		std::size_t operator()(const LLNode* n) const 
 		{
-		    int loc_multi = 1;
-		    for(int loc : n->locs){
-		        loc_multi = loc_multi*loc;
+            int loc_multi = 1;
+
+            if (n->train_mode) {
+                for (int loc : n->locs) {
+                    loc_multi = loc_multi * loc;
+                }
+            }
+		    else{
+		        loc_multi = n->locs.front();
 		    }
 			size_t loc_hash = std::hash<int>()(loc_multi);
 			size_t timestep_hash = std::hash<int>()(n->timestep);

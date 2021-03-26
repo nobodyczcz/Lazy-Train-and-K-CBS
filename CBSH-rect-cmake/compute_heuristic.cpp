@@ -62,7 +62,7 @@ void ComputeHeuristic<Map>::getHVals(vector<hvals>& res,int limit)
 	int findNode = 0;
 	int newNode = 0;
 	if (start_heading == -1) {
-		LLNode* root = new LLNode(list<int>(), 0, 0, NULL, 0);
+		LLNode* root = new LLNode(list<int>(), 0, 0, NULL, 0,false);
 		root->locs.push_back(root_location);
 		root->heading = start_heading;
 		root->open_handle = heap.push(root);  // add root to heap
@@ -70,7 +70,7 @@ void ComputeHeuristic<Map>::getHVals(vector<hvals>& res,int limit)
 	}
 	else {
 		for (int heading = 0; heading < 4; heading++) {
-			LLNode* root = new LLNode(list<int>(), 0, 0, NULL, 0);
+			LLNode* root = new LLNode(list<int>(), 0, 0, NULL, 0,false);
             root->locs.push_back(root_location);
             root->heading = heading;
 			root->open_handle = heap.push(root);  // add root to heap

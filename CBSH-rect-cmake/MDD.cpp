@@ -4,9 +4,9 @@
 #include <iostream>
 
 template<class Map>
-bool MDD<Map>::buildMDD( ConstraintTable& constraints, int numOfLevels, SingleAgentICBS<Map> & solver)
+bool MDD<Map>::buildMDD( ConstraintTable& constraints, int numOfLevels, SingleAgentICBS<Map> & solver, bool train)
 {
-	MDDNode* root = new MDDNode(std::list<int>(), nullptr); // Root
+	MDDNode* root = new MDDNode(std::list<int>(), nullptr,train); // Root
 	root->locs.push_back(solver.start_location);
 	root->heading = solver.start_heading;
 	root->row = solver.start_location / solver.num_col;
@@ -68,6 +68,7 @@ bool MDD<Map>::buildMDD( ConstraintTable& constraints, int numOfLevels, SingleAg
 			}
 
 			std::list<int> new_locs;
+
 			if(node->locs.front() == solver.goal_location && newLoc == solver.goal_location){
 			    new_locs = node->locs;
 			    new_locs.pop_back();
@@ -84,8 +85,15 @@ bool MDD<Map>::buildMDD( ConstraintTable& constraints, int numOfLevels, SingleAg
             for(auto loc:new_locs){
                 if (constraints.is_constrained(loc, node->level + 1) )
                     constrained = true;
+                if(!train)
+                    break;
             }
-            double heuristicBound = double(numOfLevels)-double(new_locs.size()) - double(node->level) - 1.0+ 0.001;
+            double heuristicBound;
+            if (train)
+                heuristicBound =  double(numOfLevels)-double(new_locs.size()) - double(node->level) - 1.0+ 0.001;
+            else
+                heuristicBound = numOfLevels - node->level - 2+ 0.001;
+
 //            cout << " Expand node: " << node->locs.front()<<","<< node->locs.back()<<","<<node->locs.size() << " heading: " << node->heading<<" h "<< solver.my_heuristic[node->locs.front()].heading[node->heading] <<" "<< heuristicBound<< endl;
 
 
@@ -98,7 +106,7 @@ bool MDD<Map>::buildMDD( ConstraintTable& constraints, int numOfLevels, SingleAg
 				std::list<MDDNode*>::reverse_iterator child = closed.rbegin();
 				bool find = false;
 				for (; child != closed.rend() && ((*child)->level == node->level + 1); ++child)
-					if (equal_occupation((*child)->locs, new_locs))  // If the child node exists
+					if (equal_occupation((*child)->locs, new_locs) || (!train && (*child)->locs.front()==new_locs.front()))  // If the child node exists
 					{
 						if ((*child)->heading == -1) { //if no heading info
 							(*child)->parents.push_back(node); // then add corresponding parent link and child link
@@ -120,7 +128,7 @@ bool MDD<Map>::buildMDD( ConstraintTable& constraints, int numOfLevels, SingleAg
 					}
 				if (!find) // Else generate a new mdd node
 				{
-					MDDNode* childNode = new MDDNode(new_locs, node);
+					MDDNode* childNode = new MDDNode(new_locs, node,train);
 					childNode->parent = node;
 					childNode->heading = new_heading;
 					childNode->row = newLoc / solver.num_col;
@@ -500,7 +508,7 @@ template<class Map>
 MDD<Map>::MDD(MDD & cpy) // deep copy
 {
 	levels.resize(cpy.levels.size());
-	MDDNode* root = new MDDNode(cpy.levels[0].front()->locs, NULL);
+	MDDNode* root = new MDDNode(cpy.levels[0].front()->locs, NULL,cpy.levels[0].front()->train);
 	levels[0].push_back(root);
 	for(int t = 0; t < levels.size() - 1; t++)
 	{
@@ -512,7 +520,7 @@ MDD<Map>::MDD(MDD & cpy) // deep copy
 				MDDNode* child = find((*cpyChild)->locs, (*cpyChild)->level);
 				if (child == NULL)
 				{
-					child = new MDDNode((*cpyChild)->locs, (*node));
+					child = new MDDNode((*cpyChild)->locs, (*node),(*cpyChild)->train);
 					levels[child->level].push_back(child);
 					(*node)->children.push_back(child);
 				}

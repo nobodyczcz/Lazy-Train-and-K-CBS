@@ -146,7 +146,7 @@ int main(int argc, char** argv)
 		vm["agents"].as<string>() << "," << icbs.solution_cost << "," << 
 		icbs.min_f_val - icbs.dummy_start->g_val << "," <<
 		vm["solver"].as<string>()  << "," <<
-		icbs.num_standard << "," << icbs.num_rectangle << "," <<
+		icbs.num_standard <<","<<icbs.num_train_standard<< "," << icbs.num_rectangle << "," <<
 		icbs.num_corridor2 << "," << icbs.num_corridor4 << "," << 
 		icbs.num_target<<","<< icbs.num_chasingRectangle << "," <<
 		icbs.less10 << ","<<icbs.less100 << ","<<icbs.less1000 << ","<<icbs.less10000 <<"," << icbs.less100000 <<","

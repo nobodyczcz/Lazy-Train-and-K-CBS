@@ -24,7 +24,7 @@ public:
 		return std::abs(loc1_x - loc2_x) + std::abs(loc1_y - loc2_y);
 	}
 	virtual bool buildMDD( ConstraintTable& constraint_table,
-		int numOfLevels, SingleAgentICBS<MapLoader>& solver) {};
+		int numOfLevels, SingleAgentICBS<MapLoader>& solver, bool train) {};
     virtual bool getOccupations(list<int>& next_locs, int next_id, MDDNode* curr, int k){};
 
     //	virtual bool buildMDD( ConstraintTable& constraint_table,
@@ -46,7 +46,7 @@ class MDD: public MDDEmpty
 {
 public:
 	bool buildMDD( ConstraintTable& constraints,
-		int numOfLevels,  SingleAgentICBS<Map> &solver);
+		int numOfLevels,  SingleAgentICBS<Map> &solver, bool train);
     bool getOccupations(list<int>& next_locs, int next_id, MDDNode* curr, int k);
 //	bool buildMDD( ConstraintTable& constraints, int numOfLevels, SingleAgentICBS<Map> & solver, int start, int start_time,int start_heading=-1);
 //	bool buildMDD(ConstraintTable& constraints, int numOfLevels, SingleAgentICBS<Map> & solver, int start, int start_time,int goal, int start_heading = -1);
@@ -100,9 +100,10 @@ struct ConstraintsHasher // Hash a CT node by constraints on one agent
 	ICBSNode* n;
 	int k = 0;
 	int num_levels;
+	bool train;
 
 	ConstraintsHasher() {};
-    ConstraintsHasher(int a, ICBSNode* n,int num_levels, int k = 0) : a(a), n(n),num_levels(num_levels),k(k) {};
+    ConstraintsHasher(int a, ICBSNode* n,int num_levels, int k = 0, bool train=false) : a(a), n(n),num_levels(num_levels),k(k),train(train) {};
 
 
 	bool operator==(const ConstraintsHasher& other) const
@@ -110,6 +111,8 @@ struct ConstraintsHasher // Hash a CT node by constraints on one agent
 	    if (a != other.a)
 	        return false;
 	    if (num_levels != other.num_levels)
+	        return false;
+	    if (train != other.train)
 	        return false;
 		std::set<Constraint> cons1, cons2;
 		const ICBSNode* curr = n;

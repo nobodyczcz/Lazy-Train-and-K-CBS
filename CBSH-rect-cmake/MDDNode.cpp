@@ -4,10 +4,11 @@
 #include "MDDNode.h"
 
 
-MDDNode::MDDNode(std::list<int> currlocs, MDDNode* parent)
+MDDNode::MDDNode(std::list<int> currlocs, MDDNode* parent, bool train)
 {
     locs = currlocs;
     this->parent = parent;
+    this->train = train;
     if(parent == NULL)
         level = 0;
     else

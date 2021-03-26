@@ -105,7 +105,7 @@ bool SingleAgentICBS<Map>::validMove(int curr, int next) const
 // return true if a path found (and updates vector<int> path) or false if no path exists
 template<class Map>
 bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weight, ConstraintTable& constraint_table,
-	ReservationTable* res_table, size_t max_plan_len, double lowerbound, std::clock_t start_clock ,int time_limit)
+	ReservationTable* res_table, size_t max_plan_len, double lowerbound, std::clock_t start_clock ,int time_limit, bool train)
 {
 	if (constraint_table.is_constrained(start_location, 0)) {
 		return false;
@@ -116,7 +116,8 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 	hashtable_t::iterator it;  // will be used for find()
 
 	 // generate start and add it to the OPEN list
-	LLNode* start = new LLNode(list<int>(), 0, my_heuristic[start_location].heading[start_heading], NULL, 0, 0, false);
+	LLNode* start = new LLNode(list<int>(), 0, my_heuristic[start_location].heading[start_heading],
+	        NULL, 0, 0, false, train);
 	start->locs.push_back(start_location);
 	start->heading = start_heading;
 	num_generated++;
@@ -223,6 +224,8 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
             for(auto loc:next_locs){
                 if (constraint_table.is_constrained(loc, next_timestep) )
                     constrained = true;
+                if(!train)
+                    break;
             }
 
             //For node at goal location, we need to consider collision when agent shrink to goal hole.
@@ -268,7 +271,7 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 
 
             // generate (maybe temporary) node
-            LLNode* next = new LLNode(next_locs, next_g_val, next_h_val,	curr, next_timestep, next_internal_conflicts, false);
+            LLNode* next = new LLNode(next_locs, next_g_val, next_h_val,	curr, next_timestep, next_internal_conflicts, false, train);
             next->heading = next_heading;
             next->actionToHere = move.second;
             next->time_generated = time_generated;

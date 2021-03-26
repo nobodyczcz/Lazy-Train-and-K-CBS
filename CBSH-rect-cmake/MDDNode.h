@@ -14,18 +14,22 @@
 class MDDNode
 {
 public:
-    MDDNode(std::list<int> currlocs, MDDNode* parent);
+    MDDNode(std::list<int> currlocs, MDDNode* parent, bool train);
 
     std::list<int> locs;
     int row;
     int col;
     int level;
     int heading;
+    bool train;
 
     bool operator == (const MDDNode & node) const
     {
         bool same_locs = true;
-        if (this->locs.size() != node.locs.size())
+        if (!train){
+            same_locs = locs.front() == node.locs.front();
+        }
+        else if (this->locs.size() != node.locs.size())
             same_locs = false;
         else{
             auto it1 = this->locs.begin();
