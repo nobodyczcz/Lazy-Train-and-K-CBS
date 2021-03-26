@@ -118,7 +118,7 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 	 // generate start and add it to the OPEN list
 	LLNode* start = new LLNode(list<int>(), 0, my_heuristic[start_location].heading[start_heading],
 	        NULL, 0, 0, false, train);
-	start->locs.push_back(start_location);
+	start->locs.resize(kRobust+1,start_location);
 	start->heading = start_heading;
 	num_generated++;
 	start->open_handle = open_list.push(start);
@@ -423,17 +423,24 @@ bool SingleAgentICBS<Map>::getOccupations(list<int>& next_locs, int next_id, LLN
     auto parent = curr;
     int pre_loc = next_id;
     bool conf_free = true;
-    while(parent != nullptr && next_locs.size()<=kRobust){
-        if (pre_loc!= parent->locs.front()) {
-            next_locs.push_back(parent->locs.front());
-            pre_loc = parent->locs.front();
-            if(next_locs.front() == next_locs.back()){
-                conf_free = false;
-                break;
-            }
+    while(next_locs.size()<=kRobust){
+        if (parent == nullptr){
+            next_locs.push_back(next_locs.back());
         }
-        parent = parent->parent;
+        else {
+            if (pre_loc != parent->locs.front()) {
+                next_locs.push_back(parent->locs.front());
+                pre_loc = parent->locs.front();
+                if (next_locs.front() == next_locs.back()) {
+                    conf_free = false;
+                    break;
+                }
+            }
+            parent = parent->parent;
+        }
+
     }
+
     return conf_free;
 }
 

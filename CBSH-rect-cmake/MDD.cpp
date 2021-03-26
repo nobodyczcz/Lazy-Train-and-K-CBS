@@ -7,7 +7,7 @@ template<class Map>
 bool MDD<Map>::buildMDD( ConstraintTable& constraints, int numOfLevels, SingleAgentICBS<Map> & solver, bool train)
 {
 	MDDNode* root = new MDDNode(std::list<int>(), nullptr,train); // Root
-	root->locs.push_back(solver.start_location);
+	root->locs.resize(solver.kRobust+1, solver.start_location);
 	root->heading = solver.start_heading;
 	root->row = solver.start_location / solver.num_col;
 	root->col = solver.start_location % solver.num_col;
@@ -195,16 +195,21 @@ bool MDD<Map>::getOccupations(list<int>& next_locs, int next_id, MDDNode* curr, 
     auto parent = curr;
     int pre_loc = next_id;
     bool conf_free = true;
-    while(parent != nullptr && next_locs.size() <= k){
-        if (pre_loc!= parent->locs.front()) {
-            next_locs.push_back(parent->locs.front());
-            pre_loc = parent->locs.front();
-            if(next_locs.front() == next_locs.back()){
-                conf_free = false;
-                break;
-            }
+    while( next_locs.size() <= k){
+        if (parent == nullptr){
+            next_locs.push_back(next_locs.back());
         }
-        parent = parent->parent;
+        else {
+            if (pre_loc != parent->locs.front()) {
+                next_locs.push_back(parent->locs.front());
+                pre_loc = parent->locs.front();
+                if (next_locs.front() == next_locs.back()) {
+                    conf_free = false;
+                    break;
+                }
+            }
+            parent = parent->parent;
+        }
     }
     return conf_free;
 }

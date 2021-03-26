@@ -871,7 +871,9 @@ bool ICBSSearch::isValidTrain()
                 if (!rt[loc].count(t))
                     rt[loc][t]=i;
                 else {
-                        cout<<i<<" body conflict t "<< t<<" with "<<rt[loc][t]<<endl;
+                    if(debug_mode) {
+                        cout << i << " body conflict t " << t << " with " << rt[loc][t] << endl;
+                    }
                     if (i == rt[loc][t])
                         num_self_conflict++;
                     num_body_conflict++;
@@ -1159,7 +1161,7 @@ bool MultiMapICBSSearch<Map>::search(){
         }
 
 
-        if (screen >= 1 || screen==6 ) {
+        if (screen > 2 || screen==6 ) {
             checkRepeatance(curr);
         }
 
