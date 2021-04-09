@@ -41,7 +41,7 @@ int ICBSSearch::computeHeuristics(const ICBSNode& curr)
 		CG[i].resize(num_of_agents, false);
 	for (auto conflict : curr.conflicts)
 	{
-		if(conflict->p == conflict_priority::CARDINAL && !CG[conflict->a1][conflict->a2])
+		if(conflict->p == conflict_priority::CARDINAL && !CG[conflict->a1][conflict->a2] && !conflict->train_conflict)
 		{
 			CG[conflict->a1][conflict->a2] = true;
 			CG[conflict->a2][conflict->a1] = true;
