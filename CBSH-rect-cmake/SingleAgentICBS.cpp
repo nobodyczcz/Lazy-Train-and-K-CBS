@@ -224,7 +224,7 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
             for(auto loc:next_locs){
                 if (constraint_table.is_constrained(loc, next_timestep) )
                     constrained = true;
-                if(!train)
+                if(!train) //if not train, only check head
                     break;
             }
 

@@ -19,7 +19,7 @@ bool MDD<Map>::buildMDD( ConstraintTable& constraints, int numOfLevels, SingleAg
 	//cout << "start: " << solver.start_heading << endl;
 	//cout << "goal: " << solver.goal_location << endl;
 	bool done = false;
-
+	cout<<"start"<<endl;
 	while (!open.empty())
 	{
 		MDDNode* node = open.front();
@@ -211,6 +211,10 @@ bool MDD<Map>::getOccupations(list<int>& next_locs, int next_id, MDDNode* curr, 
             parent = parent->parent;
         }
     }
+    for (auto i : next_locs){
+        cout<<i<<",";
+    }
+    cout<<endl;
     return conf_free;
 }
 

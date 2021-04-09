@@ -864,7 +864,12 @@ bool ICBSSearch::isValidTrain()
 
         for (int t = 0; t < paths[i]->size(); t++){
 
+            int pre_loc = -1;
             for (int loc : (*paths[i])[t].occupations) {
+                if (loc == pre_loc){
+                    continue;
+                }
+                pre_loc = loc;
                 if (!rt.count(loc))
                     rt[loc] = unordered_map<int,int>();
 
@@ -874,8 +879,10 @@ bool ICBSSearch::isValidTrain()
                     if(debug_mode) {
                         cout << i << " body conflict t " << t << " with " << rt[loc][t] << endl;
                     }
-                    if (i == rt[loc][t])
+                    if (i == rt[loc][t]) {
+
                         num_self_conflict++;
+                    }
                     num_body_conflict++;
                     valid = false;
                 }
@@ -2096,7 +2103,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 			continue;
 		}
         else if (con->type == conflict_type::STANDARD &&
-            paths[con->a1]->size()-kDelay <= con->t || paths[con->a2]->size()-kDelay <= con->t) //conflict happens after agent reaches its goal
+            paths[con->a1]->size()-kDelay <= con->t || paths[con->a2]->size()-kDelay <= con->t+con->k) //conflict happens after agent reaches its goal
         {
             parent.conflicts.push_back(con);
             continue;
@@ -2196,7 +2203,7 @@ bool MultiMapICBSSearch<Map>::rectangleReasoning(const std::shared_ptr<Conflict>
         action1 = getAction(paths.at(a1)->at(timestep).location, paths.at(a1)->at(timestep - 1).location, num_col);
     }
 
-    if (timestep == 0 || action1 == action::WAIT) {
+    if ((timestep == 0 || action1 == action::WAIT) && timestep+1 < paths.at(a1)->size()) {
 
         action1 = getAction(paths.at(a1)->at(timestep + 1).location, paths.at(a1)->at(timestep).location, num_col);
     }
@@ -2205,7 +2212,7 @@ bool MultiMapICBSSearch<Map>::rectangleReasoning(const std::shared_ptr<Conflict>
         action2 = getAction(paths.at(a2)->at(timestep2).location, paths.at(a2)->at(timestep2 - 1).location, num_col);
     }
 
-    if (timestep2 == 0 || action2 == action::WAIT) {
+    if ((timestep2 == 0 || action2 == action::WAIT && timestep2+1) < paths.at(a2)->size()) {
 
         action2 = getAction(paths.at(a2)->at(timestep2 + 1).location, paths.at(a2)->at(timestep2).location, num_col);
     }
