@@ -89,7 +89,8 @@ void ConstraintTable::insert(std::list<Constraint> &constraints, int agent_id, i
         else if (type == constraint_type::TRAIN_VERTEX)
         {
             this->has_train = true;
-            this->insert(x, z, 0);
+            if (x != -1)
+                this->insert(x, z, 0);
         }
         else // edge
         {

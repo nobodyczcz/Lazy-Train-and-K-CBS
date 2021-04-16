@@ -27,6 +27,7 @@ public:
 	int num_internal_conf = 0; 
 	bool in_openlist = false;
 	bool in_focallist = false;
+	bool self_conflict = false;
 	OldConfList* conflist=NULL;
 
 

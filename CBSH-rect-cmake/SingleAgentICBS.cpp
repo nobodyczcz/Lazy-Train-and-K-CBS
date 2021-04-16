@@ -19,7 +19,8 @@ void SingleAgentICBS<Map>::updatePath(LLNode* goal, std::vector<PathEntry> &path
         path[t].occupations = goalLocs;
         path[t].actionToHere = goal->heading;
         path[t].heading = goal->heading;
-
+        path[t].singles.clear();
+        path[t].self_conflict = false;
         if (t!=0)
             path[t].conflist =  res_table->findConflict(agent_id, goalLocs.front(), goalLocs, t-1, kRobust);
         else
@@ -34,6 +35,8 @@ void SingleAgentICBS<Map>::updatePath(LLNode* goal, std::vector<PathEntry> &path
 		path[t].occupations = curr->locs;
 		path[t].actionToHere = curr->heading;
         path[t].heading = curr->heading;
+        path[t].singles.clear();
+        path[t].self_conflict = curr->self_conflict;
 
         if (t!=0)
             path[t].conflist =  res_table->findConflict(agent_id, curr->parent->locs.front(), curr->locs, t-1, kRobust);
@@ -199,7 +202,9 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 			    continue;
 			list<int> next_locs ;
 
-            if (!getOccupations(next_locs, next_id, curr))
+            bool no_self_conflict = getOccupations(next_locs, next_id, curr);
+
+            if (train and !no_self_conflict)
 			    continue;
 
 			assert(next_locs.size()<= kRobust+1);
@@ -275,6 +280,7 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
             next->heading = next_heading;
             next->actionToHere = move.second;
             next->time_generated = time_generated;
+            next->self_conflict = !no_self_conflict;
             //std::cout << "current: (" << curr->loc << "," << curr->heading << "," << curr->getFVal() << ") " << "next: (" << next->loc << "," << next->heading << "," << next->getFVal() << ")" << std::endl;
 
 //            if (agent_id == 0 && ( curr->locs.front() == 519)){
@@ -338,6 +344,8 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
                         existing_next->g_val = next_g_val;
                         existing_next->h_val = next_h_val;
                         existing_next->timestep = next_timestep;
+                        existing_next->self_conflict = !no_self_conflict;
+                        existing_next->locs = next_locs;
 
                         existing_next->parent = curr;
                         existing_next->num_internal_conf = next_internal_conflicts;
@@ -358,6 +366,10 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
                         existing_next->g_val = next_g_val;
                         existing_next->h_val = next_h_val;
                         existing_next->timestep = next_timestep;
+                        existing_next->self_conflict = !no_self_conflict;
+                        existing_next->locs = next_locs;
+
+
 
                         existing_next->parent = curr;
                         existing_next->num_internal_conf = next_internal_conflicts;
@@ -433,7 +445,6 @@ bool SingleAgentICBS<Map>::getOccupations(list<int>& next_locs, int next_id, LLN
                 pre_loc = parent->locs.front();
                 if (next_locs.front() == next_locs.back()) {
                     conf_free = false;
-                    break;
                 }
             }
             parent = parent->parent;

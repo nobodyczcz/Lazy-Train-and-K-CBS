@@ -8,7 +8,7 @@
 #include <list>
 #include <vector>
 #include <unordered_set>
-enum conflict_type { TARGET, CORRIDOR2, CORRIDOR4, RECTANGLE,RECTANGLE4, STANDARD,TRAIN_STANDARD, TYPE_COUNT };
+enum conflict_type { TARGET, CORRIDOR2, CORRIDOR4, RECTANGLE,RECTANGLE4, STANDARD,TRAIN_STANDARD,SELF_CONFLICT, TYPE_COUNT };
 enum conflict_priority { CARDINAL, SEMI, NON, UNKNOWN, PRIORITY_COUNT };
 
 enum constraint_type { LENGTH, RANGE, BARRIER, VERTEX, EDGE, TRAIN_VERTEX, CONSTRAINT_COUNT };
@@ -43,6 +43,7 @@ struct PathEntry
 	bool single;
 	int actionToHere;
 	int timeStep;
+	int self_conflict;
 	PathEntry(int loc = -1) { location = loc; single = false; }
 	std::list<int> locations; // all possible locations at the same time step
 	OldConfList* conflist=NULL;

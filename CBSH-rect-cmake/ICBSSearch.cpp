@@ -225,7 +225,10 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 		{
 			int a1 = *it;
 			//collect conflict from path;
+			int self_conflict = false;
 			for (size_t t = 0; t < paths[a1]->size(); t++) {
+                if (paths[a1]->at(t).self_conflict)
+                    self_conflict = true;
 				if (paths[a1]->at(t).conflist != NULL && paths[a1]->at(t).conflist->size() != 0) {
 					for (auto con : *(paths[a1]->at(t).conflist)) {
 					    bool train_conflict = get<6>(*con);
@@ -278,6 +281,13 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 				}
 			}
 
+			if(self_conflict){
+                std::shared_ptr<Conflict> newConf(new Conflict());
+                newConf->selfConflict(a1);
+                curr.conflicts.emplace_back(newConf);
+            }
+
+
             if(option.ignore_target)
                 continue;
 			for (int a2 = 0; a2 < num_of_agents; a2++)
@@ -308,7 +318,11 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 			//collect conflicts from path
 			if(paths[a1]->empty())
 			    continue;
-			for (size_t t = 0; t < paths[a1]->size(); t++) {
+            int self_conflict = false;
+
+            for (size_t t = 0; t < paths[a1]->size(); t++) {
+                if (paths[a1]->at(t).self_conflict)
+                    self_conflict = true;
 
 				if (paths[a1]->at(t).conflist == NULL || paths[a1]->at(t).conflist->size() == 0)
 					continue;
@@ -361,6 +375,12 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
                 }
 				delete paths[a1]->at(t).conflist;
 			}
+
+            if(self_conflict){
+                std::shared_ptr<Conflict> newConf(new Conflict());
+                newConf->selfConflict(a1);
+                curr.conflicts.emplace_back(newConf);
+            }
 
             if(option.ignore_target)
                 continue;
@@ -1240,6 +1260,11 @@ bool MultiMapICBSSearch<Map>::search(){
             }
 
         }
+        else if(curr->conflict->type == conflict_type::SELF_CONFLICT){
+            children.resize(1);
+            children[0] = new ICBSNode(curr->conflict->a1);
+            children[0]->constraints = curr->conflict->constraint1;
+        }
         else // 2-way branching
         {
 
@@ -1484,7 +1509,10 @@ void MultiMapICBSSearch<Map>::checkRepeatance(ICBSNode* curr){
     << curr->conflict->originalConf1 % num_col << ")" << ",("
     << curr->conflict->originalConf2 / num_col << ","
     << curr->conflict->originalConf2 % num_col << "),"
-    << curr->conflict->t<<"," << curr->conflict->k<<","<<curr->conflict->type <<","<< curr->conflict->train_conflict ;
+    << curr->conflict->t<<"," << curr->conflict->k<<","<<curr->conflict->type
+    <<","<< curr->conflict->train_conflict <<","<<
+    curr->conflict->constraint1.size()<<","<<curr->conflict->constraint2.size()
+    <<","<<curr->conflict->rs<<","<<curr->conflict->rg;;
 
 
     curr->resolvedConflicts.insert(con.str());
@@ -1509,7 +1537,7 @@ void MultiMapICBSSearch<Map>::checkRepeatance(ICBSNode* curr){
     }
     if (!noRepeat) {
     cout << "Repeatance detected!!!" << endl;
-    exit(1);
+        exit(1);
     }
     parent = parent->parent;
 
@@ -1845,9 +1873,15 @@ MDD<Map>* MultiMapICBSSearch<Map>::buildMDD(ICBSNode& node, int id, int k, bool 
 		mdd = new MDD<Map>();
 		// vector < list< pair<int, int> > >* cons_vec = collectConstraints(&node, id);
 		updateConstraintTable(&node, id);
-		mdd->buildMDD(constraintTable, num_levels, *search_engines[id],train);
-        if (!mddTable.empty())
-            mddTable[c.a][c] = mdd;
+		if (mdd->buildMDD(constraintTable, num_levels, *search_engines[id],train)) {
+            if (!mddTable.empty())
+                mddTable[c.a][c] = mdd;
+        }
+		else {
+            delete mdd;
+            mdd = NULL;
+        }
+
 	}
 	else{
 	    if(screen>=5)
@@ -1857,7 +1891,7 @@ MDD<Map>* MultiMapICBSSearch<Map>::buildMDD(ICBSNode& node, int id, int k, bool 
             TotalExistKMDD+=1;
         }
 	}
-	if (k == 0) {
+	if (k == 0 && mdd !=NULL)  {
         for (int i = 0; i < mdd->levels.size(); i++)
             paths[id]->at(i).single = mdd->levels[i].size() == 1;
 
@@ -1999,6 +2033,10 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
             }
 
 			MDD<Map>* mdd = buildMDD(parent, a1,0,con->train_conflict);
+            if (mdd == NULL)
+                continue;
+
+
 			for (int i = 0; i < paths[a1]->size(); i++) {
                 paths[a1]->at(i).singles.resize(kDelay+1);
 			    if (i >= mdd->levels.size()){
@@ -2033,6 +2071,9 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
                 }
 		    }
 			MDD<Map>* mdd = buildMDD(parent, a2,0,con->train_conflict);
+		    if (mdd ==NULL)
+		        continue;
+
             for (int i = 0; i < paths[a2]->size(); i++) {
                 paths[a2]->at(i).singles.resize(kDelay+1);
                 if (i >= mdd->levels.size()){
@@ -2057,15 +2098,15 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 		if (type == conflict_type::STANDARD && loc2 >= 0) // Edge conflict
 		{
 		    assert(a1_p == a2_p && a2_p ==0);
-			cardinal1 = paths[a1]->at(timestep).singles[0] && paths[a1]->at(timestep - 1).singles[0];
-			cardinal2 = paths[a2]->at(timestep).singles[0] && paths[a2]->at(timestep - 1).singles[0];
+			cardinal1 = !paths[a1]->at(timestep).singles.empty() && paths[a1]->at(timestep).singles[0] && paths[a1]->at(timestep - 1).singles[0];
+			cardinal2 = !paths[a2]->at(timestep).singles.empty() && paths[a2]->at(timestep).singles[0] && paths[a2]->at(timestep - 1).singles[0];
 		}
 		else if(con->train_conflict) // vertex conflict or target conflict
 		{
 			if (!cardinal1)
-				cardinal1 = paths[a1]->at(timestep).singles[a1_p];
+				cardinal1 =!paths[a1]->at(timestep).singles.empty() && paths[a1]->at(timestep).singles[a1_p];
 			if (!cardinal2)
-				cardinal2 = paths[a2]->at(timestep).singles[a2_p];
+				cardinal2 =!paths[a2]->at(timestep).singles.empty() && paths[a2]->at(timestep).singles[a2_p];
 
 			con->clear();
             int range = min(kDelay - a1_p,kDelay - a2_p);
@@ -2074,9 +2115,9 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 		}
 		else{
             if (!cardinal1)
-                cardinal1 = paths[a1]->at(timestep).singles[0];
+                cardinal1 =!paths[a1]->at(timestep).singles.empty() && paths[a1]->at(timestep).singles[0];
             if (!cardinal2)
-                cardinal2 = paths[a2]->at(timestep2).singles[0];
+                cardinal2 =!paths[a2]->at(timestep).singles.empty() && paths[a2]->at(timestep2).singles[0];
 		}
 
 		if (cardinal1 && cardinal2)

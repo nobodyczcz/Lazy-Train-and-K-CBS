@@ -105,12 +105,23 @@ public:
         this->k = k;
         this->originalConf1 = v;
         this->originalConf2 = -1;
+        this->train_conflict = true;
         for (int i = 0; i <= range; i++) {
             this->constraint1.emplace_back(v, -1, t+i, constraint_type::TRAIN_VERTEX);
             this->constraint2.emplace_back(v, -1, t+i, constraint_type::TRAIN_VERTEX);
         }
         type = conflict_type::STANDARD;
     }
+
+    void selfConflict(int a)
+    {
+        this->a1 = a;
+        this->a2 = a;
+        this->constraint1.emplace_back(-1, -1, -1, constraint_type::TRAIN_VERTEX);
+        this->train_conflict = true;
+        type = conflict_type::SELF_CONFLICT;
+    }
+
     void vertexConflict(int a1, int a2, int v, int t,int k=0,int kRobust =0)
     {
         this->a1 = a1;

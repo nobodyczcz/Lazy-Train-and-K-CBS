@@ -35,8 +35,11 @@ std::ostream& operator<<(std::ostream& os, const Conflict& conflict)
 	switch (conflict.type)
 	{
 		case conflict_type::STANDARD:
-			os << "standard";
-			break;
+            os << "standard";
+            break;
+        case conflict_type::SELF_CONFLICT :
+            os << "self";
+            break;
 		case conflict_type::RECTANGLE:
 			os <<conflict.flipType << " flip rectangle";
 			break;
