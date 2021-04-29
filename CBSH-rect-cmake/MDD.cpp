@@ -84,7 +84,7 @@ bool MDD<Map>::buildMDD( ConstraintTable& constraints, int numOfLevels, SingleAg
 
 			}
 
-			if (train && !no_self_collision)
+			if ((train && !no_self_collision) || new_locs.empty())
 			    continue;
             //check does head have edge constraint or body have vertex constraint.
             bool constrained = false;
@@ -103,8 +103,6 @@ bool MDD<Map>::buildMDD( ConstraintTable& constraints, int numOfLevels, SingleAg
                 heuristicBound =  double(numOfLevels)-double(new_locs.size()) - double(node->level) - 1.0+ 0.001;
             else
                 heuristicBound = numOfLevels - node->level - 2+ 0.001;
-
-
 
 
 //            cout << "newLoc " << newLoc << " heading " << new_heading<<" h "<< solver.my_heuristic[newLoc].heading[new_heading] <<", hb"<<heuristicBound<<", c "<<constrained <<endl;

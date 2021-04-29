@@ -20,7 +20,9 @@ public:
 		latest_timestep = 0;
 		has_train = false;
 		CT_Single.clear();
-	}
+        CT_Train.clear();
+
+    }
 	void insert(int loc, int t_min, int t_max);
     void insert_train(int loc, int t_min);
 
