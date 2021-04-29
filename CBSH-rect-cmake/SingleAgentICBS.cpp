@@ -41,7 +41,7 @@ void SingleAgentICBS<Map>::updatePath(LLNode* goal, std::vector<PathEntry> &path
         if (t!=0)
             path[t].conflist =  res_table->findConflict(agent_id, curr->parent->locs.front(), curr->locs, t-1, kRobust);
         else
-            path[t].conflist = NULL;
+            path[t].conflist =  res_table->findConflict(agent_id, curr->locs.front(), curr->locs, t-1, kRobust);;
 
 		curr->conflist = NULL;
 		curr = curr->parent;

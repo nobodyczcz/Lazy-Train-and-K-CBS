@@ -566,15 +566,17 @@ bool MultiMapICBSSearch<Map>::isCorridorConflict(std::shared_ptr<Conflict>& corr
 		updateConstraintTable(node, a[0]);
 		if (screen>=4)
 			cout << "start: " << paths[a[0]]->front().location/num_col<<","<< paths[a[0]]->front().location % num_col << " end:" << u[1]/num_col<<"," << u[1]%num_col << " heading:" << paths[a[0]]->front().actionToHere << endl;
-		int t3 = cp.getBypassLength(paths[a[0]]->front().location, u[1], edge_empty, ml, num_col, map_size, constraintTable, INT_MAX, search_engines[a[0]]->my_heuristic, paths[a[0]]->front().heading,paths[a[0]]->at(e[0]).heading,search_engines[a[0]]->kRobust);
-		int t3_ = cp.getBypassLength(paths[a[0]]->front().location, u[1], edge, ml, num_col, map_size, constraintTable, t3 + 2 * k  + 1,search_engines[a[0]]->my_heuristic, paths[a[0]]->front().heading, paths[a[0]]->at(e[0]).heading, search_engines[a[0]]->kRobust);
+        int t1 = cp.getBypassLength(paths[a[0]]->front().location, u[0], edge_empty, ml, num_col, map_size, constraintTable, INT_MAX, search_engines[a[0]]->my_heuristic, paths[a[0]]->front().heading,paths[a[0]]->at(t[0]).heading);
+        int t3 = cp.getBypassLength(paths[a[0]]->front().location, u[1], edge_empty, ml, num_col, map_size, constraintTable, INT_MAX, search_engines[a[0]]->my_heuristic, paths[a[0]]->front().heading,paths[a[0]]->at(e[0]).heading);
+		int t3_ = cp.getBypassLength(paths[a[0]]->front().location, u[1], edge, ml, num_col, map_size, constraintTable, t3 + 2 * k  + 1,search_engines[a[0]]->my_heuristic, paths[a[0]]->front().heading, paths[a[0]]->at(e[0]).heading);
 		
 
 		updateConstraintTable(node, a[1]);
 		if (screen >= 4)
 			cout << "start: " << paths[a[1]]->front().location / num_col << "," << paths[a[1]]->front().location % num_col << " end:" << u[0] / num_col << "," << u[0] % num_col << " heading:" << paths[a[1]]->front().actionToHere << endl;
-		int t4 = cp.getBypassLength(paths[a[1]]->front().location, u[0], edge_empty, ml, num_col, map_size, constraintTable, INT_MAX,search_engines[a[1]]->my_heuristic, paths[a[1]]->front().heading, paths[a[1]]->at(e[1]).heading,search_engines[a[1]]->kRobust);
-		int t4_ = cp.getBypassLength(paths[a[1]]->front().location, u[0], edge, ml, num_col, map_size, constraintTable, t4 + 2*k + 1, search_engines[a[1]]->my_heuristic, paths[a[1]]->front().heading, paths[a[1]]->at(e[1]).heading,search_engines[a[1]]->kRobust);
+        int t2 = cp.getBypassLength(paths[a[1]]->front().location, u[1], edge_empty, ml, num_col, map_size, constraintTable, INT_MAX,search_engines[a[1]]->my_heuristic, paths[a[1]]->front().heading, paths[a[1]]->at(t[1]).heading);
+        int t4 = cp.getBypassLength(paths[a[1]]->front().location, u[0], edge_empty, ml, num_col, map_size, constraintTable, INT_MAX,search_engines[a[1]]->my_heuristic, paths[a[1]]->front().heading, paths[a[1]]->at(e[1]).heading);
+		int t4_ = cp.getBypassLength(paths[a[1]]->front().location, u[0], edge, ml, num_col, map_size, constraintTable, t4 + 2*k + 1, search_engines[a[1]]->my_heuristic, paths[a[1]]->front().heading, paths[a[1]]->at(e[1]).heading);
 		if (screen >= 4) {
 			cout << "t3: " << t3 << "," << "t3_: " << t3_ << "," << "t4: " << t4 << "," << "t4_: " << t4_ << endl;
 			cout << "corridor length: " << k << endl;
@@ -585,7 +587,7 @@ bool MultiMapICBSSearch<Map>::isCorridorConflict(std::shared_ptr<Conflict>& corr
 			//cout << "iscorridor5.5" << endl;
 
 			corridor = std::shared_ptr<Conflict>(new Conflict());
-			corridor->corridorConflict(a[0], a[1], u[1], u[0], t3, t4, t3_, t4_, k,kDelay);
+			corridor->corridorConflict(a[0], a[1], u[1], u[0], t3, t4, t3_, t4_,t1,t2, k,kDelay);
 			if (blocked(*(paths[corridor->a1]), corridor->constraint1) && blocked(*(paths[corridor->a2]), corridor->constraint2))
 				return true;
 			else {
@@ -2017,7 +2019,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 		parent.unknownConf.pop_front();
 
 		int a1_p = 0, a2_p = 0;
-		
+
 		bool cardinal1 = false, cardinal2 = false;
 		if (timestep >= paths[a1]->size())
 			cardinal1 = true;

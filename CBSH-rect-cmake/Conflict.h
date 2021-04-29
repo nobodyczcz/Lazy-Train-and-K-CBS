@@ -165,7 +165,7 @@ public:
 	}
 
 	// t3 
-	void corridorConflict(int a1, int a2, int v1, int v2, int t3, int t4, int t3_, int t4_, int k,int kRobust)
+	void corridorConflict(int a1, int a2, int v1, int v2, int t3, int t4, int t3_, int t4_,int t1, int t2, int k,int kRobust)
 	{
 		this->a1 = a1;
 		this->a2 = a2;
@@ -174,8 +174,8 @@ public:
 		this->originalConf1 = v1;
 		this->originalConf2 = v2;
 		//k is corridor length
-		this->constraint1.emplace_back(v1, t3, std::min(t3_ - 1 , t4 + k) + kRobust, constraint_type::RANGE);
-		this->constraint2.emplace_back(v2, t4, std::min(t4_ - 1 , t3 + k) + kRobust, constraint_type::RANGE);
+		this->constraint1.emplace_back(v1, t3, std::min( std::max(t2 + kRobust, t3_ - 1) , t4 + k + kRobust), constraint_type::RANGE);
+		this->constraint2.emplace_back(v2, t4, std::min( std::max(t1 + kRobust, t4_ - 1) , t3 + k + kRobust), constraint_type::RANGE);
 		type = conflict_type::CORRIDOR2;
 	}
 
