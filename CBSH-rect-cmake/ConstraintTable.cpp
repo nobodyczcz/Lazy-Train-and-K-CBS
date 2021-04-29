@@ -19,6 +19,20 @@ void ConstraintTable::insert(int loc, int t_min, int t_max)
 	}
 }
 
+void ConstraintTable::insert_train(int loc, int t_min)
+{
+    CT_Train[loc].emplace(t_min);
+
+    if (loc == goal_location && t_min + 1 > length_min)
+    {
+        length_min = t_min + 1;
+    }
+    if (t_min + 1 < INT_MAX && t_min + 1 > latest_timestep)
+    {
+        latest_timestep = t_min + 1;
+    }
+}
+
 void ConstraintTable::insert(std::list<Constraint> &constraints, int agent_id, int num_col, int map_size) {
     for (auto constraint : constraints)
     {
@@ -90,7 +104,7 @@ void ConstraintTable::insert(std::list<Constraint> &constraints, int agent_id, i
         {
             this->has_train = true;
             if (x != -1)
-                this->insert(x, z, 0);
+                this->insert_train(x, z);
         }
         else // edge
         {
@@ -99,8 +113,16 @@ void ConstraintTable::insert(std::list<Constraint> &constraints, int agent_id, i
     }
 }
 
-bool ConstraintTable::is_constrained(int loc, int t)
+bool ConstraintTable::is_constrained(int loc, int t, bool body)
 {
+    if (body){
+        if (CT_Train.count(loc)){
+                return true;
+
+        }
+        return false;
+    }
+
 	if (CT_Single.count(loc)) {
 		if (CT_Single[loc].count(t)) {
 			return true;

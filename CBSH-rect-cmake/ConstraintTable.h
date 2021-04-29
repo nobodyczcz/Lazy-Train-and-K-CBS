@@ -22,15 +22,19 @@ public:
 		CT_Single.clear();
 	}
 	void insert(int loc, int t_min, int t_max);
-	void insert(std::list<Constraint>& constraints, int agent_id, int num_col, int map_size);
-	bool is_constrained(int loc, int t);
+    void insert_train(int loc, int t_min);
+
+    void insert(std::list<Constraint>& constraints, int agent_id, int num_col, int map_size);
+	bool is_constrained(int loc, int t, bool body = false);
 	void printSize() {
 		std::cout << CT.size() << std::endl;;
 	};
 
 private:
 	std::unordered_map<size_t, std::unordered_set<int> > CT_Single;
-	std::unordered_map<size_t, list<pair<int, int> > > CT;
+    std::unordered_map<size_t, std::unordered_set<int> > CT_Train;
+
+    std::unordered_map<size_t, list<pair<int, int> > > CT;
 
 	
 };

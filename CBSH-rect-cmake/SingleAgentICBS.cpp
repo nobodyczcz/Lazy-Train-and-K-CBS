@@ -222,12 +222,13 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 
             //check does head have edge constraint or body have vertex constraint.
             bool constrained = false;
+
             if (constraint_table.is_constrained(curr->locs.front() * map_size + next_id, next_timestep))
                 constrained = true;
 
 
             for(auto loc:next_locs){
-                if (constraint_table.is_constrained(loc, next_timestep) )
+                if (constraint_table.is_constrained(loc, next_timestep, loc != next_locs.front()) )
                     constrained = true;
                 if(!train) //if not train, only check head
                     break;
@@ -240,7 +241,7 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
                 int onTargetTimestep = next_timestep + 1;
                 while(!onTargetLocs.empty()){
                     for (int loc: onTargetLocs){
-                        if (constraint_table.is_constrained(loc, onTargetTimestep) )
+                        if (constraint_table.is_constrained(loc, onTargetTimestep, loc != onTargetLocs.front()) )
                             constrained = true;
                     }
                     onTargetTimestep++;

@@ -93,7 +93,7 @@ bool MDD<Map>::buildMDD( ConstraintTable& constraints, int numOfLevels, SingleAg
 
 
             for(auto loc:new_locs){
-                if (constraints.is_constrained(loc, node->level + 1) )
+                if (constraints.is_constrained(loc, node->level + 1, loc != new_locs.front()) )
                     constrained = true;
                 if(!train)
                     break;
