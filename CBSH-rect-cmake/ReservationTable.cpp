@@ -17,8 +17,9 @@ void ReservationTable::addPath(int agent_id, std::vector<PathEntry>* path) {
 		return;
 	AgentStep* preStep = NULL;
 	for (int t = 0; t < path->size(); t++) {
+	    bool head = true; //first location is head.
 	    for (int loc : path->at(t).occupations) {
-	        bool head = loc == path->at(t).occupations.front();
+
             if (!res_table.count(loc)) {
                 res_table[loc] = timeline();
             }
@@ -41,6 +42,7 @@ void ReservationTable::addPath(int agent_id, std::vector<PathEntry>* path) {
                     goalTable[loc][agent_id] = t;
                 }
             }
+            head=false;// except firt occupication all false (not head).
         }
 	}
 }
