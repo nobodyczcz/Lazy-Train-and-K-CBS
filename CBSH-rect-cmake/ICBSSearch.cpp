@@ -362,7 +362,7 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 					//	newConf->targetConflict(get<1>(*con), get<0>(*con), get<2>(*con), get<4>(*con), kDelay);
 					//}
 					else if (get<3>(*con) < 0) {
-                        if(get<4>(*con) >= paths[get<0>(*con)]->size()-kDelay - 1){
+                        if(get<4>(*con) >= paths[get<0>(*con)]->size()-al.k[get<0>(*con)] - 1){ //TODO: Check if this is correct.
                             if (train_conflict)
                                 newConf->vertexTrainConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<4>(*con) + get<5>(*con),0, 0);
                             else
