@@ -22,7 +22,7 @@ void SingleAgentICBS<Map>::updatePath(LLNode* goal, std::vector<PathEntry> &path
         path[t].singles.clear();
         path[t].self_conflict = false;
         if (t!=0)
-            path[t].conflist =  res_table->findConflict(agent_id, goalLocs.front(), goalLocs, t-1, kRobust);
+            path[t].conflist =  res_table->findConflict(agent_id, goalLocs.front(), goalLocs, t-1);
         else
             path[t].conflist = NULL;
         goalLocs.pop_back();
@@ -272,7 +272,7 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
                 continue;
 
 
-            int next_internal_conflicts = curr->num_internal_conf +  res_table->countConflict(agent_id, curr->locs.front(), next_locs, curr->timestep, kRobust);
+            int next_internal_conflicts = curr->num_internal_conf +  res_table->countConflict(agent_id, curr->locs.front(), next_locs, curr->timestep);
 
 
 

@@ -35,7 +35,8 @@ int main(int argc, char** argv)
 		("screen", po::value<int>()->default_value(0), "screen option (0: none; 1: results; 2:all)")
 		("corridor2", po::value<bool>(), "reason about 2-way branching corridor conflicts")
 		("target", po::value<bool>(), "reason about target conflict")
-		("kDelay", po::value<int>()->default_value(0), "generate k-robust plan")
+		("kDelay", po::value<int>()->default_value(0), "Set max_k for k robust plan")
+		("diff-k",  "All agent have different k")
 		("only_generate_instance", po::value<std::string>()->default_value(""),"no searching")
 		("debug", "debug mode")
 		("statistic","print statistic data")
@@ -56,6 +57,9 @@ int main(int argc, char** argv)
 	po::notify(vm);
 	srand((int)time(0));
 
+	int max_k = vm["kDelay"].as<int>();
+	bool diff_k = vm.count("diff-k");
+
 	if (vm["screen"].as<int>() == 2) {
 		cout << "[CBS] Loading map and agents " << endl;
 	}
@@ -63,7 +67,7 @@ int main(int argc, char** argv)
 	MapLoader* ml = new MapLoader(vm["map"].as<string>());
 
 	// read agents' start and goal locations
-	AgentsLoader al(vm["agents"].as<string>(), *ml, vm["agentNum"].as<int>());
+	AgentsLoader al(vm["agents"].as<string>(), *ml,max_k,diff_k, vm["agentNum"].as<int>());
 	if (vm["screen"].as<int>() == 2) {
 		cout << "[CBS] Loading map and agents don2! " << endl;
 	}

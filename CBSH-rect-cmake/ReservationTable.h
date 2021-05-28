@@ -3,6 +3,8 @@
 #include <boost/unordered_map.hpp>
 #include <unordered_set> 
 #include "common.h"
+#include "agents_loader.h"
+
 #include <memory>
 using namespace std;
 
@@ -47,15 +49,16 @@ public:
 	typedef boost::unordered_map<int, int> goalAgentList;
 	boost::unordered_map<int, goalAgentList> goalTable;
 	map_table res_table;
+	AgentsLoader* agentsLoader;
 	void addPath(int agent_id, std::vector<PathEntry>* path);
 	void addPaths(vector<vector<PathEntry>*>* paths, int exclude = -1);
 	void deletePath(int agent_id, std::vector<PathEntry>* path);
-	OldConfList* findConflict(int agent, int currLoc, list<int> next_locs, int currT, int kDelay =0, bool ignore_goal_table = false);
-	int countConflict(int agent, int currLoc, list<int> next_locs, int currT,int kDelay);
+	OldConfList* findConflict(int agent, int currLoc, list<int> next_locs, int currT, bool ignore_goal_table = false);
+	int countConflict(int agent, int currLoc, list<int> next_locs, int currT);
 
 
 
-	ReservationTable(int mapSize);
-	ReservationTable(int mapSize, vector<vector<PathEntry>*>* paths, int exclude=-1);
+	ReservationTable(int mapSize, AgentsLoader* agentsLoader);
+	ReservationTable(int mapSize, vector<vector<PathEntry>*>* paths,AgentsLoader* agentsLoader, int exclude=-1);
 
 };

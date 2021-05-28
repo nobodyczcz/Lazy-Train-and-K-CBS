@@ -147,29 +147,45 @@ void ICBSSearch::copyConflicts(const std::list<std::shared_ptr<Conflict >>& conf
 	}
 }
 
-void ICBSSearch::conflict_between_2(ICBSNode& curr, int a1, int a2)
+void ICBSSearch::conflict_between_2(ICBSNode& curr, int a1, int a2)// TODO: final check for diff k
 {
     size_t min_path_length = paths[a1]->size() < paths[a2]->size() ? paths[a1]->size() : paths[a2]->size();
     for (size_t timestep = 0; timestep < min_path_length; timestep++)
     {
-        for (int k = -kDelay; k<=kDelay;k++){
+        int loc1 = paths[a1]->at(timestep).location;
+        for (int k =0; k<=al.k[a1];k++){
             int  t = timestep+k;
-            if (t<0 || t >= paths[a1]->size() || t >= paths[a2]->size())
+            if (t<0 || t >= paths[a2]->size())
                 continue;
-            int loc1 = paths[a1]->at(t).location;
             int loc2 = paths[a2]->at(t).location;
             if (loc1 == loc2)
             {
                 cout<<"Find "<<k<<" delay conflict between "<< a1 <<" and "<<a2<<endl;
 
             }
-            else if (kDelay==0 && timestep < min_path_length - 1
-                     && loc1 == paths[a2]->at(timestep + 1).location
-                     && loc2 == paths[a1]->at(timestep + 1).location)
+
+        }
+        loc1 = paths[a2]->at(timestep).location;
+        for (int k =0; k<=al.k[a2];k++){
+            int  t = timestep+k;
+            if (t<0 || t >= paths[a1]->size())
+                continue;
+            int loc2 = paths[a1]->at(t).location;
+            if (loc1 == loc2)
             {
-                cout<<"Find edge conflict between "<< a1 <<" and "<<a2<<endl;
+                cout<<"Find "<<k<<" delay conflict between "<< a2 <<" and "<<a1<<endl;
 
             }
+
+        }
+
+        if (al.k[a1]==0 && al.k[a2] ==0 && timestep < min_path_length - 1)
+        {
+            int loc2 = paths[a2]->at(timestep).location;
+            if( loc1 == paths[a2]->at(timestep + 1).location && loc2 == paths[a1]->at(timestep + 1).location) {
+                cout << "Find edge conflict between " << a1 << " and " << a2 << endl;
+            }
+
         }
 
     }
@@ -241,33 +257,33 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 							<< get<4>(*con) << "," << get<5>(*con)<<","<< get<6>(*con) << ">; ";
 
 
-						if (option.ignore_target && (get<3>(*con) < 0) && (get<4>(*con) > paths[get<0>(*con)]->size() - 1 + kDelay)){
+						if (option.ignore_target && (get<3>(*con) < 0) && (get<4>(*con) > paths[get<0>(*con)]->size() - 1 + al.k[get<0>(*con)])){
 						    continue;
 						}
 
                         std::shared_ptr<Conflict> newConf(new Conflict());
 
-                        if (targetReasoning && !train_conflict && (get<3>(*con) < 0) && (get<4>(*con) >= paths[get<0>(*con)]->size() - 1)) {
+                        if (targetReasoning && (!train_conflict) && (get<3>(*con) < 0) && (get<4>(*con) >= paths[get<0>(*con)]->size() - 1)) {
 							newConf->targetConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<4>(*con)+ get<5>(*con), kDelay);
 						}
 						//else if (targetReasoning && (get<3>(*con) < 0) && (get<4>(*con) >= paths[get<1>(*con)]->size() - 1)) {
 						//	newConf->targetConflict(get<1>(*con), get<0>(*con), get<2>(*con), get<4>(*con)+ get<5>(*con), kDelay);
 						//}
 						else if (get<3>(*con) < 0) {
-							if(get<4>(*con) >= paths[get<0>(*con)]->size() -kDelay - 1){
+							if(get<4>(*con) >= paths[get<0>(*con)]->size() -al.k[get<0>(*con)] - 1){
 							    if (train_conflict)
-                                    newConf->vertexTrainConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<4>(*con) + get<5>(*con),0, kDelay);
+                                    newConf->vertexTrainConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<4>(*con) + get<5>(*con),0, 0);
                                 else
-                                    newConf->vertexConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<4>(*con) + get<5>(*con),0, kDelay);
+                                    newConf->vertexConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<4>(*con) + get<5>(*con),0, al.k[get<0>(*con)],al.k[get<1>(*con)]);
 
                             }
 							else {
                                 if (train_conflict)
                                     newConf->vertexTrainConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<4>(*con),
-                                                            get<5>(*con), kDelay);
+                                                            get<5>(*con), 0);
                                 else
                                     newConf->vertexConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<4>(*con),
-                                                            get<5>(*con), kDelay);
+                                                            get<5>(*con), al.k[get<0>(*con)],al.k[get<1>(*con)]);
                             }
 						}
 						else {
@@ -333,7 +349,7 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
                     if (option.window_size >0 && get<4>(*con)>option.window_size)
                         continue;
 
-                    if (option.ignore_target && (get<3>(*con) < 0) && (get<4>(*con) > paths[get<0>(*con)]->size() - 1 + kDelay)){
+                    if (option.ignore_target && (get<3>(*con) < 0) && (get<4>(*con) > paths[get<0>(*con)]->size() - 1 + al.k[get<0>(*con)])){
                         continue;
                     }
 
@@ -348,18 +364,18 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 					else if (get<3>(*con) < 0) {
                         if(get<4>(*con) >= paths[get<0>(*con)]->size()-kDelay - 1){
                             if (train_conflict)
-                                newConf->vertexTrainConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<4>(*con) + get<5>(*con),0, kDelay);
+                                newConf->vertexTrainConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<4>(*con) + get<5>(*con),0, 0);
                             else
-                                newConf->vertexConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<4>(*con) + get<5>(*con),0, kDelay);
+                                newConf->vertexConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<4>(*con) + get<5>(*con),0, al.k[get<0>(*con)],al.k[get<1>(*con)]);
 
                         }
                         else {
                             if (train_conflict)
                                 newConf->vertexTrainConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<4>(*con),
-                                                             get<5>(*con), kDelay);
+                                                             get<5>(*con), 0);
                             else
                                 newConf->vertexConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<4>(*con),
-                                                        get<5>(*con), kDelay);
+                                                        get<5>(*con), al.k[get<0>(*con)],al.k[get<1>(*con)]);
                         }
 					}
 					else {
@@ -424,11 +440,11 @@ void ICBSSearch::findTargetConflicts(int a1, int a2, ICBSNode& curr) {
 					std::shared_ptr<Conflict> conflict(new Conflict());
 					if (targetReasoning)
 					{
-						conflict->targetConflict(a1_, a2_, loc1, timestep, kDelay);
+						conflict->targetConflict(a1_, a2_, loc1, timestep, kDelay);//TODO: different k for target conflict.
 					}
 					else
 					{
-						conflict->vertexConflict(a1_, a2_, loc1, timestep,0,kDelay);
+						conflict->vertexConflict(a1_, a2_, loc1, timestep,0,al.k[a1_],al.k[a2_]);
 					}
 					if (debug_mode)
 						cout << "<" << a1_ << "," << a2_ << ","
@@ -485,7 +501,7 @@ void ICBSSearch::findTargetConflicts(int a1, int a2, ICBSNode& curr) {
 
 
 template<class Map>
-bool MultiMapICBSSearch<Map>::isCorridorConflict(std::shared_ptr<Conflict>& corridor, const std::shared_ptr<Conflict>& con, ICBSNode* node)
+bool MultiMapICBSSearch<Map>::isCorridorConflict(std::shared_ptr<Conflict>& corridor, const std::shared_ptr<Conflict>& con, ICBSNode* node) //TODO: corridor for diff k
 {
 	if (screen >= 4) {
 		cout << "Check is corridor conflict" << endl;
@@ -802,7 +818,7 @@ bool ICBSSearch::generateChild(ICBSNode*  node, ICBSNode* curr)
 			    if (screen>=2){
 			        cout<<"Replan for agent: "<< ag<<endl;
 			    }
-				double lowerbound = (int)paths[ag]->size() - kDelay - 1; //The shrink at goal is added after search complete
+				double lowerbound = (int)paths[ag]->size() - al.k[ag] - 1; //The shrink at goal is added after search complete
 				if (!findPathForSingleAgent(node, ag, lowerbound))
 					return false;
 			}
@@ -810,7 +826,7 @@ bool ICBSSearch::generateChild(ICBSNode*  node, ICBSNode* curr)
 	}
 	else
 	{
-		double lowerbound = (int)paths[node->agent_id]->size() - kDelay-1;//The shrink at goal is added after search complete
+		double lowerbound = (int)paths[node->agent_id]->size() - al.k[node->agent_id]-1;//The shrink at goal is added after search complete
 		// if (curr->conflict->p == conflict_priority::CARDINAL && curr->conflict->type != conflict_type::CORRIDOR2)
 		//	lowerbound += 1;
 
@@ -1514,7 +1530,14 @@ void MultiMapICBSSearch<Map>::checkRepeatance(ICBSNode* curr){
     << curr->conflict->t<<"," << curr->conflict->k<<","<<curr->conflict->type
     <<","<< curr->conflict->train_conflict <<","<<
     curr->conflict->constraint1.size()<<","<<curr->conflict->constraint2.size()
-    <<","<<curr->conflict->rs<<","<<curr->conflict->rg;;
+    <<","<<curr->conflict->rs<<","<<curr->conflict->rg;
+
+    for(auto con1: curr->conflict->multiConstraint1){
+        con<<","<<con1.size();
+    }
+    for(auto con1: curr->conflict->multiConstraint2){
+        con<<","<<con1.size();
+    }
 
 
     curr->resolvedConflicts.insert(con.str());
@@ -1538,7 +1561,14 @@ void MultiMapICBSSearch<Map>::checkRepeatance(ICBSNode* curr){
     printHLTree();
     }
     if (!noRepeat) {
-    cout << "Repeatance detected!!!" << endl;
+        cout << "Repeatance detected!!!" << endl;
+        for (auto conflict : curr->conflicts)
+            std::cout << *conflict;
+        if (curr->conflict == NULL)
+            cout<<"No conflicts. This is the conflict free goal node"<<endl;
+        else
+            cout<<"We choose conflict: "<<*curr->conflict;
+
         exit(1);
     }
     parent = parent->parent;
@@ -1612,9 +1642,9 @@ void MultiMapICBSSearch<Map>::startPairAnalysis(ICBSNode* node,int agent1, int a
             a2PathLength = paths[agent2]->size();
         }
 
-        a1Mdd->buildMDD(constraintTable, a1PathLength + kDelay, *search_engines[agent1],false);
+        a1Mdd->buildMDD(constraintTable, a1PathLength + al.k[agent1], *search_engines[agent1],false);//TODO: fix mdd layer for train in pair analysis
         updateConstraintTable(node, agent2);
-        a2Mdd->buildMDD(constraintTable,  a2PathLength + kDelay, *search_engines[agent2],false);
+        a2Mdd->buildMDD(constraintTable,  a2PathLength +  al.k[agent2], *search_engines[agent2],false);//TODO: fix mdd layer for train in pair analysis
 //            MDD<Map> *a1Mdd = buildMDD(*node, agent1, kDelay);
 //            MDD<Map> *a2Mdd = buildMDD(*node, agent2, kDelay);
         if (num_failed!=1)
@@ -1734,7 +1764,7 @@ MultiMapICBSSearch<Map>::MultiMapICBSSearch(Map* ml, AgentsLoader& al, double f_
 		int goal_loc = ml->linearize_coordinate((al.goal_locations[i]).first, (al.goal_locations[i]).second);
 
         ComputeHeuristic<Map> ch(init_loc, goal_loc, ml, al.headings[i]);
-        search_engines[i] = new SingleAgentICBS<Map>(init_loc, goal_loc, ml,i, al.headings[i],kDelay);
+        search_engines[i] = new SingleAgentICBS<Map>(init_loc, goal_loc, ml,i, al.headings[i],al.k[i]);
         if (debug_mode)
             cout << "initializing heuristics for "<< i << endl;
         ch.getHVals(search_engines[i]->my_heuristic);
@@ -1757,7 +1787,7 @@ void MultiMapICBSSearch<Map>::initializeDummyStart() {
 	// initialize paths_found_initially
 	paths.resize(num_of_agents, NULL);
 	paths_found_initially.resize(num_of_agents);
-	ReservationTable* res_table = new ReservationTable(map_size);  // initialized to false
+	ReservationTable* res_table = new ReservationTable(map_size,&al);  // initialized to false
 	for (int i = 0; i < num_of_agents; i++) {
 		//cout << "******************************" << endl;
 		//cout << "Agent: " << i << endl;
@@ -1857,7 +1887,7 @@ MDD<Map>* MultiMapICBSSearch<Map>::buildMDD(ICBSNode& node, int id, int k, bool 
         num_levels = paths[id]->size() + k;
     }
     else
-        num_levels = paths[id]->size() -kDelay+k;
+        num_levels = paths[id]->size() -al.k[id]+k;
 
 	MDD<Map>* mdd = NULL;
     ConstraintsHasher c(id, &node,num_levels,k, train);
@@ -1925,7 +1955,7 @@ bool MultiMapICBSSearch<Map>::findPathForSingleAgent(ICBSNode*  node, int ag, do
     // build reservation table
 	size_t max_plan_len = node->makespan + 1;
 
-	ReservationTable* res_table = new ReservationTable(map_size, &paths, ag);  // initialized to false
+	ReservationTable* res_table = new ReservationTable(map_size, &paths,&al, ag);  // initialized to false
 
 	// find a path
 	vector<PathEntry> newPath;
@@ -2019,6 +2049,8 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 		parent.unknownConf.pop_front();
 
 		int a1_p = 0, a2_p = 0;
+		int a1_k = al.k[a1];
+		int a2_k = al.k[a2];
 
 		bool cardinal1 = false, cardinal2 = false;
 		if (timestep >= paths[a1]->size())
@@ -2040,15 +2072,15 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 
 
 			for (int i = 0; i < paths[a1]->size(); i++) {
-                paths[a1]->at(i).singles.resize(kDelay+1);
-			    if (i >= mdd->levels.size()){
-                    for(int j=0;j<kDelay+1;j++){
+                paths[a1]->at(i).singles.resize(a1_k+1);
+			    if (i >= mdd->levels.size()){ //TODO: check whether this still exist.
+                    for(int j=0;j<a1_k+1;j++){
                         paths[a1]->at(i).singles[j] = true;
 			        }
 			    }
 			    else{
-                for(int j=0;j<kDelay+1;j++) {
-                    paths[a1]->at(i).singles[j] = mdd->level_locs[i][j].size() == 1;
+                    for(int j=0;j<a1_k+1;j++) {
+                        paths[a1]->at(i).singles[j] = mdd->level_locs[i][j].size() == 1;
                 }
 //                    cout<<mdd->level_locs[i][j].size()<<",";
 //                    assert(mdd->level_locs[i][j].size() >=1);
@@ -2077,14 +2109,14 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 		        continue;
 
             for (int i = 0; i < paths[a2]->size(); i++) {
-                paths[a2]->at(i).singles.resize(kDelay+1);
+                paths[a2]->at(i).singles.resize(a2_k+1);
                 if (i >= mdd->levels.size()){
-                    for(int j=0;j<kDelay+1;j++){
+                    for(int j=0;j<a2_k+1;j++){
                         paths[a2]->at(i).singles[j] = true;
                     }
                 }
                 else {
-                    for (int j = 0; j < kDelay + 1; j++) {
+                    for (int j = 0; j < a2_k + 1; j++) {
                         paths[a2]->at(i).singles[j] = mdd->level_locs[i][j].size() == 1;
 //                    cout<<mdd->level_locs[i][j].size()<<",";
 //                    assert(mdd->level_locs[i][j].size() >=1);
@@ -2111,7 +2143,8 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 				cardinal2 =!paths[a2]->at(timestep).singles.empty() && paths[a2]->at(timestep).singles[a2_p];
 
 			con->clear();
-            int range = min(kDelay - a1_p,kDelay - a2_p);
+//            int range = min(kDelay - a1_p,kDelay - a2_p);
+            int range = 0; //TODO: Check if the contraint applies on whole body
 
             con->vertexTrainConflictRange(a1,a2,loc1,timestep,con->k,range);
 		}
@@ -2146,7 +2179,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 			continue;
 		}
         else if (con->type == conflict_type::STANDARD &&
-            paths[con->a1]->size()-kDelay <= con->t || paths[con->a2]->size()-kDelay <= con->t+con->k) //conflict happens after agent reaches its goal
+            paths[con->a1]->size()-a1_k <= con->t || paths[con->a2]->size()-a2_k <= con->t+con->k) //conflict happens after agent reaches its goal TODO: check if correct.
         {
             parent.conflicts.push_back(con);
             continue;
@@ -2255,7 +2288,7 @@ bool MultiMapICBSSearch<Map>::rectangleReasoning(const std::shared_ptr<Conflict>
         action2 = getAction(paths.at(a2)->at(timestep2).location, paths.at(a2)->at(timestep2 - 1).location, num_col);
     }
 
-    if ((timestep2 == 0 || action2 == action::WAIT && timestep2+1) < paths.at(a2)->size()) {
+    if ((timestep2 == 0 || action2 == action::WAIT) && timestep2+1 < paths.at(a2)->size()) {
 
         action2 = getAction(paths.at(a2)->at(timestep2 + 1).location, paths.at(a2)->at(timestep2).location, num_col);
     }
@@ -2277,10 +2310,10 @@ bool MultiMapICBSSearch<Map>::rectangleReasoning(const std::shared_ptr<Conflict>
         int s1, g1, s2, g2;
 
         //find furthest correct direction action along the path.
-        pair<int, int> t1s_result = get_st(*paths[a1], timestep, num_col, action1, action2, kDelay, false, false);
-        pair<int, int> t1e_result = get_gt(*paths[a1], timestep, num_col, action1, action2, kDelay, false, false);
-        pair<int, int> t2s_result = get_st(*paths[a2], timestep2, num_col, action1, action2, kDelay,false, false);
-        pair<int, int> t2e_result = get_gt(*paths[a2], timestep2, num_col, action1, action2, kDelay,false, false);
+        pair<int, int> t1s_result = get_st(*paths[a1], timestep, num_col, action1, action2, al.k[a1], false, false);
+        pair<int, int> t1e_result = get_gt(*paths[a1], timestep, num_col, action1, action2, al.k[a1], false, false);
+        pair<int, int> t2s_result = get_st(*paths[a2], timestep2, num_col, action1, action2, al.k[a2],false, false);
+        pair<int, int> t2e_result = get_gt(*paths[a2], timestep2, num_col, action1, action2, al.k[a2],false, false);
         t1_start = t1s_result.first;
         t1_end = t1e_result.first;
         t2_start = t2s_result.first;
@@ -2346,8 +2379,8 @@ bool MultiMapICBSSearch<Map>::rectangleReasoning(const std::shared_ptr<Conflict>
 
         int root = std::min(rt1,rt2);
         int diff = std::abs(rt1-rt2);
-        int a1kMax = kDelay;
-        int a2kMax = kDelay;
+        int a1kMax = al.k[a2];
+        int a2kMax = al.k[a1];
         new_type = -1;
 
         //try all combination of possible k to check does any barriers build by the combination satisfy condition 1 in the paper.

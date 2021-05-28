@@ -122,16 +122,18 @@ public:
         type = conflict_type::SELF_CONFLICT;
     }
 
-    void vertexConflict(int a1, int a2, int v, int t,int k=0,int kRobust =0)
+    void vertexConflict(int a1, int a2, int v, int t,int delta=0, int k1 = 0,int k2 =0)
     {
         this->a1 = a1;
         this->a2 = a2;
         this->t = t;
-        this->k = k;
+        this->k = delta;
         this->originalConf1 = v;
         this->originalConf2 = -1;
-        for (int i = 0; i <= kRobust; i++) {
+        for (int i = 0; i <= k2; i++) {
             this->constraint1.emplace_back(v, -1, t+i, constraint_type::VERTEX);
+        }
+        for (int i = 0; i <= k1; i++) {
             this->constraint2.emplace_back(v, -1, t+i, constraint_type::VERTEX);
         }
         type = conflict_type::STANDARD;
@@ -487,7 +489,7 @@ public:
 		this->originalConf2 = -1;
 
 
-		this->constraint1.emplace_back(-1, a1, t + kDelay/* kDelay>0? t + kDelay+1:t*/, constraint_type::LENGTH); // length of a1 should be larger than t
+		this->constraint1.emplace_back(-1, a1, t /* kDelay>0? t + kDelay+1:t*/, constraint_type::LENGTH); // length of a1 should be larger than t
 		this->constraint2.emplace_back(v, a1, t, constraint_type::LENGTH); // length of a1 should be no larger than t, and other agents can not use v at and after timestep t
 		type = conflict_type::TARGET;
 	}

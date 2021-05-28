@@ -20,17 +20,20 @@ using namespace std;
 int RANDOM_WALK_STEPS = 100000;
 
 
-AgentsLoader::AgentsLoader(int number_of_agent){
+AgentsLoader::AgentsLoader(int number_of_agent,int max_k){
     this->num_of_agents = number_of_agent;
     initial_locations.resize(number_of_agent);
     goal_locations.resize(number_of_agent);
+    k.resize(number_of_agent);
     headings.resize(number_of_agent);
+    this->max_k = max_k;
 
 
 }
 AgentsLoader::AgentsLoader(p::object agents) {
     int agentsNum = p::len(agents);
     this->num_of_agents = agentsNum;
+    this->max_k = 1;
     for (int i = 0; i < num_of_agents; i++) {
         pair<int, int> initial;
         pair<int, int> goal;
@@ -46,15 +49,17 @@ AgentsLoader::AgentsLoader(p::object agents) {
         this->headings.push_back(heading);
         this->min_end_time.push_back(0);
         this->done.push_back(false);
+        this->k.push_back(1);
 
 
     }
 }
 
-AgentsLoader::AgentsLoader(string fname, const MapLoader &ml, int agentsNum = 0){
+AgentsLoader::AgentsLoader(string fname, const MapLoader &ml,int max_k,bool diff_k, int agentsNum = 0){
   string line;
 
   ifstream myfile (fname.c_str());
+  this->max_k = max_k;
 
   if (myfile.is_open()) {
     getline (myfile,line);
@@ -79,8 +84,16 @@ AgentsLoader::AgentsLoader(string fname, const MapLoader &ml, int agentsNum = 0)
       curr_pair.first = atoi ( (*c_beg).c_str() );
       c_beg++;
       curr_pair.second = atoi ( (*c_beg).c_str() );
+
+
       //      cout << "GOAL[" << curr_pair.first << "," << curr_pair.second << "]" << endl;
       this->goal_locations.push_back(curr_pair);
+      if (diff_k)
+        this->k.push_back(i%(this->max_k+1));
+      else
+          this->k.push_back(this->max_k);
+
+
 	  this->headings.push_back(-1);
 	  this->min_end_time.push_back(0);
 	  this->done.push_back(false);
@@ -100,6 +113,7 @@ AgentsLoader::AgentsLoader(string fname, const MapLoader &ml, int agentsNum = 0)
   else if(agentsNum > 0)//Generate agents randomly
   {
 	  this->num_of_agents = agentsNum;
+	  this->max_k = 4;
 	  vector<bool> starts(ml.rows * ml.cols, false);
 	  vector<bool> goals(ml.rows * ml.cols, false);
 	  // Choose random start locations
@@ -164,6 +178,10 @@ AgentsLoader::AgentsLoader(string fname, const MapLoader &ml, int agentsNum = 0)
 				}
 				//update goal
 				this->goal_locations.push_back(make_pair(goal / ml.cols, goal % ml.cols));
+                  if (diff_k)
+                      this->k.push_back(k%(this->max_k+1));
+                  else
+                      this->k.push_back(this->max_k);
 				goals[goal] = true;
 				this->headings.push_back(-1);
                 this->done.push_back(false);
@@ -193,7 +211,7 @@ void AgentsLoader::printAgentsInitGoal () {
   cout << "AGENTS:" << endl;;
   for (int i=0; i<num_of_agents; i++) {
     cout << "Agent" << i << " : I=(" << initial_locations[i].first << "," << initial_locations[i].second << ") ; G=(" <<
-      goal_locations[i].first << "," << goal_locations[i].second << ")"<< ", min_end_time: "<<min_end_time[i]<<", done: "
+      goal_locations[i].first << "," << goal_locations[i].second << ")" << ", k: "<< k[i]<< ", min_end_time: "<<min_end_time[i]<<", done: "
       << done[i] <<", Heading: "<<headings[i]<< endl;
   }
   cout << endl;
@@ -206,6 +224,7 @@ AgentsLoader::~AgentsLoader() {
 // create an empty object
 AgentsLoader::AgentsLoader() {
   num_of_agents = 0;
+  max_k = 0;
 }
 
 // returns the agents' ids if they occupy [row,col] (first for start, second for goal)

@@ -18,17 +18,19 @@ using namespace std;
 class AgentsLoader {
  public:
   int num_of_agents;
+  int max_k = 0;
   vector< pair<int, int> > initial_locations;
   vector< pair<int, int> > goal_locations;
+  vector<int> k;
   vector<int> min_end_time;
   vector<bool> done;
   vector<int> headings;
   vector<double> max_v;  // entry [i] is the max translational velocity for agent i
   vector<double> max_w;  // entry [i] is the max rotational velocity for agent i
   vector<double> max_a;  // entry [i] is the max accelration for agent i
-  AgentsLoader(const std::string fname, const MapLoader &ml, int agentsNum);
+  AgentsLoader(const std::string fname, const MapLoader &ml,int max_k, bool diff_k, int agentsNum);
   AgentsLoader();
-  AgentsLoader(int number_of_agent);
+  AgentsLoader(int number_of_agent,int max_k);
   AgentsLoader(p::object agents);
 
   void addAgent ( int start_row, int start_col, int goal_row, int goal_col,int min_time = 0,int finish = false, int heading = -1);

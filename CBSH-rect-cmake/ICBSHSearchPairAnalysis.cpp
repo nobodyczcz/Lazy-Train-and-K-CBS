@@ -114,7 +114,7 @@ bool ICBSSearchWithPairedAnalysis<Map>::pairedAnalysis(ICBSNode* node,int agent1
     std::set<int> agents;
     agents.insert(agent1);
     agents.insert(agent2);
-    ReservationTable* res_table = new ReservationTable(this->map_size);  // initialized to false
+    ReservationTable* res_table = new ReservationTable(this->map_size, &this->al);  // initialized to false
     for (int i = 0; i <this->num_of_agents; i++) {
         //cout << "******************************" << endl;
         //cout << "Agent: " << i << endl;
