@@ -792,12 +792,13 @@ bool ICBSSearch::generateChild(ICBSNode*  node, ICBSNode* curr)
 		tie(x, agent, t, type) = node->constraints.front();
 		for (int ag = 0; ag < num_of_agents; ag++)
 		{
+		    int t_ag = t - al.k[ag];
 			if (ag == agent)
 			{
 				continue;
 			}
 
-			if (t > paths[ag]->size()) {
+			if (t_ag > paths[ag]->size()) {
 				continue;
 			}
 			bool replan = false;
@@ -806,7 +807,7 @@ bool ICBSSearch::generateChild(ICBSNode*  node, ICBSNode* curr)
 					replan = true;
 				}
 			}*/
-			for (int tg = t; tg < paths[ag]->size(); tg++) {
+			for (int tg = t_ag; tg < paths[ag]->size(); tg++) {
 				if (paths[ag]->at(tg).location == x) {
 					replan = true;
 					break;
@@ -2018,7 +2019,8 @@ void MultiMapICBSSearch<Map>::updateConstraintTable(ICBSNode* curr, int agent_id
 			tie(x, y, z, type) = curr->constraints.front();
 			if (type == constraint_type::LENGTH && x >= 0 && y != agent_id)
 			{
-				constraintTable.insert(x, z, INT_MAX);
+
+				constraintTable.insert(x, z - al.k[curr->agent_id], INT_MAX);
 			}
 		}
 		curr = curr->parent;

@@ -479,7 +479,7 @@ public:
     }
 
 
-	void targetConflict(int a1, int a2, int v, int t,int kDelay)
+	void targetConflict(int a1, int a2, int v, int t,int k_2)
 	{
 		this->a1 = a1;
 		this->a2 = a2;
@@ -489,8 +489,8 @@ public:
 		this->originalConf2 = -1;
 
 
-		this->constraint1.emplace_back(-1, a1, t /* kDelay>0? t + kDelay+1:t*/, constraint_type::LENGTH); // length of a1 should be larger than t
-		this->constraint2.emplace_back(v, a1, t, constraint_type::LENGTH); // length of a1 should be no larger than t, and other agents can not use v at and after timestep t
+		this->constraint1.emplace_back(-1, a1, t + k_2 /* kDelay>0? t + kDelay+1:t*/, constraint_type::LENGTH); // length of a1 should be larger than t
+		this->constraint2.emplace_back(v, a1, t + k_2, constraint_type::LENGTH); // length of a1 should be no larger than t, and other agents can not use v at and after timestep t
 		type = conflict_type::TARGET;
 	}
 
