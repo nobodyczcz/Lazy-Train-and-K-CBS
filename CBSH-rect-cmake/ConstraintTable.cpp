@@ -33,7 +33,7 @@ void ConstraintTable::insert_train(int loc, int t_min)
     }
 }
 
-void ConstraintTable::insert(std::list<Constraint> &constraints, int agent_id, int num_col, int map_size) {
+void ConstraintTable::insert(std::list<Constraint> &constraints, int agent_id, int num_col, int map_size, int k) {
     for (auto constraint : constraints)
     {
         int x, y, z;
@@ -87,13 +87,13 @@ void ConstraintTable::insert(std::list<Constraint> &constraints, int agent_id, i
 
             }
             else if (x >= 0 && y == agent_id)
-            { // <loc, agent_id, t>: path of agent_id should be of length at most t !!not possible as y==agent will jump findpath
+            { // <loc, agent_id, t>: path of agent_id should be of length at most t
                 this->length_max = min(this->length_max, z);
 
             }
             else if (x >= 0 && y != agent_id)
             { // <loc, agent_id, t>: any other agent cannot be at loc at or after timestep t
-                this->insert(x, z, INT_MAX);
+                this->insert(x, z-k, INT_MAX);
             }
         }
         else if (type == constraint_type::VERTEX)

@@ -264,7 +264,7 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
                         std::shared_ptr<Conflict> newConf(new Conflict());
 
                         if (targetReasoning && (!train_conflict) && (get<3>(*con) < 0) && (get<4>(*con) >= paths[get<0>(*con)]->size() - 1)) {
-							newConf->targetConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<4>(*con)+ get<5>(*con), kDelay);
+							newConf->targetConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<4>(*con)+ get<5>(*con), al.k[get<1>(*con)]);
 						}
 						//else if (targetReasoning && (get<3>(*con) < 0) && (get<4>(*con) >= paths[get<1>(*con)]->size() - 1)) {
 						//	newConf->targetConflict(get<1>(*con), get<0>(*con), get<2>(*con), get<4>(*con)+ get<5>(*con), kDelay);
@@ -356,7 +356,7 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 					std::shared_ptr<Conflict> newConf(new Conflict());
 
 					if (targetReasoning&& !train_conflict && (get<3>(*con) < 0) && (get<4>(*con) > paths[get<0>(*con)]->size() - 1)) {
-						newConf->targetConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<4>(*con), kDelay);
+						newConf->targetConflict(get<0>(*con), get<1>(*con), get<2>(*con), get<4>(*con), al.k[get<1>(*con)]);
 					}
 					//else if (targetReasoning && (get<3>(*con) < 0) && (get<4>(*con) > paths[get<1>(*con)]->size() - 1)) {
 					//	newConf->targetConflict(get<1>(*con), get<0>(*con), get<2>(*con), get<4>(*con), kDelay);
@@ -440,7 +440,7 @@ void ICBSSearch::findTargetConflicts(int a1, int a2, ICBSNode& curr) {
 					std::shared_ptr<Conflict> conflict(new Conflict());
 					if (targetReasoning)
 					{
-						conflict->targetConflict(a1_, a2_, loc1, timestep, kDelay);//TODO: different k for target conflict.
+						conflict->targetConflict(a1_, a2_, loc1, timestep, al.k[a2_]);
 					}
 					else
 					{
@@ -529,7 +529,6 @@ bool MultiMapICBSSearch<Map>::isCorridorConflict(std::shared_ptr<Conflict>& corr
 		curr = loc2;
 	if (curr <= 0 || !ml->notCorner(curr))
 		return false;
-	//cout << "iscorridor2" << endl;
 
 	int t[2];
 	t[0] = cp.getEnteringTime(*paths[a[0]], *paths[a[1-0]], timestep, ml);
@@ -555,7 +554,6 @@ bool MultiMapICBSSearch<Map>::isCorridorConflict(std::shared_ptr<Conflict>& corr
 		u[i] = paths[a[i]]->at(t[i]).location;
 	if (u[0] == u[1])
 		return false;
-	//cout << "iscorridor3" << endl;
 
 	for (int i = 0; i < 2; i++)//check does one entering location lead to another's entering location
 	{
@@ -570,7 +568,6 @@ bool MultiMapICBSSearch<Map>::isCorridorConflict(std::shared_ptr<Conflict>& corr
 	}
 	std::pair<int, int> edge; // one edge in the corridor
 	int k = getCorridorLength(*paths[a[0]], t[0], u[1], edge);
-	//cout << "iscorridor4" << endl;
 
 	if (corridor2)
 	{
@@ -594,21 +591,25 @@ bool MultiMapICBSSearch<Map>::isCorridorConflict(std::shared_ptr<Conflict>& corr
         int t4 = cp.getBypassLength(paths[a[1]]->front().location, u[0], edge_empty, ml, num_col, map_size, constraintTable, INT_MAX,search_engines[a[1]]->my_heuristic, paths[a[1]]->front().heading, paths[a[1]]->at(e[1]).heading);
 		int t4_ = cp.getBypassLength(paths[a[1]]->front().location, u[0], edge, ml, num_col, map_size, constraintTable, t4 + 2*k + 1, search_engines[a[1]]->my_heuristic, paths[a[1]]->front().heading, paths[a[1]]->at(e[1]).heading);
 		if (screen >= 4) {
-			cout << "t3: " << t3 << "," << "t3_: " << t3_ << "," << "t4: " << t4 << "," << "t4_: " << t4_ << endl;
+			cout <<"t1: "<<t1 <<",t2: "<<t2  << ",t3: " << t3 << "," << "t3_: " << t3_ << "," << "t4: " << t4 << "," << "t4_: " << t4_ << endl;
 			cout << "corridor length: " << k << endl;
 		}
 		//cout << k << endl;
-		if (abs(t3 - t4) <= k+kDelay && t3_ > t3 && t4_ > t4)
+		if ((abs(t3 - t4) <= k+al.k[a[1]] || abs(t3-t4) <= k+al.k[a[0]]) && t3_ > t3 && t4_ > t4)
 		{
 			//cout << "iscorridor5.5" << endl;
 
 			corridor = std::shared_ptr<Conflict>(new Conflict());
-			corridor->corridorConflict(a[0], a[1], u[1], u[0], t3, t4, t3_, t4_,t1,t2, k,kDelay);
+			corridor->corridorConflict(a[0], a[1], u[1], u[0], t3, t4, t3_, t4_,t1,t2, k,al.k[a[0]], al.k[a[1]]);
+
 			if (blocked(*(paths[corridor->a1]), corridor->constraint1) && blocked(*(paths[corridor->a2]), corridor->constraint2))
 				return true;
 			else {
-				if(screen>=4)
-					cout << "not blocked" << endl;
+				if(screen>=4) {
+                    cout << *corridor << endl;
+                    cout << "not blocked" << endl;
+                }
+
 			}
 		}
 		else {
@@ -798,7 +799,7 @@ bool ICBSSearch::generateChild(ICBSNode*  node, ICBSNode* curr)
 				continue;
 			}
 
-			if (t_ag > paths[ag]->size()) {
+			if (t_ag >= paths[ag]->size()) {
 				continue;
 			}
 			bool replan = false;
@@ -1944,7 +1945,7 @@ template<class Map>
 bool MultiMapICBSSearch<Map>::findPathForSingleAgent(ICBSNode*  node, int ag, double lowerbound)
 {
 	if (debug_mode)
-		cout << "Start LL search" << endl;
+		cout << "Start LL search for "<<ag << endl;
 	// extract all constraints on agent ag
 	ICBSNode* curr = node;
 	// vector < list< pair<int, int> > >* cons_vec = collectConstraints(curr, ag);
@@ -2009,7 +2010,7 @@ void MultiMapICBSSearch<Map>::updateConstraintTable(ICBSNode* curr, int agent_id
 	    layer+=1;
 		if (curr->agent_id == agent_id)
 		{
-			constraintTable.insert(curr->constraints,agent_id,num_col,map_size);
+			constraintTable.insert(curr->constraints,agent_id,num_col,map_size, al.k[agent_id]);
 			constraint_amount += curr->constraints.size();
 		}
 		else if (!curr->constraints.empty())
@@ -2225,7 +2226,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
             parent.conflicts.remove(conflict);
 
             found = true;
-//            break;
+            break;
         }
     }
 
@@ -2248,7 +2249,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
             corridor->p = conflict->p;
             parent.conflicts.push_back(corridor);
             parent.conflicts.remove(conflict);
-//            break;
+            break;
         }
     }
 

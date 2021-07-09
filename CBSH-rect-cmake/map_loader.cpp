@@ -135,12 +135,30 @@ MapLoader::MapLoader(string fname)
   ifstream myfile (fname.c_str());
   if (myfile.is_open()) {
     getline (myfile,line);
-    char_separator<char> sep(",");
-    tokenizer< char_separator<char> > tok(line, sep);
-    tokenizer< char_separator<char> >::iterator beg=tok.begin();
-    int rows = atoi ( (*beg).c_str() ); // read number of rows
-    beg++;
-    int cols = atoi ( (*beg).c_str() ); // read number of cols
+    int rows, cols;
+    if(line == "type octile"){
+        getline (myfile, line);
+        char_separator<char> sep(" ");
+        tokenizer< char_separator<char> > tok(line, sep);
+        tokenizer< char_separator<char> >::iterator beg=tok.begin();
+        beg++;
+        rows = atoi ( (*beg).c_str() );
+        getline (myfile, line);
+        tokenizer< char_separator<char> > tok2(line, sep);
+        tokenizer< char_separator<char> >::iterator beg2=tok.begin();
+        beg2++;
+        cols = atoi ( (*beg2).c_str() );
+        getline (myfile,line);
+    }
+    else{
+        char_separator<char> sep(",");
+        tokenizer< char_separator<char> > tok(line, sep);
+        tokenizer< char_separator<char> >::iterator beg=tok.begin();
+        rows = atoi ( (*beg).c_str() ); // read number of rows
+        beg++;
+        cols = atoi ( (*beg).c_str() ); // read number of cols
+    }
+
     bool* my_map= new bool[rows*cols];
     for (int i=0; i<rows*cols; i++)
       my_map[i] = false;

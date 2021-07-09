@@ -33,7 +33,7 @@ int main(int argc, char** argv)
 		("cutoffTime,t", po::value<float>()->default_value(7200), "cutoff time (seconds)")
 		("seed,d", po::value<int>()->default_value(0), "random seed")
 		("screen", po::value<int>()->default_value(0), "screen option (0: none; 1: results; 2:all)")
-		("corridor2", po::value<bool>(), "reason about 2-way branching corridor conflicts")
+		("corridor", po::value<bool>(), "reason about 2-way branching corridor conflicts")
 		("target", po::value<bool>(), "reason about target conflict")
 		("kDelay", po::value<int>()->default_value(0), "Set max_k for k robust plan")
 		("diff-k",  "All agent have different k")
@@ -118,9 +118,9 @@ int main(int argc, char** argv)
 		icbs.rectangleMDD = true;
 	}
 
-	if (vm.count("corridor2"))
+	if (vm.count("corridor"))
 	{
-		icbs.corridor2 = vm["corridor2"].as<bool>();
+		icbs.corridor2 = vm["corridor"].as<bool>();
 	}
 
 	if (vm.count("target"))

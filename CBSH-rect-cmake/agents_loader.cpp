@@ -61,7 +61,7 @@ AgentsLoader::AgentsLoader(string fname, const MapLoader &ml,int max_k,bool diff
   ifstream myfile (fname.c_str());
   this->max_k = max_k;
 
-  if (myfile.is_open()) {
+  if (myfile.is_open() && agentsNum == 0) {//jiaoyang's agent format
     getline (myfile,line);
     char_separator<char> sep(",");
     tokenizer< char_separator<char> > tok(line, sep);
@@ -109,7 +109,49 @@ AgentsLoader::AgentsLoader(string fname, const MapLoader &ml,int max_k,bool diff
       this->max_a.push_back(atof((*c_beg).c_str()));*/
     }
     myfile.close();
-  } 
+  }
+  else if(myfile.is_open() && agentsNum > 0){//
+      getline (myfile,line);
+      char_separator<char> sep("\t");
+      tokenizer< char_separator<char> > tok(line, sep);
+      tokenizer< char_separator<char> >::iterator beg=tok.begin();
+      this->num_of_agents = agentsNum;
+      //    cout << "#AG=" << num_of_agents << endl;
+      for (int i=0; i<num_of_agents; i++) {
+          getline (myfile, line);
+          tokenizer< char_separator<char> > col_tok(line, sep);
+          tokenizer< char_separator<char> >::iterator c_beg=col_tok.begin();
+          c_beg++;
+          c_beg++;
+          c_beg++;
+          c_beg++;
+          pair<int,int> curr_pair;
+          // read start [row,col] for agent i
+          curr_pair.second = atoi ( (*c_beg).c_str() );
+          c_beg++;
+          curr_pair.first = atoi ( (*c_beg).c_str() );
+          //      cout << "AGENT" << i << ":   START[" << curr_pair.first << "," << curr_pair.second << "] ; ";
+          this->initial_locations.push_back(curr_pair);
+          // read goal [row,col] for agent i
+          c_beg++;
+          curr_pair.second = atoi ( (*c_beg).c_str() );
+          c_beg++;
+          curr_pair.first = atoi ( (*c_beg).c_str() );
+          //      cout << "GOAL[" << curr_pair.first << "," << curr_pair.second << "]" << endl;
+          this->goal_locations.push_back(curr_pair);
+          this->headings.push_back(-1);
+          this->min_end_time.push_back(0);
+          this->done.push_back(false);
+
+          if (diff_k)
+              this->k.push_back(i%(this->max_k+1));
+          else
+              this->k.push_back(this->max_k);
+
+
+      }
+      myfile.close();
+  }
   else if(agentsNum > 0)//Generate agents randomly
   {
 	  this->num_of_agents = agentsNum;

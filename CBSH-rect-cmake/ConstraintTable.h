@@ -26,7 +26,7 @@ public:
 	void insert(int loc, int t_min, int t_max);
     void insert_train(int loc, int t_min);
 
-    void insert(std::list<Constraint>& constraints, int agent_id, int num_col, int map_size);
+    void insert(std::list<Constraint>& constraints, int agent_id, int num_col, int map_size, int k = 0);
 	bool is_constrained(int loc, int t, bool body = false);
 	void printSize() {
 		std::cout << CT.size() << std::endl;;

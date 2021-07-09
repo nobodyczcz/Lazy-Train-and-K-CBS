@@ -129,7 +129,7 @@ int CorridorReasoning<Map>::getBypassLength(int start, int end, std::pair<int, i
 	{
 		curr = heap.top();
 		heap.pop();
-		if (curr->locs.front() == end && goalHeuTable[end].get_hval(end_heading) >= goalHeuTable[curr->locs.front()].get_hval(curr->heading))
+		if (curr->locs.front() == end )// todo:: ignore heading for now. maybe adding back if run experiment on flatland
 		{
 			length = curr->g_val;
 			break;
@@ -141,7 +141,7 @@ int CorridorReasoning<Map>::getBypassLength(int start, int end, std::pair<int, i
 			int next_loc = move.first;
 			time_generated += 1;
 			list<int> next_locs;
-            if (!getOccupations(next_locs, next_loc, curr,k));
+            if (!getOccupations(next_locs, next_loc, curr,k))
                 continue;
 
 			int next_timestep = curr->timestep + 1;
@@ -214,17 +214,23 @@ bool CorridorReasoning<Map>::getOccupations(list<int>& next_locs, int next_id, L
     auto parent = curr;
     int pre_loc = next_id;
     bool conf_free = true;
-    while(parent != nullptr && next_locs.size()<k){
-        if (pre_loc!= parent->locs.front()) {
-            next_locs.push_back(parent->locs.front());
-            pre_loc = parent->locs.front();
-            if(next_locs.front() == next_locs.back()){
-                conf_free = false;
-                break;
-            }
+    while(next_locs.size()<=k){
+        if (parent == nullptr){
+            next_locs.push_back(next_locs.back());
         }
-        parent = parent->parent;
+        else {
+            if (pre_loc != parent->locs.front()) {
+                next_locs.push_back(parent->locs.front());
+                pre_loc = parent->locs.front();
+                if (next_locs.front() == next_locs.back()) {
+                    conf_free = false;
+                }
+            }
+            parent = parent->parent;
+        }
+
     }
+
     return conf_free;
 }
 
