@@ -184,7 +184,6 @@ int main(int argc, char** argv)
 
     if (vm["screen"].as<int>() == 2)
 		cout << "Done!!" << endl;
-	delete ml;
 	return 0;
 
 }

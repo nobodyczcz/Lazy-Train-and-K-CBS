@@ -260,7 +260,7 @@ public:
     virtual bool pairedAnalysis(ICBSNode* node,int agent1, int agent2){};
     void countNodes(int amount);
     void printConstraints(ICBSNode* node,int agent_id,ofstream& out);
-    bool print_data();
+    void print_data();
 
     ofstream analysisOutput;
     string analysisOutputPath;

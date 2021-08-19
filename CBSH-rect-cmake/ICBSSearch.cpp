@@ -914,7 +914,7 @@ void ICBSSearch::printStrategy() const
 }
 
 template<class Map>
-bool MultiMapICBSSearch<Map>::print_data(){
+void MultiMapICBSSearch<Map>::print_data(){
     cout << solution_cost << " ; " << min_f_val - dummy_start->g_val << " ; " <<
     HL_num_expanded << " ; " << HL_num_generated << " ; " <<
     LL_num_expanded << " ; " << LL_num_generated << " ; " << runtime / CLOCKS_PER_SEC << " ; "
