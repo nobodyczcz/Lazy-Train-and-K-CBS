@@ -74,15 +74,7 @@ bool MDD<Map>::buildMDD( ConstraintTable& constraints, int numOfLevels, SingleAg
 			}
 
 			std::list<int> new_locs;
-            bool no_self_collision = true;
-			if(node->locs.front() == solver.goal_location && newLoc == solver.goal_location){
-			    new_locs = node->locs;
-			    new_locs.pop_back();
-			}
-			else{
-                no_self_collision = getOccupations(new_locs,newLoc,node,solver.kRobust);
-
-			}
+            bool no_self_collision = getOccupations(new_locs,newLoc,node,solver.kRobust);
 
 			if ((train && !no_self_collision) || new_locs.empty())
 			    continue;

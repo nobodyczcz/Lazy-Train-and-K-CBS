@@ -1,7 +1,6 @@
 #pragma once
 
 
-#include "LLNode.h"
 #include <memory>
 #include "common.h"
 #include <string>
@@ -24,12 +23,10 @@ std::ostream& operator<<(std::ostream& os, const Constraint& constraint);
 
 
 
-bool addGeneralKVerticalBarrierConstraint(const std::vector<PathEntry>& path, int y,
-                                          int Ri_x, int Rg_x, int Rg_t, int num_col, int St,
+bool addGeneralKVerticalBarrierConstraint( int y, int Ri_x, int Rg_x, int Rg_t, int num_col, int St,
                                           std::list<Constraint>& constraints, int k,int extended, const MDDLevels* kMDD);
 
-bool addGeneralKHorizontalBarrierConstraint(const std::vector<PathEntry>& path, int x,
-                                            int Ri_y, int Rg_y, int Rg_t, int num_col, int St,
+bool addGeneralKHorizontalBarrierConstraint(int x, int Ri_y, int Rg_y, int Rg_t, int num_col, int St,
                                             std::list<Constraint>& constraints, int k,int extended, const MDDLevels* kMDD);
 
 
@@ -39,27 +36,23 @@ class Conflict
 {
 public:
 
+    // row conflict contains following information
 	int a1;
 	int a2;
 	int t;
+	int delta=0;
+	int v1=0;
+	int v2=-1;
+	bool train_conflict = false;
+
+
+	//Additional information for advanced conflict
 	int k=0;
-	int s1;
-	int s2;
-	int g1;
-	int g2;
-	int s1_t;
-	int s2_t;
-	int g1_t;
-	int g2_t;
 	int rs=0;
 	int rg=0;
 	int t_sg;
-	int originalConf1=0;
-	int originalConf2=-1;
-	int flipType = 0;
-	bool repeat = false;
+
 	bool isChasing = false;
-	bool train_conflict = false;
 	std::list<Constraint> constraint1;
 	std::vector<std::list<Constraint>> multiConstraint1;
 	std::list<Constraint> constraint2;
@@ -70,11 +63,23 @@ public:
 
 	Conflict() {};
 	Conflict(int v,int k,int t) {
-		this->originalConf1 = v;
-		this->originalConf2 = -1;
+		this->v1 = v;
+		this->v2 = -1;
 		this->k = k;
 		this->t = t;
 	};
+
+	Conflict(int a1, int a2, int v1, int v2, int t, int delta, bool train_conflict ){
+	    this->a1 = a1;
+	    this->a2 = a2;
+	    this->v1 = v1;
+	    this->v2 = v2;
+	    this->t = t;
+	    this->delta = delta;
+	    this->train_conflict = train_conflict;
+	}
+
+
 	void clear(){
         constraint1.clear();
         constraint2.clear();
@@ -82,36 +87,57 @@ public:
         multiConstraint2.clear();
 	}
 
-	void vertexTrainConflict(int a1, int a2, int v, int t,int k=0,int kRobust =0)
+
+	void vertexTrainConflict(int a1, int a2, int v, int t, bool target = false)
 	{
 		this->a1 = a1;
 		this->a2 = a2;
 		this->t = t;
-		this->k = k;
-		this->originalConf1 = v;
-		this->originalConf2 = -1;
+		this->k = 0;
+		this->v1 = v;
+		this->v2 = -1;
 		this->train_conflict = true;
-//		for (int i = 0; i <= kRobust; i++) {
-			this->constraint1.emplace_back(v, -1, t, constraint_type::TRAIN_VERTEX);
-			this->constraint2.emplace_back(v, -1, t, constraint_type::TRAIN_VERTEX);
-//		}
+
+		if (target)
+		    this->constraint1.emplace_back(-v, a1, t, constraint_type::PARKING); //place a parking constraint on it.
+		else
+		    this->constraint1.emplace_back(v, -1, t, constraint_type::TRAIN_VERTEX);
+		this->constraint2.emplace_back(v, -1, t, constraint_type::TRAIN_VERTEX);
 		type = conflict_type::STANDARD;
 	}
-    void vertexTrainConflictRange(int a1, int a2, int v, int t,int k=0,int range =0)
-    {
-        this->a1 = a1;
-        this->a2 = a2;
-        this->t = t;
-        this->k = k;
-        this->originalConf1 = v;
-        this->originalConf2 = -1;
-        this->train_conflict = true;
-        for (int i = 0; i <= range; i++) {
-            this->constraint1.emplace_back(v, -1, t+i, constraint_type::TRAIN_VERTEX);
-            this->constraint2.emplace_back(v, -1, t+i, constraint_type::TRAIN_VERTEX);
-        }
-        type = conflict_type::STANDARD;
-    }
+
+	void parkingConflict(int a1, int a2, int v, int t)
+	{
+	    this->a1 = a1;
+	    this->a2 = a2;
+	    this->t = t;
+	    this->k = 0;
+	    this->v1 = v;
+	    this->v2 = -1;
+	    this->train_conflict = true;
+
+
+
+	    this->constraint1.emplace_back(-v, a1, t, constraint_type::PARKING); // a1 must not part at v from 0, t
+	    this->constraint2.emplace_back(v, a1, t, constraint_type::PARKING); // a1 must park at v from [0,t], all others not use v after t
+	    type = conflict_type::TARGET;
+	}
+
+//    void vertexTrainConflictRange(int a1, int a2, int v, int t,int k=0,int range =0)
+//    {
+//        this->a1 = a1;
+//        this->a2 = a2;
+//        this->t = t;
+//        this->k = k;
+//        this->v1 = v;
+//        this->v2 = -1;
+//        this->train_conflict = true;
+//        for (int i = 0; i <= range; i++) {
+//            this->constraint1.emplace_back(v, -1, t+i, constraint_type::TRAIN_VERTEX);
+//            this->constraint2.emplace_back(v, -1, t+i, constraint_type::TRAIN_VERTEX);
+//        }
+//        type = conflict_type::STANDARD;
+//    }
 
     void selfConflict(int a)
     {
@@ -128,8 +154,8 @@ public:
         this->a2 = a2;
         this->t = t;
         this->k = delta;
-        this->originalConf1 = v;
-        this->originalConf2 = -1;
+        this->v1 = v;
+        this->v2 = -1;
         for (int i = 0; i <= k2; i++) {
             this->constraint1.emplace_back(v, -1, t+i, constraint_type::VERTEX);
         }
@@ -145,26 +171,15 @@ public:
 		this->a2 = a2;
 		this->t = t;
 		this->k = 0;
-		this->originalConf1 = v1;
-		this->originalConf2 = v2;
+		this->v1 = v1;
+		this->v2 = v2;
 
 		this->constraint1.emplace_back(v1, v2, t, constraint_type::EDGE);
 		this->constraint2.emplace_back(v2, v1, t, constraint_type::EDGE);
 		type = conflict_type::STANDARD;
 	}
 
-	void trainCorridorConflict(int a1, int a2, int v1, int v2, int t1, int t2, int e1, int e2, int k, int kRobust)
-	{
-		this->a1 = a1;
-		this->a2 = a2;
-		this->k = k;
-		this->t = std::min(e1, e2);
-		this->originalConf1 = v1;
-		this->originalConf2 = v2;
-		this->constraint1.emplace_back(v1, t2, e2-1 + kRobust, constraint_type::RANGE);
-		this->constraint2.emplace_back(v2, t1, e1-1 + kRobust, constraint_type::RANGE);
-		type = conflict_type::CORRIDOR2;
-	}
+
 
 	// t3 
 	void corridorConflict(int a1, int a2, int v1, int v2, int t3, int t4, int t3_, int t4_,int t1, int t2, int l,int k_1, int k_2)
@@ -173,37 +188,17 @@ public:
 		this->a2 = a2;
 		this->k = l;
 		this->t = std::min(t3, t4);
-		this->originalConf1 = v1;
-		this->originalConf2 = v2;
+		this->v1 = v1;
+		this->v2 = v2;
 		//k is corridor length
 		this->constraint1.emplace_back(v1, t3, std::min( std::max(t2 + k_2, t3_ - 1) , t4 + l + k_2), constraint_type::RANGE);
 		this->constraint2.emplace_back(v2, t4, std::min( std::max(t1 + k_1, t4_ - 1) , t3 + l + k_1), constraint_type::RANGE);
 		type = conflict_type::CORRIDOR2;
 	}
 
-
-	void corridorConflict(int a1, int a2, int v1, int v2, int t1, int t2, int k, int h, int kRobust)
-	{
-		this->a1 = a1;
-		this->a2 = a2;
-		this->t = std::min(t1, t2);
-		this->originalConf1 = v1;
-		this->originalConf2 = v2;
-		this->k = k;
-		this->constraint1.emplace_back(v1, t1, t1 + 2 * k - 1 + kRobust, constraint_type::RANGE);
-		this->constraint1.emplace_back(v2, t1 + k, std::min(t2 + 2 * k, t1 + h - 1) + kRobust, constraint_type::RANGE);
-		this->constraint2.emplace_back(v2, t2, t2 + 2 * k - 1 + kRobust, constraint_type::RANGE);
-		this->constraint2.emplace_back(v1, t2 + k, std::min(t1 + 2 * k, t2 + h - 1) + kRobust, constraint_type::RANGE);
-		type = conflict_type::CORRIDOR4;
-	}
-
-
-
-
-
     int generalKRectangleConflict(int a1, int a2, const std::pair<int, int>& Rs, const std::pair<int, int>& Rg,
                             const std::pair<int, int>& s1, const std::pair<int, int>& s2, int rt1,int rt2,
-                            const std::vector<Path*>& paths, int S1_t, int S2_t, const std::pair<int, int>& G1, const std::pair<int, int>& G2,
+                            int S1_t, int S2_t, const std::pair<int, int>& G1, const std::pair<int, int>& G2,
                             int num_col, int a1k, int a2k,int a1_extended,int a2_extended, const MDDLevels* a1kMDD, const MDDLevels* a2kMDD) // For K-RM
     {
 	    //s and g are B and A in paper
@@ -275,23 +270,23 @@ public:
 
 
             std::list<Constraint> constraint11;
-            addGeneralKVerticalBarrierConstraint(*paths[a1], a1_exit, R1_x, G1_x, G1_t, num_col, S1_t, constraint11, a1k,a2_extended, a1kMDD);
+            addGeneralKVerticalBarrierConstraint( a1_exit, R1_x, G1_x, G1_t, num_col, S1_t, constraint11, a1k,a2_extended, a1kMDD);
             multiConstraint1.push_back(constraint11);
 
 
             //chasing case always 4 way split
             std::list<Constraint> constraint12;
-            addGeneralKVerticalBarrierConstraint(*paths[a1], a1_entrance, R1_x, G1_x, E1_t, num_col, S1_t, constraint12, a1k,a2_extended, a1kMDD);
+            addGeneralKVerticalBarrierConstraint( a1_entrance, R1_x, G1_x, E1_t, num_col, S1_t, constraint12, a1k,a2_extended, a1kMDD);
             multiConstraint1.push_back(constraint12);
 
 
             std::list<Constraint> constraint21;
-            addGeneralKHorizontalBarrierConstraint(*paths[a2], a2_exit, R2_y, G2_y, G2_t, num_col, S2_t, constraint21, a2k,a1_extended, a2kMDD);
+            addGeneralKHorizontalBarrierConstraint( a2_exit, R2_y, G2_y, G2_t, num_col, S2_t, constraint21, a2k,a1_extended, a2kMDD);
             multiConstraint2.push_back(constraint21);
 
             //chasing case always 4 way split
             std::list<Constraint> constraint22;
-            addGeneralKHorizontalBarrierConstraint(*paths[a2], a2_entrance, R2_y, G2_y, E2_t, num_col, S2_t, constraint22, a2k,a1_extended, a2kMDD);
+            addGeneralKHorizontalBarrierConstraint( a2_entrance, R2_y, G2_y, E2_t, num_col, S2_t, constraint22, a2k,a1_extended, a2kMDD);
             multiConstraint2.push_back(constraint22);
             this->isChasing = true;
 
@@ -338,24 +333,24 @@ public:
 
             std::list<Constraint> constraint11;
 
-            addGeneralKHorizontalBarrierConstraint(*paths[a1], a1_exit, R1_y, G1_y, G1_t, num_col, S1_t, constraint11, a1k,a2_extended, a1kMDD);
+            addGeneralKHorizontalBarrierConstraint( a1_exit, R1_y, G1_y, G1_t, num_col, S1_t, constraint11, a1k,a2_extended, a1kMDD);
             multiConstraint1.push_back(constraint11);
 
             //chasing case always 4 way split
             std::list<Constraint> constraint12;
-            addGeneralKHorizontalBarrierConstraint(*paths[a1], a1_entrance, R1_y, G1_y, E1_t, num_col, S1_t, constraint12, a1k,a2_extended, a1kMDD);
+            addGeneralKHorizontalBarrierConstraint( a1_entrance, R1_y, G1_y, E1_t, num_col, S1_t, constraint12, a1k,a2_extended, a1kMDD);
             multiConstraint1.push_back(constraint12);
 
 
 
 
             std::list<Constraint> constraint21;
-            addGeneralKVerticalBarrierConstraint(*paths[a2], a2_exit, R2_x, G2_x, G2_t, num_col, S2_t, constraint21, a2k,a1_extended, a2kMDD);
+            addGeneralKVerticalBarrierConstraint( a2_exit, R2_x, G2_x, G2_t, num_col, S2_t, constraint21, a2k,a1_extended, a2kMDD);
             multiConstraint2.push_back(constraint21);
 
             //chasing case always 4 way split
             std::list<Constraint> constraint22;
-            addGeneralKVerticalBarrierConstraint(*paths[a2], a2_entrance, R2_x, G2_x, E2_t, num_col, S2_t, constraint22, a2k,a1_extended, a2kMDD);
+            addGeneralKVerticalBarrierConstraint( a2_entrance, R2_x, G2_x, E2_t, num_col, S2_t, constraint22, a2k,a1_extended, a2kMDD);
             multiConstraint2.push_back(constraint22);
 
             this->isChasing = true;
@@ -400,22 +395,22 @@ public:
 
             std::list<Constraint> constraint11;
 
-            addGeneralKHorizontalBarrierConstraint(*paths[a1], a1_exit, R1_y, G1_y, G1_t, num_col, S1_t, constraint11, a1k,a2_extended, a1kMDD);
+            addGeneralKHorizontalBarrierConstraint(a1_exit, R1_y, G1_y, G1_t, num_col, S1_t, constraint11, a1k,a2_extended, a1kMDD);
             multiConstraint1.push_back(constraint11);
 
             std::list<Constraint> constraint12;
-            addGeneralKHorizontalBarrierConstraint(*paths[a1], a1_entrance, R1_y, G1_y, E1_t, num_col, S1_t, constraint12, a1k,a2_extended, a1kMDD);
+            addGeneralKHorizontalBarrierConstraint( a1_entrance, R1_y, G1_y, E1_t, num_col, S1_t, constraint12, a1k,a2_extended, a1kMDD);
             multiConstraint1.push_back(constraint12);
 
 
 
 
             std::list<Constraint> constraint21;
-            addGeneralKVerticalBarrierConstraint(*paths[a2], a2_exit, R2_x, G2_x, G2_t, num_col, S2_t, constraint21, a2k,a1_extended, a2kMDD);
+            addGeneralKVerticalBarrierConstraint( a2_exit, R2_x, G2_x, G2_t, num_col, S2_t, constraint21, a2k,a1_extended, a2kMDD);
             multiConstraint2.push_back(constraint21);
 
             std::list<Constraint> constraint22;
-            addGeneralKVerticalBarrierConstraint(*paths[a2], a2_entrance, R2_x, G2_x, E2_t, num_col, S2_t, constraint22, a2k,a1_extended, a2kMDD);
+            addGeneralKVerticalBarrierConstraint(a2_entrance, R2_x, G2_x, E2_t, num_col, S2_t, constraint22, a2k,a1_extended, a2kMDD);
             multiConstraint2.push_back(constraint22);
 
 
@@ -454,22 +449,22 @@ public:
 
 
             std::list<Constraint> constraint11;
-            addGeneralKVerticalBarrierConstraint(*paths[a1], a1_exit, R1_x, G1_x, G1_t, num_col, S1_t, constraint11, a1k,a2_extended, a1kMDD);
+            addGeneralKVerticalBarrierConstraint( a1_exit, R1_x, G1_x, G1_t, num_col, S1_t, constraint11, a1k,a2_extended, a1kMDD);
             multiConstraint1.push_back(constraint11);
 
 
             std::list<Constraint> constraint12;
-            addGeneralKVerticalBarrierConstraint(*paths[a1], a1_entrance, R1_x, G1_x, E1_t, num_col, S1_t, constraint12, a1k,a2_extended, a1kMDD);
+            addGeneralKVerticalBarrierConstraint( a1_entrance, R1_x, G1_x, E1_t, num_col, S1_t, constraint12, a1k,a2_extended, a1kMDD);
             multiConstraint1.push_back(constraint12);
 
 
 
             std::list<Constraint> constraint21;
-            addGeneralKHorizontalBarrierConstraint(*paths[a2], a2_exit, R2_y, G2_y, G2_t, num_col, S2_t, constraint21, a2k,a1_extended, a2kMDD);
+            addGeneralKHorizontalBarrierConstraint( a2_exit, R2_y, G2_y, G2_t, num_col, S2_t, constraint21, a2k,a1_extended, a2kMDD);
             multiConstraint2.push_back(constraint21);
 
             std::list<Constraint> constraint22;
-            addGeneralKHorizontalBarrierConstraint(*paths[a2], a2_entrance, R2_y, G2_y, E2_t, num_col, S2_t, constraint22, a2k,a1_extended, a2kMDD);
+            addGeneralKHorizontalBarrierConstraint( a2_entrance, R2_y, G2_y, E2_t, num_col, S2_t, constraint22, a2k,a1_extended, a2kMDD);
             multiConstraint2.push_back(constraint22);
 
 
@@ -485,14 +480,42 @@ public:
 		this->a2 = a2;
 		this->t = t;
 		this->k = 0;
-		this->originalConf1 = v;
-		this->originalConf2 = -1;
+		this->v1 = v;
+		this->v2 = -1;
 
 
 		this->constraint1.emplace_back(-1, a1, t + k_2 /* kDelay>0? t + kDelay+1:t*/, constraint_type::LENGTH); // length of a1 should be larger than t
 		this->constraint2.emplace_back(v, a1, t + k_2, constraint_type::LENGTH); // length of a1 should be no larger than t, and other agents can not use v at and after timestep t
 		type = conflict_type::TARGET;
 	}
+
+	//	void corridorConflict(int a1, int a2, int v1, int v2, int t1, int t2, int k, int h, int kRobust)
+	//	{
+	//		this->a1 = a1;
+	//		this->a2 = a2;
+	//		this->t = std::min(t1, t2);
+	//		this->v1 = v1;
+	//		this->v2 = v2;
+	//		this->k = k;
+	//		this->constraint1.emplace_back(v1, t1, t1 + 2 * k - 1 + kRobust, constraint_type::RANGE);
+	//		this->constraint1.emplace_back(v2, t1 + k, std::min(t2 + 2 * k, t1 + h - 1) + kRobust, constraint_type::RANGE);
+	//		this->constraint2.emplace_back(v2, t2, t2 + 2 * k - 1 + kRobust, constraint_type::RANGE);
+	//		this->constraint2.emplace_back(v1, t2 + k, std::min(t1 + 2 * k, t2 + h - 1) + kRobust, constraint_type::RANGE);
+	//		type = conflict_type::CORRIDOR4;
+	//	}
+
+//	void trainCorridorConflict(int a1, int a2, int v1, int v2, int t1, int t2, int e1, int e2, int k, int kRobust)
+//	{
+//	    this->a1 = a1;
+//	    this->a2 = a2;
+//	    this->k = k;
+//	    this->t = std::min(e1, e2);
+//	    this->v1 = v1;
+//	    this->v2 = v2;
+//	    this->constraint1.emplace_back(v1, t2, e2-1 + kRobust, constraint_type::RANGE);
+//	    this->constraint2.emplace_back(v2, t1, e1-1 + kRobust, constraint_type::RANGE);
+//	    type = conflict_type::CORRIDOR2;
+//	}
 
 
 };

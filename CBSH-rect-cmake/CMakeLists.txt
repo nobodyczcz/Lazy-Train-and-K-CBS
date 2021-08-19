@@ -58,7 +58,7 @@ add_executable (CBS-K
 			# ../mapVisualiser/Visualiser.cpp
 			MDDNode.h
 			MDDNode.cpp
-			ICBSHSearchPairAnalysis.cpp ICBSHSearchPairAnalysis.h)
+			ICBSHSearchPairAnalysis.cpp ICBSHSearchPairAnalysis.h Path.h)
 
 
 

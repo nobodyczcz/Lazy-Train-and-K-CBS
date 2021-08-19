@@ -4,8 +4,9 @@
 #include <unordered_set> 
 #include "common.h"
 #include "agents_loader.h"
-
+#include "Conflict.h"
 #include <memory>
+#include "Path.h"
 using namespace std;
 
 
@@ -53,7 +54,7 @@ public:
 	void addPath(int agent_id, std::vector<PathEntry>* path);
 	void addPaths(vector<vector<PathEntry>*>* paths, int exclude = -1);
 	void deletePath(int agent_id, std::vector<PathEntry>* path);
-	OldConfList* findConflict(int agent, int currLoc, list<int> next_locs, int currT, bool ignore_goal_table = false);
+	std::list<Conflict> findConflict(int agent, int currLoc, list<int> next_locs, int currT, bool parking = false);
 	int countConflict(int agent, int currLoc, list<int> next_locs, int currT);
 
 

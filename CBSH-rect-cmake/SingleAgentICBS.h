@@ -7,6 +7,7 @@
 #include <utility>
 #include <ctime>
 #include "common.h"
+#include "Path.h"
 
 #include "LLNode.h"
 #include "map_loader.h"
@@ -54,9 +55,7 @@ public:
 	double min_f_val;  // min f-val seen so far
 	int num_of_conf; // number of conflicts between this agent to all the other agents
 
-	//returns the minimal plan length for the agent (that is, extract the latest timestep which
-	// has a constraint invloving this agent's goal location).
-	int extractLastGoalTimestep(int goal_location, const std::vector< std::list<std::pair<int, int> > >* cons);
+
 
 	//Checks if a vaild path found (wrt my_map and constraints)
 	//Note -- constraint[timestep] is a list of pairs. Each pair is a disallowed <loc1,loc2> (loc2=-1 for vertex constraint).
@@ -81,9 +80,6 @@ public:
 	// Updates the path datamember
 	void updatePath(LLNode* goal, std::vector<PathEntry> &path,ReservationTable* res_table);
 
-	// Return the number of conflicts between the known_paths' (by looking at the reservation table) for the move [curr_id,next_id].
-	// Returns 0 if no conflict, 1 for vertex or edge conflict, 2 for both.
-	int numOfConflictsForStep(int curr_id, int next_id, int next_timestep, const bool* res_table, int max_plan_len);
 
 	// find path by time-space A* search
 	// Returns true if a collision free path found  while
@@ -94,7 +90,6 @@ public:
 		ConstraintTable& constraints, ReservationTable* res_table,
 		size_t max_plan_len, double lowerbound,
 		std::clock_t start = 0, int time_limit = 0, bool train = false);
-	bool validMove(int curr, int next) const; // whetehr curr->next is a valid move
     bool getOccupations(list<int>& next_locs,int next_id, LLNode* curr);
 
 	inline void releaseClosedListNodes(hashtable_t* allNodes_table);

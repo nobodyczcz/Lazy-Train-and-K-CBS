@@ -28,7 +28,6 @@ public:
 	bool in_openlist = false;
 	bool in_focallist = false;
 	bool self_conflict = false;
-	OldConfList* conflist=NULL;
 
 
 	// the following is used to comapre nodes in the OPEN list

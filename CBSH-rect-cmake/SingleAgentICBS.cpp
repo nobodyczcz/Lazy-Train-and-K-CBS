@@ -7,26 +7,27 @@ template<class Map>
 void SingleAgentICBS<Map>::updatePath(LLNode* goal, std::vector<PathEntry> &path,ReservationTable* res_table)
 {
     path.clear();
-	path.resize(goal->g_val + 1 + goal->locs.size()-1);
+	path.resize(goal->g_val + 1);
 	LLNode* curr = goal;
 	num_of_conf = goal->num_internal_conf;
 
+	// No shrink to hole any more.
 	// Include the goal shrink process to path
-    list<int> goalLocs =  goal->locs;
-    goalLocs.pop_back();
-    for (int t = goal->g_val+1; t < path.size();t++){
-        path[t].location = goalLocs.front();
-        path[t].occupations = goalLocs;
-        path[t].actionToHere = goal->heading;
-        path[t].heading = goal->heading;
-        path[t].singles.clear();
-        path[t].self_conflict = false;
-        if (t!=0)
-            path[t].conflist =  res_table->findConflict(agent_id, goalLocs.front(), goalLocs, t-1);
-        else
-            path[t].conflist = NULL;
-        goalLocs.pop_back();
-	}
+//    list<int> goalLocs =  goal->locs;
+//    goalLocs.pop_back();
+//    for (int t = goal->g_val+1; t < path.size();t++){
+//        path[t].location = goalLocs.front();
+//        path[t].occupations = goalLocs;
+//        path[t].actionToHere = goal->heading;
+//        path[t].heading = goal->heading;
+//        path[t].singles.clear();
+//        path[t].self_conflict = false;
+//        if (t!=0)
+//            path[t].conflist =  res_table->findConflict(agent_id, goalLocs.front(), goalLocs, t-1);
+//        else
+//            path[t].conflist = NULL;
+//        goalLocs.pop_back();
+//	}
 
 	for(int t = goal->g_val; t >= 0; t--)
 	{
@@ -39,11 +40,10 @@ void SingleAgentICBS<Map>::updatePath(LLNode* goal, std::vector<PathEntry> &path
         path[t].self_conflict = curr->self_conflict;
 
         if (t!=0)
-            path[t].conflist =  res_table->findConflict(agent_id, curr->parent->locs.front(), curr->locs, t-1, kRobust);
+            path[t].conflist =  res_table->findConflict(agent_id, curr->parent->locs.front(), curr->locs, t-1, t==goal->g_val);
         else
-            path[t].conflist =  res_table->findConflict(agent_id, curr->locs.front(), curr->locs, t-1, kRobust);;
+            path[t].conflist =  res_table->findConflict(agent_id, curr->locs.front(), curr->locs, t-1);
 
-		curr->conflist = NULL;
 		curr = curr->parent;
 	}
 
@@ -51,58 +51,11 @@ void SingleAgentICBS<Map>::updatePath(LLNode* goal, std::vector<PathEntry> &path
 }
 
 
-// iterate over the constraints ( cons[t] is a list of all constraints for timestep t) and return the latest
-// timestep which has a constraint involving the goal location
-template<class Map>
-int SingleAgentICBS<Map>::extractLastGoalTimestep(int goal_location, const std::vector< std::list< std::pair<int, int> > >* cons) {
-	if (cons != NULL) {
-		for (int t = static_cast<int>(cons->size()) - 1; t > 0; t--) 
-		{
-			for (std::list< std::pair<int, int> >::const_iterator it = cons->at(t).begin(); it != cons->at(t).end(); ++it)
-			{
-				if (std::get<0>(*it) == goal_location && it->second < 0) 
-				{
-					return (t);
-				}
-			}
-		}
-	}
-	return -1;
-}
 
 
-template<class Map>
-int SingleAgentICBS<Map>::numOfConflictsForStep(int curr_id, int next_id, int next_timestep, const bool* res_table, int max_plan_len) {
-	int retVal = 0;
-	if (next_timestep >= max_plan_len) {
-		// check vertex constraints (being at an agent's goal when he stays there because he is done planning)
-		if (res_table[next_id + (max_plan_len - 1)*map_size] == true)
-			retVal++;
-		// Note -- there cannot be edge conflicts when other agents are done moving
-	}
-	else {
-		// check vertex constraints (being in next_id at next_timestep is disallowed)
-		if (res_table[next_id + next_timestep*map_size] == true)
-			retVal++;
-		// check edge constraints (the move from curr_id to next_id at next_timestep-1 is disallowed)
-		// which means that res_table is occupied with another agent for [curr_id,next_timestep] and [next_id,next_timestep-1]
-		if (res_table[curr_id + next_timestep*map_size] && res_table[next_id + (next_timestep - 1)*map_size])
-			retVal++;
-	}
-	return retVal;
-}
 
-template<class Map>
-bool SingleAgentICBS<Map>::validMove(int curr, int next) const
-{
-	if (next < 0 || next >= map_size)
-		return false;
-	int curr_x = curr / num_col;
-	int curr_y = curr % num_col;
-	int next_x = next / num_col;
-	int next_y = next % num_col;
-	return abs(next_x - curr_x) + abs(next_y - curr_y) < 2;
-}
+
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // return true if a path found (and updates vector<int> path) or false if no path exists
@@ -165,7 +118,10 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 		num_expanded++;
 
 		// check if the popped node is a goal
-		if ( curr->locs.front() == goal_location && curr->timestep >= constraint_table.length_min && curr->timestep >= min_end_time)
+		if ( curr->locs.front() == goal_location
+		&& curr->timestep >= constraint_table.length_min
+		&& curr->timestep >= min_end_time
+		&& (!train || !constraint_table.is_parking_constrained(curr->locs, curr->timestep)))
 		{
 
 			if (curr->parent == NULL || curr->parent->locs.front() != goal_location)
@@ -223,10 +179,11 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
             //check does head have edge constraint or body have vertex constraint.
             bool constrained = false;
 
+            //Check edge constraint on head
             if (constraint_table.is_constrained(curr->locs.front() * map_size + next_id, next_timestep))
                 constrained = true;
 
-
+            //Check vertex constraint on body and head
             for(auto loc:next_locs){
                 if (constraint_table.is_constrained(loc, next_timestep, loc != next_locs.front()) )
                     constrained = true;
@@ -234,21 +191,23 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
                     break;
             }
 
+            //Trains no longer shrink to whole. But will occupy the destination with whole body.
             //For node at goal location, we need to consider collision when agent shrink to goal hole.
-            if (next_id == goal_location){
-                list<int> onTargetLocs = next_locs;
-                onTargetLocs.pop_back();
-                int onTargetTimestep = next_timestep + 1;
-                while(!onTargetLocs.empty()){
-                    for (int loc: onTargetLocs){
-                        if (constraint_table.is_constrained(loc, onTargetTimestep, loc != onTargetLocs.front()) )
-                            constrained = true;
-                    }
-                    onTargetTimestep++;
-                    onTargetLocs.pop_back();
-                }
+//            if (next_id == goal_location){
+//                list<int> onTargetLocs = next_locs;
+//                onTargetLocs.pop_back();
+//                int onTargetTimestep = next_timestep + 1;
+//                while(!onTargetLocs.empty()){
+//                    for (int loc: onTargetLocs){
+//                        if (constraint_table.is_constrained(loc, onTargetTimestep, loc != onTargetLocs.front()) )
+//                            constrained = true;
+//                    }
+//                    onTargetTimestep++;
+//                    onTargetLocs.pop_back();
+//                }
+//
+//            }
 
-            }
 
 
 

@@ -3,6 +3,7 @@
 #include "LLNode.h"
 #include "Conflict.h"
 #include "common.h"
+#include "Path.h"
 #include <vector>
 
 

@@ -11,9 +11,8 @@
 enum conflict_type { TARGET, CORRIDOR2, CORRIDOR4, RECTANGLE,RECTANGLE4, STANDARD,TRAIN_STANDARD,SELF_CONFLICT, TYPE_COUNT };
 enum conflict_priority { CARDINAL, SEMI, NON, UNKNOWN, PRIORITY_COUNT };
 
-enum constraint_type { LENGTH, RANGE, BARRIER, VERTEX, EDGE, TRAIN_VERTEX, CONSTRAINT_COUNT };
+enum constraint_type { LENGTH, RANGE, BARRIER, VERTEX, EDGE, TRAIN_VERTEX, PARKING, CONSTRAINT_COUNT };
 typedef std::tuple<int, int, int, constraint_type> Constraint;
-typedef std::list<std::shared_ptr<std::tuple<int, int, int, int, int,int,bool>>> OldConfList;
 
 enum constraint_strategy { CBS, ICBS, CBSH, CBSH_CR, CBSH_R, CBSH_RM, CBSH_GR, STRATEGY_COUNT };
 enum action { UP, RIGHT, DOWN, LEFT, WAIT };
@@ -33,21 +32,7 @@ namespace N
 				 // as far as enabling ADL is concerned!
 }
 
-struct PathEntry
-{
 
-	int location;
-	list<int> occupations;
-	vector<bool> singles;
-	int heading;
-	bool single;
-	int actionToHere;
-	int timeStep;
-	int self_conflict;
-	PathEntry(int loc = -1) { location = loc; single = false; }
-	std::list<int> locations; // all possible locations at the same time step
-	OldConfList* conflist=NULL;
-};
 
 struct hvals {
     boost::unordered_map<int, int> heading;
@@ -90,7 +75,6 @@ struct MDDPath {
 
 
 
-typedef std::vector<PathEntry> Path;
 
 
  //Only for three-tuples of std::hash-able types for simplicity.
@@ -109,7 +93,6 @@ struct three_tuple_hash {
 	}
 };
 
-int getLocation(const std::vector<PathEntry>& path, int timestep);
 
 int getMahattanDistance(int loc1_x, int loc1_y, int loc2_x, int loc2_y);
 int getArea(int loc1_x, int loc1_y, int loc2_x, int loc2_y);

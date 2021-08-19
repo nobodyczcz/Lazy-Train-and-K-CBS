@@ -5,6 +5,7 @@
 #include "map_loader.h"
 #include "flat_map_loader.h"
 #include "compute_heuristic.h"
+#include "Path.h"
 #include <vector>
 #include <boost/unordered_set.hpp>
 

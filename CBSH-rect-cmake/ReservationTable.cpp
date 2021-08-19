@@ -38,12 +38,16 @@ void ReservationTable::addPath(int agent_id, std::vector<PathEntry>* path) {
                 }
                 res_table[loc][t][agent_id].preStep = preStep;
                 preStep = &(res_table[loc][t][agent_id]);
-
-                if (t == path->size() - 1) {
-                    assert(path->at(t).occupations.size() ==1);
+            }
+            if (t == path->size() - 1) {
+                if(head){
                     goalTable[loc][agent_id] = t;
                 }
+                else{
+                    goalTable[loc][-agent_id -1] = t; //Non-head occupation
+                }
             }
+
             head=false;// except firt occupication all false (not head).
         }
 	}
@@ -75,8 +79,8 @@ void ReservationTable::deletePath(int agent_id, std::vector<PathEntry>* path) {
 	}
 }
 
-OldConfList* ReservationTable::findConflict(int agent, int currLoc, list<int> next_locs, int currT, bool ignore_goal_table) {
-	OldConfList* confs =  new OldConfList;
+std::list<Conflict> ReservationTable::findConflict(int agent, int currLoc, list<int> next_locs, int currT, bool parking) {
+    std::list<Conflict> confs;
 	int nextT = currT + 1;
 	int max_k = this->agentsLoader->max_k;
 	int k_1 = this->agentsLoader->k[agent];
@@ -101,14 +105,10 @@ OldConfList* ReservationTable::findConflict(int agent, int currLoc, list<int> ne
 
 
                     if (t >= nextT) {
-                        confs->push_back(std::shared_ptr<tuple<int, int, int, int, int, int,bool>>(
-                                new tuple<int, int, int, int, int, int,bool>(
-                                        agent,  a_2,next_locs.front(), -1, nextT, k, false)));
+                        confs.push_back(Conflict(agent,  a_2,next_locs.front(), -1, nextT, k, false));
                     }
                     else if(-k_2 <= k){
-                        confs->push_back(std::shared_ptr<tuple<int, int, int, int, int, int,bool>>(
-                                new tuple<int, int, int, int, int, int,bool>(
-                                        a_2,agent,next_locs.front(), -1, t , -k, false)));
+                        confs.push_back(Conflict( a_2,agent,next_locs.front(), -1, t , -k, false));
                     }
 
 
@@ -123,9 +123,7 @@ OldConfList* ReservationTable::findConflict(int agent, int currLoc, list<int> ne
                     a_2 = it->second.agent_id;
                     k_2 = this->agentsLoader->k[a_2];
                     if (k_2 == 0 && it->second.nextStep != NULL && it->second.nextStep->loc == currLoc) {
-                        confs->push_back(std::shared_ptr<tuple<int, int, int, int, int, int,bool>>(
-                                new tuple<int, int, int, int, int, int,bool>(
-                                        agent, a_2, currLoc, nextLoc, nextT, 0,false)));
+                        confs.push_back(Conflict(agent, a_2, currLoc, nextLoc, nextT, 0,false));
                     }
 
 
@@ -138,10 +136,20 @@ OldConfList* ReservationTable::findConflict(int agent, int currLoc, list<int> ne
             for (it = goalTable[next_locs.front()].begin(); it != goalTable[next_locs.front()].end(); ++it) {
 
                 if (nextT > it->second) {
-                    confs->push_back(std::shared_ptr<tuple<int, int, int, int, int, int,bool>>(
-                            new tuple<int, int, int, int, int, int, bool>(
-                                    it->first, agent, next_locs.front(), -1, nextT, 0,false)));
+                    if (it->first >=0){
+                        confs.push_back(Conflict(it->first, agent, next_locs.front(), -1, nextT, 0,false));
+                    }
 
+                }
+            }
+        }
+        if(parking){
+            for (auto& occupation : res_table[next_locs.front()]){
+                if (occupation.first > nextT){
+                    for (auto& it: occupation.second){
+                        confs.push_back(Conflict( agent, it.first , next_locs.front(), -1, occupation.first, 0,false));
+
+                    }
                 }
             }
         }
@@ -155,11 +163,22 @@ OldConfList* ReservationTable::findConflict(int agent, int currLoc, list<int> ne
             if (res_table[nextLoc].count(nextT)) {
                 agentList::iterator it;
                 for (it = res_table[nextLoc][nextT].begin(); it != res_table[nextLoc][nextT].end(); ++it) {
-                    confs->push_back(std::shared_ptr<tuple<int, int, int, int, int, int,bool>>(
-                            new tuple<int, int, int, int, int, int,bool>(
-                                    it->second.agent_id, agent, nextLoc,
-                                    -1, nextT, train_cell_number,true)));
+                    confs.push_back(Conflict(it->second.agent_id, agent, nextLoc,
+                                    -1, nextT, train_cell_number,true));
 
+                }
+            }
+
+            if(parking){
+                for (auto& occupation : res_table[nextLoc]){
+                    if (occupation.first > nextT){
+                        for (auto& it: occupation.second){
+                            confs.push_back(Conflict( agent, it.first , nextLoc, -1, occupation.first, 0,true));
+                            if (nextLoc==650 && agent == 8){
+                                cout<<endl;
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -168,14 +187,18 @@ OldConfList* ReservationTable::findConflict(int agent, int currLoc, list<int> ne
             goalAgentList::iterator it;
             for (it = goalTable[nextLoc].begin(); it != goalTable[nextLoc].end(); ++it) {
 
-                if (nextT > it->second) {
-                    confs->push_back(std::shared_ptr<tuple<int, int, int, int, int, int,bool>>(
-                            new tuple<int, int, int, int, int, int,bool>(
-                                    it->first, agent, nextLoc, -1, nextT, 0,true)));
+                if (it->first >=0){
+                    confs.push_back(Conflict(it->first, agent, nextLoc, -1, nextT, 0,true));
+
+                }
+                else {// body parking
+                    confs.push_back(Conflict(-(it->first+1), agent, nextLoc, -1, nextT, 0,true));
 
                 }
             }
         }
+
+
 
         train_cell_number ++;
     }
@@ -184,7 +207,7 @@ OldConfList* ReservationTable::findConflict(int agent, int currLoc, list<int> ne
 
 
 
-//    //detect edge conflict
+    //detect edge conflict
 //    if (kDelay == 0) {
 //        int nextLoc = next_locs.front();
 //        if (res_table.count(nextLoc) && res_table[nextLoc].count(currT)) {
@@ -232,6 +255,17 @@ int ReservationTable::countConflict(int agent, int currLoc, list<int> next_locs,
 
         }
     }
+
+    if (goalTable.count(nextLoc)) {
+        goalAgentList::iterator it;
+        for (it = goalTable[nextLoc].begin(); it != goalTable[nextLoc].end(); ++it) {
+
+            if (nextT > it->second) {
+                count++;
+            }
+        }
+    }
+
 
     return count;
 }

@@ -24,13 +24,7 @@
 //}
 
 
-int getLocation(const std::vector<PathEntry>& path, int timestep)
-{
-	if (timestep >= path.size())
-		return path.back().location;
-	else
-		return path[timestep].location;
-}
+
 
 int getMahattanDistance(int loc1_x, int loc1_y, int loc2_x, int loc2_y)
 {

@@ -12,6 +12,7 @@
 #include "ConstraintTable.h"
 #include "common.h"
 #include "MDD.h"
+#include "Path.h"
 #include <unordered_map>
 //#include <boost/python.hpp>
 #include <fstream>
@@ -74,6 +75,7 @@ public:
 	uint64_t num_1FlipRectangle = 0;
 	uint64_t num_2FlipRectangle = 0;
 	uint64_t num_target = 0;
+	uint64_t num_parking = 0;
 	uint64_t num_standard = 0;
 	uint64_t num_chasingRectangle = 0;
     uint64_t num_train_standard = 0;
@@ -154,6 +156,7 @@ protected:
 	bool generateChild(ICBSNode* child, ICBSNode* curr);
 	//conflicts
 	void findConflicts(ICBSNode& curr);
+	void findConflicts2All(ICBSNode& curr, int a1);
 	std::shared_ptr<Conflict> chooseConflict(ICBSNode &parent);
 	void copyConflicts(const std::list<std::shared_ptr<Conflict>>& conflicts,
 		std::list<std::shared_ptr<Conflict>>& copy, const list<int>& excluded_agent) const;
@@ -257,6 +260,8 @@ public:
     virtual bool pairedAnalysis(ICBSNode* node,int agent1, int agent2){};
     void countNodes(int amount);
     void printConstraints(ICBSNode* node,int agent_id,ofstream& out);
+    bool print_data();
+
     ofstream analysisOutput;
     string analysisOutputPath;
 

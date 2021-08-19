@@ -40,12 +40,6 @@ std::ostream& operator<<(std::ostream& os, const Conflict& conflict)
         case conflict_type::SELF_CONFLICT :
             os << "self";
             break;
-		case conflict_type::RECTANGLE:
-			os <<conflict.flipType << " flip rectangle";
-			break;
-		case conflict_type::RECTANGLE4:
-			os << conflict.flipType << " flip rectangle";
-			break;
 		case conflict_type::CORRIDOR2:
 			os << "corrdior2";
 			break;
@@ -163,7 +157,7 @@ bool operator < (const Conflict& conflict1, const Conflict& conflict2) // return
 
 
 // add a vertival modified barrier constraint
-bool addGeneralKVerticalBarrierConstraint(const std::vector<PathEntry>& path, int y,
+bool addGeneralKVerticalBarrierConstraint( int y,
                                               int Ri_x, int Rg_x, int Rg_t, int num_col, int St,
                                               std::list<Constraint>& constraints, int k,int extended, const MDDLevels* kMDD)
 {
@@ -251,7 +245,7 @@ bool addGeneralKVerticalBarrierConstraint(const std::vector<PathEntry>& path, in
 
 
 // add a horizontal modified barrier constraint
-bool addGeneralKHorizontalBarrierConstraint(const std::vector<PathEntry>& path, int x,
+bool addGeneralKHorizontalBarrierConstraint( int x,
                                                 int Ri_y, int Rg_y, int Rg_t, int num_col, int St,
                                                 std::list<Constraint>& constraints, int k,int extended, const MDDLevels* kMDD)
 {

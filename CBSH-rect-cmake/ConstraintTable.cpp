@@ -19,17 +19,28 @@ void ConstraintTable::insert(int loc, int t_min, int t_max)
 	}
 }
 
-void ConstraintTable::insert_train(int loc, int t_min)
+void ConstraintTable::insert_train(int loc, int t_min, int t_max)
 {
-    CT_Train[loc].emplace(t_min);
+    CT_Train[loc].emplace_back(t_min,t_max);
 
-    if (loc == goal_location && t_min + 1 > length_min)
+    if (loc == goal_location && t_max > length_min)
     {
-        length_min = t_min + 1;
+        length_min = t_max;
     }
-    if (t_min + 1 < INT_MAX && t_min + 1 > latest_timestep)
+    if (t_max < INT_MAX && t_max > latest_timestep)
     {
-        latest_timestep = t_min + 1;
+        latest_timestep = t_max;
+    }
+}
+
+void ConstraintTable::insert_parking(int loc, int t_min, int t_max)
+{
+
+    CT_Parking[loc].emplace_back(t_min, t_max);
+
+    if (t_max < INT_MAX && t_max > latest_timestep)
+    {
+        latest_timestep = t_max;
     }
 }
 
@@ -92,8 +103,20 @@ void ConstraintTable::insert(std::list<Constraint> &constraints, int agent_id, i
 
             }
             else if (x >= 0 && y != agent_id)
-            { // <loc, agent_id, t>: any other agent cannot be at loc at or after timestep t
-                this->insert(x, z-k, INT_MAX);
+            { // <loc, agent_id, t>: any other agent cannot be at loc at or after timestep t - k
+                this->insert(x, z - k, INT_MAX);
+            }
+        }
+        else if (type == constraint_type::PARKING)
+        {
+            this->has_train = true;
+            if (y == agent_id)
+            { // a1 must not park at x from [0,z]
+                insert_parking(x, 0, z+1);
+            }
+            else if (x >= 0 && y != agent_id)
+            { // other must not use x after z
+                this->insert_train(x, z, INT_MAX);
             }
         }
         else if (type == constraint_type::VERTEX)
@@ -104,7 +127,7 @@ void ConstraintTable::insert(std::list<Constraint> &constraints, int agent_id, i
         {
             this->has_train = true;
             if (x != -1)
-                this->insert_train(x, z);
+                this->insert_train(x, z, z+1);
         }
         else // edge
         {
@@ -115,11 +138,14 @@ void ConstraintTable::insert(std::list<Constraint> &constraints, int agent_id, i
 
 bool ConstraintTable::is_constrained(int loc, int t, bool body)
 {
-    if (body){
-        if (CT_Train.count(loc)){
+    if (CT_Train.count(loc)){
+        for (auto constraint: CT_Train[loc]){
+            if (constraint.first <= t && t < constraint.second)
                 return true;
-
         }
+    }
+
+    if (body){
         return false;
     }
 
@@ -139,4 +165,39 @@ bool ConstraintTable::is_constrained(int loc, int t, bool body)
 			return true;
 	}
 	return false;
+}
+
+bool ConstraintTable::is_parking_constrained(list<int> occupation, int t)
+{
+    int loc = 0;
+
+    //check for if all positive parking constraints satisfied
+    for(auto constraints: CT_Parking){
+        loc = constraints.first;
+
+        if (loc < 0)
+            continue;
+        for (auto constraint: constraints.second){
+            bool satisfied = false;
+            for (int l : occupation){ //if any occupation cell satisfy positive constraint
+                if (l == loc && t >= constraint.first && t < constraint.second){
+                    satisfied = true;
+                }
+            }
+            if (!satisfied){
+                return true;
+            }
+        }
+    }
+
+    for(auto l: occupation){
+        if (CT_Parking.count(-l)){//negative parking, must not park
+            for (auto constraint: CT_Parking[-l]){
+                if (t > constraint.first && t < constraint.second ){
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
 }
