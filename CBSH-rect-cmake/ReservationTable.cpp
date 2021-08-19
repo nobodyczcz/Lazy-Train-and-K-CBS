@@ -147,7 +147,9 @@ std::list<Conflict> ReservationTable::findConflict(int agent, int currLoc, list<
             for (auto& occupation : res_table[next_locs.front()]){
                 if (occupation.first > nextT){
                     for (auto& it: occupation.second){
-                        confs.push_back(Conflict( agent, it.first , next_locs.front(), -1, occupation.first, 0,false));
+                        if(it.second.head){
+                            confs.push_back(Conflict( agent, it.first , next_locs.front(), -1, occupation.first, 0,false));
+                        }
 
                     }
                 }
@@ -174,9 +176,7 @@ std::list<Conflict> ReservationTable::findConflict(int agent, int currLoc, list<
                     if (occupation.first > nextT){
                         for (auto& it: occupation.second){
                             confs.push_back(Conflict( agent, it.first , nextLoc, -1, occupation.first, 0,true));
-                            if (nextLoc==650 && agent == 8){
-                                cout<<endl;
-                            }
+
                         }
                     }
                 }

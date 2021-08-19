@@ -243,7 +243,7 @@ void ICBSSearch::findConflicts2All(ICBSNode& curr, int a1){
 
                     }
                     else{
-                        newConf->targetConflict(con.a1, con.a2, con.v1, con.t+ con.delta, al.k[con.a2]);
+                        newConf->targetConflict(con.a1, con.a2, con.v1, con.t, al.k[con.a2]);
 
                     }
                 }
@@ -252,7 +252,7 @@ void ICBSSearch::findConflicts2All(ICBSNode& curr, int a1){
                         if (train_conflict)
                             newConf->vertexTrainConflict(con.a1, con.a2, con.v1, con.t, true);
                         else
-                            newConf->vertexConflict(con.a1, con.a2, con.v1, con.t + con.delta,0, al.k[con.a1],al.k[con.a2]);
+                            newConf->vertexConflict(con.a1, con.a2, con.v1, con.t,0, al.k[con.a1],al.k[con.a2]);
 
 
                     }
