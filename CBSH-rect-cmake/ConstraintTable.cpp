@@ -37,7 +37,10 @@ void ConstraintTable::insert_parking(int loc, int t_min, int t_max)
 {
 
     CT_Parking[loc].emplace_back(t_min, t_max);
-
+    if (-loc == goal_location && t_max > length_min)
+    {
+        length_min = t_max;
+    }
     if (t_max < INT_MAX && t_max > latest_timestep)
     {
         latest_timestep = t_max;
@@ -112,7 +115,7 @@ void ConstraintTable::insert(std::list<Constraint> &constraints, int agent_id, i
             this->has_train = true;
             if (y == agent_id)
             { // a1 must not park at x from [0,z]
-                insert_parking(x, 0, z+1);
+                this->insert_parking(x, 0, z+1);
             }
             else if (x >= 0 && y != agent_id)
             { // other must not use x after z
@@ -126,7 +129,7 @@ void ConstraintTable::insert(std::list<Constraint> &constraints, int agent_id, i
         else if (type == constraint_type::TRAIN_VERTEX)
         {
             this->has_train = true;
-            if (x != -1)
+            if (!(x == -1 && z==-1))
                 this->insert_train(x, z, z+1);
         }
         else // edge

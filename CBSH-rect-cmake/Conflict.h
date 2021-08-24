@@ -98,8 +98,10 @@ public:
 		this->v2 = -1;
 		this->train_conflict = true;
 
-		if (target)
+		if (target){
 		    this->constraint1.emplace_back(-v, a1, t, constraint_type::PARKING); //place a parking constraint on it.
+		    this->constraint1.emplace_back(v, -1, t, constraint_type::TRAIN_VERTEX);
+		}
 		else
 		    this->constraint1.emplace_back(v, -1, t, constraint_type::TRAIN_VERTEX);
 		this->constraint2.emplace_back(v, -1, t, constraint_type::TRAIN_VERTEX);
@@ -157,6 +159,7 @@ public:
         this->v1 = v;
         this->v2 = -1;
         for (int i = 0; i <= k2; i++) {
+
             this->constraint1.emplace_back(v, -1, t+i, constraint_type::VERTEX);
         }
         for (int i = 0; i <= k1; i++) {

@@ -121,7 +121,7 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 		if ( curr->locs.front() == goal_location
 		&& curr->timestep >= constraint_table.length_min
 		&& curr->timestep >= min_end_time
-		&& (!train || !constraint_table.is_parking_constrained(curr->locs, curr->timestep)))
+		&& (!train || !constraint_table.is_parking_constrained(curr->locs, curr->g_val)))
 		{
 
 			if (curr->parent == NULL || curr->parent->locs.front() != goal_location)

@@ -258,7 +258,7 @@ void ICBSSearch::findConflicts2All(ICBSNode& curr, int a1){
                     }
                     else {
                         if (train_conflict)
-                            newConf->vertexTrainConflict(con.a1, con.a2, con.v1, con.t);
+                            newConf->vertexTrainConflict(con.a1, con.a2, con.v1, con.t, false);
                         else
                             newConf->vertexConflict(con.a1, con.a2, con.v1, con.t,
                                                     con.delta, al.k[con.a1],al.k[con.a2]);
@@ -973,7 +973,7 @@ bool MultiMapICBSSearch<Map>::search(){
 
         if (screen > 2) {
             cout << "#############" << endl;
-            cout << "Choose node " <<" with cost " << curr->g_val
+            cout << "Choose node "<< curr->time_generated <<" with cost " << curr->g_val
                  << " , h " << curr->h_val
                  << " , f " << curr->f_val
                  << endl;
@@ -1015,8 +1015,8 @@ bool MultiMapICBSSearch<Map>::search(){
                     double new_focal_list_threshold = min_f_val * focal_w;
                     updateFocalList(focal_list_threshold, new_focal_list_threshold, focal_w);
                     focal_list_threshold = new_focal_list_threshold;
-                    if (screen > 3) {
-                        cout << "new focal threadhold: " << focal_list_threshold << endl;
+                    if (screen >= 3) {
+                        cout << "new focal threshold: " << focal_list_threshold << endl;
                     }
                 }
                 runtime_listoperation += std::clock() - t1;
@@ -1167,15 +1167,6 @@ bool MultiMapICBSSearch<Map>::search(){
                     num_train_standard++;
             }
             else if (curr->conflict->type == conflict_type::RECTANGLE) {
-//                if (curr->conflict->flipType == 1) {
-//                    num_1FlipRectangle++;
-//                }
-//                else if (curr->conflict->flipType == 2) {
-//                    num_2FlipRectangle++;
-//                }
-//                else {
-//                    num_0FlipRectangle++;
-//                }
                 num_rectangle++;
             }
             else if (curr->conflict->type == conflict_type::TARGET){
@@ -1920,6 +1911,12 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 		int a1_k = al.k[a1];
 		int a2_k = al.k[a2];
 
+		if(screen>=3)
+            cout << "c<" << con->a1 << "," << con->a2 << ","
+            << "(" << con->v1 / num_col << "," << con->v1 % num_col << ")" << ","
+            << "(" << con->v2 / num_col << "," << con->v2 % num_col << ")" << ","
+            << con->t << "," << con->delta<<","<< con->train_conflict << ">; ";
+
 		bool cardinal1 = false, cardinal2 = false;
 		if (timestep >= paths[a1]->size())
 			cardinal1 = true;
@@ -1935,31 +1932,22 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
             }
 
 			MDD<Map>* mdd = buildMDD(parent, a1,0,con->train_conflict);
-            if (mdd == NULL)
-                continue;
+            if (mdd != NULL){
+                for (int i = 0; i < paths[a1]->size(); i++) {
+                    paths[a1]->at(i).singles.resize(a1_k+1);
 
-
-			for (int i = 0; i < paths[a1]->size(); i++) {
-                paths[a1]->at(i).singles.resize(a1_k+1);
-			    if (i >= mdd->levels.size()){ //TODO: check whether this still exist.
-                    for(int j=0;j<a1_k+1;j++){
-                        paths[a1]->at(i).singles[j] = true;
-			        }
-			    }
-			    else{
+                    assert( i < mdd->levels.size());
                     for(int j=0;j<a1_k+1;j++) {
                         paths[a1]->at(i).singles[j] = mdd->level_locs[i][j].size() == 1;
+                    }
                 }
-//                    cout<<mdd->level_locs[i][j].size()<<",";
-//                    assert(mdd->level_locs[i][j].size() >=1);
-
-                }
+                //			cout<<endl;
+                if (mddTable.empty())
+                    delete mdd;
             }
-//			cout<<endl;
-			if (mddTable.empty())
-				delete mdd;
 
         }
+
 		if (timestep2 >= paths[a2]->size())
 			cardinal2 = true;
 		else if (paths[a2]->at(0).singles.empty())
@@ -1973,28 +1961,23 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
                 }
 		    }
 			MDD<Map>* mdd = buildMDD(parent, a2,0,con->train_conflict);
-		    if (mdd ==NULL)
-		        continue;
+		    if (mdd !=NULL){
 
-            for (int i = 0; i < paths[a2]->size(); i++) {
-                paths[a2]->at(i).singles.resize(a2_k+1);
-                if (i >= mdd->levels.size()){
-                    for(int j=0;j<a2_k+1;j++){
-                        paths[a2]->at(i).singles[j] = true;
-                    }
-                }
-                else {
-                    for (int j = 0; j < a2_k + 1; j++) {
-                        paths[a2]->at(i).singles[j] = mdd->level_locs[i][j].size() == 1;
-//                    cout<<mdd->level_locs[i][j].size()<<",";
-//                    assert(mdd->level_locs[i][j].size() >=1);
+		        for (int i = 0; i < paths[a2]->size(); i++) {
+		            paths[a2]->at(i).singles.resize(a2_k+1);
+		            assert( i < mdd->levels.size());
+		            for (int j = 0; j < a2_k + 1; j++) {
+		                paths[a2]->at(i).singles[j] = mdd->level_locs[i][j].size() == 1;
+		                //                    cout<<mdd->level_locs[i][j].size()<<",";
+		                //                    assert(mdd->level_locs[i][j].size() >=1);
 
-                    }
-                }
-            }
-//            cout<< endl;
-			if (mddTable.empty())
-				delete mdd;
+		            }
+
+		        }
+		        //            cout<< endl;
+		        if (mddTable.empty())
+		            delete mdd;
+		    }
 		}
 
 		if (type == conflict_type::STANDARD && loc2 >= 0) // Edge conflict
@@ -2035,6 +2018,9 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 		{
 			con->p = conflict_priority::NON;
 		}
+
+
+
 		if (con->p == conflict_priority::CARDINAL && cons_strategy == constraint_strategy::ICBS)
 		{
 			parent.conflicts.push_back(con);
@@ -2045,6 +2031,10 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 		{
 			parent.conflicts.push_back(con);
 			continue;
+		}
+		else if (con->type == conflict_type::STANDARD && con->train_conflict){
+		    parent.conflicts.push_back(con);
+		    continue;
 		}
         else if (con->type == conflict_type::STANDARD &&
             paths[con->a1]->size() <= con->t || paths[con->a2]->size() <= con->t+con->k) //conflict happens after agent reaches its goal TODO: check if correct.

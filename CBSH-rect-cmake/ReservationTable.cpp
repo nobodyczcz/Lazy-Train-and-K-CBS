@@ -158,6 +158,7 @@ std::list<Conflict> ReservationTable::findConflict(int agent, int currLoc, list<
     }
 
 	int train_cell_number = 0;
+    int head = next_locs.front();
 	for(int nextLoc : next_locs) {
         if (res_table.count(nextLoc)) {
             //detect vertex conflict and k delay vertex conflict
@@ -165,17 +166,19 @@ std::list<Conflict> ReservationTable::findConflict(int agent, int currLoc, list<
             if (res_table[nextLoc].count(nextT)) {
                 agentList::iterator it;
                 for (it = res_table[nextLoc][nextT].begin(); it != res_table[nextLoc][nextT].end(); ++it) {
-                    confs.push_back(Conflict(it->second.agent_id, agent, nextLoc,
-                                    -1, nextT, train_cell_number,true));
+                    if (nextLoc==head || it->second.head)
+                        confs.push_back(Conflict(it->second.agent_id, agent, nextLoc,
+                                        -1, nextT, 0,true));
 
                 }
             }
 
-            if(parking){
+            if(parking){//if parking check any head run into parking head/body
                 for (auto& occupation : res_table[nextLoc]){
                     if (occupation.first > nextT){
                         for (auto& it: occupation.second){
-                            confs.push_back(Conflict( agent, it.first , nextLoc, -1, occupation.first, 0,true));
+                            if (it.second.head)
+                                confs.push_back(Conflict( agent, it.first , nextLoc, -1, occupation.first, 0,true));
 
                         }
                     }
@@ -183,17 +186,18 @@ std::list<Conflict> ReservationTable::findConflict(int agent, int currLoc, list<
             }
         }
 
-        if (goalTable.count(nextLoc)) {
+        if (nextLoc == head && goalTable.count(nextLoc)) {// only cares current head run into other's parking head/body
             goalAgentList::iterator it;
             for (it = goalTable[nextLoc].begin(); it != goalTable[nextLoc].end(); ++it) {
+                if (nextT > it->second) {
+                    if (it->first >=0){
+                        confs.push_back(Conflict(it->first, agent, nextLoc, -1, nextT, 0,true));
 
-                if (it->first >=0){
-                    confs.push_back(Conflict(it->first, agent, nextLoc, -1, nextT, 0,true));
+                    }
+                    else {// body parking
+                        confs.push_back(Conflict(-(it->first+1), agent, nextLoc, -1, nextT, 0,true));
 
-                }
-                else {// body parking
-                    confs.push_back(Conflict(-(it->first+1), agent, nextLoc, -1, nextT, 0,true));
-
+                    }
                 }
             }
         }
@@ -241,6 +245,16 @@ int ReservationTable::countConflict(int agent, int currLoc, list<int> next_locs,
                 count++;
             }
         }
+
+        if (goalTable.count(nextLoc)) {
+            goalAgentList::iterator it;
+            for (it = goalTable[nextLoc].begin(); it != goalTable[nextLoc].end(); ++it) {
+
+                if (nextT > it->second) {
+                    count++;
+                }
+            }
+        }
     }
 
     int nextLoc = next_locs.front();
@@ -256,15 +270,7 @@ int ReservationTable::countConflict(int agent, int currLoc, list<int> next_locs,
         }
     }
 
-    if (goalTable.count(nextLoc)) {
-        goalAgentList::iterator it;
-        for (it = goalTable[nextLoc].begin(); it != goalTable[nextLoc].end(); ++it) {
 
-            if (nextT > it->second) {
-                count++;
-            }
-        }
-    }
 
 
     return count;
