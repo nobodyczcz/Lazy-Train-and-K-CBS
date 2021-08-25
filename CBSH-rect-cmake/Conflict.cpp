@@ -109,9 +109,6 @@ bool operator < (const Conflict& conflict1, const Conflict& conflict2) // return
         else if (conflict2.type == conflict_type::CORRIDOR2 ) {
             return true;
         }
-        else if (conflict2.type == conflict_type::TARGET ) {
-            return true;
-        }
 
 
 
@@ -132,10 +129,6 @@ bool operator < (const Conflict& conflict1, const Conflict& conflict2) // return
         else if (conflict2.type == conflict_type::RECTANGLE4 || conflict2.type == conflict_type::RECTANGLE){
             return true;
         }
-        else if (conflict2.type == conflict_type::CORRIDOR2 &&  conflict1.type != conflict_type::CORRIDOR2)
-		{
-			return true;
-		}
 		else if (conflict2.type != conflict_type::CORRIDOR2 &&  conflict1.type == conflict_type::CORRIDOR2)
 		{
 			return false;
