@@ -30,6 +30,7 @@ struct options {
 	bool ignore_target = false;
 	int window_size = 0;
 	bool print_nodes = false;
+	bool parking = false;
 };
 
 

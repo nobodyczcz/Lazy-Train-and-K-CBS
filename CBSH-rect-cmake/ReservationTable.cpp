@@ -173,7 +173,7 @@ std::list<Conflict> ReservationTable::findConflict(int agent, int currLoc, list<
                 }
             }
 
-            if(parking && nextLoc!=head){//if parking check any head run into parking head/body
+            if(parking && nextLoc!=head){//if parking check any head run into parking body
                 for (auto& occupation : res_table[nextLoc]){
                     if (occupation.first > nextT){
                         for (auto& it: occupation.second){

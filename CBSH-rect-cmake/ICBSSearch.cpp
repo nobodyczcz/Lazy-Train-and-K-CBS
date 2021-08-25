@@ -237,15 +237,11 @@ void ICBSSearch::findConflicts2All(ICBSNode& curr, int a1){
 
                 std::shared_ptr<Conflict> newConf(new Conflict(con.a1, con.a2, con.v1,con.v2,con.t,con.delta,con.train_conflict));
 
-                if (targetReasoning  && (con.v2 < 0) && (con.t >= paths[con.a1]->size() - 1)) {
-                    if (train_conflict){
-                        newConf->parkingConflict(con.a1,con.a2,con.v1,con.t);
-
-                    }
-                    else{
-                        newConf->targetConflict(con.a1, con.a2, con.v1, con.t, al.k[con.a2]);
-
-                    }
+                if (targetReasoning && !train_conflict && (con.v2 < 0) && (con.t >= paths[con.a1]->size() - 1)) {
+                    newConf->targetConflict(con.a1, con.a2, con.v1, con.t, al.k[con.a2]);
+                }
+                else if (targetReasoning && train_conflict && option.parking && (con.v2 < 0) && (con.t >= paths[con.a1]->size() - 1)) {
+                    newConf->parkingConflict(con.a1,con.a2,con.v1,con.t);
                 }
                 else if (con.v2 < 0) {
                     if(con.t >= paths[con.a1]->size() - 1){

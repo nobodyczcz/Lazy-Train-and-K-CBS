@@ -33,8 +33,9 @@ int main(int argc, char** argv)
 		("cutoffTime,t", po::value<float>()->default_value(7200), "cutoff time (seconds)")
 		("seed,d", po::value<int>()->default_value(0), "random seed")
 		("screen", po::value<int>()->default_value(0), "screen option (0: none; 1: results; 2:all)")
-		("corridor", po::value<bool>(), "reason about 2-way branching corridor conflicts")
-		("target", po::value<bool>(), "reason about target conflict")
+		("corridor", po::value<bool>()->default_value(false), "reason about 2-way branching corridor conflicts")
+		("target", po::value<bool>()->default_value(false), "reason about target conflict")
+		("parking", po::value<bool>()->default_value(false), "reason about target conflict")
 		("kDelay", po::value<int>()->default_value(0), "Set max_k for k robust plan")
 		("diff-k",  "All agent have different k")
 		("only_generate_instance", po::value<std::string>()->default_value(""),"no searching")
@@ -91,6 +92,9 @@ int main(int argc, char** argv)
         options1.pairAnalysis = true;
     }
 
+    options1.parking = vm["parking"].as<bool>();;
+
+
 
 	if (vm["only_generate_instance"].as<string>()!="") {
 		al.saveToFile(vm["only_generate_instance"].as<string>());
@@ -128,6 +132,8 @@ int main(int argc, char** argv)
 		icbs.targetReasoning = vm["target"].as<bool>();
 
 	}
+
+
 
     if (vm.count("pairAnalysis")) {
         icbs.analysisEngine = new ICBSSearchWithPairedAnalysis<MapLoader>(&icbs, vm["pairAnalysis"].as<int>());
