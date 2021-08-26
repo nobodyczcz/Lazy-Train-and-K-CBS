@@ -195,7 +195,7 @@ std::list<Conflict> ReservationTable::findConflict(int agent, int currLoc, list<
 //                        confs.push_back(Conflict(it->first, agent, nextLoc, -1, nextT, 0,true));
 
                     }
-                    else {// body parking
+                    else {// body parking, body occupation on goal table is -loc - 1
                         confs.push_back(Conflict(-(it->first+1), agent, nextLoc, -1, nextT, 0,true));
 
                     }

@@ -94,8 +94,8 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 	lowerbound = std::max(lowerbound, (double)constraint_table.length_min);
 	lowerbound = std::max(lowerbound, (double)min_end_time);
 	lower_bound = std::max(lowerbound, f_weight * min_f_val);
-//	cout<<"initial lower_bound "<<lower_bound<<","<<constraint_table.length_min<<","<<min_end_time<<","<<min_f_val<<f_weight<<","<<lowerbound<<endl;
-
+//	cout<<"initial lower_bound "<<lower_bound<<", "<<constraint_table.length_min<<","<<min_end_time<<","<<min_f_val<<f_weight<<","<<lowerbound<<
+//	", length_max "<< constraint_table.length_max <<", latest_timestep"<<constraint_table.latest_timestep<<endl;
 	int time_generated = 0;
 	int time_check_count = 0;
 	std:clock_t runtime;
@@ -116,6 +116,14 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 
 		curr->in_openlist = false;
 		num_expanded++;
+//		if(goal_location == 435 ){
+//		    std::cout << "Pick node current: (";
+//		    for (auto loc : curr->locs){
+//		        cout<< loc<<"|";
+//		    }
+//		    cout<<"," << curr->heading << "," << curr->getFVal() << ") "
+//		    <<" g:"<<curr->g_val <<" timestep:"<<curr->timestep<<" length_max:"<<constraint_table.length_max <<" max_plan_len:"<<max_plan_len<< std::endl;
+//		}
 
 		// check if the popped node is a goal
 		if ( curr->locs.front() == goal_location
@@ -143,9 +151,8 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 		}
 		
 
-		if (curr->timestep >= constraint_table.length_max) {
+		if (curr->g_val >= constraint_table.length_max) {
 			continue;
-
 		}
 
 
@@ -241,7 +248,7 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
             next->actionToHere = move.second;
             next->time_generated = time_generated;
             next->self_conflict = !no_self_conflict;
-            //std::cout << "current: (" << curr->loc << "," << curr->heading << "," << curr->getFVal() << ") " << "next: (" << next->loc << "," << next->heading << "," << next->getFVal() << ")" << std::endl;
+//            std::cout << "----current: (" << curr->locs.front() << "," << curr->heading << "," << curr->getFVal() << ") " << "next: (" << next->locs.front() << "," << next->heading << "," << next->getFVal() << ")" << std::endl;
 
 //            if (agent_id == 0 && ( curr->locs.front() == 519)){
 //                cout << "current: " <<curr->locs.front()<<","<<curr->locs.back()<<","<< curr->g_val<<","<<curr->h_val<<","<<curr->num_internal_conf<<curr->getFVal() << endl;

@@ -654,7 +654,7 @@ bool ICBSSearch::generateChild(ICBSNode*  node, ICBSNode* curr)
 			    if (screen>=2){
 			        cout<<"Replan for agent: "<< ag<<endl;
 			    }
-				double lowerbound = (int)paths[ag]->size()  - 1; //The shrink at goal is added after search complete
+				double lowerbound = (int)paths[ag]->size()  - 1;
 				if (!findPathForSingleAgent(node, ag, lowerbound))
 					return false;
 			}
@@ -1988,12 +1988,6 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 				cardinal1 =!paths[a1]->at(timestep).singles.empty() && paths[a1]->at(timestep).singles[a1_p];
 			if (!cardinal2)
 				cardinal2 =!paths[a2]->at(timestep).singles.empty() && paths[a2]->at(timestep).singles[a2_p];
-
-//			con->clear();
-////            int range = min(kDelay - a1_p,kDelay - a2_p);
-////            int range = 0; //TODO: Check if the contraint applies on whole body
-//
-//            con->vertexTrainConflict(a1,a2,loc1,timestep,con->k);
 		}
 		else{
             if (!cardinal1)

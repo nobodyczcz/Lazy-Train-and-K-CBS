@@ -99,7 +99,7 @@ public:
 		this->train_conflict = true;
 
 		if (target){
-		    this->constraint1.emplace_back(-v, a1, t, constraint_type::PARKING); //place a parking constraint on it.
+		    this->constraint1.emplace_back(v, a1, t, constraint_type::NOPARKING); //place a parking constraint on it.
 		    this->constraint1.emplace_back(v, -1, t, constraint_type::TRAIN_VERTEX);
 		}
 		else
@@ -120,7 +120,7 @@ public:
 
 
 
-	    this->constraint1.emplace_back(-v, a1, t, constraint_type::PARKING); // a1 must not part at v from 0, t
+	    this->constraint1.emplace_back(v, a1, t, constraint_type::NOPARKING); // a1 must not part at v from 0, t
 	    this->constraint2.emplace_back(v, a1, t, constraint_type::PARKING); // a1 must park at v from [0,t], all others not use v after t
 	    type = conflict_type::TARGET;
 	}
