@@ -61,6 +61,12 @@ public:
 	conflict_type type;
 	conflict_priority p = conflict_priority::UNKNOWN;
 
+	//other infor for repeatance check
+	int info1 = 0;
+	int info2 = 0;
+	int info3 = 0;
+	int info4 = 0;
+
 	Conflict() {};
 	Conflict(int v,int k,int t) {
 		this->v1 = v;
@@ -193,6 +199,10 @@ public:
 		this->t = std::min(t3, t4);
 		this->v1 = v1;
 		this->v2 = v2;
+		this->info1 = t3;
+		this->info2 = t4;
+		this->info3 = std::min( std::max(t2 + k_2, t3_ - 1) , t4 + l + k_2);
+		this->info4 = std::min( std::max(t1 + k_1, t4_ - 1) , t3 + l + k_1);
 		//k is corridor length
 		this->constraint1.emplace_back(v1, t3, std::min( std::max(t2 + k_2, t3_ - 1) , t4 + l + k_2), constraint_type::RANGE);
 		this->constraint2.emplace_back(v2, t4, std::min( std::max(t1 + k_1, t4_ - 1) , t3 + l + k_1), constraint_type::RANGE);

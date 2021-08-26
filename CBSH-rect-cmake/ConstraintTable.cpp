@@ -48,13 +48,13 @@ void ConstraintTable::insert_parking(int loc, int t_min, int t_max)
     CT_Parking[loc].emplace_back(t_min, t_max);
 
     //if not parking goal from 0 to t_max, set length_min to t_max
-    if (-(loc+1) == goal_location && t_max > length_min && t_max < INT_MAX)
+    if (loc <0 && -(loc+1) == goal_location && t_max > length_min && t_max < INT_MAX)
     {
         length_min = t_max;
     }
 
     //if not parking goal from t_min to max, set length_max to t_min
-    if (-(loc+1) == goal_location && t_min < length_max && t_max >= INT_MAX)
+    if (loc <0 && -(loc+1) == goal_location && t_min < length_max && t_max >= INT_MAX)
     {
         length_max = t_min;
     }
@@ -135,14 +135,20 @@ void ConstraintTable::insert(std::list<Constraint> &constraints, int agent_id, i
         }
         else if (type == constraint_type::PARKING)
         {
-            this->has_train = true;
             if (y == agent_id)
             { // a1 must park at x from [0,z]
+                this->has_train = true;
                 this->insert_parking(x, 0, z+1);
             }
             else if (y != agent_id)
             { // other must not use x after z
-                this->insert_train(x, z, INT_MAX);
+//                if (x == goal_location){
+                    this->insert(x,z, INT_MAX);
+//                }
+//                else{
+//                    this->insert_train(x, z, INT_MAX);
+//                    this->has_train = true;
+//                }
             }
         }
         else if (type == constraint_type::NOPARKING)

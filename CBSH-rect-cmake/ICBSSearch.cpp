@@ -1385,7 +1385,8 @@ void MultiMapICBSSearch<Map>::checkRepeatance(ICBSNode* curr){
     << curr->conflict->t<<"," << curr->conflict->delta<<","<<curr->conflict->k <<","<<curr->conflict->type
     <<","<< curr->conflict->train_conflict <<","<<
     curr->conflict->constraint1.size()<<","<<curr->conflict->constraint2.size()
-    <<","<<curr->conflict->rs<<","<<curr->conflict->rg;
+    <<","<<curr->conflict->rs<<","<<curr->conflict->rg <<","<< curr->conflict->info1
+    <<","<< curr->conflict->info2 <<","<< curr->conflict->info3 <<","<< curr->conflict->info4;
 
     for(auto con1: curr->conflict->multiConstraint1){
         con<<","<<con1.size();
@@ -1791,12 +1792,14 @@ MDD<Map>* MultiMapICBSSearch<Map>::buildMDD(ICBSNode& node, int id, int k, bool 
 template<class Map>
 bool MultiMapICBSSearch<Map>::findPathForSingleAgent(ICBSNode*  node, int ag, double lowerbound)
 {
-	if (debug_mode)
-		cout << "Start LL search for "<<ag << endl;
+
 	// extract all constraints on agent ag
 	ICBSNode* curr = node;
 	// vector < list< pair<int, int> > >* cons_vec = collectConstraints(curr, ag);
 	updateConstraintTable(curr, ag);
+
+	if (debug_mode)
+	    cout << "Start LL search for "<<ag <<", is lltp: "<< constraintTable.has_train<< endl;
 
 	if (debug_mode)
         cout<<"Train search:"<<constraintTable.has_train<<endl;
