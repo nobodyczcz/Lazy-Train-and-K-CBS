@@ -161,8 +161,7 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 		for (const pair<int, int> move : transitions)
 		{
 			int next_id = move.first;
-			if (curr->locs.front() == goal_location && next_id != goal_location )
-			    continue;
+
 			list<int> next_locs ;
 
             bool no_self_conflict = getOccupations(next_locs, next_id, curr);
