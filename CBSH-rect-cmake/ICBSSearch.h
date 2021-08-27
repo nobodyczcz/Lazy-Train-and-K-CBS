@@ -18,20 +18,7 @@
 #include <fstream>
 
 
-struct options {
-	bool asymmetry_constraint=false;
-	bool debug = false;
-	bool ignore_t0 = false;
-	bool shortBarrier = false;
-	bool flippedRec = false;
-	int RM4way;
-	bool pairAnalysis = false;
-	bool printFailedPair = false;
-	bool ignore_target = false;
-	int window_size = 0;
-	bool print_nodes = false;
-	bool parking = false;
-};
+
 
 
 

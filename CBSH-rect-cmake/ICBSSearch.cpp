@@ -1620,7 +1620,7 @@ MultiMapICBSSearch<Map>::MultiMapICBSSearch(Map* ml, AgentsLoader& al, double f_
 		int goal_loc = ml->linearize_coordinate((al.goal_locations[i]).first, (al.goal_locations[i]).second);
 
         ComputeHeuristic<Map> ch(init_loc, goal_loc, ml, al.headings[i]);
-        search_engines[i] = new SingleAgentICBS<Map>(init_loc, goal_loc, ml,i, al.headings[i],al.k[i]);
+        search_engines[i] = new SingleAgentICBS<Map>(init_loc, goal_loc, ml,i,option, al.headings[i],al.k[i]);
         if (debug_mode)
             cout << "initializing heuristics for "<< i << endl;
         ch.getHVals(search_engines[i]->my_heuristic);

@@ -31,6 +31,7 @@ int main(int argc, char** argv)
 		("solver,s", po::value<std::string>()->required(), "solvers (CBS, ICBS, CBSH, CBSH-CR, CBSH-R, CBSH-RM, CBSH-GR")
 		("agentNum,k", po::value<int>()->default_value(0), "number of agents")
 		("cutoffTime,t", po::value<float>()->default_value(7200), "cutoff time (seconds)")
+		("shrink", po::value<bool>()->default_value(false), "shrink to hole on reaching target")
 		("seed,d", po::value<int>()->default_value(0), "random seed")
 		("screen", po::value<int>()->default_value(0), "screen option (0: none; 1: results; 2:all)")
 		("corridor", po::value<bool>()->default_value(false), "reason about 2-way branching corridor conflicts")
@@ -93,6 +94,7 @@ int main(int argc, char** argv)
     }
 
     options1.parking = vm["parking"].as<bool>();;
+    options1.shrink = vm["shrink"].as<bool>();;
 
 
 
