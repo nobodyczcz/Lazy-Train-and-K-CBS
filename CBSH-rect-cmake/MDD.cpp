@@ -59,13 +59,13 @@ bool MDD<Map>::buildMDD( ConstraintTable& constraints, int numOfLevels, SingleAg
 			    cout << " Expand node: " << node->locs.front()<<","<< node->locs.back()<<","<<node->locs.size() << " heading: " << node->heading<<" h "<< solver.my_heuristic[node->locs.front()].heading[node->heading]<<", level: "<<node->level << endl;
 				while (!open.empty())
 				{
-					MDDNode* node = open.front();
+					MDDNode* n = open.front();
 					open.pop();
 					cout << "loc: ";
-					for(auto loc: node->locs){
+					for(auto loc: n->locs){
 					    cout<<loc<<"|";
 					}
-					cout <<" level: "<< node->level << " heading: " << node->heading<<" h "<< solver.my_heuristic[node->locs.front()].heading[node->heading] <<", level: "<<node->level<< endl;
+					cout <<" level: "<< n->level << " heading: " << n->heading<<" h "<< solver.my_heuristic[n->locs.front()].heading[n->heading] <<", level: "<<n->level<< endl;
 
 				}
 				
@@ -113,7 +113,7 @@ bool MDD<Map>::buildMDD( ConstraintTable& constraints, int numOfLevels, SingleAg
 			}
 			else
 			    no_self_collision = getOccupations(new_locs, newLoc, node,solver.kRobust);
-			if ((train && !no_self_collision))
+			if (new_locs.empty() || (train && !no_self_collision))
 			    continue;
             //check does head have edge constraint or body have vertex constraint.
             bool constrained = false;
