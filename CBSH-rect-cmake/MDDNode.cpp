@@ -16,5 +16,4 @@ MDDNode::MDDNode(std::list<int> currlocs, MDDNode* parent, bool train)
         level = parent->level + 1;
         parents.push_back(parent);
     }
-    parent = NULL;
 }

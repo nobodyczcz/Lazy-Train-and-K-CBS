@@ -25,6 +25,23 @@ using std::list;
 using std::vector;
 using std::tuple;
 
+struct options {
+    bool asymmetry_constraint=false;
+    bool debug = false;
+    bool ignore_t0 = false;
+    bool shortBarrier = false;
+    bool flippedRec = false;
+    int RM4way;
+    bool pairAnalysis = false;
+    bool printFailedPair = false;
+    bool ignore_target = false;
+    bool lltp_only = false;
+    int window_size = 0;
+    bool print_nodes = false;
+    bool parking = false;
+    bool shrink = false;
+};
+
 namespace N
 {
 	template<typename T>

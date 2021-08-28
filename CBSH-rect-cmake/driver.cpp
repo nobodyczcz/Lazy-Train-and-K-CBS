@@ -37,6 +37,9 @@ int main(int argc, char** argv)
 		("target", po::value<bool>()->default_value(false), "reason about target conflict")
 		("parking", po::value<bool>()->default_value(false), "reason about target conflict")
 		("kDelay", po::value<int>()->default_value(0), "Set max_k for k robust plan")
+		("shrink", "shrink to hole on reaching target")
+		("ignore-target",  "ignore all target conflict")
+		("lltp-only",  "only use lltp and occupation conflict find solution.")
 		("diff-k",  "All agent have different k")
 		("only_generate_instance", po::value<std::string>()->default_value(""),"no searching")
 		("debug", "debug mode")
@@ -76,23 +79,13 @@ int main(int argc, char** argv)
 
 	options options1;
 
-	if (vm.count("debug")) {
-		options1.debug = true;
-	}
-	else {
-		options1.debug = false;
-	}
-
-	if (vm.count("printFailedPair")){
-	    options1.printFailedPair = true;
-	}
-
-
-    if (vm.count("pairAnalysis")) {
-        options1.pairAnalysis = true;
-    }
-
+	options1.debug = vm.count("debug");
+	options1.printFailedPair = vm.count("printFailedPair");
+	options1.pairAnalysis = vm.count("pairAnalysis");
+    options1.ignore_target = vm.count("ignore-target");
+    options1.lltp_only = vm.count("lltp-only");
     options1.parking = vm["parking"].as<bool>();;
+    options1.shrink = vm.count("shrink");
 
 
 
@@ -145,24 +138,11 @@ int main(int argc, char** argv)
 	bool res;
 	res = icbs.runICBSSearch();
 	bool validTrain = icbs.isValidTrain();
-	ofstream stats;
-	stats.open(vm["output"].as<string>(), ios::trunc);
-    if (vm["screen"].as<int>() >= 1) {
-        cout<<"Valid Train Plan: "<< validTrain<<" body conflicts: "<<icbs.num_body_conflict<<" goal conflict: "<<icbs.num_goal_conflict<<" self conflict: "<<icbs.num_self_conflict<<endl;
-    }
-	stats  << icbs.runtime/ CLOCKS_PER_SEC << "," <<
-		icbs.HL_num_expanded << "," << icbs.HL_num_generated << "," <<
-		icbs.LL_num_expanded << "," << icbs.LL_num_generated << "," <<
-		vm["agents"].as<string>() << "," << icbs.solution_cost << "," << 
-		icbs.min_f_val - icbs.dummy_start->g_val << "," <<
-		vm["solver"].as<string>()  << "," <<
-		icbs.num_standard <<","<<icbs.num_train_standard<< "," << icbs.num_rectangle << "," <<
-		icbs.num_corridor2 << "," << icbs.num_parking << "," <<
-		icbs.num_target<<","<< icbs.num_chasingRectangle << "," <<
-		icbs.less10 << ","<<icbs.less100 << ","<<icbs.less1000 << ","<<icbs.less10000 <<"," << icbs.less100000 <<","
-		<<icbs.larger100000 << "," <<icbs.num_pairs <<"," <<icbs.num_failed << ","<< validTrain<<","
-		<<icbs.num_body_conflict<<","<<icbs.num_goal_conflict<<","<<icbs.num_self_conflict<<","<<icbs.runtime_mdd<< endl;
-	stats.close();
+	if (vm["screen"].as<int>() >= 1) {
+	    cout<<"Valid Train Plan: "<< validTrain<<" body conflicts: "<<icbs.num_body_conflict<<" goal conflict: "<<icbs.num_goal_conflict<<" self conflict: "<<icbs.num_self_conflict<<endl;
+	}
+
+	icbs.write_data(vm["output"].as<string>(),vm["agents"].as<string>(),vm["solver"].as<string>(), validTrain);
 
     if(vm.count("statistic")){
         cout<<"Total RM time: "<<icbs.RMTime/CLOCKS_PER_SEC <<endl;

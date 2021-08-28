@@ -22,6 +22,7 @@ public:
     int level;
     int heading;
     bool train;
+    bool shrinking = false;
 
     bool operator == (const MDDNode & node) const
     {

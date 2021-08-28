@@ -122,17 +122,17 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 //		        cout<< loc<<"|";
 //		    }
 //		    cout<<"," << curr->heading << "," << curr->getFVal() << ") "
-//		    <<" g:"<<curr->g_val <<" timestep:"<<curr->timestep<<" length_max:"<<constraint_table.length_max <<" max_plan_len:"<<max_plan_len<< std::endl;
+//		    <<" g:"<<curr->g_val <<" shrinking:"<<curr->shrinking<<" timestep:"<<curr->timestep<<" length_max:"<<constraint_table.length_max <<" max_plan_len:"<<max_plan_len<< std::endl;
 //		}
 
 		// check if the popped node is a goal
-		if ( curr->locs.front() == goal_location
-		&& curr->timestep >= constraint_table.length_min
-		&& curr->timestep >= min_end_time
+		if ( (!this->option.shrink || (this->option.shrink && curr->locs.size() == 1))
+		&& curr->locs.front() == goal_location
+		&& curr->timestep >= lowerbound
 		&& (!train || !constraint_table.is_parking_constrained(curr->locs, curr->g_val)))
 		{
 
-			if (curr->parent == NULL || curr->parent->locs.front() != goal_location)
+			if (curr->parent == NULL || curr->shrinking || curr->parent->locs.front() != goal_location)
 			{
 				//cout << num_generated << endl;
 
@@ -156,15 +156,29 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 		}
 
 
-		vector<pair<int, int>> transitions = ml->get_transitions(curr->locs.front(), curr->heading,false);
+		vector<pair<int, int>> transitions;
+
+		if (!curr->shrinking)
+		    transitions = ml->get_transitions(curr->locs.front(), curr->heading,false);
+
+		if (option.shrink && curr->locs.front() == goal_location){
+		    transitions.emplace_back(curr->locs.front(), -2); //-2 indicate shrinking
+		}
 
 		for (const pair<int, int> move : transitions)
 		{
 			int next_id = move.first;
 
-			list<int> next_locs ;
+			list<int> next_locs;
 
-            bool no_self_conflict = getOccupations(next_locs, next_id, curr);
+
+            bool no_self_conflict = true;
+            if (option.shrink && move.second == -2){
+                next_locs = curr->locs;
+                next_locs.pop_back();
+            }
+            else
+                no_self_conflict = getOccupations(next_locs, next_id, curr);
 
             if (train and !no_self_conflict)
 			    continue;
@@ -173,7 +187,7 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 			time_generated += 1;
 			int next_timestep = curr->timestep + 1;
 
-            if (max_plan_len <= curr->timestep)
+            if (max_plan_len <= curr->timestep && move.second!= -2 && !curr->shrinking )
             {
                 if (next_id == curr->locs.front())
                 {
@@ -197,26 +211,6 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
                     break;
             }
 
-            //Trains no longer shrink to whole. But will occupy the destination with whole body.
-            //For node at goal location, we need to consider collision when agent shrink to goal hole.
-//            if (next_id == goal_location){
-//                list<int> onTargetLocs = next_locs;
-//                onTargetLocs.pop_back();
-//                int onTargetTimestep = next_timestep + 1;
-//                while(!onTargetLocs.empty()){
-//                    for (int loc: onTargetLocs){
-//                        if (constraint_table.is_constrained(loc, onTargetTimestep, loc != onTargetLocs.front()) )
-//                            constrained = true;
-//                    }
-//                    onTargetTimestep++;
-//                    onTargetLocs.pop_back();
-//                }
-//
-//            }
-
-
-
-
 			if (constrained)
 			    continue;
 
@@ -227,12 +221,17 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
             if (curr->heading == -1) //heading == 4 means no heading info
                 next_heading = -1;
             else
-                if (move.second == 4) //move == 4 means wait
+                if (move.second == 4 || move.second == -2) //move == 4 means wait
                     next_heading = curr->heading;
                 else
                     next_heading = move.second;
 
             int next_h_val = my_heuristic[next_id].get_hval(next_heading);
+
+            if (option.shrink)
+                next_h_val = next_h_val + next_locs.size() - 1;
+
+
             if (next_g_val + next_h_val > constraint_table.length_max)
                 continue;
 
@@ -247,6 +246,8 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
             next->actionToHere = move.second;
             next->time_generated = time_generated;
             next->self_conflict = !no_self_conflict;
+            if(move.second == -2 || curr->shrinking)
+                next->shrinking = true;
 //            std::cout << "----current: (" << curr->locs.front() << "," << curr->heading << "," << curr->getFVal() << ") " << "next: (" << next->locs.front() << "," << next->heading << "," << next->getFVal() << ")" << std::endl;
 
 //            if (agent_id == 0 && ( curr->locs.front() == 519)){
@@ -436,7 +437,7 @@ inline void SingleAgentICBS<Map>::releaseClosedListNodes(hashtable_t* allNodes_t
 }
 
 template<class Map>
-SingleAgentICBS<Map>::SingleAgentICBS(int start_location, int goal_location,  Map* ml1,int agent_id, int start_heading, int kRobust, int min_end):ml(ml1)
+        SingleAgentICBS<Map>::SingleAgentICBS(int start_location, int goal_location,  Map* ml1, int agent_id, options cbs_option, int start_heading, int kRobust, int min_end):ml(ml1)
 {
 	this->agent_id = agent_id;
 	this->start_heading = start_heading;
@@ -456,6 +457,7 @@ SingleAgentICBS<Map>::SingleAgentICBS(int start_location, int goal_location,  Ma
 	this->num_col = ml->cols;
 
 	this->kRobust = kRobust;
+	this->option = cbs_option;
 	// initialize allNodes_table (hash table)
 	empty_node = new LLNode();
 	empty_node->locs.push_back(-1);

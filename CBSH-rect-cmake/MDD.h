@@ -46,7 +46,7 @@ class MDD: public MDDEmpty
 {
 public:
 	bool buildMDD( ConstraintTable& constraints,
-		int numOfLevels,  SingleAgentICBS<Map> &solver, bool train);
+		int numOfLevels,  SingleAgentICBS<Map> &solver, bool train, bool shrink);
     bool getOccupations(list<int>& next_locs, int next_id, MDDNode* curr, int k);
 //	bool buildMDD( ConstraintTable& constraints, int numOfLevels, SingleAgentICBS<Map> & solver, int start, int start_time,int start_heading=-1);
 //	bool buildMDD(ConstraintTable& constraints, int numOfLevels, SingleAgentICBS<Map> & solver, int start, int start_time,int goal, int start_heading = -1);

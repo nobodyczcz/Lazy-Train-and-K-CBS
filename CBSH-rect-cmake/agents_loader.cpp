@@ -89,7 +89,7 @@ AgentsLoader::AgentsLoader(string fname, const MapLoader &ml,int max_k,bool diff
       //      cout << "GOAL[" << curr_pair.first << "," << curr_pair.second << "]" << endl;
       this->goal_locations.push_back(curr_pair);
       if (diff_k)
-        this->k.push_back(i%(this->max_k+1));
+          this->k.push_back(this->max_k - i%(this->max_k+1));
       else
           this->k.push_back(this->max_k);
 

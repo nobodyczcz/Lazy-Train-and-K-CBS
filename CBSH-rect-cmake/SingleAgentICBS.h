@@ -55,6 +55,8 @@ public:
 	double min_f_val;  // min f-val seen so far
 	int num_of_conf; // number of conflicts between this agent to all the other agents
 
+	options option;
+
 
 
 	//Checks if a vaild path found (wrt my_map and constraints)
@@ -94,7 +96,7 @@ public:
 
 	inline void releaseClosedListNodes(hashtable_t* allNodes_table);
 
-	SingleAgentICBS(int start_location, int goal_location, Map* ml, int agent_id, int start_heading = -1, int kRobust = 0, int min_end = 0);
+	SingleAgentICBS(int start_location, int goal_location, Map* ml, int agent_id, options cbs_option, int start_heading = -1, int kRobust = 0, int min_end = 0);
 	~SingleAgentICBS();
 
 };

@@ -18,20 +18,7 @@
 #include <fstream>
 
 
-struct options {
-	bool asymmetry_constraint=false;
-	bool debug = false;
-	bool ignore_t0 = false;
-	bool shortBarrier = false;
-	bool flippedRec = false;
-	int RM4way;
-	bool pairAnalysis = false;
-	bool printFailedPair = false;
-	bool ignore_target = false;
-	int window_size = 0;
-	bool print_nodes = false;
-	bool parking = false;
-};
+
 
 
 
@@ -72,14 +59,22 @@ public:
 	uint64_t num_corridor2 = 0;
 	uint64_t num_corridor4 = 0;
 	uint64_t num_rectangle = 0;
-	uint64_t num_0FlipRectangle = 0;
-	uint64_t num_1FlipRectangle = 0;
-	uint64_t num_2FlipRectangle = 0;
-	uint64_t num_target = 0;
-	uint64_t num_parking = 0;
+	uint64_t num_target_std = 0;
+	uint64_t num_target_sym = 0;
+	uint64_t num_parking_std = 0;
+	uint64_t num_parking_sym = 0;
 	uint64_t num_standard = 0;
-	uint64_t num_chasingRectangle = 0;
     uint64_t num_train_standard = 0;
+    uint64_t num_train_self = 0;
+
+    uint64_t num_cardinal = 0;
+    uint64_t num_semicardinal = 0;
+    uint64_t num_noncardinal = 0;
+    uint64_t num_unkown = 0;
+
+
+    uint64_t num_lltp = 0;
+    uint64_t num_llpp = 0;
 
 
 	bool solution_found;
@@ -94,14 +89,12 @@ public:
 	bool targetReasoning=false;
 	int kDelay;
     int screen;
-    bool asymmetry_constraint;
 	int numOfRectangle = 0;
 	bool debug_mode=false;
-	bool ignore_t0=false;
-	bool shortBarrier = false;
 	bool I_RM = false;
 	std::clock_t start;
     int num_col;
+
 
     options option;
 
@@ -222,6 +215,7 @@ public:
 	MDD<Map>* buildMDD(ICBSNode& node, int id, int k=0, bool train = false);
 	void updateConstraintTable(ICBSNode* cTurr, int agent_id);
 	void classifyConflicts(ICBSNode &parent);
+	bool have_delta_conflict(ICBSNode &node);
 	void initializeDummyStart();
 	bool isCorridorConflict(std::shared_ptr<Conflict>& corridor, const std::shared_ptr<Conflict>& con, ICBSNode* node);
 	bool rectangleReasoning(const std::shared_ptr<Conflict>& con,ICBSNode &parent,std::shared_ptr<Conflict>& rectangle);
@@ -262,6 +256,7 @@ public:
     void countNodes(int amount);
     void printConstraints(ICBSNode* node,int agent_id,ofstream& out);
     void print_data();
+    void write_data(string ouput_file, string agents_file, string solver, bool validTrain);
 
     ofstream analysisOutput;
     string analysisOutputPath;
