@@ -35,6 +35,7 @@ struct options {
     bool pairAnalysis = false;
     bool printFailedPair = false;
     bool ignore_target = false;
+    bool lltp_only = false;
     int window_size = 0;
     bool print_nodes = false;
     bool parking = false;

@@ -62,6 +62,7 @@ public:
 	// conflicts in the current paths
 	std::list<std::shared_ptr<Conflict>> conflicts;
 	std::list<std::shared_ptr<Conflict>> unknownConf;
+	std::list<std::shared_ptr<Conflict>> unknownTrainConf;
 	std::unordered_set<string> resolvedConflicts;
     std::list<std::shared_ptr<Conflict>> cardinal_waiting;
     std::list<std::shared_ptr<Conflict>> non_cardinal_waiting;

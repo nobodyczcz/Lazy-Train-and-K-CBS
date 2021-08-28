@@ -60,9 +60,6 @@ template <class Map>ICBSSearchWithPairedAnalysis<Map>::ICBSSearchWithPairedAnaly
     this->solution_found = false;
     this->solution_cost = -1;
     this->kDelay = engine->kDelay;
-    this->asymmetry_constraint = false;
-    this->ignore_t0 = false;
-    this->shortBarrier = false;
     this->search_engines = engine->search_engines;
     this->analysisInstance=true;
 }

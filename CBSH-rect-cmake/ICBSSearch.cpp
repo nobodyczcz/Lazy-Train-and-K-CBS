@@ -233,18 +233,22 @@ void ICBSSearch::findConflicts2All(ICBSNode& curr, int a1){
                     << "(" << con.v2 / num_col << "," << con.v2 % num_col << ")" << ","
                     << con.t << "," << con.delta<<","<< con.train_conflict << ">; ";
 
+                if(option.lltp_only && !con.train_conflict)
+                    continue;
 
+                if (option.ignore_target && (con.v2 < 0) && (con.t > paths[con.a1]->size() - 1))
+                    continue;
 
                 std::shared_ptr<Conflict> newConf(new Conflict(con.a1, con.a2, con.v1,con.v2,con.t,con.delta,con.train_conflict));
 
-                if (targetReasoning && !train_conflict && (con.v2 < 0) && (con.t >= paths[con.a1]->size() - 1)) {
+                if (targetReasoning && !train_conflict && (con.v2 < 0) && (con.t > paths[con.a1]->size() - 1)) {
                     newConf->targetConflict(con.a1, con.a2, con.v1, con.t, al.k[con.a2]);
                 }
-                else if (targetReasoning && train_conflict && option.parking && (con.v2 < 0) && (con.t >= paths[con.a1]->size() - 1)) {
+                else if (targetReasoning && train_conflict && option.parking && (con.v2 < 0) && (con.t > paths[con.a1]->size() - 1)) {
                     newConf->parkingConflict(con.a1,con.a2,con.v1,con.t);
                 }
                 else if (con.v2 < 0) {
-                    if(con.t >= paths[con.a1]->size() - 1){
+                    if(con.t > paths[con.a1]->size() - 1){
                         if (train_conflict)
                             newConf->vertexTrainConflict(con.a1, con.a2, con.v1, con.t, true);
                         else
@@ -264,7 +268,10 @@ void ICBSSearch::findConflicts2All(ICBSNode& curr, int a1){
                     newConf->edgeConflict(con.a1, con.a2, con.v1, con.v2, con.t);
                 }
 
-                curr.unknownConf.emplace_back(newConf);
+                if (newConf->train_conflict)
+                    curr.unknownTrainConf.emplace_back(newConf);
+                else
+                    curr.unknownConf.emplace_back(newConf);
 
             }
         }
@@ -295,6 +302,7 @@ void ICBSSearch::findConflicts(ICBSNode& curr)
 		}
 		copyConflicts(curr.parent->conflicts, curr.conflicts, new_agents);
 		copyConflicts(curr.parent->unknownConf, curr.unknownConf, new_agents);
+		copyConflicts(curr.parent->unknownTrainConf, curr.unknownTrainConf, new_agents);
         copyConflicts(curr.parent->cardinal_waiting, curr.cardinal_waiting, new_agents);
         copyConflicts(curr.parent->non_cardinal_waiting, curr.non_cardinal_waiting, new_agents);
 
@@ -592,7 +600,7 @@ std::shared_ptr<Conflict> ICBSSearch::chooseConflict(ICBSNode &parent)
 		cout << "Start choosing conflict" << endl;
 
 	std::shared_ptr<Conflict> choose;
-	if (parent.conflicts.empty() && parent.unknownConf.empty())
+	if (parent.conflicts.empty() && parent.unknownConf.empty() && parent.unknownTrainConf.empty())
 		return NULL;
 	else if (!parent.conflicts.empty())
 	{
@@ -603,7 +611,7 @@ std::shared_ptr<Conflict> ICBSSearch::chooseConflict(ICBSNode &parent)
 				choose = conflict;
 		}
 	}
-	else
+	else if (!parent.unknownConf.empty())
 	{
 		choose = parent.unknownConf.back();
 		for (auto conflict : parent.unknownConf)
@@ -611,6 +619,15 @@ std::shared_ptr<Conflict> ICBSSearch::chooseConflict(ICBSNode &parent)
 			if (conflict->t < choose->t)
 				choose = conflict;
 		}
+	}
+	else
+	{
+	    choose = parent.unknownTrainConf.back();
+	    for (auto conflict : parent.unknownTrainConf)
+	    {
+	        if (conflict->t < choose->t)
+	            choose = conflict;
+	    }
 	}
 
 	return choose;
@@ -915,8 +932,34 @@ void MultiMapICBSSearch<Map>::print_data(){
     HL_num_expanded << " ; " << HL_num_generated << " ; " <<
     LL_num_expanded << " ; " << LL_num_generated << " ; " << runtime / CLOCKS_PER_SEC << " ; "
     << RMTime/CLOCKS_PER_SEC<<
-    "; std "<<num_standard <<"; train "<<num_train_standard<< "; rectangle " << num_rectangle << ", corridor " <<
-    num_corridor2  << ", target " << num_target << ", parking" << num_parking << endl;
+    "; std "<<num_standard <<"; train_std "<<num_train_standard<<
+    "; rectangle " << num_rectangle << ", corridor " << num_corridor2  <<
+    ", target_std " << num_target_std << ", target_sym " << num_target_sym <<
+    ", parking_std " << num_parking_std <<", parking_sym" << num_parking_sym <<
+    ", self_conflict " << num_train_self <<
+    ", num_llpp " << num_llpp << ", num_lltp "<<num_lltp<<
+    ", num_cardinal " << num_cardinal << ", num_semicardinal "<<num_semicardinal<<
+    ", num_noncardinal " << num_noncardinal << ", num_unkown "<<num_unkown<<
+    endl;
+}
+
+template<class Map>
+void MultiMapICBSSearch<Map>::write_data(string ouput_file, string agents_file, string solver,bool validTrain){
+    ofstream stats;
+    stats.open(ouput_file, ios::trunc);
+
+    stats  << runtime/ CLOCKS_PER_SEC << "," <<
+    HL_num_expanded << "," << HL_num_generated << "," <<
+    LL_num_expanded << "," << LL_num_generated << "," <<
+    agents_file << "," << solution_cost << "," <<
+    min_f_val - dummy_start->g_val << "," <<
+    solver << "," << num_standard <<","<<num_train_standard<< "," <<
+    num_rectangle << "," << num_corridor2 << "," << num_parking_std << "," <<
+    num_target_std<<","<< num_parking_sym << "," <<num_target_sym << "," << num_train_self << ","<<
+    "," << num_llpp << ","<<num_lltp<<"," << num_cardinal << ","<<num_semicardinal<<
+    "," << num_noncardinal << ","<< num_unkown << ","<< validTrain<<","
+    <<num_body_conflict<<","<<num_goal_conflict<<","<<num_self_conflict<<","<<runtime_mdd<< endl;
+    stats.close();
 }
 
 template<class Map>
@@ -974,6 +1017,8 @@ bool MultiMapICBSSearch<Map>::search(){
                  << " , f " << curr->f_val
                  << endl;
         }
+        if (screen>=3)
+            printPaths();
 
         if (cons_strategy == constraint_strategy::CBS)
         {
@@ -1064,9 +1109,6 @@ bool MultiMapICBSSearch<Map>::search(){
                  << curr->conflict->v2 / num_col << ","
                  << curr->conflict->v2 % num_col << ")"
                  << curr->conflict->t <<"," << curr->conflict->delta<< "," << curr->conflict->k << "," << curr->conflict->type << ","<< curr->conflict->train_conflict<< ">" << std::endl;
-            if (screen>=3)
-                printPaths();
-
         }
 
 
@@ -1077,10 +1119,6 @@ bool MultiMapICBSSearch<Map>::search(){
         //Expand the node
         HL_num_expanded++;
         curr->time_expanded = HL_num_expanded;
-        if (curr->conflict->type == conflict_type::RECTANGLE) {
-
-            numOfRectangle += 1;
-        }
 
         if (screen >= 2)
         {
@@ -1093,27 +1131,16 @@ bool MultiMapICBSSearch<Map>::search(){
 
         vector<ICBSNode*> children;
 
-        if (curr->conflict->type == conflict_type::CORRIDOR4) // 4-way branching
-        {
-            children.resize(4);
-            children[0] = new ICBSNode(curr->conflict->a1);
-            children[0]->constraints.push_back(curr->conflict->constraint1.front());
-            children[1] = new ICBSNode(curr->conflict->a1);
-            children[1]->constraints.push_back(curr->conflict->constraint1.back());
-            children[2] = new ICBSNode(curr->conflict->a2);
-            children[2]->constraints.push_back(curr->conflict->constraint2.front());
-            children[3] = new ICBSNode(curr->conflict->a2);
-            children[3]->constraints.push_back(curr->conflict->constraint2.back());
-            num_corridor4++;
-        }
-            //else if (curr->conflict->type == conflict_type::STANDARD && curr->conflict->t == 0 && !option.ignore_t0) {
+        if(curr->conflict->p == conflict_priority::CARDINAL)
+            num_cardinal++;
+        else if(curr->conflict->p == conflict_priority::SEMI)
+            num_semicardinal++;
+        else if(curr->conflict->p == conflict_priority::NON)
+            num_noncardinal++;
+        else
+            num_unkown++;
 
-            //	children.resize(1);
-            //	children[0] = new ICBSNode(curr->conflict->a2);
-            //	children[0]->constraints = curr->conflict->constraint2;
-            //	num_standard++;
-            //}
-        else if (curr->conflict->type == conflict_type::RECTANGLE4) // 4-way branching
+        if (curr->conflict->type == conflict_type::RECTANGLE4) // 4-way branching
         {
             children.resize(curr->conflict->multiConstraint1.size()+ curr->conflict->multiConstraint2.size());
             int constraint1Size = curr->conflict->multiConstraint1.size();
@@ -1137,15 +1164,13 @@ bool MultiMapICBSSearch<Map>::search(){
             }
 
             num_rectangle++;
-            if (curr->conflict->isChasing) {
-                num_chasingRectangle++;
-            }
 
         }
         else if(curr->conflict->type == conflict_type::SELF_CONFLICT){
             children.resize(1);
             children[0] = new ICBSNode(curr->conflict->a1);
             children[0]->constraints = curr->conflict->constraint1;
+            num_train_self++;
         }
         else // 2-way branching
         {
@@ -1161,16 +1186,22 @@ bool MultiMapICBSSearch<Map>::search(){
                 num_standard++;
                 if (curr->conflict->train_conflict)
                     num_train_standard++;
+                if (curr->conflict->t >  paths[curr->conflict->a1]->size())
+                    if (curr->conflict->v1 == search_engines[curr->conflict->a1]->goal_location)
+                        num_target_std++;
+                    else
+                        num_parking_std++;
+
             }
             else if (curr->conflict->type == conflict_type::RECTANGLE) {
                 num_rectangle++;
             }
             else if (curr->conflict->type == conflict_type::TARGET){
                 if(curr->conflict->train_conflict){
-                    num_parking++;
+                    num_parking_sym++;
                 }
                 else{
-                    num_target++;
+                    num_target_sym++;
                 }
             }
         }
@@ -1498,9 +1529,9 @@ void MultiMapICBSSearch<Map>::startPairAnalysis(ICBSNode* node,int agent1, int a
             a2PathLength = paths[agent2]->size();
         }
 
-        a1Mdd->buildMDD(constraintTable, a1PathLength + al.k[agent1], *search_engines[agent1],false);//TODO: fix mdd layer for train in pair analysis
+        a1Mdd->buildMDD(constraintTable, a1PathLength + al.k[agent1], *search_engines[agent1],false, option.shrink);//TODO: fix mdd layer for train in pair analysis
         updateConstraintTable(node, agent2);
-        a2Mdd->buildMDD(constraintTable,  a2PathLength +  al.k[agent2], *search_engines[agent2],false);//TODO: fix mdd layer for train in pair analysis
+        a2Mdd->buildMDD(constraintTable,  a2PathLength +  al.k[agent2], *search_engines[agent2],false,option.shrink);//TODO: fix mdd layer for train in pair analysis
 //            MDD<Map> *a1Mdd = buildMDD(*node, agent1, kDelay);
 //            MDD<Map> *a2Mdd = buildMDD(*node, agent2, kDelay);
         if (num_failed!=1)
@@ -1607,9 +1638,7 @@ MultiMapICBSSearch<Map>::MultiMapICBSSearch(Map* ml, AgentsLoader& al, double f_
 	solution_found = false;
 	solution_cost = -1;
 	kDelay = kDlay;
-	asymmetry_constraint = options1.asymmetry_constraint;
-	ignore_t0 = options1.ignore_t0;
-	shortBarrier = options1.shortBarrier;
+
 	search_engines = std::vector<SingleAgentICBS<Map>* >(num_of_agents);
 	if (debug_mode)
 		cout << "Initializing search engines" << endl;
@@ -1647,9 +1676,12 @@ void MultiMapICBSSearch<Map>::initializeDummyStart() {
 	for (int i = 0; i < num_of_agents; i++) {
 		//cout << "******************************" << endl;
 		//cout << "Agent: " << i << endl;
-		if (search_engines[i]->findPath(paths_found_initially[i], focal_w, constraintTable, res_table, dummy_start->makespan + 1, 0) == false && !analysisInstance)
+		if (search_engines[i]->findPath(paths_found_initially[i], focal_w, constraintTable, res_table, dummy_start->makespan + 1, 0,0,0,option.lltp_only) == false && !analysisInstance)
 			cout << "NO SOLUTION EXISTS";
-		
+		if(option.lltp_only)
+		    num_lltp++;
+		else
+		    num_llpp++;
 		paths[i] = &paths_found_initially[i];
 		/*if (paths[i]->at(2).conflist == NULL) {
 			cout << "x" << endl;
@@ -1755,7 +1787,7 @@ MDD<Map>* MultiMapICBSSearch<Map>::buildMDD(ICBSNode& node, int id, int k, bool 
 		mdd = new MDD<Map>();
 		// vector < list< pair<int, int> > >* cons_vec = collectConstraints(&node, id);
 		updateConstraintTable(&node, id);
-		if (mdd->buildMDD(constraintTable, num_levels, *search_engines[id],train)) {
+		if (mdd->buildMDD(constraintTable, num_levels, *search_engines[id],train, option.shrink)) {
             if (!mddTable.empty())
                 mddTable[c.a][c] = mdd;
         }
@@ -1813,7 +1845,12 @@ bool MultiMapICBSSearch<Map>::findPathForSingleAgent(ICBSNode*  node, int ag, do
 	vector<PathEntry> newPath;
 	//cout << "**************" << endl;
 	//cout << "Single agent : " << curr->agent_id << endl;
-	bool foundSol = search_engines[ag]->findPath(newPath, focal_w, constraintTable, res_table, max_plan_len, lowerbound, start, time_limit,constraintTable.has_train);
+	bool foundSol = search_engines[ag]->findPath(newPath, focal_w, constraintTable, res_table, max_plan_len, lowerbound, start, time_limit,constraintTable.has_train || option.lltp_only);
+
+	if (constraintTable.has_train || option.lltp_only)
+	    num_lltp++;
+	else
+	    num_llpp++;
 
 	LL_num_expanded += search_engines[ag]->num_expanded;
 	LL_num_generated += search_engines[ag]->num_generated;
@@ -1886,16 +1923,26 @@ void MultiMapICBSSearch<Map>::updateConstraintTable(ICBSNode* curr, int agent_id
 	}
 }
 
+
+
 template<class Map>
 void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 {
-	if (parent.conflicts.empty() && parent.unknownConf.empty())
-		return; // No conflict
-	int previousRetangle[4] = {0,0,0,0};
+    bool no_delta_conf = parent.unknownConf.empty();
+//    bool no_delta_conf = true;
+
 	// Classify all conflicts in unknownConf
-	while (!parent.unknownConf.empty())
+	while (!parent.unknownConf.empty() || (no_delta_conf && !parent.unknownTrainConf.empty()))
 	{
-		std::shared_ptr<Conflict> con = parent.unknownConf.front();
+	    std::shared_ptr<Conflict> con;
+	    if (!parent.unknownConf.empty()){
+	        con = parent.unknownConf.front();
+	        parent.unknownConf.pop_front();
+	    }
+	    else{
+	        con = parent.unknownTrainConf.front();
+	        parent.unknownTrainConf.pop_front();
+	    }
 		int a1 = con->a1, a2 = con->a2;
 		int loc1, loc2, timestep,timestep2;
 		constraint_type type;
@@ -1904,7 +1951,6 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 		timestep = con->t;
 		timestep2 = timestep + con->k;
 		//std::tie(loc1, loc2, timestep, type) = con->constraint1.front();
-		parent.unknownConf.pop_front();
 
 		int a1_p = 0, a2_p = 0;
 		int a1_k = al.k[a1];
