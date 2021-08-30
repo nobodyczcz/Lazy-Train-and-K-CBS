@@ -221,7 +221,7 @@ void ICBSSearch::findConflicts2All(ICBSNode& curr, int a1){
     int self_conflict = false;
     for (size_t t = 0; t < paths[a1]->size(); t++) {
 
-        if (paths[a1]->at(t).self_conflict)
+        if (paths[a1]->at(t).self_conflict && !option.ignore_train)
             self_conflict = true;
         if (!paths[a1]->at(t).conflist.empty() ) {
             for (auto& con : (paths[a1]->at(t).conflist)) {
