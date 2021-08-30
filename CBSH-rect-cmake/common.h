@@ -40,6 +40,7 @@ struct options {
     bool print_nodes = false;
     bool parking = false;
     bool shrink = false;
+    bool ignore_train = false;
 };
 
 namespace N

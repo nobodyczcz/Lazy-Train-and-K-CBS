@@ -39,6 +39,7 @@ int main(int argc, char** argv)
 		("kDelay", po::value<int>()->default_value(0), "Set max_k for k robust plan")
 		("shrink", "shrink to hole on reaching target")
 		("ignore-target",  "ignore all target conflict")
+		("ignore-train", "ignore train conflict, act only robust cbs")
 		("lltp-only",  "only use lltp and occupation conflict find solution.")
 		("diff-k",  "All agent have different k")
 		("only_generate_instance", po::value<std::string>()->default_value(""),"no searching")
@@ -86,6 +87,7 @@ int main(int argc, char** argv)
     options1.lltp_only = vm.count("lltp-only");
     options1.parking = vm["parking"].as<bool>();;
     options1.shrink = vm.count("shrink");
+    options1.ignore_train = vm.count("ignore-train");
 
 
 

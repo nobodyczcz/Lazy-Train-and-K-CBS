@@ -233,7 +233,10 @@ void ICBSSearch::findConflicts2All(ICBSNode& curr, int a1){
                     << "(" << con.v2 / num_col << "," << con.v2 % num_col << ")" << ","
                     << con.t << "," << con.delta<<","<< con.train_conflict << ">; ";
 
-                if(option.lltp_only && !con.train_conflict)
+                if (option.ignore_train && con.train_conflict)
+                    continue;
+
+                if (option.lltp_only && !con.train_conflict)
                     continue;
 
                 if (option.ignore_target && (con.v2 < 0) && (con.t > paths[con.a1]->size() - 1))
