@@ -1937,6 +1937,10 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 	// Classify all conflicts in unknownConf
 	while (!parent.unknownConf.empty() || (no_delta_conf && !parent.unknownTrainConf.empty()))
 	{
+	    std::clock_t runtime = (std::clock() - start);
+	    if (runtime > time_limit){
+	        break;
+	    }
 	    std::shared_ptr<Conflict> con;
 	    if (!parent.unknownConf.empty()){
 	        con = parent.unknownConf.front();
@@ -2100,6 +2104,10 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
         return;
     bool found = false;
     while ( !parent.cardinal_waiting.empty()){
+        std::clock_t runtime = (std::clock() - start);
+        if (runtime > time_limit){
+            break;
+        }
         std::shared_ptr<Conflict> conflict  = parent.cardinal_waiting.front();
         parent.cardinal_waiting.pop_front();
         // Corridor reasoning
@@ -2128,6 +2136,10 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
     }
 
     while ( !parent.non_cardinal_waiting.empty() && !found){
+        std::clock_t runtime = (std::clock() - start);
+        if (runtime > time_limit){
+            break;
+        }
         std::shared_ptr<Conflict> conflict  = parent.non_cardinal_waiting.front();
         parent.non_cardinal_waiting.pop_front();
         std::shared_ptr<Conflict> corridor;
@@ -2279,8 +2291,8 @@ bool MultiMapICBSSearch<Map>::rectangleReasoning(const std::shared_ptr<Conflict>
 
         int root = std::min(rt1,rt2);
         int diff = std::abs(rt1-rt2);
-        int a1kMax = al.k[a2];
-        int a2kMax = al.k[a1];
+        int a1kMax = al.k[a2] >8?8:al.k[a2];
+        int a2kMax = al.k[a1] >8?8:al.k[a1];
         new_type = -1;
 
         //try all combination of possible k to check does any barriers build by the combination satisfy condition 1 in the paper.
