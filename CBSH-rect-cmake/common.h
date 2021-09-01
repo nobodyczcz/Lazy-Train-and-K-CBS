@@ -41,6 +41,7 @@ struct options {
     bool parking = false;
     bool shrink = false;
     bool ignore_train = false;
+    bool no_train_classify = false;
 };
 
 namespace N

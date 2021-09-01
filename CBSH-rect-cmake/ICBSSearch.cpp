@@ -1935,7 +1935,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 //    bool no_delta_conf = true;
 
 	// Classify all conflicts in unknownConf
-	while (!parent.unknownConf.empty() || (no_delta_conf && !parent.unknownTrainConf.empty()))
+	while (!parent.unknownConf.empty() || (no_delta_conf && !option.no_train_classify && !parent.unknownTrainConf.empty()))
 	{
 	    std::clock_t runtime = (std::clock() - start);
 	    if (runtime > time_limit){
@@ -2291,8 +2291,8 @@ bool MultiMapICBSSearch<Map>::rectangleReasoning(const std::shared_ptr<Conflict>
 
         int root = std::min(rt1,rt2);
         int diff = std::abs(rt1-rt2);
-        int a1kMax = al.k[a2] >8?8:al.k[a2];
-        int a2kMax = al.k[a1] >8?8:al.k[a1];
+        int a1kMax = al.k[a2];
+        int a2kMax = al.k[a1];
         new_type = -1;
 
         //try all combination of possible k to check does any barriers build by the combination satisfy condition 1 in the paper.
