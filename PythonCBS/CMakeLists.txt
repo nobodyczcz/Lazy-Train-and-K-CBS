@@ -144,7 +144,6 @@ elseif(APPLE)
 
 	target_link_libraries(PythonCBS ${Boost_LIBRARIES} ${PYTHON_LIBRARIES} ${BOOST_PYTHON})
 
-
 else()
 	file(READ "/etc/issue" ETC_ISSUE)
 	string(REGEX MATCH "Ubuntu|Manjaro" DIST ${ETC_ISSUE})

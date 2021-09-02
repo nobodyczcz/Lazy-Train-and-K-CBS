@@ -7,7 +7,10 @@ template<class Map>
 bool MDD<Map>::buildMDD( ConstraintTable& constraints, int numOfLevels, SingleAgentICBS<Map> & solver, bool train, bool shrink)
 {
 	MDDNode* root = new MDDNode(std::list<int>(), nullptr,train); // Root
-	root->locs.resize(solver.kRobust+1, solver.start_location);
+	if (solver.ml->flatland)
+	    root->locs.resize(solver.kRobust+1, -1);
+	else
+	    root->locs.resize(solver.kRobust+1, solver.start_location);
 	root->heading = solver.start_heading;
 	root->row = solver.start_location / solver.num_col;
 	root->col = solver.start_location % solver.num_col;
@@ -85,7 +88,12 @@ bool MDD<Map>::buildMDD( ConstraintTable& constraints, int numOfLevels, SingleAg
 
 		vector<pair<int, int>> transitions;
 
-		if (!node->shrinking)
+		if (solver.ml->flatland && node->locs.front() == -1 ){
+		    transitions.emplace_back(-1, 4);
+		    transitions.emplace_back(solver.start_location, node->heading);
+
+		}
+		else if (!node->shrinking)
 		    transitions = solver.ml->get_transitions(node->locs.front(), node->heading,false);
 
 		if (shrink && node->locs.front() == solver.goal_location){
@@ -117,11 +125,13 @@ bool MDD<Map>::buildMDD( ConstraintTable& constraints, int numOfLevels, SingleAg
 			    continue;
             //check does head have edge constraint or body have vertex constraint.
             bool constrained = false;
-            if (constraints.is_constrained(node->locs.front() * solver.map_size + newLoc, node->level + 1))
+            if (node->locs.front()  != -1 && constraints.is_constrained(node->locs.front() * solver.map_size + newLoc, node->level + 1))
                 constrained = true;
 
 
             for(auto loc:new_locs){
+                if (loc == -1)
+                    break;
                 if (constraints.is_constrained(loc, node->level + 1, loc != new_locs.front()) )
                     constrained = true;
                 if(!train)
@@ -133,7 +143,11 @@ bool MDD<Map>::buildMDD( ConstraintTable& constraints, int numOfLevels, SingleAg
             else
                 heuristicBound = numOfLevels - node->level - 2+ 0.001;
 
-            int heuristic = solver.my_heuristic[newLoc].heading[new_heading];
+            int heuristic;
+            if (solver.ml->flatland && newLoc == -1)
+                heuristic = solver.my_heuristic[solver.start_location].heading[solver.start_heading]+1;
+            else
+                heuristic = solver.my_heuristic[newLoc].heading[new_heading];
             if (shrink)
                 heuristic += new_locs.size() -1;
 
@@ -142,7 +156,7 @@ bool MDD<Map>::buildMDD( ConstraintTable& constraints, int numOfLevels, SingleAg
 
 //            cout << "newLoc " << newLoc << " heading " << new_heading<<" h "<< solver.my_heuristic[newLoc].heading[new_heading] <<", hb"<<heuristicBound<<", c "<<constrained <<endl;
 
-			if (solver.my_heuristic[newLoc].heading.count(new_heading) && heuristic < heuristicBound &&
+			if (heuristic < heuristicBound &&
 				!constrained) // valid move
 			{
 				std::list<MDDNode*>::reverse_iterator child = closed.rbegin();

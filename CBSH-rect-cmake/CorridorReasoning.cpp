@@ -118,9 +118,14 @@ int CorridorReasoning<Map>::getBypassLength(int start, int end, std::pair<int, i
 
     int start_h_val = abs(goalHeuTable[end].get_hval(end_heading) - goalHeuTable[start].get_hval(start_heading));
     LLNode* root = new LLNode(list<int>(), 0, start_h_val, NULL, 0);
-    root->locs.push_back(start); //todo:: start also should be occupation.
+    if(my_map->flatland)
+        root->locs.resize(k+1,-1);
+    else
+        root->locs.resize(k+1,start); //todo:: start also should be occupation.
 	root->heading = start_heading;
 	root->open_handle = heap.push(root);  // add root to heap
+	if (constraint_table.has_train)
+	    root->train_mode = true;
 	nodes.insert(root);       // add root to hash_table (nodes)
 	int moves_offset[5] = { 1, -1, num_col, -num_col, 0 };
 	LLNode* curr = NULL;
@@ -129,19 +134,26 @@ int CorridorReasoning<Map>::getBypassLength(int start, int end, std::pair<int, i
 	{
 		curr = heap.top();
 		heap.pop();
-		if (curr->locs.front() == end )// todo:: ignore heading for now. maybe adding back if run experiment on flatland
+		if (curr->locs.front() == end)// todo:: ignore heading for now. maybe adding back if run experiment on flatland
 		{
 			length = curr->g_val;
 			break;
 		}
-		vector<pair<int, int>> transitions = my_map->get_transitions(curr->locs.front(), curr->heading, false);
+		vector<pair<int, int>> transitions;
+		if (my_map->flatland && curr->locs.front() == -1 ){
+		    transitions.emplace_back(-1, 4);
+		    transitions.emplace_back(start, curr->heading);
+
+		}
+		else
+		    transitions = my_map->get_transitions(curr->locs.front(), curr->heading, false);
 
 		for (const pair<int, int> move : transitions)
 		{
 			int next_loc = move.first;
 			time_generated += 1;
 			list<int> next_locs;
-            if (!getOccupations(next_locs, next_loc, curr,k))
+			if (!getOccupations(next_locs, next_loc, curr,k) && constraint_table.has_train)
                 continue;
 
 			int next_timestep = curr->timestep + 1;
@@ -154,51 +166,75 @@ int CorridorReasoning<Map>::getBypassLength(int start, int end, std::pair<int, i
 				next_timestep--;
 			}
 
-			if (!constraint_table.is_constrained(next_loc, next_timestep) &&
-				!constraint_table.is_constrained(curr->locs.front() * map_size + next_loc, next_timestep))
-			{  // if that grid is not blocked
-				if ((curr->locs.front() == blocked.first && next_loc == blocked.second) ||
-					(curr->locs.front() == blocked.second && next_loc == blocked.first)) // use the prohibited edge
-				{
-					continue;
-				}
-				int next_heading;
+			//check does head have edge constraint or body have vertex constraint.
+			bool constrained = false;
 
-				if (curr->heading == -1) //heading == 4 means no heading info
-					next_heading = -1;
-				else
-					if (move.second == 4) //move == 4 means wait
-						next_heading = curr->heading;
-					else
-						next_heading = move.second;
+			//Check edge constraint on head
+			if (curr->locs.front() != -1 && constraint_table.is_constrained(curr->locs.front() * map_size + next_loc, next_timestep))
+			    constrained = true;
 
-				int next_g_val = curr->g_val + 1;
-				int next_h_val = abs(goalHeuTable[end].get_hval(end_heading) - goalHeuTable[next_loc].get_hval(next_heading));
-				if (next_g_val + next_h_val >= upper_bound) // the cost of the path is larger than the upper bound
-					continue;
-				LLNode* next = new LLNode(next_locs, next_g_val, next_h_val, NULL, next_timestep);
-				next->heading = next_heading;
-				next->actionToHere = move.second;
-				next->time_generated = time_generated;
-
-				it = nodes.find(next);
-				if (it == nodes.end())
-				{  // add the newly generated node to heap and hash table
-					next->open_handle = heap.push(next);
-					nodes.insert(next);
-				}
-				else {  // update existing node's g_val if needed (only in the heap)
-					delete(next);  // not needed anymore -- we already generated it before
-					LLNode* existing_next = (*it);
-					if (existing_next->g_val > next_g_val)
-					{
-						existing_next->g_val = next_g_val;
-						existing_next->timestep = next_timestep;
-
-                        heap.update(existing_next->open_handle);
-					}
-				}
+			//Check vertex constraint on body and head
+			for(auto loc:next_locs){
+			    if (loc == -1)
+			        break;
+			    if (constraint_table.is_constrained(loc, next_timestep, loc != next_locs.front()) )
+			        constrained = true;
+			    if(!constraint_table.has_train) //if not train, only check head
+			        break;
 			}
+
+			if (constrained)
+			    continue;
+
+
+            if ((curr->locs.front() == blocked.first && next_loc == blocked.second) ||
+                (curr->locs.front() == blocked.second && next_loc == blocked.first)) // use the prohibited edge
+            {
+                continue;
+            }
+            int next_heading;
+
+            if (curr->heading == -1) //heading == 4 means no heading info
+                next_heading = -1;
+            else
+                if (move.second == 4) //move == 4 means wait
+                    next_heading = curr->heading;
+                else
+                    next_heading = move.second;
+
+            int next_g_val = curr->g_val + 1;
+            int next_h_val;
+            if (next_loc == -1)
+                next_h_val = abs(goalHeuTable[end].get_hval(end_heading) - goalHeuTable[start].get_hval(start_heading));
+            else
+                next_h_val = abs(goalHeuTable[end].get_hval(end_heading) - goalHeuTable[next_loc].get_hval(next_heading));
+            if (next_g_val + next_h_val >= upper_bound) // the cost of the path is larger than the upper bound
+                continue;
+            LLNode* next = new LLNode(next_locs, next_g_val, next_h_val, NULL, next_timestep);
+            next->heading = next_heading;
+            next->actionToHere = move.second;
+            next->time_generated = time_generated;
+            if (constraint_table.has_train)
+                next->train_mode = true;
+
+            it = nodes.find(next);
+            if (it == nodes.end())
+            {  // add the newly generated node to heap and hash table
+                next->open_handle = heap.push(next);
+                nodes.insert(next);
+            }
+            else {  // update existing node's g_val if needed (only in the heap)
+                delete(next);  // not needed anymore -- we already generated it before
+                LLNode* existing_next = (*it);
+                if (existing_next->g_val > next_g_val)
+                {
+                    existing_next->g_val = next_g_val;
+                    existing_next->timestep = next_timestep;
+
+                    heap.update(existing_next->open_handle);
+                }
+            }
+
 		}
 	}
 	for (it = nodes.begin(); it != nodes.end(); it++)

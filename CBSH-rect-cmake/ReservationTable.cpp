@@ -21,6 +21,8 @@ void ReservationTable::addPath(int agent_id, std::vector<PathEntry>* path) {
 	for (int t = 0; t < path->size(); t++) {
 	    bool head = true; //first location is head.
 	    for (int loc : path->at(t).occupations) {
+	        if (loc == -1)
+	            continue;
 
             if (!res_table.count(loc)) {
                 res_table[loc] = timeline();
@@ -81,6 +83,9 @@ void ReservationTable::deletePath(int agent_id, std::vector<PathEntry>* path) {
 
 std::list<Conflict> ReservationTable::findConflict(int agent, int currLoc, list<int> next_locs, int currT, bool parking) {
     std::list<Conflict> confs;
+
+    if (next_locs.front() == -1)
+        return confs;
 	int nextT = currT + 1;
 	int max_k = this->agentsLoader->max_k;
 	int k_1 = this->agentsLoader->k[agent];

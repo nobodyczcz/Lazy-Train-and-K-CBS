@@ -38,7 +38,6 @@ void SingleAgentICBS<Map>::updatePath(LLNode* goal, std::vector<PathEntry> &path
         path[t].heading = curr->heading;
         path[t].singles.clear();
         path[t].self_conflict = curr->self_conflict;
-
         if (t!=0)
             path[t].conflist =  res_table->findConflict(agent_id, curr->parent->locs.front(), curr->locs, t-1, t==goal->g_val);
         else
@@ -74,7 +73,10 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 	 // generate start and add it to the OPEN list
 	LLNode* start = new LLNode(list<int>(), 0, my_heuristic[start_location].heading[start_heading],
 	        NULL, 0, 0, false, train);
-	start->locs.resize(kRobust+1,start_location);
+	if (ml->flatland)
+	    start->locs.resize(kRobust+1,-1);
+	else
+	    start->locs.resize(kRobust+1,start_location);
 	start->heading = start_heading;
 	num_generated++;
 	start->open_handle = open_list.push(start);
@@ -82,6 +84,8 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 	start->in_openlist = true;
 	start->time_generated = 0;
 	start->num_internal_conf= 0;
+	if(option.shrink)
+	    start->h_val += start->locs.size() -1;
 
 
 	allNodes_table.insert(start);
@@ -158,7 +162,12 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 
 		vector<pair<int, int>> transitions;
 
-		if (!curr->shrinking)
+		if (ml->flatland && curr->locs.front() == -1 ){
+		    transitions.emplace_back(-1, 4);
+		    transitions.emplace_back(start_location, curr->heading);
+
+		}
+		else if (!curr->shrinking)
 		    transitions = ml->get_transitions(curr->locs.front(), curr->heading,false);
 
 		if (option.shrink && curr->locs.front() == goal_location){
@@ -200,11 +209,13 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
             bool constrained = false;
 
             //Check edge constraint on head
-            if (constraint_table.is_constrained(curr->locs.front() * map_size + next_id, next_timestep))
+            if (curr->locs.front() != -1 && constraint_table.is_constrained(curr->locs.front() * map_size + next_id, next_timestep))
                 constrained = true;
 
             //Check vertex constraint on body and head
             for(auto loc:next_locs){
+                if (loc == -1)
+                    continue;
                 if (constraint_table.is_constrained(loc, next_timestep, loc != next_locs.front()) )
                     constrained = true;
                 if(!train) //if not train, only check head
@@ -226,7 +237,11 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
                 else
                     next_heading = move.second;
 
-            int next_h_val = my_heuristic[next_id].get_hval(next_heading);
+            int next_h_val;
+            if (ml->flatland && next_id == -1)
+                next_h_val = my_heuristic[start_location].get_hval(next_heading) + 1;
+            else
+                next_h_val = my_heuristic[next_id].get_hval(next_heading);
 
             if (option.shrink)
                 next_h_val = next_h_val + next_locs.size() - 1;

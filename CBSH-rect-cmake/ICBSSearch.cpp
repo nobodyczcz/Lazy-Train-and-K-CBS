@@ -432,18 +432,18 @@ bool MultiMapICBSSearch<Map>::isCorridorConflict(std::shared_ptr<Conflict>& corr
 		std::pair<int, int> edge_empty = make_pair(-1, -1);
 		updateConstraintTable(node, a[0]);
 		if (screen>=4)
-			cout << "start: " << paths[a[0]]->front().location/num_col<<","<< paths[a[0]]->front().location % num_col << " end:" << u[1]/num_col<<"," << u[1]%num_col << " heading:" << paths[a[0]]->front().actionToHere << endl;
-        int t1 = cp.getBypassLength(paths[a[0]]->front().location, u[0], edge_empty, ml, num_col, map_size, constraintTable, INT_MAX, search_engines[a[0]]->my_heuristic, paths[a[0]]->front().heading,paths[a[0]]->at(t[0]).heading);
-        int t3 = cp.getBypassLength(paths[a[0]]->front().location, u[1], edge_empty, ml, num_col, map_size, constraintTable, INT_MAX, search_engines[a[0]]->my_heuristic, paths[a[0]]->front().heading,paths[a[0]]->at(e[0]).heading);
-		int t3_ = cp.getBypassLength(paths[a[0]]->front().location, u[1], edge, ml, num_col, map_size, constraintTable, t3 + 2 * k  + 1,search_engines[a[0]]->my_heuristic, paths[a[0]]->front().heading, paths[a[0]]->at(e[0]).heading);
+		    cout << "start: " << search_engines[a[0]]->start_location/num_col<<","<< search_engines[a[0]]->start_location % num_col << " end:" << u[1]/num_col<<"," << u[1]%num_col << " heading:" << paths[a[0]]->front().actionToHere << endl;
+		int t1 = cp.getBypassLength(search_engines[a[0]]->start_location, u[0], edge_empty, ml, num_col, map_size, constraintTable, INT_MAX, search_engines[a[0]]->my_heuristic, search_engines[a[0]]->start_heading,paths[a[0]]->at(t[0]).heading,search_engines[a[0]]->kRobust);
+		int t3 = cp.getBypassLength(search_engines[a[0]]->start_location, u[1], edge_empty, ml, num_col, map_size, constraintTable, INT_MAX, search_engines[a[0]]->my_heuristic,search_engines[a[0]]->start_heading,paths[a[0]]->at(e[0]).heading,search_engines[a[0]]->kRobust);
+		int t3_ = cp.getBypassLength(search_engines[a[0]]->start_location, u[1], edge, ml, num_col, map_size, constraintTable, t3 + 2 * k  + 1,search_engines[a[0]]->my_heuristic, search_engines[a[0]]->start_heading, paths[a[0]]->at(e[0]).heading,search_engines[a[0]]->kRobust);
 		
 
 		updateConstraintTable(node, a[1]);
 		if (screen >= 4)
-			cout << "start: " << paths[a[1]]->front().location / num_col << "," << paths[a[1]]->front().location % num_col << " end:" << u[0] / num_col << "," << u[0] % num_col << " heading:" << paths[a[1]]->front().actionToHere << endl;
-        int t2 = cp.getBypassLength(paths[a[1]]->front().location, u[1], edge_empty, ml, num_col, map_size, constraintTable, INT_MAX,search_engines[a[1]]->my_heuristic, paths[a[1]]->front().heading, paths[a[1]]->at(t[1]).heading);
-        int t4 = cp.getBypassLength(paths[a[1]]->front().location, u[0], edge_empty, ml, num_col, map_size, constraintTable, INT_MAX,search_engines[a[1]]->my_heuristic, paths[a[1]]->front().heading, paths[a[1]]->at(e[1]).heading);
-		int t4_ = cp.getBypassLength(paths[a[1]]->front().location, u[0], edge, ml, num_col, map_size, constraintTable, t4 + 2*k + 1, search_engines[a[1]]->my_heuristic, paths[a[1]]->front().heading, paths[a[1]]->at(e[1]).heading);
+		    cout << "start: " << search_engines[a[1]]->start_location / num_col << "," << search_engines[a[1]]->start_location % num_col << " end:" << u[0] / num_col << "," << u[0] % num_col << " heading:" << paths[a[1]]->front().actionToHere << endl;
+		int t2 = cp.getBypassLength(search_engines[a[1]]->start_location, u[1], edge_empty, ml, num_col, map_size, constraintTable, INT_MAX,search_engines[a[1]]->my_heuristic, search_engines[a[1]]->start_heading, paths[a[1]]->at(t[1]).heading, search_engines[a[1]]->kRobust);
+		int t4 = cp.getBypassLength(search_engines[a[1]]->start_location, u[0], edge_empty, ml, num_col, map_size, constraintTable, INT_MAX,search_engines[a[1]]->my_heuristic, search_engines[a[1]]->start_heading, paths[a[1]]->at(e[1]).heading,search_engines[a[1]]->kRobust);
+		int t4_ = cp.getBypassLength(search_engines[a[1]]->start_location, u[0], edge, ml, num_col, map_size, constraintTable, t4 + 2*k + 1, search_engines[a[1]]->my_heuristic, search_engines[a[1]]->start_heading, paths[a[1]]->at(e[1]).heading,search_engines[a[1]]->kRobust);
 		if (screen >= 4) {
 			cout <<"t1: "<<t1 <<",t2: "<<t2  << ",t3: " << t3 << "," << "t3_: " << t3_ << "," << "t4: " << t4 << "," << "t4_: " << t4_ << endl;
 			cout << "corridor length: " << k << endl;
@@ -791,6 +791,8 @@ bool ICBSSearch::isValidTrain()
 
             int pre_loc = -1;
             for (int loc : (*paths[i])[t].occupations) {
+                if (loc == -1)
+                    continue;
                 if (loc == pre_loc){
                     continue;
                 }
@@ -1177,12 +1179,31 @@ bool MultiMapICBSSearch<Map>::search(){
         }
         else // 2-way branching
         {
+            if(ml->flatland &&
+            curr->conflict->t-1>=0 &&
+            paths[curr->conflict->a1] ->at(curr->conflict->t-1).occupations.front() == -1 &&
+            paths[curr->conflict->a1] ->at(curr->conflict->t).occupations.front() != -1 &&
+            paths[curr->conflict->a2] ->at(curr->conflict->t-1).occupations.front() == -1 &&
+            paths[curr->conflict->a2] ->at(curr->conflict->t).occupations.front() != -1
+            ){
+                children.resize(1);
+                if (curr->conflict->a1 > curr->conflict->a2){
+                    children[0] = new ICBSNode(curr->conflict->a1);
+                    children[0]->constraints = curr->conflict->constraint1;
+                }
+                else{
+                    children[0] = new ICBSNode(curr->conflict->a2);
+                    children[0]->constraints = curr->conflict->constraint2;
+                }
+            }
+            else{
 
-            children.resize(2);
-            children[0] = new ICBSNode(curr->conflict->a1);
-            children[0]->constraints = curr->conflict->constraint1;
-            children[1] = new ICBSNode(curr->conflict->a2);
-            children[1]->constraints = curr->conflict->constraint2;
+                children.resize(2);
+                children[0] = new ICBSNode(curr->conflict->a1);
+                children[0]->constraints = curr->conflict->constraint1;
+                children[1] = new ICBSNode(curr->conflict->a2);
+                children[1]->constraints = curr->conflict->constraint2;
+            }
             if (curr->conflict->type == conflict_type::CORRIDOR2)
                 num_corridor2++;
             else if (curr->conflict->type == conflict_type::STANDARD) {

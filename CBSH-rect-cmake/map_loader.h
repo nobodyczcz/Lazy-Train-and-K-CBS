@@ -23,8 +23,10 @@ class MapLoader
 
 
 
-    int start_loc;
+  int start_loc;
   int goal_loc;
+
+  bool flatland = false;
 
   enum valid_moves_t { NORTH, EAST, SOUTH, WEST, WAIT_MOVE, MOVE_COUNT };  // MOVE_COUNT is the enum's size
   int *moves_offset;

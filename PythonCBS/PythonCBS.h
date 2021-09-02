@@ -13,12 +13,12 @@ namespace p = boost::python;
 template <class Map>
 class PythonCBS {
 public:
-	PythonCBS(p::object railEnv1, std::string algo, int kRobust, int t, bool debug, float f_w, string corridor,int RM_4Way);
-
+    PythonCBS(p::object railEnv1, std::string algo, int kRobust, int t, int screen, float f_w,bool corridor, bool diff_k, bool lltp_only);
+    PythonCBS(){};
 	p::list getResult();
 
 	bool search();
-	p::dict getResultDetail();
+	void write_result(string path);
 private:
 	std::string algo;
 	p::object railEnv;
@@ -28,6 +28,7 @@ private:
 	options options1;
 	int timeLimit;
 	int kRobust;
+	int screen;
 	float f_w;
 	MultiMapICBSSearch<Map>* icbs;
 	bool corridor2=false;

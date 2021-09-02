@@ -7,29 +7,25 @@ namespace p = boost::python;
 
 
 template <class Map>
-PythonCBS<Map>::PythonCBS(p::object railEnv1, std::string algo, int kRobust, int t, bool debug, float f_w,string corridor,int RM_4Way) :railEnv(railEnv1) {
+PythonCBS<Map>::PythonCBS(p::object railEnv1, std::string algo, int kRobust, int t, int screen, float f_w,bool corridor, bool diff_k, bool lltp_only) :railEnv(railEnv1) {
 	std::cout << "algo: " << algo << std::endl;
-	options1.debug = debug;
-	options1.ignore_t0 = false;
-	options1.shortBarrier = false;
-	options1.asymmetry_constraint = false;
-	options1.RM4way = RM_4Way;
+
 	timeLimit = t;
 	this->f_w = f_w;
 	this->algo = algo;
 	this->kRobust = kRobust;
-	if (corridor == "trainCorridor1") {
-		this->trainCorridor1 = true;
-		this->corridor2 = true;
-	}
-	if (corridor == "trainCorridor2") {
-		this->trainCorridor2 = true;
-		this->corridor2 = true;
-	}
-	if (corridor == "corridor2")
-		this->corridor2 = true;
-	if (corridor == "corridor4")
-		this->corridor4 = true;
+	this->corridor2 = corridor;
+    this->screen = screen;
+    this->algo = algo;
+
+	options1.ignore_target = true;
+	options1.shrink = true;
+	options1.parking = false;
+	options1.lltp_only = lltp_only;
+
+
+
+
 	if (algo == "ICBS")
 		s = constraint_strategy::ICBS;
 	else if (algo == "CBS")
@@ -59,9 +55,9 @@ PythonCBS<Map>::PythonCBS(p::object railEnv1, std::string algo, int kRobust, int
 	ml = new FlatlandLoader(railEnv.attr("rail"), p::extract<int>(rows), p::extract<int>(cols));
 	std::cout << "load agents " << std::endl;
 
-	al =  new AgentsLoader(railEnv.attr("agents"));
+	al =  new AgentsLoader(railEnv.attr("agents"),kRobust, diff_k);
 	std::cout << "load done " << std::endl;
-	if (debug) {
+	if (screen >=2) {
 		al->printAgentsInitGoal();
 	}
 
@@ -75,20 +71,11 @@ p::list PythonCBS<Map>::getResult() {
 
 template <class Map>
 bool PythonCBS<Map>::search() {
-	int screen;
-	if (options1.debug) {
-		screen = 5;
-	}
-	else {
-		screen = 0;
-	}
+
 	icbs = new MultiMapICBSSearch <Map> (ml, *al, f_w, s, timeLimit * CLOCKS_PER_SEC,screen, kRobust, options1);
 	if(s == constraint_strategy::CBSH_RM)
 		icbs->rectangleMDD = true;
-	icbs->trainCorridor1 = trainCorridor1;
-	icbs->trainCorridor2 = trainCorridor2;
 	icbs->corridor2 = corridor2;
-	icbs->corridor4 = corridor4;
 	bool res =false;
 	res = icbs->runICBSSearch();
 
@@ -99,33 +86,18 @@ bool PythonCBS<Map>::search() {
 
 
 template <class Map>
-p::dict PythonCBS<Map>::getResultDetail() {
-	p::dict result;
-
-	result["runtime"] = icbs->runtime / CLOCKS_PER_SEC;
-	result["HL_expanded"] = icbs->HL_num_expanded;
-	result["HL_generated"] = icbs->HL_num_generated;
-
-	result["LL_expanded"] = icbs->LL_num_expanded;
-	result["LL_generated"] = icbs->LL_num_generated;
-	if (icbs->isTimeout())
-		result["solution_cost"] = -1;
-	else
-		result["solution_cost"] = icbs->solution_cost;
-	result["algorithm"] = algo;
-	result["No_f_rectangle"] = icbs->num_rectangle;
-	result["num_corridor2"] = icbs->num_corridor2;
-	result["num_corridor4"] = icbs->num_corridor4;
-	return result;
-
+void PythonCBS<Map>::write_result(string path) {
+    bool valid_train = icbs->isValidTrain();
+    icbs->write_data(path,"", algo, valid_train);
 }
 
+template class PythonCBS<FlatlandLoader>;
 
 BOOST_PYTHON_MODULE(libPythonCBS)  // Name here must match the name of the final shared library, i.e. mantid.dll or mantid.so
 {
 	using namespace boost::python;
-	class_<PythonCBS<FlatlandLoader>>("PythonCBS", init<object, string, int, int, bool,float,string,int>())
+	class_<PythonCBS<FlatlandLoader>>("PythonCBS", init<p::object, std::string, int, int, int, float,bool, bool, bool>())
 		.def("getResult", &PythonCBS<FlatlandLoader>::getResult)
 		.def("search", &PythonCBS<FlatlandLoader>::search)
-		.def("getResultDetail", &PythonCBS<FlatlandLoader>::getResultDetail);
+		.def("write_result", &PythonCBS<FlatlandLoader>::write_result);
 }

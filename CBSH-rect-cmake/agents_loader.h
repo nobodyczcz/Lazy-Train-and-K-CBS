@@ -31,7 +31,7 @@ class AgentsLoader {
   AgentsLoader(const std::string fname, const MapLoader &ml,int max_k, bool diff_k, int agentsNum);
   AgentsLoader();
   AgentsLoader(int number_of_agent,int max_k);
-  AgentsLoader(p::object agents);
+  AgentsLoader(p::object agents, int max_k ,bool diff_k);
 
   void addAgent ( int start_row, int start_col, int goal_row, int goal_col,int min_time = 0,int finish = false, int heading = -1);
   void clear();
