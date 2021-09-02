@@ -37,7 +37,7 @@ def linearize_loc(in_env, loc):
 
 width = 50  # With of map
 height = 50  # Height of map
-nr_trains = 10  # Number of trains that have an assigned task in the env
+nr_trains = 24  # Number of trains that have an assigned task in the env
 cities_in_map = 10  # Number of cities where agents can start or end
 seed = 15  # Random seed
 grid_distribution_of_cities = False  # Type of city distribution, if False cities are randomly placed
@@ -84,7 +84,7 @@ env = RailEnv(width=width,
               rail_generator=rail_generator,
               schedule_generator=schedule_generator,
               number_of_agents=nr_trains,
-              random_seed = seed,
+              # random_seed = seed,
               obs_builder_object=DummyObservationBuilder(),
               remove_agents_at_target=True  # Removes agents at the end of their journey to make space for others
               )
@@ -97,5 +97,5 @@ env_renderer = RenderTool(env, gl="PGL",
 env_renderer.reset()
 env_renderer.render_env(show=True, show_observations=False, show_predictions=False)
 
-cbs = PythonCBS(env, "CBSH", 4, 60, 3, 1.0, True, True, False)
+cbs = PythonCBS(env, "CBSH-RM", 4, 60, 3, 1.0, True, True, True)
 cbs.search()

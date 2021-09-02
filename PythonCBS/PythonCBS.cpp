@@ -8,7 +8,6 @@ namespace p = boost::python;
 
 template <class Map>
 PythonCBS<Map>::PythonCBS(p::object railEnv1, std::string algo, int kRobust, int t, int screen, float f_w,bool corridor, bool diff_k, bool lltp_only) :railEnv(railEnv1) {
-	std::cout << "algo: " << algo << std::endl;
 
 	timeLimit = t;
 	this->f_w = f_w;
@@ -46,17 +45,13 @@ PythonCBS<Map>::PythonCBS(p::object railEnv1, std::string algo, int kRobust, int
 		s = constraint_strategy::CBSH;
 	}
 
-	std::cout << "get width height " << std::endl;
 	p::long_ rows(railEnv.attr("height"));
 	p::long_ cols(railEnv.attr("width"));
 
-	std::cout << "load map " << p::extract<int>(rows)<<" x "<< p::extract<int>(cols) << std::endl;
 	//ml =  new MapLoader(railEnv.attr("rail"), p::extract<int>(rows), p::extract<int>(cols));
 	ml = new FlatlandLoader(railEnv.attr("rail"), p::extract<int>(rows), p::extract<int>(cols));
-	std::cout << "load agents " << std::endl;
 
 	al =  new AgentsLoader(railEnv.attr("agents"),kRobust, diff_k);
-	std::cout << "load done " << std::endl;
 	if (screen >=2) {
 		al->printAgentsInitGoal();
 	}
