@@ -38,6 +38,7 @@ struct options {
     bool shrink = false;
     bool ignore_train = false;
     bool no_train_classify = false;
+    bool flatland=false;
 };
 
 namespace N

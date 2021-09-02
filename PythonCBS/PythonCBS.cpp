@@ -21,6 +21,7 @@ PythonCBS<Map>::PythonCBS(p::object railEnv1, std::string algo, int kRobust, int
 	options1.shrink = true;
 	options1.parking = false;
 	options1.lltp_only = lltp_only;
+	options1.flatland = true;
 
 
 

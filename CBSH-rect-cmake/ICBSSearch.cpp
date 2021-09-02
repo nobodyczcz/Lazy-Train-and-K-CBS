@@ -4,6 +4,7 @@
 #include <ctime>
 #include <iostream>
 
+#define MAX_K_VERTEX_COVER_EDGES 10
 
 
 // takes the paths_found_initially and UPDATE all (constrained) paths found for agents from curr to start
@@ -30,55 +31,198 @@ inline void ICBSSearch::updatePaths(ICBSNode* curr)
 }
 
 
+// Find disjoint components and apply k vertex cover or greedy matching on each component
+int ICBSSearch::minimumVertexCover(const vector<vector<bool>>& CG)
+{
+    int rst = 0;
+    std::vector<bool> done(num_of_agents, false);
+    for (int i = 0; i < num_of_agents; i++)
+    {
+        if (done[i])
+            continue;
+        std::vector<int> indices;
+        indices.reserve(num_of_agents);
+        std::queue<int> Q;
+        Q.push(i);
+        done[i] = true;
+        while (!Q.empty())
+        {
+            int j = Q.front(); Q.pop();
+            indices.push_back(j);
+            for (int k = 0; k < num_of_agents; k++)
+            {
+                if (CG[j][k] && !done[k])
+                {
+                    Q.push(k);
+                    done[k] = true;
+                }
+            }
+        }
+        if ((int) indices.size() == 1) //one node -> no edges -> mvc = 0
+            continue;
+        else if ((int)indices.size() == 2) // two nodes -> only one edge -> mvc = 1
+            {
+            rst += 1; // add edge weight
+            continue;
+            }
 
+        std::vector<vector<bool> > subgraph(indices.size(), vector<bool>(indices.size(), false));
+        int num_edges = 0;
+        for (int j = 0; j < (int) indices.size(); j++)
+        {
+            for (int k = j + 1; k < (int)indices.size(); k++)
+            {
+                subgraph[j][k] = CG[indices[j]][indices[k]];
+                subgraph[k][j] = CG[indices[k]][indices[j]];
+                if (subgraph[j][k])
+                    num_edges++;
+            }
+        }
+
+        if (num_edges < MAX_K_VERTEX_COVER_EDGES)
+        {
+            for (int k = 1; k < (int)indices.size(); k++)
+            {
+                if (KVertexCover(subgraph, (int)indices.size(), num_edges, k))
+                {
+                    rst += k;
+                    break;
+                }
+                runtime = (double)(std::clock() - start);
+                if (runtime > time_limit)
+                    return -1; // run out of time
+            }
+        }
+        else
+        {
+            rst += greedyMatching(subgraph);
+        }
+    }
+    return rst;
+}
+
+int ICBSSearch::greedyMatching(const vector<vector<bool>>& CG)
+{
+    int rst = 0;
+    std::vector<bool> selected(CG.size(), false);
+    for (int i = 0; i < (int)CG.size(); i++)
+    {
+        if (selected[i])
+            continue;
+        for (int j = i + 1; j < (int)CG.size(); j++)
+        {
+            if(CG[i][j] && !selected[j])
+            {
+                rst += 1; // select the edge between i and j
+                selected[i] = true;
+                selected[j] = true;
+            }
+        }
+    }
+    return rst;
+}
 
 
 int ICBSSearch::computeHeuristics(const ICBSNode& curr)
 {
-	// Conflict graph
-	vector<vector<bool>> CG(num_of_agents);
-	int num_of_CGnodes = 0, num_of_CGedges = 0;
-	for (int i = 0; i < num_of_agents; i++)
-		CG[i].resize(num_of_agents, false);
-	for (auto conflict : curr.conflicts)
-	{
-		if(conflict->p == conflict_priority::CARDINAL && !CG[conflict->a1][conflict->a2] && !conflict->train_conflict)
-		{
-			CG[conflict->a1][conflict->a2] = true;
-			CG[conflict->a2][conflict->a1] = true;
-			num_of_CGedges++;
-		}
-	}
+    // Conflict graph
+    vector<vector<bool>> CG(num_of_agents);
+    int num_of_CGnodes = 0, num_of_CGedges = 0;
+    for (int i = 0; i < num_of_agents; i++)
+        CG[i].resize(num_of_agents, false);
+    if (debug_mode)
+        cout << "Conflict graph: ";
+    for (const auto& conflict : curr.conflicts)
+    {
+        if(conflict->p == conflict_priority::CARDINAL && !CG[conflict->a1][conflict->a2])
+        {
+            CG[conflict->a1][conflict->a2] = true;
+            CG[conflict->a2][conflict->a1] = true;
+            num_of_CGedges++;
+            if (debug_mode)
+                cout << "(" << conflict->a1 << "," << conflict->a2 << "),";
+        }
+    }
 
-	if (num_of_CGedges < 2)
-		return num_of_CGedges;
+    if (num_of_CGedges < 2)
+        return num_of_CGedges;
 
-	// Compute #CG nodes that have edges
-	for (int i = 0; i < num_of_agents; i++)
-	{
-		for (int j = 0; j < num_of_agents; j++)
-		{
-			if (CG[i][j])
-			{
-				num_of_CGnodes++;
-				break;
-			}
-		}
-	}
+    // Compute #CG nodes that have edges
+    for (int i = 0; i < num_of_agents; i++)
+    {
+        for (int j = 0; j < num_of_agents; j++)
+        {
+            if (CG[i][j])
+            {
+                num_of_CGnodes++;
+                break;
+            }
+        }
+    }
 
-	// Minimum Vertex Cover
-	if (curr.parent == NULL) // root node of CBS tree
-	{
-		for (int i = 1; i < num_of_CGnodes; i++)
-			if (KVertexCover(CG, num_of_CGnodes, num_of_CGedges, i))
-				return i;
-	}
-	if (KVertexCover(CG, num_of_CGnodes, num_of_CGedges, curr.parent->h_val - 1))
-		return curr.parent->h_val - 1;
-	else if (KVertexCover(CG, num_of_CGnodes, num_of_CGedges, curr.parent->h_val))
-		return curr.parent->h_val;
-	else
-		return curr.parent->h_val + 1;
+    int h;
+    // Minimum Vertex Cover
+    if (curr.parent == nullptr || // root node of CBS tree or
+    num_of_CGedges > MAX_K_VERTEX_COVER_EDGES) // too many edges for k vertex cover method
+        {
+        h = minimumVertexCover(CG);
+        }
+    else
+    {
+        if (KVertexCover(CG, num_of_CGnodes, num_of_CGedges, curr.parent->h_val - 1))
+            h = curr.parent->h_val - 1;
+        else if (KVertexCover(CG, num_of_CGnodes, num_of_CGedges, curr.parent->h_val))
+            h = curr.parent->h_val;
+        else
+            h = curr.parent->h_val + 1;
+    }
+    if (debug_mode)
+        cout << "-> h = " << h << endl;
+    return h;
+//	// Conflict graph
+//	vector<vector<bool>> CG(num_of_agents);
+//	int num_of_CGnodes = 0, num_of_CGedges = 0;
+//	for (int i = 0; i < num_of_agents; i++)
+//		CG[i].resize(num_of_agents, false);
+//	for (auto conflict : curr.conflicts)
+//	{
+//		if(conflict->p == conflict_priority::CARDINAL && !CG[conflict->a1][conflict->a2] && !conflict->train_conflict)
+//		{
+//			CG[conflict->a1][conflict->a2] = true;
+//			CG[conflict->a2][conflict->a1] = true;
+//			num_of_CGedges++;
+//		}
+//	}
+//
+//	if (num_of_CGedges < 2)
+//		return num_of_CGedges;
+//
+//	// Compute #CG nodes that have edges
+//	for (int i = 0; i < num_of_agents; i++)
+//	{
+//		for (int j = 0; j < num_of_agents; j++)
+//		{
+//			if (CG[i][j])
+//			{
+//				num_of_CGnodes++;
+//				break;
+//			}
+//		}
+//	}
+//
+//	// Minimum Vertex Cover
+//	if (curr.parent == NULL) // root node of CBS tree
+//	{
+//		for (int i = 1; i < num_of_CGnodes; i++)
+//			if (KVertexCover(CG, num_of_CGnodes, num_of_CGedges, i))
+//				return i;
+//	}
+//	if (KVertexCover(CG, num_of_CGnodes, num_of_CGedges, curr.parent->h_val - 1))
+//		return curr.parent->h_val - 1;
+//	else if (KVertexCover(CG, num_of_CGnodes, num_of_CGedges, curr.parent->h_val))
+//		return curr.parent->h_val;
+//	else
+//		return curr.parent->h_val + 1;
 }
 
 
@@ -219,14 +363,40 @@ void ICBSSearch::finalConflictCheck(ICBSNode& curr)
 void ICBSSearch::findConflicts2All(ICBSNode& curr, int a1){
     //collect conflict from path;
     int self_conflict = false;
+//    unordered_set<int> exist;
     for (size_t t = 0; t < paths[a1]->size(); t++) {
 
         if (paths[a1]->at(t).self_conflict && !option.ignore_train)
             self_conflict = true;
+
+//        unordered_set<int> exist_t;
+
         if (!paths[a1]->at(t).conflist.empty() ) {
+
             for (auto& con : (paths[a1]->at(t).conflist)) {
                 bool train_conflict = con.train_conflict;
 
+
+
+//                if(option.flatland){
+//                    if (con.a1 == a1) {
+//                        exist_t.insert(con.a2);
+//                        if(!exist.count(con.a2)){
+//                            exist.insert(con.a2);
+//                        }
+//                        else{
+//                            continue;
+//                        }
+//                    }
+//                    else if (con.a2 == a1) {
+//                        exist_t.insert(con.a1);
+//                        if (!exist.count(con.a1))
+//                            exist.insert(con.a1);
+//                        else
+//                            continue;
+//                    }
+//
+//                }
                 if (debug_mode)
                     cout << "l<" << con.a1 << "," << con.a2 << ","
                     << "(" << con.v1 / num_col << "," << con.v1 % num_col << ")" << ","
@@ -278,6 +448,10 @@ void ICBSSearch::findConflicts2All(ICBSNode& curr, int a1){
 
             }
         }
+//        for (auto i : exist){
+//            if (!exist_t.count(i))
+//                exist.erase(i);
+//        }
     }
 
     if(self_conflict){
@@ -1046,7 +1220,9 @@ bool MultiMapICBSSearch<Map>::search(){
             runtime_conflictdetection += std::clock() - t1;
 
             t1 = std::clock();
-            curr->h_val = computeHeuristics(*curr);
+            int h = computeHeuristics(*curr);
+
+            curr->h_val = max(curr->h_val, h);
             runtime_computeh += std::clock() - t1;
             curr->f_val = curr->g_val + curr->h_val;
 
