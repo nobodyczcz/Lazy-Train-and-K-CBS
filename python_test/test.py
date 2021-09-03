@@ -37,9 +37,9 @@ def linearize_loc(in_env, loc):
 
 width = 50  # With of map
 height = 50  # Height of map
-nr_trains = 24  # Number of trains that have an assigned task in the env
+nr_trains = 10  # Number of trains that have an assigned task in the env
 cities_in_map = 10  # Number of cities where agents can start or end
-seed = 19  # Random seed
+seed = 2  # Random seed
 grid_distribution_of_cities = False  # Type of city distribution, if False cities are randomly placed
 max_rails_between_cities = 2  # Max number of tracks allowed between cities. This is number of entry point to a city
 max_rail_in_cities = 3  # Max number of parallel tracks within a city, representing a realistic trainstation
@@ -89,13 +89,13 @@ env = RailEnv(width=width,
               remove_agents_at_target=True  # Removes agents at the end of their journey to make space for others
               )
 env.reset()
-# env_renderer = RenderTool(env, gl="PGL",
-#                           agent_render_variant=AgentRenderVariant.ONE_STEP_BEHIND,
-#                           show_debug=True,
-#                           screen_height=env.height*15,  # Adjust these parameters to fit your resolution
-#                           screen_width=env.width*15)  # Adjust these parameters to fit your resolution
-# env_renderer.reset()
-# env_renderer.render_env(show=True, show_observations=False, show_predictions=False)
+env_renderer = RenderTool(env, gl="PGL",
+                          agent_render_variant=AgentRenderVariant.ONE_STEP_BEHIND,
+                          show_debug=True,
+                          screen_height=env.height*15,  # Adjust these parameters to fit your resolution
+                          screen_width=env.width*15)  # Adjust these parameters to fit your resolution
+env_renderer.reset()
+env_renderer.render_env(show=True, show_observations=False, show_predictions=False)
 
-cbs = PythonCBS(env, "CBSH-RM", 2, 60, 3, 1.0, True, True, False)
+cbs = PythonCBS(env, "CBSH-RM", 4, 60, 0, 1.0, True, True, False)
 cbs.search()

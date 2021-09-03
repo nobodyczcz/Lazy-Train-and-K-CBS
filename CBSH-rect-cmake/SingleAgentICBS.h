@@ -39,6 +39,7 @@ public:
 	int goal_location;
 	int start_heading;
 	int min_end_time = 0;
+	int departure_time = 0;
 
 
 	Map* ml;

@@ -646,17 +646,17 @@ bool MultiMapICBSSearch<Map>::isCorridorConflict(std::shared_ptr<Conflict>& corr
 		updateConstraintTable(node, a[0]);
 		if (screen>=4)
 		    cout << "start: " << search_engines[a[0]]->start_location/num_col<<","<< search_engines[a[0]]->start_location % num_col << " end:" << u[1]/num_col<<"," << u[1]%num_col << " heading:" << paths[a[0]]->front().actionToHere << endl;
-		int t1 = cp.getBypassLength(search_engines[a[0]]->start_location, u[0], edge_empty, ml, num_col, map_size, constraintTable, INT_MAX, search_engines[a[0]]->my_heuristic, search_engines[a[0]]->start_heading,paths[a[0]]->at(t[0]).heading,search_engines[a[0]]->kRobust);
-		int t3 = cp.getBypassLength(search_engines[a[0]]->start_location, u[1], edge_empty, ml, num_col, map_size, constraintTable, INT_MAX, search_engines[a[0]]->my_heuristic,search_engines[a[0]]->start_heading,paths[a[0]]->at(e[0]).heading,search_engines[a[0]]->kRobust);
-		int t3_ = cp.getBypassLength(search_engines[a[0]]->start_location, u[1], edge, ml, num_col, map_size, constraintTable, t3 + 2 * k  + 1,search_engines[a[0]]->my_heuristic, search_engines[a[0]]->start_heading, paths[a[0]]->at(e[0]).heading,search_engines[a[0]]->kRobust);
+		int t1 = cp.getBypassLength(search_engines[a[0]]->start_location, u[0], edge_empty, ml, num_col, map_size, constraintTable, INT_MAX, search_engines[a[0]], search_engines[a[0]]->start_heading,paths[a[0]]->at(t[0]).heading,search_engines[a[0]]->kRobust);
+		int t3 = cp.getBypassLength(search_engines[a[0]]->start_location, u[1], edge_empty, ml, num_col, map_size, constraintTable, INT_MAX, search_engines[a[0]],search_engines[a[0]]->start_heading,paths[a[0]]->at(e[0]).heading,search_engines[a[0]]->kRobust);
+		int t3_ = cp.getBypassLength(search_engines[a[0]]->start_location, u[1], edge, ml, num_col, map_size, constraintTable, t3 + 2 * k  + 1,search_engines[a[0]], search_engines[a[0]]->start_heading, paths[a[0]]->at(e[0]).heading,search_engines[a[0]]->kRobust);
 		
 
 		updateConstraintTable(node, a[1]);
 		if (screen >= 4)
 		    cout << "start: " << search_engines[a[1]]->start_location / num_col << "," << search_engines[a[1]]->start_location % num_col << " end:" << u[0] / num_col << "," << u[0] % num_col << " heading:" << paths[a[1]]->front().actionToHere << endl;
-		int t2 = cp.getBypassLength(search_engines[a[1]]->start_location, u[1], edge_empty, ml, num_col, map_size, constraintTable, INT_MAX,search_engines[a[1]]->my_heuristic, search_engines[a[1]]->start_heading, paths[a[1]]->at(t[1]).heading, search_engines[a[1]]->kRobust);
-		int t4 = cp.getBypassLength(search_engines[a[1]]->start_location, u[0], edge_empty, ml, num_col, map_size, constraintTable, INT_MAX,search_engines[a[1]]->my_heuristic, search_engines[a[1]]->start_heading, paths[a[1]]->at(e[1]).heading,search_engines[a[1]]->kRobust);
-		int t4_ = cp.getBypassLength(search_engines[a[1]]->start_location, u[0], edge, ml, num_col, map_size, constraintTable, t4 + 2*k + 1, search_engines[a[1]]->my_heuristic, search_engines[a[1]]->start_heading, paths[a[1]]->at(e[1]).heading,search_engines[a[1]]->kRobust);
+		int t2 = cp.getBypassLength(search_engines[a[1]]->start_location, u[1], edge_empty, ml, num_col, map_size, constraintTable, INT_MAX,search_engines[a[1]], search_engines[a[1]]->start_heading, paths[a[1]]->at(t[1]).heading, search_engines[a[1]]->kRobust);
+		int t4 = cp.getBypassLength(search_engines[a[1]]->start_location, u[0], edge_empty, ml, num_col, map_size, constraintTable, INT_MAX,search_engines[a[1]], search_engines[a[1]]->start_heading, paths[a[1]]->at(e[1]).heading,search_engines[a[1]]->kRobust);
+		int t4_ = cp.getBypassLength(search_engines[a[1]]->start_location, u[0], edge, ml, num_col, map_size, constraintTable, t4 + 2*k + 1, search_engines[a[1]], search_engines[a[1]]->start_heading, paths[a[1]]->at(e[1]).heading,search_engines[a[1]]->kRobust);
 		if (screen >= 4) {
 			cout <<"t1: "<<t1 <<",t2: "<<t2  << ",t3: " << t3 << "," << "t3_: " << t3_ << "," << "t4: " << t4 << "," << "t4_: " << t4_ << endl;
 			cout << "corridor length: " << k << endl;
@@ -1889,6 +1889,8 @@ MultiMapICBSSearch<Map>::MultiMapICBSSearch(Map* ml, AgentsLoader& al, double f_
 
         ComputeHeuristic<Map> ch(init_loc, goal_loc, ml, al.headings[i]);
         search_engines[i] = new SingleAgentICBS<Map>(init_loc, goal_loc, ml,i,option, al.headings[i],al.k[i]);
+        if(ml->flatland)
+            search_engines[i]->departure_time = al.departure_times[i];
         if (debug_mode)
             cout << "initializing heuristics for "<< i << endl;
         ch.getHVals(search_engines[i]->my_heuristic);

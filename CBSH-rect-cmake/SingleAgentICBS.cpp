@@ -164,7 +164,8 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 
 		if (ml->flatland && curr->locs.front() == -1 ){
 		    transitions.emplace_back(-1, 4);
-		    transitions.emplace_back(start_location, curr->heading);
+		    if (curr->timestep +1 >= departure_time)
+		        transitions.emplace_back(start_location, curr->heading);
 
 		}
 		else if (!curr->shrinking)

@@ -103,7 +103,8 @@ int CorridorReasoning<Map>::getExitTime(const std::vector<PathEntry>& path, cons
 
 
 template<class Map>
-int CorridorReasoning<Map>::getBypassLength(int start, int end, std::pair<int, int> blocked, Map* my_map, int num_col, int map_size, ConstraintTable& constraint_table, int upper_bound,std::vector<hvals>& goalHeuTable, int start_heading, int end_heading, int k)
+        int CorridorReasoning<Map>::getBypassLength(int start, int end, std::pair<int, int> blocked, Map* my_map, int num_col, int map_size,
+                                                    ConstraintTable& constraint_table, int upper_bound,SingleAgentICBS<Map>* solver, int start_heading, int end_heading, int k)
 {
 	int length = INT_MAX;
 	// generate a heap that can save nodes (and a open_handle)
@@ -116,7 +117,7 @@ int CorridorReasoning<Map>::getBypassLength(int start, int end, std::pair<int, i
     hashtable_t nodes;
     hashtable_t::iterator it; // will be used for find()
 
-    int start_h_val = abs(goalHeuTable[end].get_hval(end_heading) - goalHeuTable[start].get_hval(start_heading));
+    int start_h_val = abs(solver->my_heuristic[end].get_hval(end_heading) - solver->my_heuristic[start].get_hval(start_heading));
     LLNode* root = new LLNode(list<int>(), 0, start_h_val, NULL, 0);
     if(my_map->flatland)
         root->locs.resize(k+1,-1);
@@ -134,6 +135,7 @@ int CorridorReasoning<Map>::getBypassLength(int start, int end, std::pair<int, i
 	{
 		curr = heap.top();
 		heap.pop();
+		curr->closed= true;
 		if (curr->locs.front() == end)// todo:: ignore heading for now. maybe adding back if run experiment on flatland
 		{
 			length = curr->g_val;
@@ -142,7 +144,8 @@ int CorridorReasoning<Map>::getBypassLength(int start, int end, std::pair<int, i
 		vector<pair<int, int>> transitions;
 		if (my_map->flatland && curr->locs.front() == -1 ){
 		    transitions.emplace_back(-1, 4);
-		    transitions.emplace_back(start, curr->heading);
+		    if (curr->timestep +1 >= solver->departure_time)
+		        transitions.emplace_back(start, curr->heading);
 
 		}
 		else
@@ -205,15 +208,16 @@ int CorridorReasoning<Map>::getBypassLength(int start, int end, std::pair<int, i
             int next_g_val = curr->g_val + 1;
             int next_h_val;
             if (next_loc == -1)
-                next_h_val = abs(goalHeuTable[end].get_hval(end_heading) - goalHeuTable[start].get_hval(start_heading));
+                next_h_val = abs(solver->my_heuristic[end].get_hval(end_heading) - solver->my_heuristic[start].get_hval(start_heading));
             else
-                next_h_val = abs(goalHeuTable[end].get_hval(end_heading) - goalHeuTable[next_loc].get_hval(next_heading));
+                next_h_val = abs(solver->my_heuristic[end].get_hval(end_heading) - solver->my_heuristic[next_loc].get_hval(next_heading));
             if (next_g_val + next_h_val >= upper_bound) // the cost of the path is larger than the upper bound
                 continue;
             LLNode* next = new LLNode(next_locs, next_g_val, next_h_val, NULL, next_timestep);
             next->heading = next_heading;
             next->actionToHere = move.second;
             next->time_generated = time_generated;
+            assert(next->timestep <= constraint_table.latest_timestep);
             if (constraint_table.has_train)
                 next->train_mode = true;
 
@@ -228,10 +232,15 @@ int CorridorReasoning<Map>::getBypassLength(int start, int end, std::pair<int, i
                 LLNode* existing_next = (*it);
                 if (existing_next->g_val > next_g_val)
                 {
+
                     existing_next->g_val = next_g_val;
                     existing_next->timestep = next_timestep;
-
-                    heap.update(existing_next->open_handle);
+                    if (existing_next->closed){
+                        existing_next->closed = false;
+                        existing_next->open_handle = heap.push(existing_next);
+                    }
+                    else
+                        heap.update(existing_next->open_handle);
                 }
             }
 

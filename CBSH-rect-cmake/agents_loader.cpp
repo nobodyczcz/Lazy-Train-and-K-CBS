@@ -34,6 +34,7 @@ AgentsLoader::AgentsLoader(p::object agents, int max_k ,bool diff_k) {
     int agentsNum = p::len(agents);
     this->num_of_agents = agentsNum;
     this->max_k = max_k;
+    std::unordered_map<int,int> time_table;
     for (int i = 0; i < num_of_agents; i++) {
         pair<int, int> initial;
         pair<int, int> goal;
@@ -53,6 +54,17 @@ AgentsLoader::AgentsLoader(p::object agents, int max_k ,bool diff_k) {
             this->k.push_back(this->max_k - i%(this->max_k+1));
         else
             this->k.push_back(this->max_k);
+
+        int station = initial.first*1000+initial.second;
+        if(!time_table.count(station))
+            time_table[station] = 1;
+
+        this->departure_times.push_back(time_table[station]);
+        time_table[station] += this->k.back()+1;
+//        time_table[station] += max_k;
+
+
+
 
 
     }

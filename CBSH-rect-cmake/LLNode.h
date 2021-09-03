@@ -30,6 +30,8 @@ public:
 	bool self_conflict = false;
 	bool shrinking = false;
 
+	bool closed = false; //only for corridor getbypass
+
 
 	// the following is used to comapre nodes in the OPEN list
 	struct compare_node 
@@ -102,14 +104,11 @@ public:
 				
 				if (n1->g_val == n2->g_val)
 				{
-                    return n1->h_val >= n2->h_val;
+//                    return n1->h_val >= n2->h_val;
 
 
 
-//                    if (rand() % 2 == 0)
-//						return true;
-//					else
-//						return false;
+                    return rand() % 2 == 0;
 				}
 				return n1->g_val <= n2->g_val;
 					

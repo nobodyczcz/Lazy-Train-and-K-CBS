@@ -21,6 +21,7 @@ class AgentsLoader {
   int max_k = 0;
   vector< pair<int, int> > initial_locations;
   vector< pair<int, int> > goal_locations;
+  vector<int> departure_times;
   vector<int> k;
   vector<int> min_end_time;
   vector<bool> done;

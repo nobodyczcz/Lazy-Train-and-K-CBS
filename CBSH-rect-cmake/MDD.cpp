@@ -90,7 +90,8 @@ bool MDD<Map>::buildMDD( ConstraintTable& constraints, int numOfLevels, SingleAg
 
 		if (solver.ml->flatland && node->locs.front() == -1 ){
 		    transitions.emplace_back(-1, 4);
-		    transitions.emplace_back(solver.start_location, node->heading);
+		    if (node->level +1 >= solver.departure_time)
+		        transitions.emplace_back(solver.start_location, node->heading);
 
 		}
 		else if (!node->shrinking)
