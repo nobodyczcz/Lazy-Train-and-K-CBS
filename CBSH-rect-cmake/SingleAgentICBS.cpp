@@ -71,7 +71,7 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 	hashtable_t::iterator it;  // will be used for find()
 
 	 // generate start and add it to the OPEN list
-	LLNode* start = new LLNode(list<int>(), 0, my_heuristic[start_location].heading[start_heading],
+	 LLNode* start = new LLNode(list<int>(), 0, my_heuristic[start_location].get_hval(start_heading),
 	        NULL, 0, 0, false, train);
 	if (ml->flatland)
 	    start->locs.resize(kRobust+1,-1);
@@ -239,7 +239,7 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 
             int next_h_val;
             if (ml->flatland && next_id == -1)
-                next_h_val = my_heuristic[start_location].get_hval(next_heading) + 1;
+                next_h_val = my_heuristic[start_location].get_hval(next_heading) ;
             else
                 next_h_val = my_heuristic[next_id].get_hval(next_heading);
 

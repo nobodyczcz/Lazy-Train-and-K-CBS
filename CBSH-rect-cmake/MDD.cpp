@@ -59,7 +59,7 @@ bool MDD<Map>::buildMDD( ConstraintTable& constraints, int numOfLevels, SingleAg
 
 			if(!open.empty() )
 			{
-			    cout << " Expand node: " << node->locs.front()<<","<< node->locs.back()<<","<<node->locs.size() << " heading: " << node->heading<<" h "<< solver.my_heuristic[node->locs.front()].heading[node->heading]<<", level: "<<node->level << endl;
+			    cout << " Expand node: " << node->locs.front()<<","<< node->locs.back()<<","<<node->locs.size() << " heading: " << node->heading<<" h "<< solver.my_heuristic[node->locs.front()].get_hval(node->heading)<<", level: "<<node->level << endl;
 				while (!open.empty())
 				{
 					MDDNode* n = open.front();
@@ -68,7 +68,7 @@ bool MDD<Map>::buildMDD( ConstraintTable& constraints, int numOfLevels, SingleAg
 					for(auto loc: n->locs){
 					    cout<<loc<<"|";
 					}
-					cout <<" level: "<< n->level << " heading: " << n->heading<<" h "<< solver.my_heuristic[n->locs.front()].heading[n->heading] <<", level: "<<n->level<< endl;
+					cout <<" level: "<< n->level << " heading: " << n->heading<<" h "<< solver.my_heuristic[n->locs.front()].get_hval(n->heading) <<", level: "<<n->level<< endl;
 
 				}
 				
@@ -145,11 +145,13 @@ bool MDD<Map>::buildMDD( ConstraintTable& constraints, int numOfLevels, SingleAg
 
             int heuristic;
             if (solver.ml->flatland && newLoc == -1)
-                heuristic = solver.my_heuristic[solver.start_location].heading[solver.start_heading]+1;
+                heuristic = solver.my_heuristic[solver.start_location].get_hval(solver.start_heading);
             else
-                heuristic = solver.my_heuristic[newLoc].heading[new_heading];
+                heuristic = solver.my_heuristic[newLoc].get_hval(new_heading);
             if (shrink)
                 heuristic += new_locs.size() -1;
+
+            assert(newLoc == solver.goal_location || heuristic!=0);
 
 //            if(shrink)
 //                heuristicBound += node->locs.size();

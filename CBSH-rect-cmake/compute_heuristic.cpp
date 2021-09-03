@@ -130,6 +130,7 @@ void ComputeHeuristic<Map>::getHVals(vector<hvals>& res,int limit)
 	{
 		LLNode* s = (*it).first;
 		if (s->heading == -1) {
+		    assert(!ml->flatland);
 
 			if (!res[s->locs.front()].heading.count(-1)) {
 				res[s->locs.front()].heading[-1] = s->g_val;
@@ -142,17 +143,17 @@ void ComputeHeuristic<Map>::getHVals(vector<hvals>& res,int limit)
 			}
 
 		}
-		else {
-			
-			if (s->possible_next_heading.size() > 0) {
+		else if (s->possible_next_heading.size() > 0) {
 				for (int& next_heading : s->possible_next_heading) {
 					int heading = (next_heading + 2) % 4;
 
 					if (!res[s->locs.front()].heading.count(heading)) {
+					    assert(s->locs.front() == goal_location || s->g_val !=0);
 						res[s->locs.front()].heading[heading] = s->g_val;
 						
 					}
 					else if (s->g_val < res[s->locs.front()].heading[heading]) {
+					    assert(s->locs.front() == goal_location || s->g_val !=0);
 						res[s->locs.front()].heading[heading] = s->g_val;
 						
 
@@ -160,21 +161,6 @@ void ComputeHeuristic<Map>::getHVals(vector<hvals>& res,int limit)
 
 				}
 			}
-
-//			int heading = (s->heading + 2) % 4;
-//			if (!res[s->loc].heading.count(heading)) {
-//				res[s->loc].heading[heading] = s->g_val;
-//
-//			}
-//			else if (s->g_val < res[s->loc].heading[heading]) {
-//				res[s->loc].heading[heading] = s->g_val;
-//
-//
-//			}
-
-
-
-		}
 
 		delete (s);
 	}

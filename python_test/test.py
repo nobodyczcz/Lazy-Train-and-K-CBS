@@ -37,9 +37,9 @@ def linearize_loc(in_env, loc):
 
 width = 50  # With of map
 height = 50  # Height of map
-nr_trains = 8  # Number of trains that have an assigned task in the env
+nr_trains = 24  # Number of trains that have an assigned task in the env
 cities_in_map = 10  # Number of cities where agents can start or end
-seed = 0  # Random seed
+seed = 19  # Random seed
 grid_distribution_of_cities = False  # Type of city distribution, if False cities are randomly placed
 max_rails_between_cities = 2  # Max number of tracks allowed between cities. This is number of entry point to a city
 max_rail_in_cities = 3  # Max number of parallel tracks within a city, representing a realistic trainstation
@@ -84,7 +84,7 @@ env = RailEnv(width=width,
               rail_generator=rail_generator,
               schedule_generator=schedule_generator,
               number_of_agents=nr_trains,
-              # random_seed = seed,
+              random_seed = seed,
               obs_builder_object=DummyObservationBuilder(),
               remove_agents_at_target=True  # Removes agents at the end of their journey to make space for others
               )
@@ -97,5 +97,5 @@ env.reset()
 # env_renderer.reset()
 # env_renderer.render_env(show=True, show_observations=False, show_predictions=False)
 
-cbs = PythonCBS(env, "CBSH-RM", 6, 60, 3, 1.0, True, True, False)
+cbs = PythonCBS(env, "CBSH-RM", 2, 60, 3, 1.0, True, True, False)
 cbs.search()
