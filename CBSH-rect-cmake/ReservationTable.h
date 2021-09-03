@@ -14,16 +14,18 @@ using namespace std;
 class AgentStep {
 public:
 	AgentStep() {};
-	AgentStep(int id, int l, int t0,bool head0) {
+	AgentStep(int id, int l, int t0,bool head0, int position0) {
 		agent_id = id;
 		loc = l;
 		t = t0;
 		head = head0;
+		position = position0;
 	}
 	int agent_id;
 	int loc;
 	int t;
 	bool head;
+	int position;
 	AgentStep* preStep = NULL;
 	AgentStep* nextStep = NULL;
 

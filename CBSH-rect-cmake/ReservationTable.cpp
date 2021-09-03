@@ -20,6 +20,7 @@ void ReservationTable::addPath(int agent_id, std::vector<PathEntry>* path) {
 	AgentStep* preStep = NULL;
 	for (int t = 0; t < path->size(); t++) {
 	    bool head = true; //first location is head.
+	    bool cell = 0;
 	    for (int loc : path->at(t).occupations) {
 	        if (loc == -1)
 	            continue;
@@ -32,7 +33,7 @@ void ReservationTable::addPath(int agent_id, std::vector<PathEntry>* path) {
             }
 
 
-            res_table[loc][t][agent_id] = AgentStep(agent_id, loc, t,head);
+            res_table[loc][t][agent_id] = AgentStep(agent_id, loc, t,head, cell);
 
             if(head) {
                 if (preStep != NULL) {
@@ -51,6 +52,7 @@ void ReservationTable::addPath(int agent_id, std::vector<PathEntry>* path) {
             }
 
             head=false;// except firt occupication all false (not head).
+            cell++;
         }
 	}
 }
@@ -171,9 +173,12 @@ std::list<Conflict> ReservationTable::findConflict(int agent, int currLoc, list<
             if (res_table[nextLoc].count(nextT)) {
                 agentList::iterator it;
                 for (it = res_table[nextLoc][nextT].begin(); it != res_table[nextLoc][nextT].end(); ++it) {
-                    if (nextLoc==head || it->second.head)
+                    if (nextLoc==head)
+                        confs.push_back(Conflict(agent,it->second.agent_id, nextLoc,
+                                        -1, nextT, it->second.position,true));
+                    else if (it->second.head)
                         confs.push_back(Conflict(it->second.agent_id, agent, nextLoc,
-                                        -1, nextT, 0,true));
+                                                 -1, nextT, train_cell_number,true));
 
                 }
             }
