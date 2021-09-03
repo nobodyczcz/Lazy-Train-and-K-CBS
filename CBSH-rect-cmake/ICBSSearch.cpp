@@ -225,49 +225,88 @@ int ICBSSearch::computeHeuristics(const ICBSNode& curr)
 //		return curr.parent->h_val + 1;
 }
 
-
-
-// Whether there exists a k-vertex cover solution
 bool ICBSSearch::KVertexCover(const vector<vector<bool>>& CG, int num_of_CGnodes, int num_of_CGedges, int k)
 {
-	if (num_of_CGedges == 0)
-		return true;
-	else if (num_of_CGedges > k * num_of_CGnodes - k) 
-		return false;
+    if (num_of_CGedges == 0)
+        return true;
+    else if (num_of_CGedges > k * num_of_CGnodes - k)
+        return false;
 
-	vector<int> node(2);
-	bool flag = true;
-	for (int i = 0; i < num_of_agents - 1 && flag; i++) // to find an edge
-	{
-		for (int j = i + 1; j < num_of_agents && flag; j++)
-		{
-			if (CG[i][j])
-			{
-				node[0] = i;
-				node[1] = j;
-				flag = false;
-			}
-		}
-	}
-	for (int i = 0; i < 2; i++)
-	{
-		vector<vector<bool>> CG_copy(num_of_agents);
-		CG_copy.assign(CG.cbegin(), CG.cend());
-		int num_of_CGedges_copy = num_of_CGedges;
-		for (int j = 0; j < num_of_agents; j++)
-		{
-			if (CG_copy[node[i]][j])
-			{
-				CG_copy[node[i]][j] = false;
-				CG_copy[j][node[i]] = false;
-				num_of_CGedges_copy--;
-			}
-		}
-		if (KVertexCover(CG_copy, num_of_CGnodes - 1, num_of_CGedges_copy, k - 1))
-			return true;
-	}
-	return false;
+    int node[2];
+    bool flag = true;
+    for (int i = 0; i < (int)CG.size() - 1 && flag; i++) // to find an edge
+        {
+        for (int j = i + 1; j < (int)CG.size() && flag; j++)
+        {
+            if (CG[i][j])
+            {
+                node[0] = i;
+                node[1] = j;
+                flag = false;
+            }
+        }
+        }
+    for (int i : node)
+    {
+        vector<vector<bool>> CG_copy(CG.size());
+        CG_copy.assign(CG.cbegin(), CG.cend());
+        int num_of_CGedges_copy = num_of_CGedges;
+        for (int j = 0; j < (int)CG.size(); j++)
+        {
+            if (i<CG_copy.size() && j <CG_copy[i].size() && CG_copy[i][j])
+            {
+                CG_copy[i][j] = false;
+                CG_copy[j][i] = false;
+                num_of_CGedges_copy--;
+            }
+        }
+        if (KVertexCover(CG_copy, num_of_CGnodes - 1, num_of_CGedges_copy, k - 1))
+            return true;
+    }
+    return false;
 }
+
+//// Whether there exists a k-vertex cover solution
+//bool ICBSSearch::KVertexCover(const vector<vector<bool>>& CG, int num_of_CGnodes, int num_of_CGedges, int k)
+//{
+//	if (num_of_CGedges == 0)
+//		return true;
+//	else if (num_of_CGedges > k * num_of_CGnodes - k)
+//		return false;
+//
+//	vector<int> node(2);
+//	bool flag = true;
+//	for (int i = 0; i < num_of_agents - 1 && flag; i++) // to find an edge
+//	{
+//		for (int j = i + 1; j < num_of_agents && flag; j++)
+//		{
+//			if (CG[i][j])
+//			{
+//				node[0] = i;
+//				node[1] = j;
+//				flag = false;
+//			}
+//		}
+//	}
+//	for (int i = 0; i < 2; i++)
+//	{
+//		vector<vector<bool>> CG_copy(num_of_agents);
+//		CG_copy.assign(CG.cbegin(), CG.cend());
+//		int num_of_CGedges_copy = num_of_CGedges;
+//		for (int j = 0; j < num_of_agents; j++)
+//		{
+//			if (CG_copy[node[i]][j])
+//			{
+//				CG_copy[node[i]][j] = false;
+//				CG_copy[j][node[i]] = false;
+//				num_of_CGedges_copy--;
+//			}
+//		}
+//		if (KVertexCover(CG_copy, num_of_CGnodes - 1, num_of_CGedges_copy, k - 1))
+//			return true;
+//	}
+//	return false;
+//}
 
 // deep copy of all conflicts except ones that involve the particular agent
 // used for copying conflicts from the parent node to the child nodes

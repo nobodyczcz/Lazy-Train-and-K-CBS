@@ -8,6 +8,8 @@
 #include <list>
 #include <vector>
 #include <unordered_set>
+#define MAX_COST INT_MAX/2
+
 enum conflict_type { TARGET, CORRIDOR2, CORRIDOR4, RECTANGLE,RECTANGLE4, STANDARD,TRAIN_STANDARD,SELF_CONFLICT, TYPE_COUNT };
 enum conflict_priority { CARDINAL, SEMI, NON, UNKNOWN, PRIORITY_COUNT };
 
@@ -57,7 +59,7 @@ struct hvals {
             return heading[direction];
         }
         else {
-            return INT_MAX;
+            return MAX_COST;
         }
     }
     ~hvals(){
