@@ -94,7 +94,7 @@ public:
 	}
 
 
-	void vertexTrainConflict(int a1, int a2, int v, int t,bool k2, bool target = false)
+	void vertexTrainConflict(int a1, int a2, int v, int t,bool k2,bool lltp_only, bool target = false)
 	{
 		this->a1 = a1;
 		this->a2 = a2;
@@ -107,9 +107,11 @@ public:
 		    this->constraint1.emplace_back(v, a1, t, constraint_type::NOPARKING); //place a parking constraint on it.
 		    this->constraint1.emplace_back(v, -1, t, constraint_type::TRAIN_VERTEX);
 		}
+		if (lltp_only){
+		    this->constraint1.emplace_back(v, -1, t, constraint_type::TRAIN_VERTEX);
+		}
 		else{
 		    this->constraint1.emplace_back(v, t-delta, t-delta+k2, constraint_type::RANGE);
-//		    this->constraint1.emplace_back(v, -1, t, constraint_type::TRAIN_VERTEX);
 		}
 		this->constraint2.emplace_back(v, -1, t, constraint_type::TRAIN_VERTEX);
 		type = conflict_type::STANDARD;

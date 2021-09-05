@@ -268,7 +268,8 @@ void AgentsLoader::printAgentsInitGoal () {
   cout << "AGENTS:" << endl;;
   for (int i=0; i<num_of_agents; i++) {
     cout << "Agent" << i << " : I=(" << initial_locations[i].first << "," << initial_locations[i].second << ") ; G=(" <<
-      goal_locations[i].first << "," << goal_locations[i].second << ")" << ", k: "<< k[i]<< ", min_end_time: "<<min_end_time[i]<<", done: "
+      goal_locations[i].first << "," << goal_locations[i].second << ")" << ", k: "<< k[i]<<", departure_time: "<<departure_times[i]<<
+      ", min_end_time: "<<min_end_time[i]<<", done: "
       << done[i] <<", Heading: "<<headings[i]<< endl;
   }
   cout << endl;
