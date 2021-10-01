@@ -167,14 +167,23 @@ public:
         this->k = delta;
         this->v1 = v;
         this->v2 = -1;
-        for (int i = 0; i <= k2; i++) {
-
-            this->constraint1.emplace_back(v, -1, t+i, constraint_type::VERTEX);
-        }
-        for (int i = 0; i <= k1; i++) {
-            this->constraint2.emplace_back(v, -1, t+i, constraint_type::VERTEX);
-        }
+        this->constraint1.emplace_back(v, t, t + k2, constraint_type::RANGE);
+        this->constraint2.emplace_back(v, t, t + k1, constraint_type::RANGE);
         type = conflict_type::STANDARD;
+    }
+
+    void vertexConflictM2(int a1, int a2, int v, int t1, int t2,int delta=0, int k1 = 0,int k2 =0)
+    {
+	    //a1 is the agent arrive v earlier
+	    this->a1 = a1;
+	    this->a2 = a2;
+	    this->t = t;
+	    this->k = delta;
+	    this->v1 = v;
+	    this->v2 = -1;
+        this->constraint1.emplace_back(v, t1, t2 + k2, constraint_type::RANGE);
+        this->constraint2.emplace_back(v, t2, t1 + k1, constraint_type::RANGE);
+	    type = conflict_type::STANDARD;
     }
 		
 	void edgeConflict(int a1, int a2, int v1, int v2, int t)

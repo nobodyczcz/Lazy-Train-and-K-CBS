@@ -83,6 +83,7 @@ AgentsLoader::AgentsLoader(string fname, const MapLoader &ml,int max_k,bool diff
     tokenizer< char_separator<char> >::iterator beg=tok.begin();
     this->num_of_agents = atoi ( (*beg).c_str() );
     //    cout << "#AG=" << num_of_agents << endl;
+    this->departure_times.resize(this->num_of_agents,0);
     for (int i=0; i<num_of_agents; i++) {
       getline (myfile, line);
       tokenizer< char_separator<char> > col_tok(line, sep);
@@ -132,6 +133,7 @@ AgentsLoader::AgentsLoader(string fname, const MapLoader &ml,int max_k,bool diff
       tokenizer< char_separator<char> >::iterator beg=tok.begin();
       this->num_of_agents = agentsNum;
       //    cout << "#AG=" << num_of_agents << endl;
+      this->departure_times.resize(this->num_of_agents,0);
       for (int i=0; i<num_of_agents; i++) {
           getline (myfile, line);
           tokenizer< char_separator<char> > col_tok(line, sep);
@@ -174,6 +176,7 @@ AgentsLoader::AgentsLoader(string fname, const MapLoader &ml,int max_k,bool diff
 	  vector<bool> starts(ml.rows * ml.cols, false);
 	  vector<bool> goals(ml.rows * ml.cols, false);
 	  // Choose random start locations
+	  this->departure_times.resize(this->num_of_agents,0);
 	  for (int k = 0; k < agentsNum; k++)
 	  {
 		  int x = rand() % ml.rows, y = rand() % ml.cols;

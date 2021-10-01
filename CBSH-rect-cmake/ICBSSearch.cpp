@@ -607,83 +607,106 @@ bool MultiMapICBSSearch<Map>::isCorridorConflict(std::shared_ptr<Conflict>& corr
 
 
 
-
     int u[2];//get entering location
 	for (int i = 0; i < 2; i++)
 		u[i] = paths[a[i]]->at(t[i]).location;
-	if (u[0] == u[1]){
+
+	if (u[0] != u[1]){
+	    //Trains moving towards each other
 	    if (screen >= 4) {
-	        cout<<"u[0] == u[1]"<<endl;
+	        cout<<"Head to head"<<endl;
 	    }
+
+	    for (int i = 0; i < 2; i++)//check does one entering location lead to another's entering location
+	        {
+	        bool found = false;
+	        for (int time = t[i]; time < paths[a[i]]->size() && !found; time++)
+	        {
+	            if (paths[a[i]]->at(time).location == u[1 - i])
+	                found = true;
+	        }
+	        if (!found){
+	            if (screen >= 4) {
+	                cout<<"!found"<<endl;
+	            }
+	            return false;
+	        }
+	        }
+	    std::pair<int, int> edge; // one edge in the corridor
+	    int k = getCorridorLength(*paths[a[0]], t[0], u[1], edge);
+
+	    if (corridor2)
+	    {
+	        if (screen >= 4) {
+	            cout << "Compute corridor2 B E" << endl;
+	        }
+
+	        std::pair<int, int> edge_empty = make_pair(-1, -1);
+	        updateConstraintTable(node, a[0]);
+	        if (screen>=4)
+	            cout << "start: " << search_engines[a[0]]->start_location/num_col<<","<< search_engines[a[0]]->start_location % num_col << " end:" << u[1]/num_col<<"," << u[1]%num_col << " heading:" << paths[a[0]]->front().actionToHere << endl;
+	        int t1 = cp.getBypassLength(search_engines[a[0]]->start_location, u[0], edge_empty, ml, num_col, map_size, constraintTable, INT_MAX, search_engines[a[0]], search_engines[a[0]]->start_heading,paths[a[0]]->at(t[0]).heading,search_engines[a[0]]->kRobust);
+	        int t3 = cp.getBypassLength(search_engines[a[0]]->start_location, u[1], edge_empty, ml, num_col, map_size, constraintTable, INT_MAX, search_engines[a[0]],search_engines[a[0]]->start_heading,paths[a[0]]->at(e[0]).heading,search_engines[a[0]]->kRobust);
+	        int t3_ = cp.getBypassLength(search_engines[a[0]]->start_location, u[1], edge, ml, num_col, map_size, constraintTable, t3 + 2 * k  + 1,search_engines[a[0]], search_engines[a[0]]->start_heading, paths[a[0]]->at(e[0]).heading,search_engines[a[0]]->kRobust);
+
+
+	        updateConstraintTable(node, a[1]);
+	        if (screen >= 4)
+	            cout << "start: " << search_engines[a[1]]->start_location / num_col << "," << search_engines[a[1]]->start_location % num_col << " end:" << u[0] / num_col << "," << u[0] % num_col << " heading:" << paths[a[1]]->front().actionToHere << endl;
+	        int t2 = cp.getBypassLength(search_engines[a[1]]->start_location, u[1], edge_empty, ml, num_col, map_size, constraintTable, INT_MAX,search_engines[a[1]], search_engines[a[1]]->start_heading, paths[a[1]]->at(t[1]).heading, search_engines[a[1]]->kRobust);
+	        int t4 = cp.getBypassLength(search_engines[a[1]]->start_location, u[0], edge_empty, ml, num_col, map_size, constraintTable, INT_MAX,search_engines[a[1]], search_engines[a[1]]->start_heading, paths[a[1]]->at(e[1]).heading,search_engines[a[1]]->kRobust);
+	        int t4_ = cp.getBypassLength(search_engines[a[1]]->start_location, u[0], edge, ml, num_col, map_size, constraintTable, t4 + 2*k + 1, search_engines[a[1]], search_engines[a[1]]->start_heading, paths[a[1]]->at(e[1]).heading,search_engines[a[1]]->kRobust);
+	        if (screen >= 4) {
+	            cout <<"t1: "<<t1 <<",t2: "<<t2  << ",t3: " << t3 << "," << "t3_: " << t3_ << "," << "t4: " << t4 << "," << "t4_: " << t4_ << endl;
+	            cout << "corridor length: " << k << endl;
+	        }
+	        //cout << k << endl;
+	        if ((abs(t3 - t4) <= k+al.k[a[1]] || abs(t3-t4) <= k+al.k[a[0]]) && t3_ > t3 && t4_ > t4)
+	        {
+	            //cout << "iscorridor5.5" << endl;
+
+	            corridor = std::shared_ptr<Conflict>(new Conflict());
+	            corridor->corridorConflict(a[0], a[1], u[1], u[0], t3, t4, t3_, t4_,t1,t2, k,al.k[a[0]], al.k[a[1]]);
+
+	            if (blocked(*(paths[corridor->a1]), corridor->constraint1) && blocked(*(paths[corridor->a2]), corridor->constraint2))
+	                return true;
+	            else {
+	                if(screen>=4) {
+	                    cout << *corridor << endl;
+	                    cout << "not blocked" << endl;
+	                }
+
+	            }
+	        }
+	        else {
+	            if (screen>=4)
+	                 cout << "t check not pass" << endl;
+	        }
+	        //cout << "iscorridor6" << endl;
+
+	    }
+	}
+	else{
+	    //Chasing
+	    if(screen>=4)
+	        cout<<"Chasing"<<endl;
 	    return false;
-	}
 
-	for (int i = 0; i < 2; i++)//check does one entering location lead to another's entering location
-	{
-		bool found = false;
-		for (int time = t[i]; time < paths[a[i]]->size() && !found; time++)
-		{
-			if (paths[a[i]]->at(time).location == u[1 - i])
-				found = true;
-		}
-		if (!found){
-		    if (screen >= 4) {
-		        cout<<"!found"<<endl;
-		    }
-		    return false;
-		}
-	}
-	std::pair<int, int> edge; // one edge in the corridor
-	int k = getCorridorLength(*paths[a[0]], t[0], u[1], edge);
+//	    int ue[2];//get exit location
+//	    for (int i = 0; i < 2; i++)
+//	        ue[i] = paths[a[i]]->at(e[i]).location;
+//
+//	    assert(ue[0]==ue[1]);
+//
+//	    if(al.k[a[0]] ==0 || al.k[a[1]] == 0 )
+//	        return false;
+//
+//	    std::pair<int, int> edge; // one edge in the corridor
+//	    int k = getCorridorLength(*paths[a[0]], t[0], ue[1], edge);
 
-	if (corridor2)
-	{
-		if (screen >= 4) {
-			cout << "Compute corridor2 B E" << endl;
-		}
 
-		std::pair<int, int> edge_empty = make_pair(-1, -1);
-		updateConstraintTable(node, a[0]);
-		if (screen>=4)
-		    cout << "start: " << search_engines[a[0]]->start_location/num_col<<","<< search_engines[a[0]]->start_location % num_col << " end:" << u[1]/num_col<<"," << u[1]%num_col << " heading:" << paths[a[0]]->front().actionToHere << endl;
-		int t1 = cp.getBypassLength(search_engines[a[0]]->start_location, u[0], edge_empty, ml, num_col, map_size, constraintTable, INT_MAX, search_engines[a[0]], search_engines[a[0]]->start_heading,paths[a[0]]->at(t[0]).heading,search_engines[a[0]]->kRobust);
-		int t3 = cp.getBypassLength(search_engines[a[0]]->start_location, u[1], edge_empty, ml, num_col, map_size, constraintTable, INT_MAX, search_engines[a[0]],search_engines[a[0]]->start_heading,paths[a[0]]->at(e[0]).heading,search_engines[a[0]]->kRobust);
-		int t3_ = cp.getBypassLength(search_engines[a[0]]->start_location, u[1], edge, ml, num_col, map_size, constraintTable, t3 + 2 * k  + 1,search_engines[a[0]], search_engines[a[0]]->start_heading, paths[a[0]]->at(e[0]).heading,search_engines[a[0]]->kRobust);
-		
 
-		updateConstraintTable(node, a[1]);
-		if (screen >= 4)
-		    cout << "start: " << search_engines[a[1]]->start_location / num_col << "," << search_engines[a[1]]->start_location % num_col << " end:" << u[0] / num_col << "," << u[0] % num_col << " heading:" << paths[a[1]]->front().actionToHere << endl;
-		int t2 = cp.getBypassLength(search_engines[a[1]]->start_location, u[1], edge_empty, ml, num_col, map_size, constraintTable, INT_MAX,search_engines[a[1]], search_engines[a[1]]->start_heading, paths[a[1]]->at(t[1]).heading, search_engines[a[1]]->kRobust);
-		int t4 = cp.getBypassLength(search_engines[a[1]]->start_location, u[0], edge_empty, ml, num_col, map_size, constraintTable, INT_MAX,search_engines[a[1]], search_engines[a[1]]->start_heading, paths[a[1]]->at(e[1]).heading,search_engines[a[1]]->kRobust);
-		int t4_ = cp.getBypassLength(search_engines[a[1]]->start_location, u[0], edge, ml, num_col, map_size, constraintTable, t4 + 2*k + 1, search_engines[a[1]], search_engines[a[1]]->start_heading, paths[a[1]]->at(e[1]).heading,search_engines[a[1]]->kRobust);
-		if (screen >= 4) {
-			cout <<"t1: "<<t1 <<",t2: "<<t2  << ",t3: " << t3 << "," << "t3_: " << t3_ << "," << "t4: " << t4 << "," << "t4_: " << t4_ << endl;
-			cout << "corridor length: " << k << endl;
-		}
-		//cout << k << endl;
-		if ((abs(t3 - t4) <= k+al.k[a[1]] || abs(t3-t4) <= k+al.k[a[0]]) && t3_ > t3 && t4_ > t4)
-		{
-			//cout << "iscorridor5.5" << endl;
 
-			corridor = std::shared_ptr<Conflict>(new Conflict());
-			corridor->corridorConflict(a[0], a[1], u[1], u[0], t3, t4, t3_, t4_,t1,t2, k,al.k[a[0]], al.k[a[1]]);
-
-			if (blocked(*(paths[corridor->a1]), corridor->constraint1) && blocked(*(paths[corridor->a2]), corridor->constraint2))
-				return true;
-			else {
-				if(screen>=4) {
-                    cout << *corridor << endl;
-                    cout << "not blocked" << endl;
-                }
-
-			}
-		}
-		else {
-			if (screen>=4)
-			cout << "t check not pass" << endl;
-		}
-		//cout << "iscorridor6" << endl;
 
 	}
 	
@@ -2238,6 +2261,7 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 
         }
 
+		bool useM2 = true;
 		if (timestep2 >= paths[a2]->size())
 			cardinal2 = true;
 		else if (paths[a2]->at(0).singles.empty())
@@ -2264,10 +2288,21 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 		            }
 
 		        }
+
+		        for (int i = timestep2; i>=timestep; i--){
+		            if (mdd->level_locs[i][0].count(loc1)){
+                        useM2 = false;
+                        break;
+		            }
+		        }
 		        //            cout<< endl;
 		        if (mddTable.empty())
 		            delete mdd;
 		    }
+		}
+		if (useM2 && !con->train_conflict && !(paths[con->a1]->size() <= con->t || paths[con->a2]->size() <= con->t+con->k)){
+		    con->clear();
+		    con->vertexConflictM2(a1,a2,loc1,timestep,timestep2,con->k,al.k[a1],al.k[a2]);
 		}
 
 		if (type == conflict_type::STANDARD && loc2 >= 0) // Edge conflict
