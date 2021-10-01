@@ -1173,7 +1173,7 @@ void MultiMapICBSSearch<Map>::print_data(){
     HL_num_expanded << " ; " << HL_num_generated << " ; " <<
     LL_num_expanded << " ; " << LL_num_generated << " ; " << runtime / CLOCKS_PER_SEC << " ; "
     << RMTime/CLOCKS_PER_SEC<<
-    "; std "<<num_standard <<"; train_std "<<num_train_standard<<
+    "; std "<<num_standard <<"; std_m2 "<<num_standard_m2 <<"; train_std "<<num_train_standard<<
     "; rectangle " << num_rectangle << ", corridor " << num_corridor2  <<
     ", target_std " << num_target_std << ", target_sym " << num_target_sym <<
     ", parking_std " << num_parking_std <<", parking_sym" << num_parking_sym <<
@@ -1194,7 +1194,7 @@ void MultiMapICBSSearch<Map>::write_data(string ouput_file, string agents_file, 
     LL_num_expanded << "," << LL_num_generated << "," <<
     agents_file << "," << solution_cost << "," <<
     min_f_val - dummy_start->g_val << "," <<
-    solver << "," << num_standard <<","<<num_train_standard<< "," <<
+    solver << "," << num_standard <<","<<num_standard_m2 <<","<<num_train_standard<< "," <<
     num_rectangle << "," << num_corridor2 << "," << num_parking_std << "," <<
     num_target_std<<","<< num_parking_sym << "," <<num_target_sym << "," << num_train_self << ","<<
     "," << num_llpp << ","<<num_lltp<<"," << num_cardinal << ","<<num_semicardinal<<
@@ -1448,6 +1448,8 @@ bool MultiMapICBSSearch<Map>::search(){
                 num_standard++;
                 if (curr->conflict->train_conflict)
                     num_train_standard++;
+                if (curr->conflict->m2)
+                    num_standard_m2++;
                 if (curr->conflict->t >  paths[curr->conflict->a1]->size())
                     if (curr->conflict->v1 == search_engines[curr->conflict->a1]->goal_location)
                         num_target_std++;

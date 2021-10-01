@@ -44,6 +44,7 @@ public:
 	int v1=0;
 	int v2=-1;
 	bool train_conflict = false;
+	bool m2 = false;
 
 
 	//Additional information for advanced conflict
@@ -177,10 +178,11 @@ public:
 	    //a1 is the agent arrive v earlier
 	    this->a1 = a1;
 	    this->a2 = a2;
-	    this->t = t;
+	    this->t = t1;
 	    this->k = delta;
 	    this->v1 = v;
 	    this->v2 = -1;
+	    this->m2 = true;
         this->constraint1.emplace_back(v, t1, t2 + k2, constraint_type::RANGE);
         this->constraint2.emplace_back(v, t2, t1 + k1, constraint_type::RANGE);
 	    type = conflict_type::STANDARD;

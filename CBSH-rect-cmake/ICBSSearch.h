@@ -64,6 +64,8 @@ public:
 	uint64_t num_parking_std = 0;
 	uint64_t num_parking_sym = 0;
 	uint64_t num_standard = 0;
+	uint64_t num_standard_m2 = 0;
+
     uint64_t num_train_standard = 0;
     uint64_t num_train_self = 0;
 
