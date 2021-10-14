@@ -168,8 +168,13 @@ public:
         this->k = delta;
         this->v1 = v;
         this->v2 = -1;
-        this->constraint1.emplace_back(v, t, t + k2, constraint_type::RANGE);
-        this->constraint2.emplace_back(v, t, t + k1, constraint_type::RANGE);
+
+        for (int i = 0; i <= k2; i++) {
+            this->constraint1.emplace_back(v, -1, t+i, constraint_type::VERTEX);
+        }
+        for (int i = 0; i <= k1; i++) {
+            this->constraint2.emplace_back(v, -1, t+i, constraint_type::VERTEX);
+        }
         type = conflict_type::STANDARD;
     }
 
@@ -183,8 +188,11 @@ public:
 	    this->v1 = v;
 	    this->v2 = -1;
 	    this->m2 = true;
-        this->constraint1.emplace_back(v, t1, t2 + k2, constraint_type::RANGE);
-        this->constraint2.emplace_back(v, t2, t1 + k1, constraint_type::RANGE);
+	    for (int t = t1; t<=t2+k2; t++)
+	        this->constraint1.emplace_back(v,-1,t,constraint_type::VERTEX);
+	    for (int t = t2; t<= t1+k1; t++)
+	        this->constraint2.emplace_back(v,-1,t, constraint_type::VERTEX);
+
 	    type = conflict_type::STANDARD;
     }
 		
