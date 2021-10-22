@@ -2291,7 +2291,6 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 		            }
 
 		        }
-
 		        for (int i = timestep2; i>=timestep; i--){
 		            if (mdd->level_locs[i][0].count(loc1)){
                         useM2 = false;

@@ -61,7 +61,6 @@ int main(int argc, char** argv)
 	}
 
 	po::notify(vm);
-	srand((int)time(0));
 
 	int max_k = vm["kDelay"].as<int>();
 	bool diff_k = vm.count("diff-k");

@@ -104,11 +104,11 @@ public:
 				
 				if (n1->g_val == n2->g_val)
 				{
-//                    return n1->h_val >= n2->h_val;
+                    return n1->h_val >= n2->h_val;
 
 
 
-                    return rand() % 2 == 0;
+//                    return rand() % 2 == 0;
 				}
 				return n1->g_val <= n2->g_val;
 					
