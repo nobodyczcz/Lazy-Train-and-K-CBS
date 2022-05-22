@@ -213,7 +213,7 @@ public:
 
 
 	// t3 
-	void corridorConflict(int a1, int a2, int v1, int v2, int t3, int t4, int t3_, int t4_,int t1, int t2, int l,int k_1, int k_2)
+	void corridorConflict(int a1, int a2, int v1, int v2, int t3, int t4, int t3_, int t4_, int l,int k_1, int k_2)
 	{
 		this->a1 = a1;
 		this->a2 = a2;
@@ -223,11 +223,11 @@ public:
 		this->v2 = v2;
 		this->info1 = t3;
 		this->info2 = t4;
-		this->info3 = std::min( std::max(t2 + k_2, t3_ - 1) , t4 + l + k_2);
-		this->info4 = std::min( std::max(t1 + k_1, t4_ - 1) , t3 + l + k_1);
+		this->info3 = std::min(  t3_ - 1, t4 + l + k_2);
+		this->info4 = std::min( t4_ - 1, t3 + l + k_1);
 		//k is corridor length
-		this->constraint1.emplace_back(v1, t3, std::min( std::max(t2 + k_2, t3_ - 1) , t4 + l + k_2), constraint_type::RANGE);
-		this->constraint2.emplace_back(v2, t4, std::min( std::max(t1 + k_1, t4_ - 1) , t3 + l + k_1), constraint_type::RANGE);
+		this->constraint1.emplace_back(v1, t3, std::min( t3_ - 1 , t4 + l + k_2), constraint_type::RANGE);
+		this->constraint2.emplace_back(v2, t4, std::min( t4_ - 1 , t3 + l + k_1), constraint_type::RANGE);
 		type = conflict_type::CORRIDOR2;
 	}
 
