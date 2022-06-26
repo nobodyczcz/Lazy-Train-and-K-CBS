@@ -2262,7 +2262,6 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 
         }
 
-		bool useM2 = true;
 		if (timestep2 >= paths[a2]->size())
 			cardinal2 = true;
 		else if (paths[a2]->at(0).singles.empty())
@@ -2289,21 +2288,13 @@ void MultiMapICBSSearch<Map>::classifyConflicts(ICBSNode &parent)
 		            }
 
 		        }
-		        for (int i = timestep2; i>=timestep; i--){
-		            if (mdd->level_locs[i][0].count(loc1)){
-                        useM2 = false;
-                        break;
-		            }
-		        }
+
 		        //            cout<< endl;
 		        if (mddTable.empty())
 		            delete mdd;
 		    }
 		}
-		if (useM2 && !con->train_conflict && !(paths[con->a1]->size() <= con->t || paths[con->a2]->size() <= con->t+con->k)){
-		    con->clear();
-		    con->vertexConflictM2(a1,a2,loc1,timestep,timestep2,con->k,al.k[a1],al.k[a2]);
-		}
+
 
 		if (type == conflict_type::STANDARD && loc2 >= 0) // Edge conflict
 		{
