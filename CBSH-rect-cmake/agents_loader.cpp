@@ -161,7 +161,7 @@ AgentsLoader::AgentsLoader(string fname, const MapLoader &ml,int max_k,bool diff
           this->done.push_back(false);
 
           if (diff_k)
-              this->k.push_back(i%(this->max_k+1));
+              this->k.push_back(this->max_k - i%(this->max_k+1));
           else
               this->k.push_back(this->max_k);
 
@@ -239,7 +239,7 @@ AgentsLoader::AgentsLoader(string fname, const MapLoader &ml,int max_k,bool diff
 				//update goal
 				this->goal_locations.push_back(make_pair(goal / ml.cols, goal % ml.cols));
                   if (diff_k)
-                      this->k.push_back(k%(this->max_k+1));
+                      this->k.push_back(this->max_k - k%(this->max_k+1));
                   else
                       this->k.push_back(this->max_k);
 				goals[goal] = true;
