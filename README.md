@@ -46,15 +46,15 @@ CBS-K --help
 ```
 
 #### Options:
-**--shrink**    Run MTPF variant 2.
+**--shrink**    Run LT-CBS in MTPF variant 1.
 
-**--shrink --ignore-target**    Run MTPF variant 1.
+**--shrink --ignore-target**    Run LT-CBS in MTPF variant 2.
 
-Run MTPF variant 3 without above options.
+Run LT-CBS in MTPF variant 3 without above options.
 
 **--ignore-train**  ignore head occupation or self conflict. 
 
-Run K-robust CBS using **--ignore-train** 
+Run K-robust CBS by only using **--ignore-train** (without  **--shrink** and **--ignore-target**)
 
 **--kDelay 2**      Body length for trains/ or k value for k-cbs
 
