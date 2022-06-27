@@ -8,11 +8,11 @@ and *Symmetry Breaking for K-Robust Multi-Agent Path Finding (Zhe Chen, Daniel D
 2. sparsehash
 3. boost-python
 4. Python-dev
-5. Python and flatland-rl 2.2.2 if using flatland environment
+5. Python and flatland-rl 2.2.2 (could be installed through pip: `pip install flatland-rl==2.2.2` ) if using flatland environment
 
 Please make sure your boost-python version match your python version and boost version.
 
-## Compilingßgit 
+## Compiling 
 Use cmake to compile the program. You might need to adjust the cmake to suit your machine.
 
 For compiling CBS-K, compile the codes under CBSH-rect-cmake folder.
