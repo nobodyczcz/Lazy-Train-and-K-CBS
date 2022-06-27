@@ -1,0 +1,1 @@
+/home/mike/MAPF/CBS-exp/build-flipped/CBS-K -m /home/mike/MAPF/CBS-exp/map/random-32-32-10.map -a /home/mike/MAPF/CBS-exp/agent/random-32-32-10-even_sample/40/18.agents -o /home/mike/MAPF/CBS-exp/outputs/random-32-32-10-even-RM4wayF/algo=CBSH-RM_agents=40_ins=18_k=2_asy=False_no0=False_corridor=False_target=False_flipRec=False_RM4way=5 -s CBSH-RM -t 150 --kDelay 2 --RM-4way 5

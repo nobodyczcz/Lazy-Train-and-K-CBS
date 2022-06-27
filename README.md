@@ -1,18 +1,36 @@
+## About
+This repo contains codes for *Multi-Train Path Finding Revisited 
+(Zhe Chen, Jiaoyang Li, Daniel Harabor, Peter Stuckey and Sven Koenig. SoCS 2022)* 
+and *Symmetry Breaking for K-Robust Multi-Agent Path Finding (Zhe Chen, Daniel D Harabor, Jiaoyang Li, and Peter J Stuckey)*.
+
 ## Dependencies
 1. boost
-2. boost-python
-3. Python-dev
-4. Python and flatland-rl 2.2.2 if using flatland environment
+2. sparsehash
+3. boost-python
+4. Python-dev
+5. Python and flatland-rl 2.2.2 if using flatland environment
 
-Please make sure your boost-python version match the python version.
+Please make sure your boost-python version match your python version and boost version.
 
-## Compiling
+## Compilingß
 Use cmake to compile the program. You might need to adjust the cmake to suit your machine.
 
 For compiling CBS-K, compile the codes under CBSH-rect-cmake folder.
 
-For compiling as a python lib, compile codes from PythonCBS.
+```shell
+mkdir build
+cd build
+cmake ../CBSH-rect-cmake
+make -j
+```
 
+For compiling as a python lib, compile codes from PythonCBS.
+```shell
+mkdir python-lib-build
+cd python-lib-build
+cmake ../PythonCBS
+make -j
+```
 ## Usage
 ### CLI
 
@@ -28,13 +46,19 @@ CBS-K --help
 ```
 
 #### Options:
-**--shrink**    MTPF variant 2, without this option will run in MTPF variant 3
+**--shrink**    Run MTPF variant 2.
 
-**--shrink --ignore-target**    MTPF variant 1 with these two options
+**--shrink --ignore-target**    Run MTPF variant 1.
 
-**--kDelay 2**      Body length for trains
+Run MTPF variant 3 without above options.
 
-**--diff-k**   generate body length uniformly and use --kDelay as max k.
+**--ignore-train**  ignore head occupation or self conflict. 
+
+Run K-robust CBS using **--ignore-train** 
+
+**--kDelay 2**      Body length for trains/ or k value for k-cbs
+
+**--diff-k**   generate body length uniformly and it use --kDelay as max k.
 
 **--corridor True**     enable corridor reasoning
 
@@ -42,9 +66,23 @@ CBS-K --help
 
 **--parking True**  enable parking reasoning
 
-**--ignore-train**  ingore head occupation or self conflict. (run in k-robust mode)
 
 ### Python Flatland
 Place the compiled library libPythonCBS.xx together with python script.
 
-See test.py under PythonCBS for python script example.
+See run-flatland experiment scripts for python script example.
+
+## Experiment Scripts
+
+The scripts and data for generating plots/tables in Multi-Train Path Finding Revisited
+are under **exp-scripts** folder.
+
+Scripts with "run-*.py" are used to run experiments
+for different variants. 
+
+Please specify the correct compiled executable and output folder
+in the script before using them. The compiled python lib should be
+placed in the same folder with "run-flatland-variant2.py".
+
+The jupyter notebook file "plots.ipynb" including codes 
+for generating plots and tables.

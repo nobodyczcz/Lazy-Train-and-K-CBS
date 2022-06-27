@@ -141,18 +141,18 @@ elseif(APPLE)
 	set(Boost_USE_STATIC_RUNTIME OFF)
 
 	# Other boost packages still use normal boost library
-	FIND_PACKAGE(Boost REQUIRED COMPONENTS system program_options thread)
+	FIND_PACKAGE(Boost REQUIRED COMPONENTS system program_options thread python3)
 	include_directories(${Boost_INCLUDE_DIRS})
 
-	# Find py-boost include dir and py-boost lib
-	find_path(BOOST_PYTHON_INCLUDE_DIR boost/python.hpp HINTS ../py-boost/include)
-	find_library(BOOST_PYTHON NAMES libboost_python37.a HINTS ../py-boost/lib)
-	include_directories(${BOOST_PYTHON_INCLUDE_DIR})
+#	# Find py-boost include dir and py-boost lib
+#	find_path(BOOST_PYTHON_INCLUDE_DIR boost/python.hpp HINTS ../py-boost/include)
+#	find_library(BOOST_PYTHON NAMES libboost_python37.a HINTS ../py-boost/lib)
+#	include_directories(${BOOST_PYTHON_INCLUDE_DIR})
 
 	#Print find result. Make its correct
-	message(STATUS ${PYTHON_INCLUDE_DIRS})
-	message(STATUS ${BOOST_PYTHON_INCLUDE_DIR})
-	message(STATUS ${BOOST_PYTHON})
+#	message(STATUS ${PYTHON_INCLUDE_DIRS})
+#	message(STATUS ${BOOST_PYTHON_INCLUDE_DIR})
+#	message(STATUS ${BOOST_PYTHON})
 
 	target_link_libraries(CBS-K  ${Boost_LIBRARIES} ${PYTHON_LIBRARIES} ${BOOST_PYTHON})
 
