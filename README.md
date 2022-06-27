@@ -12,7 +12,7 @@ and *Symmetry Breaking for K-Robust Multi-Agent Path Finding (Zhe Chen, Daniel D
 
 Please make sure your boost-python version match your python version and boost version.
 
-## Compilingß
+## Compilingßgit 
 Use cmake to compile the program. You might need to adjust the cmake to suit your machine.
 
 For compiling CBS-K, compile the codes under CBSH-rect-cmake folder.
