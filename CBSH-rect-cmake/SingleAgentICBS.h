@@ -52,7 +52,7 @@ public:
 	uint64_t num_expanded;
 	uint64_t num_generated;
 
-	double lower_bound;  // FOCAL's lower bound ( = e_weight * min_f_val)
+	double bound;  // FOCAL's lower bound ( = e_weight * min_f_val)
 	double min_f_val;  // min f-val seen so far
 	int num_of_conf; // number of conflicts between this agent to all the other agents
 
