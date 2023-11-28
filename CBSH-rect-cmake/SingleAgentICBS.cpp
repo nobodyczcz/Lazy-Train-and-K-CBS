@@ -11,23 +11,6 @@ void SingleAgentICBS<Map>::updatePath(LLNode* goal, std::vector<PathEntry> &path
 	LLNode* curr = goal;
 	num_of_conf = goal->num_internal_conf;
 
-	// No shrink to hole any more.
-	// Include the goal shrink process to path
-//    list<int> goalLocs =  goal->locs;
-//    goalLocs.pop_back();
-//    for (int t = goal->g_val+1; t < path.size();t++){
-//        path[t].location = goalLocs.front();
-//        path[t].occupations = goalLocs;
-//        path[t].actionToHere = goal->heading;
-//        path[t].heading = goal->heading;
-//        path[t].singles.clear();
-//        path[t].self_conflict = false;
-//        if (t!=0)
-//            path[t].conflist =  res_table->findConflict(agent_id, goalLocs.front(), goalLocs, t-1);
-//        else
-//            path[t].conflist = NULL;
-//        goalLocs.pop_back();
-//	}
 
 	for(int t = goal->g_val; t >= 0; t--)
 	{
@@ -97,7 +80,7 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 
 	lowerbound = std::max(lowerbound, (double)constraint_table.length_min);
 	lowerbound = std::max(lowerbound, (double)min_end_time);
-	lower_bound = std::max(lowerbound, f_weight * min_f_val);
+	lower_bound = std::max(lowerbound, f_weight * min_f_val);//bound to be qualify in focal_list
 //	cout<<"initial lower_bound "<<lower_bound<<", "<<constraint_table.length_min<<","<<min_end_time<<","<<min_f_val<<f_weight<<","<<lowerbound<<
 //	", length_max "<< constraint_table.length_max <<", latest_timestep"<<constraint_table.latest_timestep<<endl;
 	int time_generated = 0;
@@ -168,6 +151,9 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 		        transitions.emplace_back(start_location, curr->heading);
 
 		}
+        else if (curr->timestep +1 <= departure_time){
+            transitions.emplace_back(curr->locs.front(), -1);
+        }
 		else if (!curr->shrinking)
 		    transitions = ml->get_transitions(curr->locs.front(), curr->heading,false);
 
@@ -197,7 +183,7 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
 			time_generated += 1;
 			int next_timestep = curr->timestep + 1;
 
-            if (max_plan_len <= curr->timestep && move.second!= -2 && !curr->shrinking )
+            if (max_plan_len <= curr->timestep && move.second!= -2 && !curr->shrinking && curr->timestep + 1 > departure_time)
             {
                 if (next_id == curr->locs.front())
                 {

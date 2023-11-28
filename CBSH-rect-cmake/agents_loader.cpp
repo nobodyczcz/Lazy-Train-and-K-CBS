@@ -70,6 +70,28 @@ AgentsLoader::AgentsLoader(p::object agents, int max_k ,bool diff_k) {
     }
 }
 
+void AgentsLoader::loadDepartureTimes(const std::string fname){
+  if (this->num_of_agents <=0){
+    std::cerr <<"Error load departure times, num of agents is zero or agents not loaded yet"<<std::endl;
+    exit(1);
+  }
+  string line;
+  ifstream myfile (fname.c_str());
+  assert(this->departure_times.size()==this->num_of_agents);
+
+  for (int i=0; i<num_of_agents; i++) {
+    getline (myfile, line);
+
+    if(myfile.eof()){
+      std::cerr <<"num of lines in waits file smaller than num of agents"<<std::endl;
+      exit(1);
+    }
+    this->departure_times[i] = atoi(line.c_str());
+  }
+
+}
+
+
 AgentsLoader::AgentsLoader(string fname, const MapLoader &ml,int max_k,bool diff_k, int agentsNum = 0){
   string line;
 

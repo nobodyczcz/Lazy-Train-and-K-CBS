@@ -27,8 +27,12 @@ int main(int argc, char** argv)
 		("help", "produce help message")
 		("map,m", po::value<std::string>()->required(), "input file for map")
 		("agents,a", po::value<std::string>()->required(), "input file for agents")
-		("output,o", po::value<std::string>()->required(), "output file for schedule")
-		("solver,s", po::value<std::string>()->required(), "solvers (CBS, ICBS, CBSH, CBSH-CR, CBSH-R, CBSH-RM, CBSH-GR")
+		("waits,w", po::value<std::string>()->default_value(""), "input file for waits")
+		("f_w", po::value<float>()->default_value(1.0), "focal weight")
+
+		("output,o", po::value<std::string>()->required(), "output file for statistic")
+
+		("solver,s", po::value<std::string>()->required(), "solvers (CBS, ICBS, CBSH, CBSH-CR, CBSH-R, CBSH-RM")
 		("agentNum,k", po::value<int>()->default_value(0), "number of agents")
 		("cutoffTime,t", po::value<float>()->default_value(7200), "cutoff time (seconds)")
 		("seed,d", po::value<int>()->default_value(0), "random seed")
@@ -44,6 +48,8 @@ int main(int argc, char** argv)
 		("lltp-only",  "only use lltp and occupation conflict find solution.")
 		("diff-k",  "All agent have different k")
 		("only_generate_instance", po::value<std::string>()->default_value(""),"no searching")
+		("printPath", "print path to stdout")
+
 		("debug", "debug mode")
 		("statistic","print statistic data")
 		("pairAnalysis",po::value<int>(),"perform 2 agent analysis")
@@ -73,6 +79,10 @@ int main(int argc, char** argv)
 
 	// read agents' start and goal locations
 	AgentsLoader al(vm["agents"].as<string>(), *ml,max_k,diff_k, vm["agentNum"].as<int>());
+	
+	if (vm["waits"].as<string>() != ""){
+		al.loadDepartureTimes(vm["waits"].as<string>());
+	}
 	if (vm["screen"].as<int>() == 2) {
 		cout << "[CBS] Loading map and agents don2! " << endl;
 	}
@@ -112,7 +122,7 @@ int main(int argc, char** argv)
 		return -1;
 	}
 
-    ICBSSearchWithPairedAnalysis<MapLoader> icbs(ml, al, 1.0, s, vm["cutoffTime"].as<float>() * CLOCKS_PER_SEC, vm["screen"].as<int>(), vm["kDelay"].as<int>(), options1);
+    ICBSSearchWithPairedAnalysis<MapLoader> icbs(ml, al, vm["f_w"].as<float>(), s, vm["cutoffTime"].as<float>() * CLOCKS_PER_SEC, vm["screen"].as<int>(), vm["kDelay"].as<int>(), options1);
 	if (vm["solver"].as<string>() == "CBSH-RM")
 	{
 		icbs.rectangleMDD = true;
@@ -146,6 +156,10 @@ int main(int argc, char** argv)
 	}
 
 	icbs.write_data(vm["output"].as<string>(),vm["agents"].as<string>(),vm["solver"].as<string>(), validTrain);
+
+	if (vm.count("printPath")){
+		icbs.printPaths();
+	}
 
     if(vm.count("statistic")){
         cout<<"Total RM time: "<<icbs.RMTime/CLOCKS_PER_SEC <<endl;

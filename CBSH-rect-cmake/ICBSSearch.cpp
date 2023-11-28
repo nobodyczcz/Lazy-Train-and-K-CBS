@@ -1009,7 +1009,7 @@ void ICBSSearch::printPaths() const
 		std::cout << "Agent " << i << " (" << paths_found_initially[i].size() - 1 << " -->" <<
 			paths[i]->size() - 1 << "): ";
 		for (int t = 0; t < paths[i]->size(); t++)
-			std::cout << t <<"(" << paths[i]->at(t).location / num_col << "," << paths[i]->at(t).location % num_col << ")->";
+			std::cout <<"(" << paths[i]->at(t).location / num_col << "," << paths[i]->at(t).location % num_col << ")->";
 		std::cout << std::endl;
 	}
 }
@@ -1913,8 +1913,8 @@ MultiMapICBSSearch<Map>::MultiMapICBSSearch(Map* ml, AgentsLoader& al, double f_
 
         ComputeHeuristic<Map> ch(init_loc, goal_loc, ml, al.headings[i]);
         search_engines[i] = new SingleAgentICBS<Map>(init_loc, goal_loc, ml,i,option, al.headings[i],al.k[i]);
-        if(ml->flatland)
-            search_engines[i]->departure_time = al.departure_times[i];
+        // if(ml->flatland)
+        search_engines[i]->departure_time = al.departure_times[i];
         if (debug_mode)
             cout << "initializing heuristics for "<< i << endl;
         ch.getHVals(search_engines[i]->my_heuristic);
@@ -1938,6 +1938,8 @@ void MultiMapICBSSearch<Map>::initializeDummyStart() {
 	paths.resize(num_of_agents, NULL);
 	paths_found_initially.resize(num_of_agents);
 	ReservationTable* res_table = new ReservationTable(map_size,&al);  // initialized to false
+    dummy_start->g_val = 0;
+
 	for (int i = 0; i < num_of_agents; i++) {
 		//cout << "******************************" << endl;
 		//cout << "Agent: " << i << endl;
@@ -1959,6 +1961,9 @@ void MultiMapICBSSearch<Map>::initializeDummyStart() {
 		res_table->addPath(i, paths[i]);
 		dummy_start->makespan = max(dummy_start->makespan, paths_found_initially[i].size() - 1);
 
+        dummy_start->g_val += search_engines[i]->min_f_val - 1;
+
+
 		LL_num_expanded += search_engines[i]->num_expanded;
 		LL_num_generated += search_engines[i]->num_generated;
 
@@ -1970,9 +1975,6 @@ void MultiMapICBSSearch<Map>::initializeDummyStart() {
 	if (debug_mode)
 		cout << "Initializing dummy start" << endl;
 	// generate dummy start and update data structures	
-	dummy_start->g_val = 0;
-	for (int i = 0; i < num_of_agents; i++)
-		dummy_start->g_val += paths[i]->size() - 1;
 	dummy_start->h_val = 0;
 	dummy_start->f_val = dummy_start->g_val;
 
@@ -2128,7 +2130,7 @@ bool MultiMapICBSSearch<Map>::findPathForSingleAgent(ICBSNode*  node, int ag, do
 	{
 		node->paths.emplace_back(ag, newPath);
 
-		node->g_val = node->g_val - paths[ag]->size() + newPath.size();
+		node->g_val = node->g_val - search_engines[ag]->min_f_val + newPath.size();
 
 		paths[ag] = &node->paths.back().second;
 
