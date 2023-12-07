@@ -307,8 +307,7 @@ bool SingleAgentICBS<Map>::findPath(std::vector<PathEntry> &path, double f_weigh
                 }
                 else
                 {  // if its in the closed list (reopen)
-                    if (existing_next->getFVal() > next_g_val + next_h_val ||
-                        (existing_next->getFVal() == next_g_val + next_h_val && existing_next->num_internal_conf > next_internal_conflicts))
+                    if (existing_next->getFVal() > next_g_val + next_h_val)
                     {
                         // if f-val decreased through this new path (or it remains the same and there's less internal conflicts)
                         existing_next->g_val = next_g_val;
