@@ -7,26 +7,27 @@ template<class Map>
 void SingleAgentICBS<Map>::updatePath(LLNode* goal, std::vector<PathEntry> &path,ReservationTable* res_table)
 {
     path.clear();
-	path.resize(goal->g_val + 1);
+	path.reserve(goal->g_val + 1);
 	LLNode* curr = goal;
 	num_of_conf = goal->num_internal_conf;
+    while (curr != nullptr){
+        path.emplace_back(curr->locs.front());
+        path.back().occupations = curr->locs;
+		path.back().actionToHere = curr->heading;
+        path.back().heading = curr->heading;
+        path.back().singles.clear();
+        path.back().self_conflict = curr->self_conflict;
+        curr = curr->parent;
 
+    }
+    std::reverse(path.begin(), path.end());
 
-	for(int t = goal->g_val; t >= 0; t--)
+	for(int t = path.size()-1; t >= 0; t--)
 	{
-
-		path[t].location = curr->locs.front();
-		path[t].occupations = curr->locs;
-		path[t].actionToHere = curr->heading;
-        path[t].heading = curr->heading;
-        path[t].singles.clear();
-        path[t].self_conflict = curr->self_conflict;
         if (t!=0)
-            path[t].conflist =  res_table->findConflict(agent_id, curr->parent->locs.front(), curr->locs, t-1, t==goal->g_val);
+            path[t].conflist =  res_table->findConflict(agent_id, path[t-1].location, path[t].occupations, t-1, t==path.size()-1);
         else
-            path[t].conflist =  res_table->findConflict(agent_id, curr->locs.front(), curr->locs, t-1);
-
-		curr = curr->parent;
+            path[t].conflist =  res_table->findConflict(agent_id, path[t].location, path[t].occupations, t-1);
 	}
 
 
