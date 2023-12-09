@@ -136,6 +136,8 @@ protected:
 	int node_limit = 0;
 	double focal_w = 1.0;
 
+	vector<int> min_f_vals;
+
 	const bool* my_map;
 	int map_size;
 	int num_of_agents;

@@ -71,6 +71,7 @@ public:
 
 	int agent_id;
 	list<pair<int, vector<PathEntry> > > paths; // path of agent_id
+	unordered_map<int,int> min_f_vals;
 	std::list<Constraint> constraints; // constraints imposed to agent_id
 	
 

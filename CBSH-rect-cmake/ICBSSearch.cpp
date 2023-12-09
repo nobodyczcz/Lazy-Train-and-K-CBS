@@ -12,8 +12,10 @@
 // also, do the same for ll_min_f_vals and paths_costs (since its already "on the way").
 inline void ICBSSearch::updatePaths(ICBSNode* curr)
 {
-	for(int i = 0; i < num_of_agents; i++)
+	for(int i = 0; i < num_of_agents; i++){
 		paths[i] = &paths_found_initially[i];
+        min_f_vals[i] = dummy_start->min_f_vals[i];
+    }
 	vector<bool> updated(num_of_agents, false);  // initialized for false
 
 	while (curr->parent != NULL)
@@ -24,6 +26,7 @@ inline void ICBSSearch::updatePaths(ICBSNode* curr)
 			{
 				paths[it->first] = &(it->second);
 				updated[it->first] = true;
+                min_f_vals[it->first] = curr->min_f_vals[it->first];
 			}
 		}
 		curr = curr->parent;
@@ -1475,8 +1478,11 @@ bool MultiMapICBSSearch<Map>::search(){
 
 
         vector<vector<PathEntry>*> copy(paths);
+        vector<int> fmin_copy(min_f_vals);
+
         for (int i = 0; i < children.size(); i++)
         {
+            min_f_vals = fmin_copy;
             if (generateChild(children[i], curr))
             {
                 curr->children.push_back(children[i]);
@@ -1940,6 +1946,7 @@ void MultiMapICBSSearch<Map>::initializeDummyStart() {
 		cout << "Initializing first solutions" << endl;
 	// initialize paths_found_initially
 	paths.resize(num_of_agents, NULL);
+    min_f_vals.resize(num_of_agents,0);
 	paths_found_initially.resize(num_of_agents);
 	ReservationTable* res_table = new ReservationTable(map_size,&al);  // initialized to false
     dummy_start->g_val = 0;
@@ -1965,7 +1972,9 @@ void MultiMapICBSSearch<Map>::initializeDummyStart() {
 		res_table->addPath(i, paths[i]);
 		dummy_start->makespan = max(dummy_start->makespan, paths_found_initially[i].size() - 1);
 
-        dummy_start->g_val += search_engines[i]->min_f_val - 1;
+        dummy_start->g_val += search_engines[i]->min_f_val;
+        dummy_start->min_f_vals[i] = search_engines[i]->min_f_val;
+        min_f_vals[i] = search_engines[i]->min_f_val;
 
 
 		LL_num_expanded += search_engines[i]->num_expanded;
@@ -2133,9 +2142,9 @@ bool MultiMapICBSSearch<Map>::findPathForSingleAgent(ICBSNode*  node, int ag, do
 	if (foundSol)
 	{
 		node->paths.emplace_back(ag, newPath);
-
-		node->g_val = node->g_val - search_engines[ag]->min_f_val + newPath.size();
-
+        node->min_f_vals[ag] = search_engines[ag]->min_f_val;
+		node->g_val = node->g_val - min_f_vals[ag] + search_engines[ag]->min_f_val;
+        min_f_vals[ag] = search_engines[ag]->min_f_val;
 		paths[ag] = &node->paths.back().second;
 
 		node->makespan = std::max(node->makespan, newPath.size() - 1);
