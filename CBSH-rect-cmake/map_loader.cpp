@@ -136,7 +136,7 @@ MapLoader::MapLoader(string fname)
   if (myfile.is_open()) {
     getline (myfile,line);
     int rows, cols;
-    if(line == "type octile"){
+    if (line.find("type octile") != string::npos) {
         getline (myfile, line);
         char_separator<char> sep(" ");
         tokenizer< char_separator<char> > tok(line, sep);
