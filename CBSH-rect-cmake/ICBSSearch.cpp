@@ -1328,7 +1328,11 @@ bool MultiMapICBSSearch<Map>::search(){
         {  // found a solution (and finish the while look)
             runtime = (std::clock() - start);
             solution_found = true;
-            solution_cost = curr->g_val;
+            solution_cost = 0;
+            for (int i = 0; i < num_of_agents; i++)
+            {
+                solution_cost += paths[i]->size() - 1;
+            }
             if (debug_mode) {
                 printHLTree();
                 finalConflictCheck(*curr);
