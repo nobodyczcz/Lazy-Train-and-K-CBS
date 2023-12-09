@@ -48,6 +48,7 @@ int main(int argc, char** argv)
 		("statistic","print statistic data")
 		("pairAnalysis",po::value<int>(),"perform 2 agent analysis")
 		("printFailedPair","print mdd and constraints for failed pair")
+		("printPath", "print path to stdout")
 
 
             ;
@@ -146,6 +147,10 @@ int main(int argc, char** argv)
 	}
 
 	icbs.write_data(vm["output"].as<string>(),vm["agents"].as<string>(),vm["solver"].as<string>(), validTrain);
+
+	if (vm.count("printPath")){
+		icbs.printPaths();
+	}
 
     if(vm.count("statistic")){
         cout<<"Total RM time: "<<icbs.RMTime/CLOCKS_PER_SEC <<endl;

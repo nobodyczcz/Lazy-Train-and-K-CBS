@@ -110,7 +110,9 @@ public:
     bool isValidTrain();
 
     vector<vector<PathEntry>*> getPaths(){ return paths;};
-
+	// print
+	void printPaths() const;
+	void printPaths(Path& path) const;
 
 
 
@@ -190,9 +192,7 @@ protected:
         }
     };
 
-	// print
-	void printPaths() const;
-	void printPaths(Path& path) const;
+
 
 
     void printStrategy() const;

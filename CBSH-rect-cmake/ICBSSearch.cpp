@@ -1009,7 +1009,7 @@ void ICBSSearch::printPaths() const
 		std::cout << "Agent " << i << " (" << paths_found_initially[i].size() - 1 << " -->" <<
 			paths[i]->size() - 1 << "): ";
 		for (int t = 0; t < paths[i]->size(); t++)
-			std::cout << t <<"(" << paths[i]->at(t).location / num_col << "," << paths[i]->at(t).location % num_col << ")->";
+			std::cout <<"(" << paths[i]->at(t).location / num_col << "," << paths[i]->at(t).location % num_col << ")->";
 		std::cout << std::endl;
 	}
 }
@@ -1060,7 +1060,6 @@ void ICBSSearch::printPaths(Path& path) const
 {
 
 		for (int t = 0; t < path.size(); t++){
-            std::cout << t;
             for (int loc: path[t].occupations){
                 std::cout <<"(" << loc / num_col << "," << loc % num_col << ")";
             }
